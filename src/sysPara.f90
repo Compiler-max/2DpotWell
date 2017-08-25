@@ -4,9 +4,9 @@ module sysPara
 	use m_config
 	implicit none
 	private
-	public :: 	readInp, insideAt, getRindex, &
+	public :: 	readInp, insideAt, getRindex, getKindex, &
 				dim, aX, aY, vol, nAt, relXpos, relYpos, atRx, atRy, atPot,&
-				nG, nG0, Gcut, nK, nKx, nKy, nSC, nR, nRx, nRy, R0,  dx, dy, dkx, dky, &
+				nG, nG0, Gcut, nK, nKx, nKy, nSC, nSCx, nSCy, nR, nRx, nRy, R0,  dx, dy, dkx, dky, &
 				gaugeSwitch, nWfs, &
 				Gvec, atPos, atR, kpts, rpts, Rcell, trialOrbVAL, trialOrbSw, Zion
 
@@ -142,13 +142,18 @@ module sysPara
 
 	integer function getRindex(xi,yi)
 		integer,	intent(in)		:: xi, yi
-
+		!
 		getRindex = (yi-1) * nRx + xi
 		return
 	end
 
 
-
+	integer function getKindex(kx,ky)
+		integer,	intent(in)		:: kx, ky
+		!
+		getKindex = (ky-1) * nKx + kx
+		return
+	end
 
 
 

@@ -71,14 +71,13 @@ module wannGen
 
 	subroutine genWannF(ki, bWf, wnF)
 		! generates wannier functions from (projected) bloch wavefunctions
-		! 
+		!
 		integer,		intent(in)		:: ki
 		complex(dp), 	intent(in)  	:: bWf(:,:) ! lobWf(nRpts,nWfs)	
 		complex(dp), 	intent(inout) 	:: wnF(:,:,:) ! wnF( 	nR, nSC, nWfs		)	
-		integer 				 :: n,xi,Ri,R, Rmin
+		integer 				 :: n,xi,Ri
 		real(dp)				 :: cellP
 		!
-		Rmin = 0
 		do n = 1, nWfs
 			do Ri = 1, nSC
 				cellP = -1 * dot_product(	kpts(:,ki) , Rcell(:,Ri)	) 

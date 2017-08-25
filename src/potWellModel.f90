@@ -2,9 +2,9 @@ module potWellModel
 	!this modules sets up the Hamiltonian matrix and solves it for each k point
 	!	in the process the wannier functions are generated aswell with routines from wannGen module
 	use mathematics,	only:	dp, PI_dp,i_dp, myExp, eigSolver, isHermitian
-	use sysPara,		only: 	readInp, &
+	use sysPara,		only: 	readInp, getKindex, &
 									dim, aX, aY,vol, nAt, atR, atPos, atPot,&
-									nG, nG0, Gcut, nK, nWfs, nSC, nR, dx, dy, dkx, dky, &
+									nG, nG0, Gcut, nK, nKx, nKy, nWfs, nSC, nR, dx, dy, dkx, dky, &
 									Gvec, atPos, atR, kpts, rpts, gaugeSwitch
 	use wannGen,		only:	projectBwf, genWannF
 	use output,			only:	printMat
@@ -30,7 +30,7 @@ module potWellModel
 																				!unkW(nR	, nKpts,	nWfs	)
 		complex(dp),	allocatable		::	Hmat(:,:), bWf(:,:), lobWf(:,:), gnr(:,:)
 		real(dp),		allocatable		::	En(:), bwfR(:,:), bwfI(:,:)	 
-		integer							:: 	ki
+		integer							:: 	ki, xi , n
 		real(dp)						::	kVal(dim)
 		!
 		allocate(	Hmat(	nG,	nG	)			)
@@ -41,7 +41,7 @@ module potWellModel
 		allocate(	lobWf(	nR, nWfs)			)
 		allocate(	gnr(	nR,	nWfs)			)
 		
-		wnF	=	dcmplx(0.0_dp)
+		wnF		=	dcmplx(0.0_dp)
 		bWf		=	dcmplx(0.0_dp)
 		unkW	=	dcmplx(0.0_dp)
 		!
@@ -70,7 +70,7 @@ module potWellModel
 			
 			call genWannF(ki, lobWf, wnF)
 
-			!call genUnk(ki, lobWf, unkW(:, ki, :))
+			call genUnk(ki, lobWf, unkW(:, ki, :))
 			!
 		end do
 		close(200)
@@ -79,6 +79,9 @@ module potWellModel
 		!
 		return
 	end
+
+
+
 
 
 
@@ -321,6 +324,7 @@ module potWellModel
 
 
 	subroutine genUnk(ki, lobWf, unk)
+		! generates the lattice periodic part from given bloch wave functions
 		integer,		intent(in)		:: ki
 		complex(dp),	intent(in)		:: lobWf(:,:) !lobWf(	nR, nWfs)
 		complex(dp),	intent(out)		:: unk(:,:)   !unk(	nR, nWfs)
@@ -336,6 +340,31 @@ module potWellModel
 		!
 		return
 	end
+
+
+	logical function isLattSym(bWf)
+		!checks if bwf(k) = bwf(k+G)
+		complex(dp),	intent(in)		:: bWf(:,:,:) !nR, nK , nG or nWfs
+		integer							:: k00, k10, k01, k11, n ! edge point indices
+
+		isLattSym = .true.
+		k00 = getKindex(	1	, 1		)
+		k10	= getKindex(	nKx	, 1		)
+		k01 = getKindex(	1	, nKy	)
+		k11 = getKindex(	nKx , nKy	)
+		write(*,'(a,i3,a,i3,a,i3,a,i3)')"[isLattSym]: k00 =",k00,", k10=",k10,", k01=",k01,", k11=",k11 
+
+
+		do n = 1, size(bwf,3) ! loop states
+
+		end do
+
+		return
+	end
+
+
+
+
 
 
 

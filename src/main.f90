@@ -9,19 +9,22 @@ program main
 	!
 	use potWellModel, only: 		solveHam 
 	!
-	use wannier	   , only: isNormal			!, calcWcent, calcWsprd,calc0ElPol, &
-	!						genWUnk ,bandInterpol,gaugeUnk, calcConnViaK, gaugeConnToHam, calcPolViaA
-	!!
-	use output	   , only:		writeMeshInfo, writeMeshBin, writeWannFiles, printTiming	!printMat, printInp, printWannInfo,& 
-	!						writeSysInfo  
+	use wannier	   , only: isNormal,calcWcent, calcWsprd,calc0ElPol , &
+							genUnkW, calcConn, calcPolViaA  !,bandInterpol,gaugeUnk, calcConnViaK, gaugeConnToHam
+	!
+	use output	   , only:		writeMeshInfo, writeMeshBin, writeWannFiles,writePolFile,& 
+								printTiming	!printMat, printInp, printWannInfo,writeSysInfo  
+
+
+						
 	implicit none
 
 	
-    real(dp)   	, allocatable, dimension(:,:)		:: wCent, wSprd
-    complex(dp)	, allocatable, dimension(:,:,:)	:: wnF, unkW, Uh , Aconn!, ukn basCoeff,
-    real(dp) 									:: pEl, pIon, pTot, pElViaA 
-    real										:: mastT0,mastT1,mastT,aT0,aT1,aT,kT0,kT1,kT,wT0,wT1,wT, oT0, oT1, oT
-    integer 									:: xi,ki
+    real(dp), 		allocatable,	dimension(:,:)		:: wCent, wSprd
+    complex(dp),	allocatable,	dimension(:,:,:)	:: wnF, unk, Uh, Aconn !, ukn basCoeff,
+    real(dp) 											:: pEl(2), pIon(2), pTot(2), pElViaA(2) 
+    real												:: mastT0,mastT1,mastT,aT0,aT1,aT,kT0,kT1,kT,wT0,wT1,wT, oT0, oT1, oT
+    integer 											:: xi,ki
     call cpu_time(mastT0)
 
 
@@ -35,9 +38,9 @@ program main
 	call readInp()
 	!
 	allocate(		wnF( 	nR, nSC, nWfs	)		)
-	allocate(		unkW(	nR, nK, nWfs	)		) 
+	allocate(		unk(	nR, nK, nWfs	)		) 
 	allocate(		Uh(		nWfs, nWfs,	nK	)		)
-	allocate(		Aconn(	nWfs, nWfs, nK	)		)
+	allocate(		Aconn(	2,nWfs, nK)		)
 	allocate(		wCent(	2, nWfs			)		)
 	allocate(		wSprd(	2, nWfs			)		)
 
@@ -47,10 +50,10 @@ program main
 
 	
 	!SOLVE ELECTRONIC STRUCTURE & GENERATE THE WANNIER FUNCTIONS ON THE FLY
-	write(*,*)"[main]: start solving Schroedinger eq."
+	write(*,*)"[main]:**************************ELECTRONIC STRUCTURE PART*************************"
 	call cpu_time(kT0)
 	!
-	call solveHam(Uh, wnF, unkW)
+	call solveHam(Uh, wnF, unk)
 	!
 	call cpu_time(kT1)
 	write(*,*)"[main]: done solving Schroedinger eq."
@@ -70,29 +73,29 @@ program main
 
 	
 	!!WANNIER CENTERS & POLARIZATION
+	write(*,*)"[main]:**************************WANNIER CENTERS & POLARIZATION*************************"
 	call cpu_time(wT0)
-	!call calcWcent(wnF,	wCent)
-	!call calcWsprd(wnF, wCent, wSprd)
-	!call calc0ElPol(wCent, pEl, pIon, pTot)
-	!write(*,*)"[main]: done with center polarization calc"
+	call calcWcent(wnF,	wCent)
+	call calcWsprd(wnF, wCent, wSprd)
+	call calc0ElPol(wCent, pEl, pIon, pTot)
+	write(*,*)"[main]: done with center polarization calc"
 
 	
-	!call calcConnViaK(unkW, Aconn)   
-	!write(*,*)"[main]: connection calculated"
-	!!call gaugeConnToHam(unkW, Uh, Aconn)
-
-	!call calcPolViaA(Aconn, pElViaA)
-	!write(*,*)"[main]: pol via connection calculated"
+	call calcConn(unk, Aconn)   
+	call calcPolViaA(Aconn, pElViaA)
 	call cpu_time(wT1)
 	wT = wT1 - wT0
 
 	!OUTPUTING RESULTS SECTION
+	write(*,*)"[main]: everything done, start writing results"
 	call cpu_time(oT0)
+	
 	!call writeSysInfo() 
 	call writeMeshInfo() 
 	call writeMeshBin()
-	call writeWannFiles(wnF)
-	!call writeWannFiles(gnr, wnF, wCent, wSprd, Aconn, unkW)
+	call writeWannFiles(wnF, wCent, wSprd, Aconn)			!call writeWannFiles(gnr, wnF, wCent, wSprd, Aconn, unkW)
+	call writePolFile(pEl, pIon, pTot, pElViaA )
+	
 	call cpu_time(oT1)
 	oT = oT1 - oT0
 	
@@ -101,7 +104,7 @@ program main
 	!call printWannInfo(wCent, wSprd, pEl, pIon, pTot, pElViaA)
 	call cpu_time(mastT1)
 	mastT= mastT1-mastT0
-	write(*,*) "[main]: timing info:"
+	write(*,*) '**************TIMING INFORMATION************************'
 	call printTiming(aT, kT, wT, oT, mastT)
 
 	stop
