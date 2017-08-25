@@ -1,0 +1,7 @@
+Todo:
+
+ 3. 2D code
+ 	- calculate 1. order polarization via Niu (perturbation)
+ 	- calculate polarization, B field via Peirls substitution on tight binding parameters
+
+

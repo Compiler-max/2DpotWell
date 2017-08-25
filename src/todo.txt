@@ -1,0 +1,40 @@
+tomorrow do:
+
+
+
+	- git
+
+
+
+
+
+
+
+
+	
+	- write test for boundary condition of polarization
+
+
+	- check weird bug with writting the bwfs in solveHam again
+	
+	- plotting: band structure (k point path?), mark atoms in the bwf and wnf plots
+
+
+	- test 2D integration routine
+
+
+	-polarization:
+		via Wannier
+		via Connection
+
+	-first order polarization
+		via Niu
+		via Peierls
+
+	- peierls
+		watch out for chern insulator breakdown
+
+	- yuriy also mentioned playing around with non collinearity, talk to frank about that again
+		-> maybe only do that in FLEUR	
+
+	

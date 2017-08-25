@@ -1,0 +1,11 @@
+**/lib
+**/bin
+*.o
+*.mod
+*.sh
+**/CMakeFiles
+*CMakeCache.txt
+**thirdparty/Makefile
+**thirdparty/cmake_install.cmake
+*Makefile
+*.cmake
