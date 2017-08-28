@@ -9,7 +9,7 @@ module output
 	implicit none
 	private
 
-	public ::	writeMeshInfo, writeMeshBin, writeWannFiles,writePolFile, &
+	public ::	writeMeshInfo, writeMeshBin, writeWaveFunc, writeWannFiles, writePolFile, &
 				printMat, printTiming 
 
 
@@ -131,42 +131,61 @@ module output
 	end
 
 
-	subroutine writeWannFiles(wnF, wCent, wSprd, Aconn)
-		complex(dp),	intent(in)		:: wnF(:,:,:), Aconn(:,:,:)
+	subroutine writeWaveFunc(unk, Aconn)
+		complex(dp),	intent(in)		:: unk(:,:,:), Aconn(:,:,:)
+		!
+		!
+		!
+		!LATTICE PERIODIC FUNCTIONS
+		open(unit=400,file='rawData/unkR.dat',form='unformatted',access='stream',action='write')
+		write(400)	dreal(unk)
+		close(400)
+		!
+		open(unit=405,file='rawData/unkI.dat',form='unformatted',access='stream',action='write')
+		write(405)	dimag(unk)
+		close(405)
+		!
+		!
+		!CONNECTION
+		open(unit=410,file='rawData/AconnR.dat',form='unformatted',access='stream',action='write')
+		write(410)	dreal(Aconn)
+		close(410)
+		!
+		open(unit=415,file='rawData/AconnI.dat',form='unformatted',access='stream',action='write')
+		write(415)	dimag(Aconn)
+		close(415)
+		!
+		!
+		return
+	end
+
+
+
+	subroutine writeWannFiles(wnF, wCent, wSprd)
+		complex(dp),	intent(in)		:: wnF(:,:,:)
 		real(dp),		intent(in)		:: wCent(:,:), wSprd(:,:)
 		!
 		!
 		!
 		!WANNIER FUNCTIONS:
-		open(unit=400,file='rawData/wnfR.dat',form='unformatted',access='stream',action='write')
-		write(400)	dreal(wnF)
-		close(400)
+		open(unit=500,file='rawData/wnfR.dat',form='unformatted',access='stream',action='write')
+		write(500)	dreal(wnF)
+		close(500)
 		!
-		open(unit=405,file='rawData/wnfI.dat',form='unformatted',access='stream',action='write')
-		write(405)	dimag(wnF)
-		close(405)
+		open(unit=505,file='rawData/wnfI.dat',form='unformatted',access='stream',action='write')
+		write(505)	dimag(wnF)
+		close(505)
 		!
 		!
 		!
 		!CENTERS AND SPREADS:
-		open(unit=410,file='rawData/wCent.dat',form='unformatted',access='stream',action='write')
-		write(410)	wCent
-		close(410)
+		open(unit=510,file='rawData/wCent.dat',form='unformatted',access='stream',action='write')
+		write(510)	wCent
+		close(510)
 		!
-		open(unit=415,file='rawData/wSprd.dat',form='unformatted',access='stream',action='write')
-		write(415)	wCent
-		close(415)
-		!
-		!
-		!
-		!CONNECTION
-		open(unit=420,file='rawData/AconnR.dat',form='unformatted',access='stream',action='write')
-		write(420)	dreal(Aconn)
-		close(420)
-		!
-		open(unit=425,file='rawData/AconnI.dat',form='unformatted',access='stream',action='write')
-		write(425)	dimag(Aconn)
-		close(425)
+		open(unit=515,file='rawData/wSprd.dat',form='unformatted',access='stream',action='write')
+		write(515)	wCent
+		close(515)
 		!
 		!
 		return
@@ -178,26 +197,24 @@ module output
 
 	subroutine writePolFile(pEl, pIon, pTot, pElA )
 		real(dp),		intent(in)		:: pEl(2), pIon(2), pTot(2), pElA(2)
-
-
-		open(unit=500,file='polOutput.txt',action='write')
-		write(500,*)"**************POLARIZATION OUTPUT FILE**********************"
-		write(500,*)"*"
-		write(500,*)"*"
-		write(500,*)"*"
-		write(500,*)"*"
-		write(500,*)"ZION:"
-		write(500,*) Zion
-		write(500,*)"*"
-		write(500,*)"*"
-		write(500,*)"POL:"
-		write(500,'(a,f16.12,a,f16.12,a)')	"pEl = (",	pEl(1) ,	", ",	pEl(2),		")"
-		write(500,'(a,f16.12,a,f16.12,a)')	"pElA= (",	pElA(1),	", ",	pElA(2),	")"
-		write(500,'(a,f16.12,a,f16.12,a)')	"pIon= (",	pIon(1),	", ",	pIon(2),	")"
-		write(500,'(a,f16.12,a,f16.12,a)')	"pTot= (",	pTot(1),	", ",	pTot(2),	")"
-		
-
-		close(500)
+		!	
+		!	
+		open(unit=600,file='polOutput.txt',action='write')
+		write(600,*)"**************POLARIZATION OUTPUT FILE**********************"
+		write(600,*)"*"
+		write(600,*)"*"
+		write(600,*)"*"
+		write(600,*)"*"
+		write(600,*)"ZION:"
+		write(600,*) Zion
+		write(600,*)"*"
+		write(600,*)"*"
+		write(600,*)"POL:"
+		write(600,'(a,f16.12,a,f16.12,a)')	"pEl = (",	pEl(1) ,	", ",	pEl(2),		")"
+		write(600,'(a,f16.12,a,f16.12,a)')	"pElA= (",	pElA(1),	", ",	pElA(2),	")"
+		write(600,'(a,f16.12,a,f16.12,a)')	"pIon= (",	pIon(1),	", ",	pIon(2),	")"
+		write(600,'(a,f16.12,a,f16.12,a)')	"pTot= (",	pTot(1),	", ",	pTot(2),	")"
+		close(600)
 		!
 		return
 	end

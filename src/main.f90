@@ -12,7 +12,7 @@ program main
 	use wannier	   , only: isNormal,calcWcent, calcWsprd,calc0ElPol , &
 							genUnkW, calcConn, calcPolViaA  !,bandInterpol,gaugeUnk, calcConnViaK, gaugeConnToHam
 	!
-	use output	   , only:		writeMeshInfo, writeMeshBin, writeWannFiles,writePolFile,& 
+	use output	   , only:		writeMeshInfo, writeMeshBin, writeWaveFunc, writeWannFiles,writePolFile,& 
 								printTiming	!printMat, printInp, printWannInfo,writeSysInfo  
 
 
@@ -37,12 +37,12 @@ program main
     call cpu_time(aT0)
 	call readInp()
 	!
-	allocate(		wnF( 	nR, nSC, nWfs	)		)
-	allocate(		unk(	nR, nK, nWfs	)		) 
-	allocate(		Uh(		nWfs, nWfs,	nK	)		)
-	allocate(		Aconn(	2,nWfs, nK)		)
-	allocate(		wCent(	2, nWfs			)		)
-	allocate(		wSprd(	2, nWfs			)		)
+	allocate(			wnF( 		nR		, 	nSC		, nWfs	)				)
+	allocate(			unk(		nR		, 	nK		, nWfs	)				) 
+	allocate(			Uh(			nWfs	, 	nWfs	,	nK	)				)
+	allocate(			Aconn(		2		,	nK		, nWfs	)				)
+	allocate(			wCent(		2		, 	nWfs			)				)
+	allocate(			wSprd(		2		, 	nWfs			)				)
 
 	!
 	call cpu_time(aT1)
@@ -59,13 +59,6 @@ program main
 	write(*,*)"[main]: done solving Schroedinger eq."
 	kT = kT1-kT0
 
-
-	if( .not. isNormal(wnF) ) then
-		write(*,*)"[main]: the used Wannier functions are not properly normalized"
-	else
-		write(*,*)"[main]: Wannier functions in home unit cell are properly normalized"
-	end if
-
 	
 
 
@@ -73,7 +66,17 @@ program main
 
 	
 	!!WANNIER CENTERS & POLARIZATION
+	write(*,*)"*"
+	write(*,*)"*"
+	write(*,*)"*"
+	write(*,*)"*"
 	write(*,*)"[main]:**************************WANNIER CENTERS & POLARIZATION*************************"
+	if( .not. isNormal(wnF) ) then
+		write(*,*)"[main]: the used Wannier functions are not properly normalized"
+	else
+		write(*,*)"[main]: Wannier functions in home unit cell are properly normalized"
+	end if
+
 	call cpu_time(wT0)
 	call calcWcent(wnF,	wCent)
 	call calcWsprd(wnF, wCent, wSprd)
@@ -86,24 +89,37 @@ program main
 	call cpu_time(wT1)
 	wT = wT1 - wT0
 
+
+
+
 	!OUTPUTING RESULTS SECTION
 	write(*,*)"[main]: everything done, start writing results"
+
 	call cpu_time(oT0)
 	
 	!call writeSysInfo() 
 	call writeMeshInfo() 
 	call writeMeshBin()
-	call writeWannFiles(wnF, wCent, wSprd, Aconn)			!call writeWannFiles(gnr, wnF, wCent, wSprd, Aconn, unkW)
+	call writeWaveFunc(unk, Aconn)
+	call writeWannFiles(wnF, wCent, wSprd)			!call writeWannFiles(gnr, wnF, wCent, wSprd, Aconn, unkW)
 	call writePolFile(pEl, pIon, pTot, pElViaA )
 	
 	call cpu_time(oT1)
 	oT = oT1 - oT0
 	
+
+
+
+
 	!TIMING INFO SECTION
 	!call printInp()
 	!call printWannInfo(wCent, wSprd, pEl, pIon, pTot, pElViaA)
 	call cpu_time(mastT1)
 	mastT= mastT1-mastT0
+	write(*,*)"*"
+	write(*,*)"*"
+	write(*,*)"*"
+	write(*,*)"*"
 	write(*,*) '**************TIMING INFORMATION************************'
 	call printTiming(aT, kT, wT, oT, mastT)
 

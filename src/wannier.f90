@@ -1,7 +1,7 @@
 module wannier
 	!contains subroutines for working with existing wannier functions
 	!	center calculations, etc. 
-	use mathematics,	only:	dp, PI_dp,i_dp, myExp, nIntegrate
+	use mathematics,	only:	dp, PI_dp, i_dp, myExp, nIntegrate
 	use sysPara, 		only: 	readInp, insideAt, getKindex, getRindex, &
 									dim, aX, aY,vol, nAt, atR, atPos, atPot,&
 									nG, nG0, Gcut, nK, nKx, nKy,  nWfs, nSC, nSCx, nSCy, nR, nRx, nRy, R0, dx, dy, dkx, dky, &
@@ -220,12 +220,12 @@ module wannier
 		! see Mazari, Vanderbilt PRB.56.12847 (1997)
 		!
 		complex(dp),	intent(in)		:: unk(:,:,:)		!unk(	nR, nK, nWfs/nG	)
-		complex(dp),	intent(out)		:: A(:,:,:)			!A(	2, nWfs, nK	)	
+		complex(dp),	intent(out)		:: A(:,:,:)			!Aconn(	2,nK, nWfs)		)	
 		complex(dp)						:: Mxl, Mxr, Myl, Myr, M, one
 		integer							:: n, Z, ki, kx, ky, kxl, kxr, kyl, kyr
 		real(dp)						:: thres, wbx,wby, bxl(2), bxr(2), byl(2), byr(2) !for nearest neighbours, assuming cubic mesh
 		!
-		thres	= 1e-10_dp
+		thres	= 1e-3_dp
 		A 		= dcmplx(0.0_dp)
 		Z 		= 4	!amount of nearest neighbours( 2 for 2D cubic unit cell)
 		wbx 	= 3.0_dp / 		( real(Z,dp) * dkx**2 )
@@ -246,32 +246,45 @@ module wannier
 			do kx = 1, nKx
 				kxl	= getLeft(kx,nKx)
 				kxr	= getRight(kx,nKx)
-
+				!
 				do ky = 1, nKy
 					kyl	= getLeft(ky,nKy)
 					kyr = getRight(ky,nKy)
 					ki	= getKindex(kx,ky)
 					!
+					!OVERLAP TO NEAREST NEIGHBOURS
 					one = overlap(	n, 		ki		, 		ki					, unk	)
 					Mxl	= overlap(	n, 		ki		, getKindex( kxl, ky ) 		, unk	) 
 					Mxr	= overlap(	n, 		ki		, getKindex( kxr, ky )		, unk	)
 					Myl	= overlap(	n, 		ki		, getKindex( kx ,kyl )		, unk	)
 					Myr	= overlap(	n, 		ki		, getKindex( kx ,kyr )		, unk	)
 					!
-					A(:,n,ki) = A(:,n,ki) + wbx * bxl * ( Mxl - one )
-					A(:,n,ki) = A(:,n,ki) + wbx * bxr * ( Mxr - one )
-					A(:,n,ki) = A(:,n,ki) + wby * byl * ( Myl - one )
-					A(:,n,ki) = A(:,n,ki) + wby * byr * ( Myr - one )
+					!write(*,'(a,f15.12,a,f15.12)')"[calcConn]: Mxl=",dreal(Mxl),"+i*",dimag(Mxl)
+					!FD SUM OVER NEAREST NEIGHBOURS
+					A(:,ki,n) = A(:,ki,n) + wbx * bxl(:) * i_dp * ( Mxl - one )
+					A(:,ki,n) = A(:,ki,n) + wbx * bxr(:) * i_dp * ( Mxr - one )
+					A(:,ki,n) = A(:,ki,n) + wby * byl(:) * i_dp * ( Myl - one )
+					A(:,ki,n) = A(:,ki,n) + wby * byr(:) * i_dp * ( Myr - one )
+					!FD SUM OVER NEAREST NEIGHBOURS
+					!A(1,ki,n) = A(1,ki,n) + wbx * bxl(1) * i_dp * ( Mxl - one )
+					!A(2,ki,n) = A(2,ki,n) + wbx * bxl(2) * i_dp * ( Mxl - one )
+					!A(1,ki,n) = A(1,ki,n) + wbx * bxr(1) * i_dp * ( Mxr - one )
+					!A(2,ki,n) = A(2,ki,n) + wbx * bxr(2) * i_dp * ( Mxr - one )
+					!A(1,ki,n) = A(1,ki,n) + wby * byl(1) * i_dp * ( Myl - one )
+					!A(2,ki,n) = A(2,ki,n) + wby * byl(2) * i_dp * ( Myl - one )
+					!A(1,ki,n) = A(1,ki,n) + wby * byr(1) * i_dp * ( Myr - one )
+					!A(2,ki,n) = A(2,ki,n) + wby * byr(2) * i_dp * ( Myr - one )
 
+					!
 					if(abs( abs(one) - 1.0_dp ) > thres ) then
 						write(*,'(a,i2,a,i7,a,f16.8,a,f16.8)')	"[calcConn]: n=",n," unk normalization problem at ki=",ki,&
 													" one=",dreal(one),"+i*",dimag(one)
 					end if
 				end do
 			end do
-		
-
 		end do
+		!
+		!
 		return
 	end
 
@@ -287,8 +300,8 @@ module wannier
 		integer							:: xi,yi,ri,rloc, nRx1, nRy1, nR1
 		!
 		!Set integration range to first unit cell
-		nRx1 	= mod(nRx, nSCx)
-		nRy1 	= mod(nRy, nSCy)
+		nRx1 	= int(		real(nRx,dp) / real(nSCx,dp)		)
+		nRy1 	= int(		real(nRy,dp) / real(nSCy,dp)		)
 		nR1		= nRx1 * nRy1 
 		allocate(	f(nR1)	)
 		!
@@ -299,11 +312,14 @@ module wannier
 				ri		= getRindex(xi,yi)			!overall index, to get correct position from unk
 				rloc 	= (yi-1) * nRx1 + xi		!for mapping to f array
 				f(rloc)	= dconjg( unk(ri,ki,n) ) * unk(ri,knb,n)
+				!write(*,'(a,f10.6,a,f10.6)')	"[overlap] f=",dreal(f(rloc)),"+i*",dimag(f(rloc))
 			end do
 		end do
 		!
 		!integrate
 		overlap = nIntegrate(nR1, nRx1, nRy1, dx, dy, f	)
+		
+		!write(*,'(a,f10.6,a,f10.6)')"[overlap]=",dreal(overlap),"+i*",dimag(overlap)
 		!
 		!
 		return
@@ -319,23 +335,34 @@ module wannier
 		real(dp),		intent(out)		:: pElA(2)
 		complex(dp)						:: val(2)
 		real(dp)						:: thres
-		integer							:: n
+		integer							:: n, ki
 		!
+		val		= dcmplx(0.0_dp)
 		pElA	= 0.0_dp
 		thres	= 1e-10_dp
 		!
+		!SUM OVER K SPACE AND OVER STATES
 		do n 	= 1, nWfs
-			val(1)	= nIntegrate(nK, nKx, nKy, dkx, dky, A(1,n,:)	)
-			val(2)	= nIntegrate(nK, nKx, nKy, dkx, dky, A(2,n,:)	)
+			do ki = 1, nK
+				val(1) = val(1) + A(1,ki,n)
+				val(2) = val(2) + A(2,ki,n)
+			end do
+			!val(1)	= nIntegrate(nK, nKx, nKy, dkx, dky, A(1,n,:)	)
+			!val(2)	= nIntegrate(nK, nKx, nKy, dkx, dky, A(2,n,:)	)
 		end do
+		!NORMALIZE
+		val(1) = val(1) / real(nK,dp)
+		val(2) = val(2) / real(nK,dp)
+		!
+		!HARVEST
+		pElA(1) = dreal( val(1)	)
+		pElA(2) = dreal( val(2)	)
+		!
+		!
+		!DEBUGGING
 		if(		dimag( val(1) ) > thres 	.or. 	dimag( val(2) ) > thres		) then
 			write(*,*)"[calcPolViaA]: non zero imaginary part of polarization"
 		end if
-		!
-		pElA	= dreal( val )
-		pElA	= pElA / real(nK,dp)
-		!
-		!
 		return
 	end
 

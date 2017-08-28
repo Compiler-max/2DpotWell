@@ -20,8 +20,8 @@ tomorrow do:
 	
 
 	- connection:
-		via projected states directly
-		via unk generated from wannier functions
+		via projected states directly -> currently zero check this
+		via unk generated from wannier functions (INTERPOLATION)
 
 
 	-polarization:
