@@ -72,10 +72,10 @@ program main
 	
 	!!WANNIER CENTERS & POLARIZATION
 	call cpu_time(wT0)
-	!call calcWcent(wnF,	wCent)
-	!call calcWsprd(wnF, wCent, wSprd)
-	!call calc0ElPol(wCent, pEl, pIon, pTot)
-	!write(*,*)"[main]: done with center polarization calc"
+	call calcWcent(wnF,	wCent)
+	call calcWsprd(wnF, wCent, wSprd)
+	call calc0ElPol(wCent, pEl, pIon, pTot)
+	write(*,*)"[main]: done with center polarization calc"
 
 	
 	!call calcConnViaK(unkW, Aconn)   

@@ -4,20 +4,22 @@ module sysPara
 	use m_config
 	implicit none
 	private
-	public :: 	readInp, insideAt, getRindex, &
+	public :: 	readInp, insideAt, getRindex, getKindex, &
 				dim, aX, aY, vol, nAt, relXpos, relYpos, atRx, atRy, atPot,&
-				nG, nG0, Gcut, nK, nKx, nKy, nSC, nR, nRx, nRy, R0,  dx, dy, dkx, dky, &
+				nG, nG0, Gcut, nK, nKx, nKy, nKxW, nKyW, nKw, nSC, nSCx, nSCy, nR, nRx, nRy, R0,  dx, dy, dkx, dky, dkxW, dkyW, &
 				gaugeSwitch, nWfs, &
-				Gvec, atPos, atR, kpts, rpts, Rcell, trialOrbVAL, trialOrbSw, Zion
+				Gvec, atPos, atR, kpts, rpts, Rcell, kptsW, trialOrbVAL, trialOrbSw, Zion, &
+				Bext
 
 
 	!
 	integer  										:: 	dim=2, nAt=0, nG=11, nG0,  nKx=1, nKy=1,nK , nSCx=1, nSCy=1,& 
+														nKxW=1, nKyW=1, nKw, &
 														nRx=10, nRy=10, nR, R0=1, nWfs=1, nSC, gaugeSwitch, trialOrbSw
 	real(dp) 										::	aX=0.0_dp, aY=0.0_dp,vol=0.0_dp, Gcut=2*PI_dp,& 
-														dx, dy, dkx, dky											
+														dx, dy, dkx, dky, dkxW, dkyW, B0, Bext(3)											
 	real(dp),	allocatable,	dimension(:)		::	relXpos, relYpos, atRx, atRy, atPot, trialOrbVAL, Zion
-	real(dp),	allocatable,	dimension(:,:)		::	Gvec, atPos, atR, kpts, rpts, Rcell 
+	real(dp),	allocatable,	dimension(:,:)		::	Gvec, atPos, atR, kpts, rpts, Rcell, kptsW 
 
 
 
@@ -65,6 +67,11 @@ module sysPara
 		call CFG_add_get(my_cfg,	"wann%nWfs"			,	nWfs	 	,	"# wannier functions to generate"		)
 		call CFG_add_get(my_cfg,	"wann%trialOrbSw"	,	trialOrbSw	,	"switch different trial orbitals"		)
 		call CFG_add_get(my_cfg,	"wann%R0"			,	R0			,	"home unit cell used for wann cent calc")
+		call CFG_add_get(my_cfg,	"wann%nKxW"			,	nKxW		,	"# k x points of interpolation mesh"	)
+		call CFG_add_get(my_cfg,	"wann%nKyW"			,	nKyW		,	"# k x points of interpolation mesh"	)
+		![perturbation]
+		call CFG_add_get(my_cfg,	"perturbation%B0"	,	B0			,	"scaling fact. of ext. magnetic field"	)
+		call CFG_add_get(my_cfg,	"perturbation%Bext"	,	Bext		,	"vector of ext. magnetic field"			)
 
 		dim = 	2
 		vol	=	aX * aY
@@ -72,6 +79,9 @@ module sysPara
 		nK 	= 	nKx 	*	nKy
 		nR 	= 	nRx 	*	nRy
 		nSC =	nSCx	*	nSCy
+		nKw =	nKxW	*	nKyW
+		Bext=	B0 * Bext
+
 		!basis
 		allocate(	Gvec(dim,nG)		)
 		!atoms
@@ -88,6 +98,7 @@ module sysPara
 		allocate(	kpts(dim,nK)		)
 		allocate(	rpts(dim,nR)		)
 		allocate(	Rcell(dim,nSC)		)
+		allocate(	kptsW(dim,nKw)		)
 		
 		![atoms]
 		call CFG_add_get(my_cfg,	"atoms%relXpos"		,	relXpos		,	"relative positions in unit cell"		)
@@ -107,6 +118,7 @@ module sysPara
 		call popAtPos()
 		call popAtR()
 		call calcRcell()
+		call kWmeshGen()
 
 		return
 	end
@@ -142,13 +154,19 @@ module sysPara
 
 	integer function getRindex(xi,yi)
 		integer,	intent(in)		:: xi, yi
-
+		!
 		getRindex = (yi-1) * nRx + xi
 		return
 	end
 
 
-
+	integer function getKindex(kx,ky)
+		integer,	intent(in)		:: kx, ky
+		!
+		getKindex = (ky-1) * nKx + kx
+		return
+	end
+	
 
 
 
@@ -164,7 +182,7 @@ module sysPara
 
 !privat:
 	subroutine kmeshGen()
-		!generates the k point mesh
+		!generates the (coarse) k point mesh for solving electronic structure
 		integer		:: kIx, kIy, kI
 		real(dp)	:: kxMin, kyMin
 		!
@@ -178,6 +196,28 @@ module sysPara
 				kI	=	(kIy-1) * nKx + kIx
 				kpts(1,kI)	=	kxMin + (kIx-1) * dkx  		!x component
 				kpts(2,kI)	=	kyMin + (kIy-1) * dky  		!y component
+			end do
+		end do
+		!
+		return
+	end
+
+
+	subroutine kWmeshGen()
+		!generates the (fine) k point mesh for wannier interpolation
+		integer		:: kIx, kIy, kI
+		real(dp)	:: kxMin, kyMin
+		!
+		kxMin	= -1.0_dp * PI_dp /  aX
+		dkxW	=  2.0_dp * PI_dp / (aX * nKxW)
+		kyMin	= -1.0_dp * PI_dp /  aY
+		dkyW	=  2.0_dp * PI_dp / (aY * nKyW)
+		!
+		do kIy = 1, nKyW
+			do kIx = 1, nKxW
+				kI	=	(kIy-1) * nKxW + kIx
+				kptsW(1,kI)	=	kxMin + (kIx-1) * dkxW  		!x component
+				kptsW(2,kI)	=	kyMin + (kIy-1) * dkyW  		!y component
 			end do
 		end do
 		!
