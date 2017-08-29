@@ -1,17 +1,18 @@
 program main
 	!TWO dimensional potential well code
-	use mathematics, only: dp, PI_dp, eigSolver
+	use mathematics, 	only: 		dp, PI_dp, eigSolver
 	!
-	use sysPara    , only: 		readInp, &
+	use sysPara    , 	only: 		readInp, &
 									aX, aY,vol, nAt, relXpos, relYpos, atRx, atRy, atPot,&
 									nG, Gcut, nK, nWfs, nSC, nR, dx, dy, dkx, dky, &
 									Gvec, atPos, atR, kpts, rpts
 	!
-	use potWellModel, only: 		solveHam 
+	use potWellModel, 	only: 		solveHam 
 	!
-	use wannier	   , only: isNormal			!, calcWcent, calcWsprd,calc0ElPol, &
+	use wannier	   ,	only: 		isNormal			!, calcWcent, calcWsprd,calc0ElPol, &
 	!						genWUnk ,bandInterpol,gaugeUnk, calcConnViaK, gaugeConnToHam, calcPolViaA
-	!!
+	use semiClassics,	only:		dummy
+	!
 	use output	   , only:		writeMeshInfo, writeMeshBin, writeWannFiles, printTiming	!printMat, printInp, printWannInfo,& 
 	!						writeSysInfo  
 	implicit none

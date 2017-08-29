@@ -193,7 +193,7 @@ module wannier
 		!
 		do xi = 1, nR	 
 			if(dimag( dconjg(wnF(xi,R1,n)) * wnF(xi,R2,m)) > thres  ) then
-				write(*,*)"[wXw]: waning wnf overlap not strictly real"
+				write(*,*)"[wXw]: waning wnf overlap not strictly real =",dimag( dconjg(wnF(xi,R1,n)) * wnF(xi,R2,m))
 			end if
 			fx(xi)	=  rpts(1,xi)		*	dreal( dconjg(wnF(xi,R1,n)) * wnF(xi,R2,m)  )
 			fy(xi)	=  rpts(2,xi)		*	dreal( dconjg(wnF(xi,R1,n)) * wnF(xi,R2,m)  )

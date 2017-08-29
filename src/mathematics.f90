@@ -6,7 +6,7 @@ module mathematics
 	private
 
 
-	public :: dp, PI_dp, i_dp, myExp, Cangle, nIntegrate, isUnit, isIdentity, isHermitian, SVD, eigSolver, myMatInvSqrt
+	public :: dp, PI_dp, i_dp, myExp, Cangle, myLeviCivita, nIntegrate, isUnit, isIdentity, isHermitian, SVD, eigSolver, myMatInvSqrt
 
 
 	interface nIntegrate
@@ -63,12 +63,35 @@ module mathematics
 	end
 
 
+	integer function myLeviCivita(i,j,k)
+		!Hard coded Levi Civita tensor
+		integer,		intent(in)		:: i,j,k
+		logical							:: even, odd
+		!
+		!
+		even	= (i==1 .and. j==2 .and. k==3) .or. (i==2 .and. j==3 .and. k==1) .or. (i==3 .and. j==1 .and. k==2)
+		odd		= (i==3 .and. j==2 .and. k==1) .or. (i==1 .and. j==3 .and. k==2) .or. (i==2 .and. j==1 .and. k==3)
+		!
+		if(even) then
+			myLeviCivita	=  1
+		else if (odd) then
+			myLeviCivita	= -1
+		else
+			myLeviCivita	=  0
+		end if
+		!
+		!
+		return
+	end
+
+
+
 	subroutine SVD(Mat, U,s,Vt)
 		!single value decomposition performed with zgesvd:
 		!https://software.intel.com/en-us/node/469236
-		complex(dp),	intent(in)	:: Mat(:,:)
-		complex(dp),	intent(out) :: U(:,:), Vt(:,:)
-		real(dp),		intent(out) :: s(:)
+		complex(dp),	intent(in)		:: Mat(:,:)
+		complex(dp),	intent(out) 	:: U(:,:), Vt(:,:)
+		real(dp),		intent(out) 	:: s(:)
 		character*1						:: jobu, jobvt
 		integer							:: m, n, lda, sda, ldu, ldvt, lwork, rworkS, info
 		complex(dp),	allocatable 	:: A(:,:), work(:), rwork(:)
