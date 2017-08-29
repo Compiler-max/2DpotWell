@@ -22,19 +22,20 @@ module potWellModel
 
 	contains
 !public:
-	subroutine solveHam(U, wnF, unkW)
+	subroutine solveHam(U, wnF, unkW, En)
 		!solves Hamiltonian at each k point
 		!also generates the Wannier functions on the fly (sum over all k)
 		complex(dp),	intent(out)		::	U(:,:,:), wnF(:,:,:), unkW(:,:,:)		!Uh(  nWfs	, nWfs,		nK		)	
 																				!wnF( nR	, nSupC,	nWfs	)	
 																				!unkW(nR	, nKpts,	nWfs	)
+		real(dp),		intent(out)		::	En(:,:)																	
 		complex(dp),	allocatable		::	Hmat(:,:), bWf(:,:), lobWf(:,:), gnr(:,:)
-		real(dp),		allocatable		::	En(:), bwfR(:,:), bwfI(:,:)	 
+		real(dp),		allocatable		::	EnT(:), bwfR(:,:), bwfI(:,:)	 
 		integer							:: 	ki, xi , n
 		real(dp)						::	kVal(dim)
 		!
 		allocate(	Hmat(	nG,	nG	)			)
-		allocate(	En(		nG		)			)
+		allocate(	EnT(		nG		)			)
 		allocate(	bWf(	nR, nG	)			)
 		allocate(	bWfR(	nR, nG	)			)
 		allocate(	bWfI(	nR, nG	)			)
@@ -56,8 +57,9 @@ module potWellModel
 			kVal	=	kpts(:,ki)
 			!
 			call populateH(kVal, Hmat)	
-			call eigSolver(Hmat, En)
-			write(200)	En
+			call eigSolver(Hmat, EnT)
+			write(200)	EnT
+			En(:,ki) = EnT(1:nWfs) 
 			!
 			call gaugeCoeff(kVal, Hmat)
 			call genBlochWf(ki, Hmat, bWf)
@@ -70,7 +72,7 @@ module potWellModel
 			
 			call genWannF(ki, lobWf, wnF)
 
-			call genUnk(ki, lobWf, unkW(:, ki, :))
+			call genUnk(ki, bWf, unkW(:, ki, :))
 			!
 		end do
 		close(200)
@@ -323,10 +325,10 @@ module potWellModel
 	end
 
 
-	subroutine genUnk(ki, lobWf, unk)
+	subroutine genUnk(ki, bWf, unk)
 		! generates the lattice periodic part from given bloch wave functions
 		integer,		intent(in)		:: ki
-		complex(dp),	intent(in)		:: lobWf(:,:) !lobWf(	nR, nWfs)
+		complex(dp),	intent(in)		:: bWf(:,:) !lobWf(	nR, nWfs)
 		complex(dp),	intent(out)		:: unk(:,:)   !unk(	nR, nWfs)
 		integer							:: xi, n
 		complex(dp)						:: phase
@@ -334,7 +336,7 @@ module potWellModel
 		do n = 1, nWfs
 			do xi = 1, nR
 				phase = myExp( -1.0_dp 	*	 dot_product( kpts(:,ki) , rpts(:,xi)	) 			)
-				unk(xi,n) = phase * loBwf(xi,n)
+				unk(xi,n) = phase * Bwf(xi,n)
 			end do
 		end do
 		!

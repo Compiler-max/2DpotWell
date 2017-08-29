@@ -18,9 +18,11 @@ tomorrow do:
 
 
 	
+	- curvature:
+		calcualation routine
 
 	- connection:
-		via projected states directly -> currently zero check this
+		via projected states directly -> still not the correct value, try interpolation, might be related to bad FD on coarse mesh
 		via unk generated from wannier functions (INTERPOLATION)
 
 

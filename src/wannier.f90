@@ -4,13 +4,15 @@ module wannier
 	use mathematics,	only:	dp, PI_dp, i_dp, myExp, nIntegrate
 	use sysPara, 		only: 	readInp, insideAt, getKindex, getRindex, &
 									dim, aX, aY,vol, nAt, atR, atPos, atPot,&
-									nG, nG0, Gcut, nK, nKx, nKy,  nWfs, nSC, nSCx, nSCy, nR, nRx, nRy, R0, dx, dy, dkx, dky, &
-									Gvec, atPos, atR, kpts, rpts,Rcell, gaugeSwitch, trialOrbSw, trialOrbVAL, Zion
+									nG, nG0, Gcut, &
+									nK, nKx, nKy, nKw, nKxW, nKyW,  nWfs, nSC, nSCx, nSCy, dkx, dky, &
+									nR, nRx, nRy, R0, dx, dy, &
+									Gvec, atPos, atR, kpts, kptsW, rpts,Rcell, gaugeSwitch, trialOrbSw, trialOrbVAL, Zion
 
 	implicit none
 
 	private
-	public :: isNormal, calcWcent, calcWsprd, calc0ElPol, genUnkW, calcConn, calcPolViaA 
+	public :: isNormal, calcWcent, calcWsprd, calc0ElPol, genUnkW, calcConn, calcPolViaA, interpConnCurv
 
 	contains
 
@@ -155,20 +157,24 @@ module wannier
 		pE	 	= 0.0_dp
 		pI		= 0.0_dp
 		!
+		!ELECTRONIC
 		do n = 1,size(wCent,2)
-			cent(1) = dmod(wCent(1,n),aX) !get current center by projection into first unit cell
-			cent(2)	= dmod(wCent(2,n),aY)
-			!
-			write(*,'(a,f8.5,a,f8.5,a,f8.6,a,f8.6,a)')"[calc0ElPol]: Wcent = (",wCent(1,n),", ",wCent(2,n),") modified cent = (", cent(1),", ",cent(2),")"
-			pE = pE + cent					!electron contribution
+			!cent(1) = dmod(wCent(1,n),aX) !get current center by projection into first unit cell
+			!cent(2)	= dmod(wCent(2,n),aY)
+			!!
+			!write(*,'(a,f8.5,a,f8.5,a,f8.6,a,f8.6,a)')"[calc0ElPol]: Wcent = (",wCent(1,n),", ",wCent(2,n),") modified cent = (", cent(1),", ",cent(2),")"
+			pE = pE + wCent(:,n)				
 		end do
+		!IONIC
 		do at = 1, nAt
-			pI = pI + Zion(at) * atPos(:,at) 	!Ion contribution  
+			pI = pI + Zion(at) * atPos(:,at) 
 		end do
-		!
+		!NORMALIZE
 		pE = -pE / vol
 		pI = pI / vol
-		pT =pI + pE				!Total											
+		!
+		!TOTAL
+		pT =pI + pE												
 		!
 		return
 	end
@@ -176,11 +182,10 @@ module wannier
 
 
 	!INTERPOLATION
-	subroutine genUnkW(wnF,kpts, unk)
+	subroutine genUnkW(wnF, unk)
 		!generates lattice periodic functions unk from the Wannier functions wnf
 		!	currently uses the intial k points again, but could also be interpolated into coarse mesh
 		complex(dp),	intent(in)		:: wnF(:,:,:)			!	wnF( 	nR, nSC, nWfs	)	
-		real(dp),		intent(in)		:: kpts(:,:)
 		complex(dp),	intent(out)		:: unk(:,:,:)
 		integer							:: n, R, ki, xi
 		real(dp)						:: cellP
@@ -189,8 +194,8 @@ module wannier
 		!GENERATE BLOCH LIKE FUNCTIONS
 		do n = 1, nWfs
 			do R = 1, nSC
-				do ki = 1, size(unk,2)
-					cellP = dot_product(	kpts(:,ki) , 	Rcell(:,R)	)
+				do ki = 1, nKw
+					cellP = dot_product(	kptsW(:,ki) , 	Rcell(:,R)	)
 					do xi = 1, nR
 						unk(xi,ki,n) = unk(xi,ki,n) + myExp(cellP) * wnF(xi,R,n) 	  
 					end do
@@ -199,7 +204,7 @@ module wannier
 		end do
 		!EXTRACT LATTICE PERIODIC PART
 		do n = 1, nWfs
-			do ki = 1, nK
+			do ki = 1, nKw
 				do xi = 1, nR
 					cellP			= -1.0_dp * dot_product( kpts(:,ki) ,	rpts(:,xi)	)	
 					unk(xi,ki,n)	= myExp(cellP) * unk(xi,ki,n)
@@ -213,13 +218,16 @@ module wannier
 
 
 
-	subroutine calcConn(unk, A)
+	subroutine calcConn(unk,nxk, nyk, A)
 		!finite difference on lattice periodic unk to calculate the Berry connection A
-		!	A_n(k) = <u_n(k)|i \nabla_k|u_n(k)>
+		!	A_n(k) 	= <u_n(k)|i \nabla_k|u_n(k)>
+		!		 	= i  <u_n(k)| \sum_b{ w_b * b * [u_n(k+b)-u_n(k)]}
+		!			= i \sum_b{		w_b * b * [  <u_n(k)|u_n(k+b)> -  <u_n(k)|u_n(k)>]		}
 		!
-		! see Mazari, Vanderbilt PRB.56.12847 (1997)
+		! see Mazari, Vanderbilt PRB.56.12847 (1997), Appendix B
 		!
-		complex(dp),	intent(in)		:: unk(:,:,:)		!unk(	nR, nK, nWfs/nG	)
+		complex(dp),	intent(in)		:: unk(:,:,:)		!unk(	nR, nK/nKw, nWfs/nG	)
+		integer,		intent(in)		:: nxk, nyk
 		complex(dp),	intent(out)		:: A(:,:,:)			!Aconn(	2,nK, nWfs)		)	
 		complex(dp)						:: Mxl, Mxr, Myl, Myr, M, one
 		integer							:: n, Z, ki, kx, ky, kxl, kxr, kyl, kyr
@@ -231,7 +239,7 @@ module wannier
 		wbx 	= 3.0_dp / 		( real(Z,dp) * dkx**2 )
 		wby 	= 3.0_dp /		( real(Z,dp) * dky**2 )
 		!b vector two nearest X neighbours:
-		bxl(1) 	= -dkx
+		bxl(1) 	= -dkx				
 		bxl(2)	= 0.0_dp
 		bxr(1) 	= +dkx
 		bxr(2)	= 0.0_dp
@@ -243,21 +251,21 @@ module wannier
 
 
 		do n = 1, nWfs
-			do kx = 1, nKx
-				kxl	= getLeft(kx,nKx)
-				kxr	= getRight(kx,nKx)
+			do kx = 1, nxk
+				kxl	= getLeft(kx,nxk)
+				kxr	= getRight(kx,nxk)
 				!
-				do ky = 1, nKy
-					kyl	= getLeft(ky,nKy)
-					kyr = getRight(ky,nKy)
+				do ky = 1, nyk
+					kyl	= getLeft(ky,nyk)
+					kyr = getRight(ky,nyk)
 					ki	= getKindex(kx,ky)
 					!
 					!OVERLAP TO NEAREST NEIGHBOURS
-					one = overlap(	n, 		ki		, 		ki					, unk	)
-					Mxl	= overlap(	n, 		ki		, getKindex( kxl, ky ) 		, unk	) 
-					Mxr	= overlap(	n, 		ki		, getKindex( kxr, ky )		, unk	)
-					Myl	= overlap(	n, 		ki		, getKindex( kx ,kyl )		, unk	)
-					Myr	= overlap(	n, 		ki		, getKindex( kx ,kyr )		, unk	)
+					one = UNKoverlap(	n, 		ki		, 		ki					, unk	)
+					Mxl	= UNKoverlap(	n, 		ki		, getKindex( kxl, ky ) 		, unk	) 
+					Mxr	= UNKoverlap(	n, 		ki		, getKindex( kxr, ky )		, unk	)
+					Myl	= UNKoverlap(	n, 		ki		, getKindex( kx ,kyl )		, unk	)
+					Myr	= UNKoverlap(	n, 		ki		, getKindex( kx ,kyr )		, unk	)
 					!
 					!write(*,'(a,f15.12,a,f15.12)')"[calcConn]: Mxl=",dreal(Mxl),"+i*",dimag(Mxl)
 					!FD SUM OVER NEAREST NEIGHBOURS
@@ -266,15 +274,11 @@ module wannier
 					A(:,ki,n) = A(:,ki,n) + wby * byl(:) * i_dp * ( Myl - one )
 					A(:,ki,n) = A(:,ki,n) + wby * byr(:) * i_dp * ( Myr - one )
 					!FD SUM OVER NEAREST NEIGHBOURS
-					!A(1,ki,n) = A(1,ki,n) + wbx * bxl(1) * i_dp * ( Mxl - one )
-					!A(2,ki,n) = A(2,ki,n) + wbx * bxl(2) * i_dp * ( Mxl - one )
-					!A(1,ki,n) = A(1,ki,n) + wbx * bxr(1) * i_dp * ( Mxr - one )
-					!A(2,ki,n) = A(2,ki,n) + wbx * bxr(2) * i_dp * ( Mxr - one )
-					!A(1,ki,n) = A(1,ki,n) + wby * byl(1) * i_dp * ( Myl - one )
-					!A(2,ki,n) = A(2,ki,n) + wby * byl(2) * i_dp * ( Myl - one )
-					!A(1,ki,n) = A(1,ki,n) + wby * byr(1) * i_dp * ( Myr - one )
-					!A(2,ki,n) = A(2,ki,n) + wby * byr(2) * i_dp * ( Myr - one )
-
+					!A(:,ki,n) = A(:,ki,n) + wbx * bxl(:) * dimag(	log( Mxl ) )
+					!A(:,ki,n) = A(:,ki,n) + wbx * bxr(:) * dimag(	log( Mxr ) )
+					!A(:,ki,n) = A(:,ki,n) + wby * byl(:) * dimag(	log( Myl ) )
+					!A(:,ki,n) = A(:,ki,n) + wby * byr(:) * dimag(	log( Myr ) )
+					!
 					!
 					if(abs( abs(one) - 1.0_dp ) > thres ) then
 						write(*,'(a,i2,a,i7,a,f16.8,a,f16.8)')	"[calcConn]: n=",n," unk normalization problem at ki=",ki,&
@@ -289,7 +293,51 @@ module wannier
 	end
 
 
-	complex(dp) function overlap(n, ki, knb, unk)
+	subroutine interpConnCurv(wnF, Aconn, Fcurv)
+		!calculates the Berry connection from the Wannier centers
+		!
+		!	A_n(k)		= \sum_R exp^{i k.R} <0n|r|Rn>
+		!
+		!and the connection via
+		!
+		! 	F_a,b_n(K)	= d_a A_b - d_b A_a
+		!
+		!where the derivatives are evaluated analytically
+		!	d_a A_b 	= d_a \sum_R exp^{i k.R} <0n|r_b|Rn>
+		!				= \sum_R (i R_a) exp^{i k.R} <0n|r_b|Rn>
+		!
+		complex(dp),	intent(in)		:: wnF(:,:,:)					 !		wnF( 	nR		, 	nSC		, nWfs	)	
+		complex(dp),	intent(out)		:: Aconn(:,:,:), Fcurv(:,:,:,:)  !		Aconn(	2	,	nK	, nWfs	)		
+		integer							:: n, Ri, ki
+		real(dp)						:: cellP, rExpec(2)
+		!
+		Aconn	= dcmplx(0.0_dp)
+		Fcurv	= dcmplx(0.0_dp)
+		!
+		do n = 1, nWfs
+			do Ri = 1, nSC
+				call wXw(1,Ri,n,n,wnF, rExpec)
+				do ki =1, nKw
+					cellP			= dot_product( 	kptsW(:,ki)	,	Rcell(:,Ri)		)		
+					Aconn(:,ki,n)	= Aconn(:,ki,n) +  myExp(cellP) * dcmplx( rExpec )
+					!xy
+					Fcurv(1,2,ki,n)	= Fcurv(1,2,ki,n) + myExp(cellP) * i_dp * dcmplx( Rcell(1,n) * rExpec(2) )
+					Fcurv(1,2,ki,n)	= Fcurv(1,2,ki,n) - myExp(cellP) * i_dp * dcmplx( Rcell(2,n) * rExpec(1) )
+					!yx
+					Fcurv(2,1,ki,n)	= Fcurv(2,1,ki,n) + myExp(cellP) * i_dp * dcmplx( Rcell(2,n) * rExpec(1) )
+					Fcurv(2,1,ki,n)	= Fcurv(2,1,ki,n) - myExp(cellP) * i_dp * dcmplx( Rcell(1,n) * rExpec(2) )
+				end do
+			end do
+		end do
+		!
+		return
+	end
+
+
+
+
+
+	complex(dp) function UNKoverlap(n, ki, knb, unk)
 		!HELPER for calcConn
 		!calculates the overlap between unk at ki and at a neigbhouring k point knb
 		!	integration only over the first unit cell
@@ -317,7 +365,7 @@ module wannier
 		end do
 		!
 		!integrate
-		overlap = nIntegrate(nR1, nRx1, nRy1, dx, dy, f	)
+		UNKoverlap = nIntegrate(nR1, nRx1, nRy1, dx, dy, f	)
 		
 		!write(*,'(a,f10.6,a,f10.6)')"[overlap]=",dreal(overlap),"+i*",dimag(overlap)
 		!
@@ -331,7 +379,7 @@ module wannier
 		! r_n 	= <0n|r|0n> 
 		!		=V/(2pi)**2 \integrate_BZ <unk|i \nabla_k|unk>
 		!		=V/(2pi)**2 \integrate_BZ A(k)
-		complex(dp),	intent(in)		:: A(:,:,:)			!A(2,	 nWfs, nK	)	
+		complex(dp),	intent(in)		:: A(:,:,:)			!A(2,	 nK, nWfs	)	
 		real(dp),		intent(out)		:: pElA(2)
 		complex(dp)						:: val(2)
 		real(dp)						:: thres
@@ -343,21 +391,21 @@ module wannier
 		!
 		!SUM OVER K SPACE AND OVER STATES
 		do n 	= 1, nWfs
-			do ki = 1, nK
+			do ki = 1, size(A,2)
 				val(1) = val(1) + A(1,ki,n)
 				val(2) = val(2) + A(2,ki,n)
 			end do
-			!val(1)	= nIntegrate(nK, nKx, nKy, dkx, dky, A(1,n,:)	)
-			!val(2)	= nIntegrate(nK, nKx, nKy, dkx, dky, A(2,n,:)	)
 		end do
+		!
 		!NORMALIZE
-		val(1) = val(1) / real(nK,dp)
-		val(2) = val(2) / real(nK,dp)
+		val		= val / real(size(A,2),dp)
 		!
 		!HARVEST
-		pElA(1) = dreal( val(1)	)
-		pElA(2) = dreal( val(2)	)
+		pElA	= dreal( val	) !/ (aX*aY)
 		!
+		!MOD TO FIRST UNIT CELL
+		pElA(1)	= mod( pElA(1), aX )
+		pElA(2) = mod( pElA(2), aY )
 		!
 		!DEBUGGING
 		if(		dimag( val(1) ) > thres 	.or. 	dimag( val(2) ) > thres		) then

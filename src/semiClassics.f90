@@ -1,0 +1,183 @@
+module semiClassics
+	!this module uses a semiclassic approach to calculate the first ordrer correction
+	!	to the polariztion induced by a perturbive magnetic field
+	! 	see Niu PRL 112, 166601 (2014)
+	use mathematics,	only:	dp, PI_dp, i_dp, myExp, myLeviCivita
+	use sysPara,		only:	Bext, nWfs
+	
+	implicit none
+
+
+
+	private
+	!public ::					calcFirstOrdP
+
+
+	contains
+
+
+
+!TODO CHECK INDEXING OF VELO ACONN FCURV AFTER THEY HAVE BEEN CALCULATED
+
+
+!public
+	subroutine	calcFirstOrdP(Fcurv, Aconn, Velo, En, p1)
+		!calculates the first order polarization p1 according to
+		!	P'= -int_dk [0.5 (Curv.Velo)*B_ext + a']
+		complex(dp),	intent(in)		:: 	Fcurv(:,:,:) 	,Aconn(:,:,:), 	Velo(:,:,:,:)		!	Fcurv(3,nKs,nWfs) Velo(3,nWfs,nWfs, nK)	
+		real(dp),		intent(in)		::	En(:,:)				!	En(			nWfs		,	nK)						
+		real(dp),		intent(out)		:: 	p1(3)
+		complex(dp), 	allocatable		::	f(:,:)
+		real(dp)						::	pn(3)
+		real(dp)						:: 	Fmat(3,3)
+		integer							:: 	n, ki
+		!
+		allocate(	f(3,size(Velo,2) )		)
+		p1 = 0.0_dp
+		if(		size(Velo,2) /= size(En,2)		) then
+			write(*,*)"[calcFirstOrdP]: WARNING Energy and connection live on different k meshes!"
+		end if
+		!
+		!
+		do n = 1, size(Velo,3)
+			f 	= dcmplx(0.0_dp)
+			pn	= 0.0_dp
+			!FILL INTEGRATION ARRAY
+			do ki = 1, size(Velo,2)
+				!PHASE SPACE DENSITY CORRECTION
+				f(:,ki)	= f(:,ki) + 0.5_dp * dot_product(		Fcurv(:,ki,n), Velo(:,ki,n,n) 	)		* Bext
+				call calcFmat(n,ki,Velo,En, Fmat)
+				!POSITIONAL SHIFT
+				f(:,ki)	= f(:,ki) + matmul(Fmat, Bext) 
+			end do
+			!INTEGRATE
+			do ki = 1, size(Velo,2)
+				pn = pn + f(:,ki)
+			end do
+			!SUM OVER n
+			p1 = p1 + pn 
+		end do
+		!
+		!
+		!NORMALIZE
+		p1 = p1 / size(Velo,2)
+		!
+		return
+	end
+
+
+!privat
+	subroutine	calcFmat(n0,ki, Velo ,En, Fmat)
+		!calculates the linear response F matrix for magnetic field perturbation
+		!F is derived in the semiclassical wavepacket approach (again see Niu PRL 112, 166601 (2014))
+		integer,		intent(in)		:: n0, ki
+		complex(dp),	intent(in)		:: Velo(:,:,:,:)  !V(3,nWfs,nWfs,nK)
+		real(dp),		intent(in)		:: En(:,:)			!En(nWfs, nK)
+		real(dp),		intent(out)		:: Fmat(:,:)
+		integer							:: i
+		!
+		Fmat = 0.0_dp		
+		call addF2(n0, ki, Velo, En, Fmat)
+		!
+		return
+	end
+
+
+
+	!subroutine	addF1(ki, Fmat)
+	!	integer,		intent(in)		:: ki
+	!	complex(dp),	intent(inout)	:: Fmat(:,:)
+	!	
+	!	return
+	!end
+
+
+	subroutine	addF2(n0,ki, Velo ,En, Fmat)
+		!
+		!	F^(2)_ij = + Re \sum_{n/=0,m/=0} \eps_{j,k,l} * (V^k_nm V^l_m0 V^i_mn) / ( (E0-En)**2 (E0-Em) )
+		!
+		integer,		intent(in)		:: n0, ki
+		complex(dp),	intent(in)		:: Velo(:,:,:,:)  !V(3,nWfs,nWfs,nK)
+		real(dp),		intent(in)		:: En(:,:)			!	En(	nWfs,	nK)	
+		real(dp),		intent(out)		:: Fmat(:,:)
+		complex(dp)						:: Vtmp
+		real(dp)						:: eDiff
+		integer							:: i, j, k, l, n,m
+		!
+		!loop spacial indices
+		do j = 1, 3
+			do i = 1, 3
+				do k = 1, 3
+					do l = 1,3
+						!loop bands
+						do n = 1, size(Velo,2)
+							do m = 1, size(Velo,2) 
+								if( n/=n0 .and. m/=n0) then
+									!VELOCITIES
+									Vtmp		= Velo(k,n,m,ki) * Velo(l,m,n0,ki) * Velo(i,n0,n,ki) 
+									!ENERGIES
+									eDiff		= ( 	En(n0,ki) - En(n,ki)	 )**2 	* 	 ( 	En(n0,ki) - En(m,ki)	)
+									!MATRIX
+									Fmat(i,j) 	= Fmat(i,j) +  myLeviCivita(j,k,l) * dreal(		Vtmp / dcmplx(eDiff)	)
+								end if
+							end do
+						end do
+						!
+						!
+					end do
+				end do
+			end do
+		end do
+		!
+		!
+		return
+	end
+
+
+
+
+	subroutine	addF3(n0,ki, Velo ,En, Fmat)	
+		!
+		!	F^(2)_ij = +- Re \sum_{n/=0} \eps_{j,k,l}  * (v^k_0 V^l_n0 V^i_0n) / ( (E0-En)**3  )
+		!
+		integer,		intent(in)		:: n0, ki
+		complex(dp),	intent(in)		:: Velo(:,:,:,:)  	!V(3,nWfs,nWfs,nK)
+		real(dp),		intent(in)		:: En(:,:)			!En(	nWfs	,	nK)
+		real(dp),		intent(out)		:: Fmat(:,:)
+		complex(dp)						:: Vtmp
+		real(dp)						:: eDiff
+		integer							:: i, j, k, l, n
+		!
+		!loop spacial indices
+		do j = 1, 3
+			do i = 1, 3
+				do k = 1, 3
+					do l = 1,3
+						!loop bands
+						do n = 1, size(Velo,2)
+							if( n/=n0 ) then
+								!VELOCITIES
+								Vtmp		= Velo(k,n0,n0,ki) * Velo(l,n,n0,ki) * Velo(i,n0,n,ki) 
+								!ENERGIES
+								eDiff		= ( 	En(n0,ki) - En(n,ki)	 )**3 	
+								!MATRIX
+								Fmat(i,j) 	= Fmat(i,j) +  myLeviCivita(j,k,l) * dreal(		Vtmp / dcmplx(eDiff)	)
+							end if
+						end do
+						!
+						!
+					end do
+				end do
+			end do
+		end do
+		!
+		!
+
+		return
+	end
+
+
+
+
+
+end module semiClassics

@@ -2,8 +2,8 @@ module output
 	!module contains several routines for printing and writing data
 	use mathematics,	only:	dp, PI_dp
 	use sysPara    , 	only: 	aX, aY, nAt, relXpos, relYpos, atRx, atRy, atPot,&
-								nG,nG0, Gcut, nKx, nKy,nK, nSC, nR, nRx, nRy, dx, dy, dkx, dky, nWfs, &
-								Gvec, atPos, atR, kpts, rpts, Rcell, trialOrbVAL, Zion
+								nG,nG0, Gcut, nKx, nKy,nK, nKw, nSC, nR, nRx, nRy, dx, dy, dkx, dky, nWfs, &
+								Gvec, atPos, atR, kpts, kptsW, rpts, Rcell, trialOrbVAL, Zion
 
 
 	implicit none
@@ -67,6 +67,12 @@ module output
 			write(100,'(a,i4,a,f15.12,a,f15.12,a)')				"k(",i,") = (", kpts(1,i) , "," , kpts(2,i), " )"
 		end do
 		!!
+		!K 	INTERPOLATION
+		write(100,*)"*******************K INTERPOLATION MESH******************************"
+		do i = 1, nKw
+			write(100,'(a,i4,a,f15.12,a,f15.12,a)')				"k(",i,") = (", kptsW(1,i) , "," , kptsW(2,i), " )"
+		end do
+		!!
 		!ATOM POSITION AND RADII
 		write(100,*)"*******************ATOMS******************************"
 		do i = 1, nAt
@@ -126,6 +132,11 @@ module output
 		write(320) kpts
 		close(320)
 		!
+		!K INTERPOLATION
+		open(unit=325,file='rawData/kptsW.dat',form='unformatted',access='stream',action='write')
+		write(325) kptsW
+		close(325)
+		!
 		!
 		return
 	end
@@ -133,26 +144,35 @@ module output
 
 	subroutine writeWaveFunc(unk, Aconn)
 		complex(dp),	intent(in)		:: unk(:,:,:), Aconn(:,:,:)
+		real(dp),		allocatable		:: unkR(:,:,:), unkI(:,:,:), AconnR(:,:,:), AconnI(:,:,:)
 		!
+		allocate(	unkR(	size(unk,1)		, size(unk,2)	, size(unk,3)		)			)
+		allocate(	unkI(	size(unk,1)		, size(unk,2)	, size(unk,3)		)			)
+		allocate(	AconnR(	size(Aconn,1)	, size(Aconn,2)	, size(Aconn,3)		)			)	
+		allocate(	AconnI(	size(Aconn,1)	, size(Aconn,2)	, size(Aconn,3)		)			)
 		!
+		unkR 	= dreal(unk)
+		unkI 	= dimag(unk)
+		AconnR	= dreal(Aconn)
+		AconnI	= dimag(Aconn)
 		!
 		!LATTICE PERIODIC FUNCTIONS
 		open(unit=400,file='rawData/unkR.dat',form='unformatted',access='stream',action='write')
-		write(400)	dreal(unk)
+		write(400)	unkR
 		close(400)
 		!
 		open(unit=405,file='rawData/unkI.dat',form='unformatted',access='stream',action='write')
-		write(405)	dimag(unk)
+		write(405)	unkI
 		close(405)
 		!
 		!
 		!CONNECTION
 		open(unit=410,file='rawData/AconnR.dat',form='unformatted',access='stream',action='write')
-		write(410)	dreal(Aconn)
+		write(410)	AconnR
 		close(410)
 		!
 		open(unit=415,file='rawData/AconnI.dat',form='unformatted',access='stream',action='write')
-		write(415)	dimag(Aconn)
+		write(415)	AconnI
 		close(415)
 		!
 		!
@@ -164,16 +184,21 @@ module output
 	subroutine writeWannFiles(wnF, wCent, wSprd)
 		complex(dp),	intent(in)		:: wnF(:,:,:)
 		real(dp),		intent(in)		:: wCent(:,:), wSprd(:,:)
+		real(dp),		allocatable		:: wnfR(:,:,:), wnfI(:,:,:)
 		!
+		allocate(	wnfR(	size(wnF,1), size(wnF,2), size(wnF,3)		)				)
+		allocate(	wnfI(	size(wnF,1), size(wnF,2), size(wnF,3)		)				)
 		!
+		wnfR	= dreal(wnF)
+		wnfI	= dimag(wnF)
 		!
 		!WANNIER FUNCTIONS:
 		open(unit=500,file='rawData/wnfR.dat',form='unformatted',access='stream',action='write')
-		write(500)	dreal(wnF)
+		write(500)	wnfR
 		close(500)
 		!
 		open(unit=505,file='rawData/wnfI.dat',form='unformatted',access='stream',action='write')
-		write(505)	dimag(wnF)
+		write(505)	wnfI
 		close(505)
 		!
 		!
@@ -192,11 +217,29 @@ module output
 	end
 
 
+	subroutine writeInterpolFiles(Aconn)
+		complex(dp),	intent(in)		::	Aconn(:,:,:)
+		real(dp),		allocatable		::	AconnR(:,:,:), AconnI(:,:,:)
+		allocate(	AconnR(	size(Aconn,1)	, size(Aconn,2)	, size(Aconn,3)		)			)	
+		allocate(	AconnI(	size(Aconn,1)	, size(Aconn,2)	, size(Aconn,3)		)			)
+		!
+		AconnR	= dreal(Aconn)
+		AconnI	= dimag(Aconn)
+		!
+		open(unit=550,file='rawData/AintR.dat',form='unformatted',access='stream',action='write')
+		write(550)	AconnR
+		close(550)
+		!
+		open(unit=555,file='rawData/AintI.dat',form='unformatted',access='stream',action='write')
+		write(555)	AconnI
+		close(555)
+		!
+		return
+	end
 
 
-
-	subroutine writePolFile(pEl, pIon, pTot, pElA )
-		real(dp),		intent(in)		:: pEl(2), pIon(2), pTot(2), pElA(2)
+	subroutine writePolFile(pEl, pIon, pTot, pElA, pInt )
+		real(dp),		intent(in)		:: pEl(2), pIon(2), pTot(2), pElA(2), pInt(2)
 		!	
 		!	
 		open(unit=600,file='polOutput.txt',action='write')
@@ -210,10 +253,17 @@ module output
 		write(600,*)"*"
 		write(600,*)"*"
 		write(600,*)"POL:"
-		write(600,'(a,f16.12,a,f16.12,a)')	"pEl = (",	pEl(1) ,	", ",	pEl(2),		")"
-		write(600,'(a,f16.12,a,f16.12,a)')	"pElA= (",	pElA(1),	", ",	pElA(2),	")"
-		write(600,'(a,f16.12,a,f16.12,a)')	"pIon= (",	pIon(1),	", ",	pIon(2),	")"
-		write(600,'(a,f16.12,a,f16.12,a)')	"pTot= (",	pTot(1),	", ",	pTot(2),	")"
+		write(600,'(a,f16.12,a,f16.12,a,f16.12,a)')	"pEl = ",norm2(pEl)	," * (", &	
+																pEl(1)/norm2(pEl) 	,	", ",	pEl(2)/norm2(pEl),		")"
+		write(600,'(a,f16.12,a,f16.12,a,f16.12,a)')	"pElA= ",norm2(pElA)," * (", &	
+																pElA(1)/norm2(pElA)	,	", ",	pElA(2)/norm2(pelA),	")"
+		write(600,'(a,f16.12,a,f16.12,a,f16.12,a)')	"pInt= ",norm2(pInt)," * (", &	
+																pInt(1)/norm2(pInt),	", ",	pInt(2)/norm2(pInt),	")"
+		write(600,'(a,f16.12,a,f16.12,a,f16.12,a)')	"pIon= ",norm2(pIon)," * (", &	
+																pIon(1)/norm2(pIon)	,	", ",	pIon(2)/norm2(pIon),	")"
+		write(600,'(a,f16.12,a,f16.12,a,f16.12,a)')	"pTot= ",norm2(pTot)," * (", &	
+																pTot(1)/norm2(pTot),	", ",	pTot(2)/norm2(pTot),	")"
+		
 		close(600)
 		!
 		return
@@ -222,8 +272,8 @@ module output
 
 
 
-	subroutine printTiming(aT,kT,wT,oT,mastT)
-		real,	intent(in)	:: aT, kT, wT, oT, mastT
+	subroutine printTiming(aT,kT,wT,oT,wI,scT,mastT)
+		real,	intent(in)	:: aT, kT, wT, oT, wI, scT, mastT
 		!
 		print '    ("r&alloc  time spend     = ",f15.7," seconds = ",f15.7,"% of overall time")',& 
 									aT 				, 100*aT		   	/mastT
@@ -231,10 +281,14 @@ module output
 									kT 				, 100*kT		   	/mastT
 		print '    ("0 order pol. time spend = ",f15.7," seconds = ",f15.7,"% of overall time")',& 
 									wT 				, 100*wT		   	/mastT
+		print '    ("wannier interpolation   = ",f15.7," seconds = ",f15.7,"% of overall time")',& 
+									wI 				, 100*wI		   	/mastT
+		print '    ("semiclassics            = ",f15.7," seconds = ",f15.7,"% of overall time")',& 
+									scT 				, 100*scT		   	/mastT							
 		print '    ("writing  time spend     = ",f15.7," seconds = ",f15.7,"% of overall time")',& 
 									oT 				, 100*oT		   	/mastT
 		print '    ("other    time spend     = ",f15.7," seconds = ",f15.7,"% of overall time")',& 
-									(mastT-wT-kT) 	, 100*(mastT-aT-wT-kT-oT)/mastT
+									(mastT-wT-kT-oT-wI-scT) 	, 100*(mastT-aT-wT-kT-oT-wI-scT)/mastT
 		print '    ("overall  time spend     = ",f15.7," seconds.")', mastT
 		!
 		return

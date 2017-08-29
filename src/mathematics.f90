@@ -6,7 +6,7 @@ module mathematics
 	private
 
 
-	public :: dp, PI_dp, i_dp, myExp, Cangle, nIntegrate, isUnit, isIdentity, isHermitian, SVD, eigSolver, myMatInvSqrt
+	public :: dp, PI_dp, i_dp, myExp, Cangle, myLeviCivita, nIntegrate, isUnit, isIdentity, isHermitian, SVD, eigSolver, myMatInvSqrt
 
 
 	interface nIntegrate
@@ -58,6 +58,33 @@ module mathematics
 			Cangle = 2*PI_dp + Cangle 
 		end if
 		Cangle = Cangle / PI_dp
+		!
+		return
+	end
+
+
+	integer function myLeviCivita(i,j,k)
+		!hard coded 3d levi civita 
+		integer,		intent(in)	:: i, j, k	
+		logical						:: even, odd
+		even 	= .false.
+		odd	 	= .false.
+		!
+		even 	= 	(i==1 .and. j==2 .and. k==3) .or. 	(i==2 .and. j==3 .and. k==1)	.or. (i==3 .and. j==1 .and. k==2)
+		odd		=	(i==3 .and. j==2 .and. k==1) .or. 	(i==1 .and. j==3 .and. k==2)	.or. (i==2 .and. j==1 .and. k==3)
+		!
+		if(even) then
+			myLeviCivita = 1
+		else if(odd) then
+			myLeviCivita = -1
+		else
+			myLeviCivita = 0
+		end if
+		!
+		!DEBUGGING
+		if(even .and. odd) then
+			write(*,*)"[myLeviCivita]: myLeviCivita detected even and odd, contact the programer he fucked up"
+		end if
 		!
 		return
 	end
