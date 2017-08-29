@@ -2,9 +2,9 @@ module potWellModel
 	!this modules sets up the Hamiltonian matrix and solves it for each k point
 	!	in the process the wannier functions are generated aswell with routines from wannGen module
 	use mathematics,	only:	dp, PI_dp,i_dp, myExp, eigSolver, isHermitian
-	use sysPara,		only: 	readInp, &
+	use sysPara,		only: 	readInp, getKindex, &
 									dim, aX, aY,vol, nAt, atR, atPos, atPot,&
-									nG, nG0, Gcut, nK, nWfs, nSC, nR, dx, dy, dkx, dky, &
+									nG, nG0, Gcut, nK, nKx, nKy, nWfs, nSC, nR, dx, dy, dkx, dky, &
 									Gvec, atPos, atR, kpts, rpts, gaugeSwitch
 	use wannGen,		only:	projectBwf, genWannF
 	use output,			only:	printMat
@@ -22,26 +22,27 @@ module potWellModel
 
 	contains
 !public:
-	subroutine solveHam(U, wnF, unkW)
+	subroutine solveHam(U, wnF, unkW, En)
 		!solves Hamiltonian at each k point
 		!also generates the Wannier functions on the fly (sum over all k)
 		complex(dp),	intent(out)		::	U(:,:,:), wnF(:,:,:), unkW(:,:,:)		!Uh(  nWfs	, nWfs,		nK		)	
 																				!wnF( nR	, nSupC,	nWfs	)	
 																				!unkW(nR	, nKpts,	nWfs	)
+		real(dp),		intent(out)		::	En(:,:)																	
 		complex(dp),	allocatable		::	Hmat(:,:), bWf(:,:), lobWf(:,:), gnr(:,:)
-		real(dp),		allocatable		::	En(:), bwfR(:,:), bwfI(:,:)	 
-		integer							:: 	ki
+		real(dp),		allocatable		::	EnT(:), bwfR(:,:), bwfI(:,:)	 
+		integer							:: 	ki, xi , n
 		real(dp)						::	kVal(dim)
 		!
 		allocate(	Hmat(	nG,	nG	)			)
-		allocate(	En(		nG		)			)
+		allocate(	EnT(		nG		)			)
 		allocate(	bWf(	nR, nG	)			)
 		allocate(	bWfR(	nR, nG	)			)
 		allocate(	bWfI(	nR, nG	)			)
 		allocate(	lobWf(	nR, nWfs)			)
 		allocate(	gnr(	nR,	nWfs)			)
 		
-		wnF	=	dcmplx(0.0_dp)
+		wnF		=	dcmplx(0.0_dp)
 		bWf		=	dcmplx(0.0_dp)
 		unkW	=	dcmplx(0.0_dp)
 		!
@@ -56,8 +57,9 @@ module potWellModel
 			kVal	=	kpts(:,ki)
 			!
 			call populateH(kVal, Hmat)	
-			call eigSolver(Hmat, En)
-			write(200)	En
+			call eigSolver(Hmat, EnT)
+			write(200)	EnT
+			En(:,ki) = EnT(1:nWfs) 
 			!
 			call gaugeCoeff(kVal, Hmat)
 			call genBlochWf(ki, Hmat, bWf)
@@ -70,7 +72,7 @@ module potWellModel
 			
 			call genWannF(ki, lobWf, wnF)
 
-			!call genUnk(ki, lobWf, unkW(:, ki, :))
+			call genUnk(ki, bWf, unkW(:, ki, :))
 			!
 		end do
 		close(200)
@@ -79,6 +81,9 @@ module potWellModel
 		!
 		return
 	end
+
+
+
 
 
 
@@ -320,9 +325,10 @@ module potWellModel
 	end
 
 
-	subroutine genUnk(ki, lobWf, unk)
+	subroutine genUnk(ki, bWf, unk)
+		! generates the lattice periodic part from given bloch wave functions
 		integer,		intent(in)		:: ki
-		complex(dp),	intent(in)		:: lobWf(:,:) !lobWf(	nR, nWfs)
+		complex(dp),	intent(in)		:: bWf(:,:) !lobWf(	nR, nWfs)
 		complex(dp),	intent(out)		:: unk(:,:)   !unk(	nR, nWfs)
 		integer							:: xi, n
 		complex(dp)						:: phase
@@ -330,12 +336,37 @@ module potWellModel
 		do n = 1, nWfs
 			do xi = 1, nR
 				phase = myExp( -1.0_dp 	*	 dot_product( kpts(:,ki) , rpts(:,xi)	) 			)
-				unk(xi,n) = phase * loBwf(xi,n)
+				unk(xi,n) = phase * Bwf(xi,n)
 			end do
 		end do
 		!
 		return
 	end
+
+
+	logical function isLattSym(bWf)
+		!checks if bwf(k) = bwf(k+G)
+		complex(dp),	intent(in)		:: bWf(:,:,:) !nR, nK , nG or nWfs
+		integer							:: k00, k10, k01, k11, n ! edge point indices
+
+		isLattSym = .true.
+		k00 = getKindex(	1	, 1		)
+		k10	= getKindex(	nKx	, 1		)
+		k01 = getKindex(	1	, nKy	)
+		k11 = getKindex(	nKx , nKy	)
+		write(*,'(a,i3,a,i3,a,i3,a,i3)')"[isLattSym]: k00 =",k00,", k10=",k10,", k01=",k01,", k11=",k11 
+
+
+		do n = 1, size(bwf,3) ! loop states
+
+		end do
+
+		return
+	end
+
+
+
+
 
 
 

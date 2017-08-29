@@ -80,10 +80,13 @@ module mathematics
 			myLeviCivita	=  0
 		end if
 		!
+		!DEBUGGING
+		if(even .and. odd) then
+			write(*,*)"[myLeviCivita]: myLeviCivita detected even and odd, contact the programer he fucked up"
+		end if
 		!
 		return
 	end
-
 
 
 	subroutine SVD(Mat, U,s,Vt)

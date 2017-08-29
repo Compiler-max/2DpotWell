@@ -4,13 +4,14 @@ module semiClassics
 	! 	see Niu PRL 112, 166601 (2014)
 	use mathematics,	only:	dp, PI_dp, i_dp, myExp, myLeviCivita
 	use sysPara,		only:	Bext
-	
+
 	implicit none
 
 
 
 	private
 	public ::			dummy,		calcFirstOrdP
+
 
 
 	contains
@@ -21,9 +22,11 @@ module semiClassics
 
 
 !public
+
 	subroutine dummy()
 		return
 	end
+
 
 	subroutine	calcFirstOrdP(Fcurv, Aconn, Velo, En, p1)
 		!calculates the first order polarization p1 according to

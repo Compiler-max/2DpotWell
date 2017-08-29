@@ -2,34 +2,49 @@ tomorrow do:
 
 
 
-	- git
-
-
-
-
-
-
-
+	- git (online)
 
 	
 	- write test for boundary condition of polarization
-
+	- test 2D integration routine
 
 	- check weird bug with writting the bwfs in solveHam again
 	
-	- plotting: band structure (k point path?), mark atoms in the bwf and wnf plots
 
 
-	- test 2D integration routine
+
+	- plotting: band structure (k point path?), 
+	- plotting: mark atoms in the bwf and wnf plots
+
+
+	
+	- curvature:
+		calcualation routine
+
+	- connection:
+		via projected states directly -> still not the correct value, try interpolation, might be related to bad FD on coarse mesh
+		via unk generated from wannier functions (INTERPOLATION)
 
 
 	-polarization:
 		via Wannier
 		via Connection
 
+	
+
+
+
 	-first order polarization
 		via Niu
 		via Peierls
+
+	
+
+
+
+
+
+
 
 	- peierls
 		watch out for chern insulator breakdown

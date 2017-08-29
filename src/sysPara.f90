@@ -166,7 +166,6 @@ module sysPara
 		getKindex = (ky-1) * nKx + kx
 		return
 	end
-	
 
 
 
