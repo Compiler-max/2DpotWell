@@ -2,15 +2,12 @@ program main
 	!TWO dimensional potential well code
 	use mathematics, 	only: 		dp, PI_dp, eigSolver
 	!
-	use sysPara    , 	only: 		readInp, &
-
 	use sysPara,	 	only: 		readInp, &
-
 									aX, aY,vol, nAt, relXpos, relYpos, atRx, atRy, atPot,&
 									nG, Gcut, nK, nKx, nKy, nKw, nKxW, nKyW, nWfs, nSC, nR, dx, dy, dkx, dky, &
 									Gvec, atPos, atR, kpts, rpts
 	!
-	use potWellModel, 	only: 		solveHam 
+	use potWellModel, 	only: 		solveHam, calcVeloMat 
 	!
 	use wannier,	 	only: 		isNormal,calcWcent, calcWsprd,calc0ElPol , &
 									genUnkW, calcConn, calcPolViaA, interpConnCurv  !,bandInterpol,gaugeUnk, calcConnViaK, gaugeConnToHam
@@ -26,8 +23,8 @@ program main
 
 	
     real(dp), 		allocatable,	dimension(:,:)		:: 	wCent, wSprd
-    complex(dp),	allocatable,	dimension(:,:,:)	:: 	wnF, unk, unkW, Uh, Aconn, Aint !, ukn basCoeff,
-    complex(dp),	allocatable,	dimension(:,:,:,:)	::	Fcurv
+    complex(dp),	allocatable,	dimension(:,:,:)	:: 	wnF, unk, unkW, Uh, Aconn, Aint, veloBwf, bWf !, ukn basCoeff,
+    complex(dp),	allocatable,	dimension(:,:,:,:)	::	Fcurv, Velo
     real(dp),		allocatable,	dimension(:,:)		:: 	En
     real(dp) 											:: 	pEl(2), pIon(2), pTot(2), pElViaA(2), pInt(2) 
     real												:: 	mastT0,mastT1,mastT,aT0,aT1,aT,kT0,kT1,kT,wT0,wT1,wT, oT0, oT1, oT,&
@@ -38,7 +35,7 @@ program main
 
 
 
-
+   write(*,*)nWfs
 
 
     !INPUT & ALLOCATION SECTION
@@ -53,9 +50,10 @@ program main
 	allocate(			wCent(		2		, 	nWfs			)				)
 	allocate(			wSprd(		2		, 	nWfs			)				)
 	!
-	allocate(			Aint(		2		,	nKw		, nWfs	)				)
-	allocate(			Fcurv(		2,	2	,	nKw		, nWfs	)				)
-	allocate(			unkW(		nR		, 	nKw		, nWfs	)				) 
+	!allocate(			Aint(		2		,	nKw		, nWfs	)				)
+	!allocate(			Fcurv(		2,	2	,	nKw		, nWfs	)				)
+	allocate(			VeloBwf(	nR		,	2*nWfs	,	nK		)			)
+	allocate(			Velo(		3,			nWfs	, nwFs,	nK)				)
 	!
 	call cpu_time(aT1)
 	aT = aT1 - aT0
@@ -65,7 +63,10 @@ program main
 	write(*,*)"[main]:**************************ELECTRONIC STRUCTURE PART*************************"
 	call cpu_time(kT0)
 	!
-	call solveHam(Uh, wnF, unk, En)
+	call solveHam(Uh, wnF, unk, En, veloBwf)
+	!Get Velocity operator matrix
+	call calcVeloMat(unk, veloBwf, Velo)
+
 	!
 	call calcConn(unk, nKx, nKy, Aconn)   
 	call calcPolViaA(Aconn, pElViaA)
@@ -107,19 +108,10 @@ program main
 
 	write(*,*)"[main]:**************************WANNIER INTERPOLATION*************************"
 	call cpu_time(wI0)
-	call interpConnCurv(wnF, Aint, Fcurv)
-	call calcPolViaA(Aint, pInt)
+	!call interpConnCurv(wnF, Aint, Fcurv)
+	!call calcPolViaA(Aint, pInt)
 	call cpu_time(wI1)
 	wI	= wI1 - wI0
-
-
-	
-	!!WANNIER CENTERS & POLARIZATION
-	call cpu_time(wT0)
-	call calcWcent(wnF,	wCent)
-	call calcWsprd(wnF, wCent, wSprd)
-	call calc0ElPol(wCent, pEl, pIon, pTot)
-	write(*,*)"[main]: done with center polarization calc"
 
 
 	write(*,*)"[main]:**************************SEMICLASSICS*************************"

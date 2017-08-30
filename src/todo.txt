@@ -1,7 +1,13 @@
 tomorrow do:
+	- calculate velocity operator matrix elements
+	- finish nius first order pol
+	- debug zero order pol calcualtion
 
 
 
+
+
+other stuff:
 	- git (online)
 
 	
@@ -13,7 +19,7 @@ tomorrow do:
 
 
 
-	- plotting: band structure (k point path?), 
+	
 	- plotting: mark atoms in the bwf and wnf plots
 
 
@@ -21,10 +27,13 @@ tomorrow do:
 	- curvature:
 		calcualation routine
 
+	
+
+	DEBUG:
+
 	- connection:
 		via projected states directly -> still not the correct value, try interpolation, might be related to bad FD on coarse mesh
 		via unk generated from wannier functions (INTERPOLATION)
-
 
 	-polarization:
 		via Wannier

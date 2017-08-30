@@ -152,6 +152,7 @@ module wannier
 		integer 				:: n, at
 		real(dp) 				:: vol, cent(2)
 		!
+		
 		vol 	= aX * aY !1D
 		pT		= 0.0_dp
 		pE	 	= 0.0_dp
@@ -159,20 +160,25 @@ module wannier
 		!
 		!ELECTRONIC
 		do n = 1,size(wCent,2)
-			!cent(1) = dmod(wCent(1,n),aX) !get current center by projection into first unit cell
-			!cent(2)	= dmod(wCent(2,n),aY)
+			cent(1) = dmod(wCent(1,n),aX) !get current center by projection into first unit cell
+			cent(2)	= dmod(wCent(2,n),aY)
 			!!
 			!write(*,'(a,f8.5,a,f8.5,a,f8.6,a,f8.6,a)')"[calc0ElPol]: Wcent = (",wCent(1,n),", ",wCent(2,n),") modified cent = (", cent(1),", ",cent(2),")"
-			pE = pE + wCent(:,n)				
+			pE = pE + cent				
 		end do
 		!IONIC
 		do at = 1, nAt
 			pI = pI + Zion(at) * atPos(:,at) 
 		end do
 		!NORMALIZE
-		pE = -pE / vol
-		pI = pI / vol
+		!pE = pE / vol
+		!pI = pI / vol
 		!
+		!SHIFT WITH RESPECT TO CENTER OF UNIT CELL
+		cent(1)	= aX * 0.5_dp
+		cent(2)	= aY * 0.5_dp
+		pE = pE - cent
+		pI = pI - cent 
 		!TOTAL
 		pT =pI + pE												
 		!
@@ -440,7 +446,7 @@ module wannier
 		real(dp), allocatable	 	:: fx(:),fy(:)
 		integer 				 	:: xi
 		!
-		thres = 1e-10_dp
+		thres = 1e-3_dp
 		allocate(	fx(nR) 	)
 		allocate(	fy(nR)	)
 		!

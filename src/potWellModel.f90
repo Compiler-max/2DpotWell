@@ -1,17 +1,17 @@
 module potWellModel
 	!this modules sets up the Hamiltonian matrix and solves it for each k point
 	!	in the process the wannier functions are generated aswell with routines from wannGen module
-	use mathematics,	only:	dp, PI_dp,i_dp, myExp, eigSolver, isHermitian
+	use mathematics,	only:	dp, PI_dp,i_dp, myExp, eigSolver, nIntegrate, isHermitian
 	use sysPara,		only: 	readInp, getKindex, &
 									dim, aX, aY,vol, nAt, atR, atPos, atPot,&
-									nG, nG0, Gcut, nK, nKx, nKy, nWfs, nSC, nR, dx, dy, dkx, dky, &
+									nG, nG0, Gcut, nK, nKx, nKy, nWfs, nSC, nR, nRx, nRy, dx, dy, dkx, dky, &
 									Gvec, atPos, atR, kpts, rpts, gaugeSwitch
 	use wannGen,		only:	projectBwf, genWannF
 	use output,			only:	printMat
 	implicit none	
 	
 	private
-	public ::					solveHam
+	public ::					solveHam, calcVeloMat
 
 
 
@@ -22,12 +22,13 @@ module potWellModel
 
 	contains
 !public:
-	subroutine solveHam(U, wnF, unkW, En)
+	subroutine solveHam(U, wnF, unkW, En, veloBwf)
 		!solves Hamiltonian at each k point
 		!also generates the Wannier functions on the fly (sum over all k)
-		complex(dp),	intent(out)		::	U(:,:,:), wnF(:,:,:), unkW(:,:,:)		!Uh(  nWfs	, nWfs,		nK		)	
+		complex(dp),	intent(out)		::	U(:,:,:), wnF(:,:,:), unkW(:,:,:), veloBwf(:,:,:)		!Uh(  nWfs	, nWfs,		nK		)	
 																				!wnF( nR	, nSupC,	nWfs	)	
 																				!unkW(nR	, nKpts,	nWfs	)
+																				!veloBwf(nR,2*nG,nK)
 		real(dp),		intent(out)		::	En(:,:)																	
 		complex(dp),	allocatable		::	Hmat(:,:), bWf(:,:), lobWf(:,:), gnr(:,:)
 		real(dp),		allocatable		::	EnT(:), bwfR(:,:), bwfI(:,:)	 
@@ -45,6 +46,7 @@ module potWellModel
 		wnF		=	dcmplx(0.0_dp)
 		bWf		=	dcmplx(0.0_dp)
 		unkW	=	dcmplx(0.0_dp)
+		veloBwf	=	dcmplx(0.0_dp)
 		!
 		
 		!call genTrialOrb(gnr) !ToDo
@@ -62,7 +64,8 @@ module potWellModel
 			En(:,ki) = EnT(1:nWfs) 
 			!
 			call gaugeCoeff(kVal, Hmat)
-			call genBlochWf(ki, Hmat, bWf)
+			call genBlochWf(ki, Hmat, bWf)		
+			call calcVeloBwf(ki,Hmat, veloBwf)
 			bWfR 	= dreal(bWf)                 !Todo fix that
 			bWfI	= dimag(bWf)
 			write(210)bWfR
@@ -85,12 +88,34 @@ module potWellModel
 
 
 
+	subroutine calcVeloMat(unk, veloBwf, Velo)
+		complex(dp),		intent(in)		:: unk(:,:,:), veloBwf(:,:,:)	!	unk(nR, nK, nWfs) , veloBwf(nR,2*nWfs,nK)
+		complex(dp),		intent(out)		:: Velo(:,:,:,:)   !Velo(		3,			nWfs	, nwFs,	nK)		
+		integer								:: ki, n,m, ri
+		complex(dp),		allocatable		:: fx(:), fy(:)
+
+		allocate(	fx(nR)	)
+		allocate(	fy(nR)	)
+
+		do ki = 1, nK
+			do m = 1, nWfs
+				do n = 1, nWfs
+					!FILL INTEGRATION ARRAY
+					do ri = 1, nWfs
+						fx(ri)	= myExP( 	dot_product( kpts(:,ki), rpts(:,ri) )		)	*unk(ri,ki,n)	* veloBwf(ri,	m		,ki)
+						fy(ri)	= myExP( 	dot_product( kpts(:,ki), rpts(:,ri) )		)	*unk(ri,ki,n)	* veloBwf(ri,	nWfs+m	,ki)
+					end do
+					!INTEGRATE
+					Velo(1,n,m,ki)	= nIntegrate(nR, nRx, nRy, dx, dy, fx)
+					Velo(2,n,m,ki)	= nIntegrate(nR, nRx, nRy, dx, dy, fy)
+					Velo(3,n,m,ki) 	= dcmplx(0.0_dp)
+				end do
+			end do
+		end do
 
 
-
-
-
-
+		return
+	end
 
 
 
@@ -323,6 +348,91 @@ module potWellModel
 		!
 		return
 	end
+
+
+
+	subroutine calcVeloBwf(ki, basCoeff, veloBwf)
+		!calculates the bwf with changed basis vectors.
+		!	basis vetors have the \nabla operator applied to the plane waves included
+		!
+		!	|veloBwf> = \hat{v} |bwf>
+		!
+		integer,		intent(in)		:: ki
+		complex(dp),	intent(in)		:: basCoeff(:,:)
+		complex(dp),	intent(out)		:: veloBwf(:,:,:)	!veloBwf(nR,2*nG,nK)
+		complex(dp),	allocatable		:: basVec(:), tmp(:)
+		integer							:: xi, min, max
+
+		allocate(	basVec(2*nG)	)
+		allocate(	tmp(nG)		)
+
+
+		do xi = 1, nR
+			call calcVeloBasVec(ki,xi,basVec)
+			!X COMPONENT
+			min 					= 1
+			max 					= nG
+			tmp						= matmul(	basVec(min:max),	basCoeff) / dsqrt(vol)
+			veloBwf(xi,1:nWfs,ki)	= tmp(1:nWfs)
+			!Y COMPONENT
+			min						= nG+1
+			max						= 2*nG
+			tmp						= matmul(	basVec(min:max),	basCoeff) / dsqrt(vol)
+			min						= nWfs +1
+			max						= 2*nWfs
+			veloBwf(xi,min:max,ki)	= tmp(1:nWfs)
+		end do
+		!
+		return
+	end
+
+
+	subroutine calcVeloBasVec(ki,ri,basVec)
+		integer,		intent(in)		:: ki, ri
+		complex(dp),	intent(out)		:: basVec(:)
+		real(dp)				 :: tmp(2)
+		integer 				 ::	i 
+
+		do i =1, nG
+			tmp(:) = kpts(:,ki) + Gvec(:,i)
+			!
+			if( norm2(tmp) < Gcut ) then
+				!X COMPONENT
+				basVec(i) 		= i_dp * (	kpts(1,ki) + Gvec(1,i)	) * myExp( 		dot_product( tmp, rpts(:,ri) )			)
+				!Y COMPONENT
+				basVec(i+nG)	= i_dp * (	kpts(2,ki) + Gvec(2,i)	) * myExp(		dot_product( tmp, rpts(:,ri) )			)
+			else
+				basVec(i) = dcmplx( 0.0_dp )
+			end if
+		end do
+
+
+		return
+	end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 	subroutine genUnk(ki, bWf, unk)

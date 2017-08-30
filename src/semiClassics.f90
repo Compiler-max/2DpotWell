@@ -85,6 +85,7 @@ module semiClassics
 		!
 		Fmat = 0.0_dp		
 		call addF2(n0, ki, Velo, En, Fmat)
+		call addF3(n0, ki, Velo, En, Fmat)
 		!
 		return
 	end
