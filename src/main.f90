@@ -46,7 +46,7 @@ program main
 	allocate(			wnF( 		nR		, 	nSC		, nWfs	)				)
 	allocate(			unk(		nR		, 	nK		, nWfs	)				) 
 	allocate(			Uh(			nWfs	, 	nWfs	,	nK	)				)
-	allocate(			Aconn(		2		,	nK		, nWfs	)				)
+	allocate(			Aconn(		3		,	nK		, nWfs	)				)
 	allocate(			Fcurv(		3		,	nK		, nWfs	)				)
 	allocate(			wCent(		2		, 	nWfs			)				)
 	allocate(			wSprd(		2		, 	nWfs			)				)
@@ -123,6 +123,7 @@ program main
 	write(*,*)"[main]:**************************SEMICLASSICS*************************"
 	call cpu_time(scT0)
 	call calcFirstOrdP(Fcurv, Aconn, Velo, En, p1)
+	write(*,*)"[main]: done with first order polarization calculation"
 	call cpu_time(scT1)
 	scT	= scT1 - scT0
 
@@ -133,11 +134,11 @@ program main
 	call writeMeshInfo() 
 	call writeMeshBin()
 	write(*,*)"[main]: ...wrote mesh info"
-	call writeWaveFunc(unk, Aconn)
+	call writeWaveFunc(unk, Aconn, Fcurv)
 	write(*,*)"[main]: ...wrote unks and connection"
 	call writeWannFiles(wnF, wCent, wSprd)			!call writeWannFiles(gnr, wnF, wCent, wSprd, Aconn, unkW)
 	write(*,*)"[main]: ...wrote wannier functions"
-	call writePolFile(pEl, pIon, pTot, pElViaA, pInt )
+	call writePolFile(pEl, pIon, pTot, pElViaA, pInt, p1 )
 	write(*,*)"[main]: ...wrote polarization txt file"
 	
 	call cpu_time(oT1)

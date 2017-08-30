@@ -136,7 +136,7 @@ module potWellModel
 		!
 		complex(dp),	intent(in)		:: unk(:,:,:)		!unk(	nR, nK/nKw, nWfs/nG	)
 		integer,		intent(in)		:: nxk, nyk
-		complex(dp),	intent(out)		:: A(:,:,:)			!Aconn(	2,nK, nWfs)		)	
+		complex(dp),	intent(out)		:: A(:,:,:)			!Aconn(	3,nK, nWfs)		)	
 		complex(dp)						:: Mxl, Mxr, Myl, Myr, M, one
 		integer							:: n, Z, ki, kx, ky, kxl, kxr, kyl, kyr
 		real(dp)						:: thres, wbx,wby, bxl(2), bxr(2), byl(2), byr(2) !for nearest neighbours, assuming cubic mesh
@@ -177,10 +177,10 @@ module potWellModel
 					!
 					!write(*,'(a,f15.12,a,f15.12)')"[calcConn]: Mxl=",dreal(Mxl),"+i*",dimag(Mxl)
 					!FD SUM OVER NEAREST NEIGHBOURS
-					A(:,ki,n) = A(:,ki,n) + wbx * bxl(:) * i_dp * ( Mxl - one )
-					A(:,ki,n) = A(:,ki,n) + wbx * bxr(:) * i_dp * ( Mxr - one )
-					A(:,ki,n) = A(:,ki,n) + wby * byl(:) * i_dp * ( Myl - one )
-					A(:,ki,n) = A(:,ki,n) + wby * byr(:) * i_dp * ( Myr - one )
+					A(1:2,ki,n) = A(1:2,ki,n) + wbx * bxl(:) * i_dp * ( Mxl - one )
+					A(1:2,ki,n) = A(1:2,ki,n) + wbx * bxr(:) * i_dp * ( Mxr - one )
+					A(1:2,ki,n) = A(1:2,ki,n) + wby * byl(:) * i_dp * ( Myl - one )
+					A(1:2,ki,n) = A(1:2,ki,n) + wby * byr(:) * i_dp * ( Myr - one )
 					!FD SUM OVER NEAREST NEIGHBOURS
 					!A(:,ki,n) = A(:,ki,n) + wbx * bxl(:) * dimag(	log( Mxl ) )
 					!A(:,ki,n) = A(:,ki,n) + wbx * bxr(:) * dimag(	log( Mxr ) )

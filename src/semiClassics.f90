@@ -54,9 +54,9 @@ module semiClassics
 			!FILL INTEGRATION ARRAY
 			do ki = 1, kSize
 				!PHASE SPACE DENSITY CORRECTION
-				f(:,ki)	= f(:,ki) + 0.5_dp * dot_product(		Fcurv(:,ki,n), Velo(:,ki,n,n) 	)		* Bext
-				call calcFmat(n,ki,Velo,En, Fmat)
+				f(:,ki)	= f(:,ki) + 0.5_dp * dot_product(		Fcurv(:,ki,n), Aconn(:,ki,n) 	)		* Bext
 				!POSITIONAL SHIFT
+				call calcFmat(n,ki,Velo,En, Fmat)
 				f(:,ki)	= f(:,ki) + matmul(Fmat, Bext) 
 			end do
 			!INTEGRATE

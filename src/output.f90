@@ -142,8 +142,8 @@ module output
 	end
 
 
-	subroutine writeWaveFunc(unk, Aconn)
-		complex(dp),	intent(in)		:: unk(:,:,:), Aconn(:,:,:)
+	subroutine writeWaveFunc(unk, Aconn, Fcurv)
+		complex(dp),	intent(in)		:: unk(:,:,:), Aconn(:,:,:), Fcurv(:,:,:)
 		real(dp),		allocatable		:: unkR(:,:,:), unkI(:,:,:), AconnR(:,:,:), AconnI(:,:,:)
 		!
 		allocate(	unkR(	size(unk,1)		, size(unk,2)	, size(unk,3)		)			)
@@ -174,6 +174,24 @@ module output
 		open(unit=415,file='rawData/AconnI.dat',form='unformatted',access='stream',action='write')
 		write(415)	AconnI
 		close(415)
+		!
+		!
+		!CURVATURE	
+		AconnR	= dreal(Fcurv)
+		AconnI	= dimag(Fcurv)
+		open(unit=420,file='rawData/FcurvR.dat',form='unformatted',access='stream',action='write')
+		write(420)	AconnR		!420!!!!!!open(unit=410,file='rawData/AconnR.dat',form='unformatted',access='stream',action='write')
+		write(410)	AconnR
+		close(410)
+		!
+		open(unit=415,file='rawData/AconnI.dat',form='unformatted',access='stream',action='write')
+		write(415)	AconnI
+		close(415)
+		close(420)
+		!
+		open(unit=425,file='rawData/FcurvI.dat',form='unformatted',access='stream',action='write')
+		write(425)	AconnI
+		close(425)
 		!
 		!
 		return
@@ -238,8 +256,8 @@ module output
 	end
 
 
-	subroutine writePolFile(pEl, pIon, pTot, pElA, pInt )
-		real(dp),		intent(in)		:: pEl(2), pIon(2), pTot(2), pElA(2), pInt(2)
+	subroutine writePolFile(pEl, pIon, pTot, pElA, pInt, p1 )
+		real(dp),		intent(in)		:: pEl(2), pIon(2), pTot(2), pElA(2), pInt(2), p1(3)
 		!	
 		!	
 		open(unit=600,file='polOutput.txt',action='write')
@@ -263,7 +281,9 @@ module output
 																pIon(1)/norm2(pIon)	,	", ",	pIon(2)/norm2(pIon),	")"
 		write(600,'(a,f16.12,a,f16.12,a,f16.12,a)')	"pTot= ",norm2(pTot)," * (", &	
 																pTot(1)/norm2(pTot),	", ",	pTot(2)/norm2(pTot),	")"
-		
+		write(600,*)"PERTURBATION:"
+		write(600,'(a,f16.12,a,f16.12,a,f16.12,a,f16.12,a)')	"pTot= ",norm2(p1)," * (", &	
+																p1(1)/norm2(p1),	", ",	p1(2)/norm2(p1),", ", p1(3)/norm2(p1),	")"
 		close(600)
 		!
 		return
