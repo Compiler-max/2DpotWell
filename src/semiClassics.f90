@@ -32,7 +32,7 @@ module semiClassics
 		!calculates the first order polarization p1 according to
 		!	P'= -int_dk [0.5 (Curv.Velo)*B_ext + a']
 		complex(dp),	intent(in)		:: 	Fcurv(:,:,:) 	,Aconn(:,:,:), 	Velo(:,:,:,:)		!	Fcurv(3,nKs,nWfs) Velo(3, nK, nWfs,nWfs)	
-		real(dp),		intent(in)		::	En(:,:)				!	En(			nWfs		,	nK)						
+		real(dp),		intent(in)		::	En(:,:)				!	En(			nK, nWfs)						
 		real(dp),		intent(out)		:: 	p1(3)
 		complex(dp), 	allocatable		::	f(:,:)
 		real(dp)						::	pn(3)
@@ -81,7 +81,7 @@ module semiClassics
 		!F is derived in the semiclassical wavepacket approach (again see Niu PRL 112, 166601 (2014))
 		integer,		intent(in)		:: n0, ki
 		complex(dp),	intent(in)		:: Velo(:,:,:,:)  !V(3,nWfs,nWfs,nK)
-		real(dp),		intent(in)		:: En(:,:)			!En(nWfs, nK)
+		real(dp),		intent(in)		:: En(:,:)			!En(nK nWfs)
 		real(dp),		intent(out)		:: Fmat(:,:)
 		integer							:: i
 		!
@@ -108,7 +108,7 @@ module semiClassics
 		!
 		integer,		intent(in)		:: n0, ki
 		complex(dp),	intent(in)		:: Velo(:,:,:,:)  !V(3,nK,nWfs,nWfs)
-		real(dp),		intent(in)		:: En(:,:)			!	En(	nWfs,	nK)	
+		real(dp),		intent(in)		:: En(:,:)			!	En(	nK, nWfs)	
 		real(dp),		intent(out)		:: Fmat(:,:)
 		complex(dp)						:: Vtmp
 		real(dp)						:: eDiff
@@ -128,7 +128,7 @@ module semiClassics
 									!VELOCITIES
 									Vtmp		= Velo(k,ki,n,m) * Velo(l,ki,m,n0) * Velo(i,ki,n0,n) 
 									!ENERGIES
-									eDiff		= ( 	En(n0,ki) - En(n,ki)	 )**2 	* 	 ( 	En(n0,ki) - En(m,ki)	)
+									eDiff		= ( 	En(ki,n0) - En(ki,n)	 )**2 	* 	 ( 	En(ki,n0) - En(ki,m)	)
 									!MATRIX
 									Fmat(i,j) 	= Fmat(i,j) +  myLeviCivita(j,k,l) * dreal(		Vtmp / dcmplx(eDiff)	)
 								end if
@@ -154,7 +154,7 @@ module semiClassics
 		!
 		integer,		intent(in)		:: n0, ki
 		complex(dp),	intent(in)		:: Velo(:,:,:,:)  	!V(3,nWfs,nWfs,nK)
-		real(dp),		intent(in)		:: En(:,:)			!En(	nWfs	,	nK)
+		real(dp),		intent(in)		:: En(:,:)			!En(	nK	,	nWfs)
 		real(dp),		intent(out)		:: Fmat(:,:)
 		complex(dp)						:: Vtmp
 		real(dp)						:: eDiff
@@ -172,7 +172,7 @@ module semiClassics
 								!VELOCITIES
 								Vtmp		= Velo(k,ki,n0,n0) * Velo(l,n,ki,n0) * Velo(i,ki,n0,n) 
 								!ENERGIES
-								eDiff		= ( 	En(n0,ki) - En(n,ki)	 )**3 	
+								eDiff		= ( 	En(ki,n0) - En(ki,n)	 )**3 	
 								!MATRIX
 								Fmat(i,j) 	= Fmat(i,j) +  myLeviCivita(j,k,l) * dreal(		Vtmp / dcmplx(eDiff)	)
 							end if

@@ -7,7 +7,7 @@ program main
 									nG, Gcut, nK, nKx, nKy, nKw, nKxW, nKyW, nWfs, nSC, nR, dx, dy, dkx, dky, &
 									Gvec, atPos, atR, kpts, rpts
 	!
-	use potWellModel, 	only: 		solveHam, calcVeloMat, calcConn 
+	use potWellModel, 	only: 		solveHam, calcVeloMat, calcConn, calcCurv
 	!
 	use wannier,	 	only: 		isNormal,calcWcent, calcWsprd,calc0ElPol , &
 									genUnkW, calcPolViaA, interpConnCurv  !,bandInterpol,gaugeUnk, calcConnViaK, gaugeConnToHam
@@ -42,7 +42,7 @@ program main
     call cpu_time(aT0)
 	call readInp()
 	!
-	allocate(			En(			nWfs		,	nK)							)
+	allocate(			En(			nK		,	nWfs)							)
 	allocate(			wnF( 		nR		, 	nSC		, nWfs	)				)
 	allocate(			unk(		nR		, 	nK		, nWfs	)				) 
 	allocate(			Uh(			nWfs	, 	nWfs	,	nK	)				)
@@ -70,8 +70,11 @@ program main
 	!Get Velocity operator matrix
 	call calcVeloMat(unk, veloBwf, Velo)
 
-	!
-	call calcConn(unk, nKx, nKy, Aconn)   
+	!connection & curvature
+	call calcConn(unk, nKx, nKy, Aconn)  
+	call calcCurv(En, Velo, Fcurv)
+
+	!polarization (integration of connection)
 	call calcPolViaA(Aconn, pElViaA)
 	!
 	call cpu_time(kT1)

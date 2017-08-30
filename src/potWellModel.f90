@@ -1,7 +1,7 @@
 module potWellModel
 	!this modules sets up the Hamiltonian matrix and solves it for each k point
 	!	in the process the wannier functions are generated aswell with routines from wannGen module
-	use mathematics,	only:	dp, PI_dp,i_dp, myExp, eigSolver, nIntegrate, isHermitian
+	use mathematics,	only:	dp, PI_dp,i_dp, myExp, myLeviCivita, eigSolver, nIntegrate, isHermitian
 	use sysPara,		only: 	readInp, getKindex, getRindex, &
 									dim, aX, aY,vol, nAt, atR, atPos, atPot,&
 									nG, nG0, Gcut, nK, nKx, nKy, nWfs, nSC, nSCx, nSCy, nR, nRx, nRy, dx, dy, dkx, dky, &
@@ -11,7 +11,7 @@ module potWellModel
 	implicit none	
 	
 	private
-	public ::					solveHam, calcVeloMat, calcConn
+	public ::					solveHam, calcVeloMat, calcConn, calcCurv
 
 
 
@@ -61,7 +61,7 @@ module potWellModel
 			call populateH(kVal, Hmat)	
 			call eigSolver(Hmat, EnT)
 			write(200)	EnT
-			En(:,ki) = EnT(1:nWfs) 
+			En(ki,:) = EnT(1:nWfs) 
 			!
 			call gaugeCoeff(kVal, Hmat)
 			call genBlochWf(ki, Hmat, bWf)		
@@ -117,8 +117,8 @@ module potWellModel
 				end do
 			end do
 		end do
-
-
+		!	
+		!
 		return
 	end
 
@@ -203,10 +203,58 @@ module potWellModel
 
 
 
+	subroutine calcCurv(En, Velo, Fcurv)
+	!Calculates the connection via Kubo formula on matrix elements of velocity operator
+	!see Wang/Vanderbilt PRB 74, 195118 (2006) eq.(5)
+	!
+	!	F_n,c(k) = \sum{a,b} leviCivi(a,b,c) F_n,{a,b}(k)
+	!
+	!
+		real(dp),		intent(in)		:: En(:,:)		!En(nK,nWfs)
+		complex(dp),	intent(in)		:: Velo(:,:,:,:) !Velo(3,nK,nWfs,nWfs)
+		complex(dp),	intent(out)		:: Fcurv(:,:,:)  !Fcurv(3,nK,nWfs)
+		integer							:: n, ki, a,b,c
+		!
+		Fcurv = dcmplx(0.0_dp)
+		do n = 1, nWfs
+			do ki = 1, nK
+				do c = 1,3
+					do b= 1,3
+						do a=1,3
+							if( myLeviCivita(a,b,c) /= 0) then
+								Fcurv(c,ki,n) = Fcurv(c,ki,n) + myLeviCivita(a,b,c) * omega(n,a,b,ki,Velo, En)
+							end if
+						end do 
+					end do
+				end do
+			end do
+		end do
+		!
+		!
+		return
+	end
 
 
-
-
+	real(dp) function omega(n,a,b,ki,Velo,En)
+		!returns curvature tensor element a,b
+		!see Wang/Vanderbilt PRB 74, 195118 (2006) eq.(9)
+		!
+		integer,		intent(in)		:: n, a, b, ki
+		complex(dp),	intent(in)		:: Velo(:,:,:,:)!Velo(3,nK,nWfs,nWfs)
+		real(dp),		intent(in)		:: En(:,:)!En(nK,nWfs)
+		integer							:: m
+		!
+		omega	= 0.0_dp
+		do m = 1, nWfs
+			if(m /= n) then
+				omega = omega +		dimag(	Velo(a,ki,n,m) * Velo(b,ki,m,n)	) 	/ 	( En(ki,m) - En(ki,n) )**2
+			end if 
+		end do		
+		omega	= -2.0_dp * omega
+		!
+		!
+		return
+	end
 
 
 
