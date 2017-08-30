@@ -12,7 +12,7 @@ module wannier
 	implicit none
 
 	private
-	public :: isNormal, calcWcent, calcWsprd, calc0ElPol, genUnkW, calcConn, calcPolViaA, interpConnCurv
+	public :: isNormal, calcWcent, calcWsprd, calc0ElPol, genUnkW, calcPolViaA, interpConnCurv
 
 	contains
 
@@ -224,79 +224,7 @@ module wannier
 
 
 
-	subroutine calcConn(unk,nxk, nyk, A)
-		!finite difference on lattice periodic unk to calculate the Berry connection A
-		!	A_n(k) 	= <u_n(k)|i \nabla_k|u_n(k)>
-		!		 	= i  <u_n(k)| \sum_b{ w_b * b * [u_n(k+b)-u_n(k)]}
-		!			= i \sum_b{		w_b * b * [  <u_n(k)|u_n(k+b)> -  <u_n(k)|u_n(k)>]		}
-		!
-		! see Mazari, Vanderbilt PRB.56.12847 (1997), Appendix B
-		!
-		complex(dp),	intent(in)		:: unk(:,:,:)		!unk(	nR, nK/nKw, nWfs/nG	)
-		integer,		intent(in)		:: nxk, nyk
-		complex(dp),	intent(out)		:: A(:,:,:)			!Aconn(	2,nK, nWfs)		)	
-		complex(dp)						:: Mxl, Mxr, Myl, Myr, M, one
-		integer							:: n, Z, ki, kx, ky, kxl, kxr, kyl, kyr
-		real(dp)						:: thres, wbx,wby, bxl(2), bxr(2), byl(2), byr(2) !for nearest neighbours, assuming cubic mesh
-		!
-		thres	= 1e-3_dp
-		A 		= dcmplx(0.0_dp)
-		Z 		= 4	!amount of nearest neighbours( 2 for 2D cubic unit cell)
-		wbx 	= 3.0_dp / 		( real(Z,dp) * dkx**2 )
-		wby 	= 3.0_dp /		( real(Z,dp) * dky**2 )
-		!b vector two nearest X neighbours:
-		bxl(1) 	= -dkx				
-		bxl(2)	= 0.0_dp
-		bxr(1) 	= +dkx
-		bxr(2)	= 0.0_dp
-		!b vector two nearest Y neighbours:
-		byl(1) 	= 0.0_dp
-		byl(2)	= -dky
-		byr(1) 	= 0.0_dp
-		byr(2)	= +dky
 
-
-		do n = 1, nWfs
-			do kx = 1, nxk
-				kxl	= getLeft(kx,nxk)
-				kxr	= getRight(kx,nxk)
-				!
-				do ky = 1, nyk
-					kyl	= getLeft(ky,nyk)
-					kyr = getRight(ky,nyk)
-					ki	= getKindex(kx,ky)
-					!
-					!OVERLAP TO NEAREST NEIGHBOURS
-					one = UNKoverlap(	n, 		ki		, 		ki					, unk	)
-					Mxl	= UNKoverlap(	n, 		ki		, getKindex( kxl, ky ) 		, unk	) 
-					Mxr	= UNKoverlap(	n, 		ki		, getKindex( kxr, ky )		, unk	)
-					Myl	= UNKoverlap(	n, 		ki		, getKindex( kx ,kyl )		, unk	)
-					Myr	= UNKoverlap(	n, 		ki		, getKindex( kx ,kyr )		, unk	)
-					!
-					!write(*,'(a,f15.12,a,f15.12)')"[calcConn]: Mxl=",dreal(Mxl),"+i*",dimag(Mxl)
-					!FD SUM OVER NEAREST NEIGHBOURS
-					A(:,ki,n) = A(:,ki,n) + wbx * bxl(:) * i_dp * ( Mxl - one )
-					A(:,ki,n) = A(:,ki,n) + wbx * bxr(:) * i_dp * ( Mxr - one )
-					A(:,ki,n) = A(:,ki,n) + wby * byl(:) * i_dp * ( Myl - one )
-					A(:,ki,n) = A(:,ki,n) + wby * byr(:) * i_dp * ( Myr - one )
-					!FD SUM OVER NEAREST NEIGHBOURS
-					!A(:,ki,n) = A(:,ki,n) + wbx * bxl(:) * dimag(	log( Mxl ) )
-					!A(:,ki,n) = A(:,ki,n) + wbx * bxr(:) * dimag(	log( Mxr ) )
-					!A(:,ki,n) = A(:,ki,n) + wby * byl(:) * dimag(	log( Myl ) )
-					!A(:,ki,n) = A(:,ki,n) + wby * byr(:) * dimag(	log( Myr ) )
-					!
-					!
-					if(abs( abs(one) - 1.0_dp ) > thres ) then
-						write(*,'(a,i2,a,i7,a,f16.8,a,f16.8)')	"[calcConn]: n=",n," unk normalization problem at ki=",ki,&
-													" one=",dreal(one),"+i*",dimag(one)
-					end if
-				end do
-			end do
-		end do
-		!
-		!
-		return
-	end
 
 
 	subroutine interpConnCurv(wnF, Aconn, Fcurv)
@@ -343,41 +271,7 @@ module wannier
 
 
 
-	complex(dp) function UNKoverlap(n, ki, knb, unk)
-		!HELPER for calcConn
-		!calculates the overlap between unk at ki and at a neigbhouring k point knb
-		!	integration only over the first unit cell
-		!
-		integer,		intent(in)		:: n, ki, knb
-		complex(dp),	intent(in)		:: unk(:,:,:)  !unk(	nR, nK, nWfs/nG	)
-		complex(dp),	allocatable		:: f(:)
-		integer							:: xi,yi,ri,rloc, nRx1, nRy1, nR1
-		!
-		!Set integration range to first unit cell
-		nRx1 	= int(		real(nRx,dp) / real(nSCx,dp)		)
-		nRy1 	= int(		real(nRy,dp) / real(nSCy,dp)		)
-		nR1		= nRx1 * nRy1 
-		allocate(	f(nR1)	)
-		!
-		!fill integration array
-		f 		= dcmplx(0.0_dp)
-		do yi = 1, nRy1
-			do xi = 1, nRx1
-				ri		= getRindex(xi,yi)			!overall index, to get correct position from unk
-				rloc 	= (yi-1) * nRx1 + xi		!for mapping to f array
-				f(rloc)	= dconjg( unk(ri,ki,n) ) * unk(ri,knb,n)
-				!write(*,'(a,f10.6,a,f10.6)')	"[overlap] f=",dreal(f(rloc)),"+i*",dimag(f(rloc))
-			end do
-		end do
-		!
-		!integrate
-		UNKoverlap = nIntegrate(nR1, nRx1, nRy1, dx, dy, f	)
-		
-		!write(*,'(a,f10.6,a,f10.6)')"[overlap]=",dreal(overlap),"+i*",dimag(overlap)
-		!
-		!
-		return
-	end
+
 
 
 	subroutine calcPolViaA(A, pElA)
@@ -489,35 +383,6 @@ module wannier
 		!call nIntegrate(nIntSwitch, dx, fn	, norm	)
 		!write(*,*)"[wXXw]: scaling with ",1.0_dp/norm
 		!wXXw = wXXw  / norm
-		!
-		return
-	end
-
-
-	integer function getLeft(i,N)
-		!HELPER for calcConn
-		!gets left (lower) neighbour, using the periodicity at boundary
-		!
-		integer,	intent(in)	:: i,N
-		if(i==1) then
-			getLeft = N
-		else
-			getLeft = i-1
-		end if
-		!
-		return
-	end
-
-	integer function getRight(i,N)
-		!HELPER for calcConn
-		!gets right (upper) neighbour, using the periodicity at boundary
-		!
-		integer,	intent(in)	:: i,N
-		if(i==N) then
-			getRight = 1
-		else
-			getRight = i+1
-		end if
 		!
 		return
 	end
