@@ -28,7 +28,7 @@ module potWellModel
 		complex(dp),	intent(out)		::	U(:,:,:), wnF(:,:,:), unkW(:,:,:), veloBwf(:,:,:)		!Uh(  nWfs	, nWfs,		nK		)	
 																				!wnF( nR	, nSupC,	nWfs	)	
 																				!unkW(nR	, nKpts,	nWfs	)
-																				!veloBwf(nR,2*nG,nK)
+																				!veloBwf(nR,nK,2*nG)
 		real(dp),		intent(out)		::	En(:,:)																	
 		complex(dp),	allocatable		::	Hmat(:,:), bWf(:,:), lobWf(:,:), gnr(:,:)
 		real(dp),		allocatable		::	EnT(:), bwfR(:,:), bwfI(:,:)	 
@@ -89,26 +89,31 @@ module potWellModel
 
 
 	subroutine calcVeloMat(unk, veloBwf, Velo)
-		complex(dp),		intent(in)		:: unk(:,:,:), veloBwf(:,:,:)	!	unk(nR, nK, nWfs) , veloBwf(nR,2*nWfs,nK)
-		complex(dp),		intent(out)		:: Velo(:,:,:,:)   !Velo(		3,			nWfs	, nwFs,	nK)		
+		!calculates matrix elements of the velocity operator
+		!	velocity operator is analytically applied to the plane wave basis 
+		!	and then weighted by the basCoeff obtained from the solver and stored in veloBwf
+		!	
+		complex(dp),		intent(in)		:: unk(:,:,:), veloBwf(:,:,:)	!	unk(nR, nK, nWfs) , veloBwf(nR,nK ,2*nWfs)
+		complex(dp),		intent(out)		:: Velo(:,:,:,:)   !Velo(3,	nK,	nWfs	, nwFs)		
 		integer								:: ki, n,m, ri
 		complex(dp),		allocatable		:: fx(:), fy(:)
 
 		allocate(	fx(nR)	)
 		allocate(	fy(nR)	)
 
-		do ki = 1, nK
-			do m = 1, nWfs
-				do n = 1, nWfs
+		
+		do m = 1, nWfs
+			do n = 1, nWfs
+				do ki = 1, nK
 					!FILL INTEGRATION ARRAY
 					do ri = 1, nWfs
-						fx(ri)	= myExP( 	dot_product( kpts(:,ki), rpts(:,ri) )		)	*unk(ri,ki,n)	* veloBwf(ri,	m		,ki)
-						fy(ri)	= myExP( 	dot_product( kpts(:,ki), rpts(:,ri) )		)	*unk(ri,ki,n)	* veloBwf(ri,	nWfs+m	,ki)
+						fx(ri)	= myExP( 	dot_product( kpts(:,ki), rpts(:,ri) )		)	*unk(ri,ki,n)	* veloBwf(ri, ki,	m		)
+						fy(ri)	= myExP( 	dot_product( kpts(:,ki), rpts(:,ri) )		)	*unk(ri,ki,n)	* veloBwf(ri, ki,	nWfs+m	)
 					end do
 					!INTEGRATE
-					Velo(1,n,m,ki)	= nIntegrate(nR, nRx, nRy, dx, dy, fx)
-					Velo(2,n,m,ki)	= nIntegrate(nR, nRx, nRy, dx, dy, fy)
-					Velo(3,n,m,ki) 	= dcmplx(0.0_dp)
+					Velo(1,ki,n,m)	= nIntegrate(nR, nRx, nRy, dx, dy, fx)
+					Velo(2,ki,n,m)	= nIntegrate(nR, nRx, nRy, dx, dy, fy)
+					Velo(3,ki,n,m) 	= dcmplx(0.0_dp)
 				end do
 			end do
 		end do
@@ -359,7 +364,7 @@ module potWellModel
 		!
 		integer,		intent(in)		:: ki
 		complex(dp),	intent(in)		:: basCoeff(:,:)
-		complex(dp),	intent(out)		:: veloBwf(:,:,:)	!veloBwf(nR,2*nG,nK)
+		complex(dp),	intent(out)		:: veloBwf(:,:,:)	!veloBwf(nR,nK,2*nG)
 		complex(dp),	allocatable		:: basVec(:), tmp(:)
 		integer							:: xi, min, max
 
@@ -373,14 +378,14 @@ module potWellModel
 			min 					= 1
 			max 					= nG
 			tmp						= matmul(	basVec(min:max),	basCoeff) / dsqrt(vol)
-			veloBwf(xi,1:nWfs,ki)	= tmp(1:nWfs)
+			veloBwf(xi,ki,1:nWfs)	= tmp(1:nWfs)
 			!Y COMPONENT
 			min						= nG+1
 			max						= 2*nG
 			tmp						= matmul(	basVec(min:max),	basCoeff) / dsqrt(vol)
 			min						= nWfs +1
 			max						= 2*nWfs
-			veloBwf(xi,min:max,ki)	= tmp(1:nWfs)
+			veloBwf(xi,ki,min:max)	= tmp(1:nWfs)
 		end do
 		!
 		return

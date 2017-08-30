@@ -52,8 +52,8 @@ program main
 	!
 	!allocate(			Aint(		2		,	nKw		, nWfs	)				)
 	!allocate(			Fcurv(		2,	2	,	nKw		, nWfs	)				)
-	allocate(			VeloBwf(	nR		,	2*nWfs	,	nK		)			)
-	allocate(			Velo(		3,			nWfs	, nwFs,	nK)				)
+	allocate(			VeloBwf(	nR		,	nK		, 2*nWfs)				)
+	allocate(			Velo(		3		,	nK		,nWfs, nwFs)			)
 	!
 	call cpu_time(aT1)
 	aT = aT1 - aT0

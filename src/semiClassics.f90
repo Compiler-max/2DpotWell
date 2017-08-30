@@ -31,26 +31,28 @@ module semiClassics
 	subroutine	calcFirstOrdP(Fcurv, Aconn, Velo, En, p1)
 		!calculates the first order polarization p1 according to
 		!	P'= -int_dk [0.5 (Curv.Velo)*B_ext + a']
-		complex(dp),	intent(in)		:: 	Fcurv(:,:,:) 	,Aconn(:,:,:), 	Velo(:,:,:,:)		!	Fcurv(3,nKs,nWfs) Velo(3,nWfs,nWfs, nK)	
+		complex(dp),	intent(in)		:: 	Fcurv(:,:,:) 	,Aconn(:,:,:), 	Velo(:,:,:,:)		!	Fcurv(3,nKs,nWfs) Velo(3, nK, nWfs,nWfs)	
 		real(dp),		intent(in)		::	En(:,:)				!	En(			nWfs		,	nK)						
 		real(dp),		intent(out)		:: 	p1(3)
 		complex(dp), 	allocatable		::	f(:,:)
 		real(dp)						::	pn(3)
 		real(dp)						:: 	Fmat(3,3)
-		integer							:: 	n, ki
+		integer							:: 	n, ki, nSize, kSize
 		!
-		allocate(	f(3,size(Velo,2) )		)
+		nSize	= size(Velo,3)
+		kSize	= size(Velo,2)
+		allocate(	f(3,nSize )		)
 		p1 = 0.0_dp
-		if(		size(Velo,2) /= size(En,2)		) then
+		if(		nSize /= size(En,2)		) then
 			write(*,*)"[calcFirstOrdP]: WARNING Energy and connection live on different k meshes!"
 		end if
 		!
 		!
-		do n = 1, size(Velo,3)
+		do n = 1, nSize
 			f 	= dcmplx(0.0_dp)
 			pn	= 0.0_dp
 			!FILL INTEGRATION ARRAY
-			do ki = 1, size(Velo,2)
+			do ki = 1, kSize
 				!PHASE SPACE DENSITY CORRECTION
 				f(:,ki)	= f(:,ki) + 0.5_dp * dot_product(		Fcurv(:,ki,n), Velo(:,ki,n,n) 	)		* Bext
 				call calcFmat(n,ki,Velo,En, Fmat)
@@ -58,7 +60,7 @@ module semiClassics
 				f(:,ki)	= f(:,ki) + matmul(Fmat, Bext) 
 			end do
 			!INTEGRATE
-			do ki = 1, size(Velo,2)
+			do ki = 1, kSize
 				pn = pn + f(:,ki)
 			end do
 			!SUM OVER n
@@ -67,7 +69,7 @@ module semiClassics
 		!
 		!
 		!NORMALIZE
-		p1 = p1 / size(Velo,2)
+		p1 = p1 / nSize !	?!
 		!
 		return
 	end
@@ -105,24 +107,26 @@ module semiClassics
 		!	F^(2)_ij = + Re \sum_{n/=0,m/=0} \eps_{j,k,l} * (V^k_nm V^l_m0 V^i_mn) / ( (E0-En)**2 (E0-Em) )
 		!
 		integer,		intent(in)		:: n0, ki
-		complex(dp),	intent(in)		:: Velo(:,:,:,:)  !V(3,nWfs,nWfs,nK)
+		complex(dp),	intent(in)		:: Velo(:,:,:,:)  !V(3,nK,nWfs,nWfs)
 		real(dp),		intent(in)		:: En(:,:)			!	En(	nWfs,	nK)	
 		real(dp),		intent(out)		:: Fmat(:,:)
 		complex(dp)						:: Vtmp
 		real(dp)						:: eDiff
-		integer							:: i, j, k, l, n,m
+		integer							:: i, j, k, l, n,m, nSize, kSize
 		!
+		nSize	= size(Velo,3)
+		kSize	= size(Velo,2)
 		!loop spacial indices
 		do j = 1, 3
 			do i = 1, 3
 				do k = 1, 3
 					do l = 1,3
 						!loop bands
-						do n = 1, size(Velo,2)
-							do m = 1, size(Velo,2) 
+						do n = 1, nSize
+							do m = 1, nSize
 								if( n/=n0 .and. m/=n0) then
 									!VELOCITIES
-									Vtmp		= Velo(k,n,m,ki) * Velo(l,m,n0,ki) * Velo(i,n0,n,ki) 
+									Vtmp		= Velo(k,ki,n,m) * Velo(l,ki,m,n0) * Velo(i,ki,n0,n) 
 									!ENERGIES
 									eDiff		= ( 	En(n0,ki) - En(n,ki)	 )**2 	* 	 ( 	En(n0,ki) - En(m,ki)	)
 									!MATRIX
@@ -154,18 +158,19 @@ module semiClassics
 		real(dp),		intent(out)		:: Fmat(:,:)
 		complex(dp)						:: Vtmp
 		real(dp)						:: eDiff
-		integer							:: i, j, k, l, n
+		integer							:: i, j, k, l, n, nSize
 		!
+		nSize 	=	size(Velo,3)
 		!loop spacial indices
 		do j = 1, 3
 			do i = 1, 3
 				do k = 1, 3
 					do l = 1,3
 						!loop bands
-						do n = 1, size(Velo,2)
+						do n = 1, nSize
 							if( n/=n0 ) then
 								!VELOCITIES
-								Vtmp		= Velo(k,n0,n0,ki) * Velo(l,n,n0,ki) * Velo(i,n0,n,ki) 
+								Vtmp		= Velo(k,ki,n0,n0) * Velo(l,n,ki,n0) * Velo(i,ki,n0,n) 
 								!ENERGIES
 								eDiff		= ( 	En(n0,ki) - En(n,ki)	 )**3 	
 								!MATRIX
