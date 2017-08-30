@@ -235,6 +235,7 @@ module potWellModel
 	end
 
 
+
 	real(dp) function omega(n,a,b,ki,Velo,En)
 		!returns curvature tensor element a,b
 		!see Wang/Vanderbilt PRB 74, 195118 (2006) eq.(9)
