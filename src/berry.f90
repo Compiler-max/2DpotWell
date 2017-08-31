@@ -1,4 +1,4 @@
-module berryWF
+module berry
 	!module contains methods related to the Berry phase theory of modern polarization
 	!	i.e. calculation of connection, velocities, curvatures and polarization
 	use mathematics,	only:	dp, PI_dp, i_dp, myExp, myLeviCivita, nIntegrate
@@ -306,4 +306,4 @@ module berryWF
 
 
 
-end module berryWF
+end module berry

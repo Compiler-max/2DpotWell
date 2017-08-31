@@ -9,7 +9,7 @@ program main
 	!
 	use potWellModel, 	only: 		solveHam
 	!
-	use berryWF,		only:		calcConn, calcCurv, calcVeloMat, calcPolViaA
+	use berry,			only:		calcConn, calcCurv, calcVeloMat, calcPolViaA
 	!
 	use wannier,	 	only: 		isNormal, calcWcent, calcWsprd, calc0ElPol,&
 									genUnkW, interpConnCurv  !,bandInterpol,gaugeUnk, calcConnViaK, gaugeConnToHam

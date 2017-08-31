@@ -8,7 +8,7 @@ module peierls
 									Gvec, atPos, atR, kpts, kptsW, rpts,Rcell, gaugeSwitch, trialOrbSw, trialOrbVAL, Zion,&
 									Bext
 	use wannier,		only:	genTBham
-	use berryWF,		only:	calcConn, calcPolViaA
+	use berry,			only:	calcConn, calcPolViaA
 	implicit none
 	
 
