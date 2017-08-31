@@ -124,14 +124,18 @@ module sysPara
 	end
 
 
-	logical function insideAt(at, x, y)
+	logical function insideAt(at, r)
 		!return true if real point is inside the potential of atom at
 		integer,	intent(in)		:: at
-		real(dp),	intent(in)		:: x, y
+		real(dp),	intent(in)		:: r(2)
 		integer						:: i
-		real(dp)					:: posX, posY, radX, radY
+		real(dp)					:: posX, posY, radX, radY, xRel, yRel
 		logical						:: insideX, insideY
 		!
+		!PROJECT TO FIRST UNIT CELL
+		xRel	=	dmod(	r(1),	aX)
+		yRel	=	dmod(	r(2),	aY)
+		!CHECK IF INSIDE
 		insideX	= .false.
 		insideY = .false.
 		posX	= atPos(1,at)
