@@ -111,18 +111,14 @@ module wannGen
 		complex(dp),	intent(out)	:: gnr(:,:)       !gnr( nR, nWfs)	
 		real(dp)					:: posX, posY, xc, k, L
 		complex(dp)					:: A
-		integer						:: n, xi, at
+		integer						:: n, ri, at
 		!
 		gnr = dcmplx(0.0_dp)
 		do n = 1, nWfs
-			do xi = 1, nR
-				!map into first unit cell
-				posX	= mod(rpts(1,xi),aX)
-				posY	= mod(rpts(2,xi),aY)
-				!
+			do ri = 1, nR
 				do at 	= 1, nAt
-					if(	insideAt( at , posX, posY )	) then
-						gnr(xi,n) = gVal(at, n, xi)
+					if(	insideAt( at , rpts(:,ri) )	) then
+						gnr(ri,n) = gVal(at, n, ri)
 						!write(*,'(a,i2,a,f6.3,a,f6.3,a,f6.3,a,f6.3,a,f6.3,a,f6.3)')	"[genTrialOrb]: gnr(at=",&
 						!			at," r=(",rpts(1,xi),",",rpts(2,xi),&
 						!		")= (",posX,",",posY,"))= ",dreal(gnr(xi,n)),"+i*",dimag(gnr(xi,n))
