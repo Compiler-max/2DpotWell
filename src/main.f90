@@ -9,8 +9,10 @@ program main
 	!
 	use potWellModel, 	only: 		solveHam, calcVeloMat, calcConn, calcCurv
 	!
-	use wannier,	 	only: 		isNormal,calcWcent, calcWsprd,calc0ElPol , &
-									genUnkW, calcPolViaA, interpConnCurv  !,bandInterpol,gaugeUnk, calcConnViaK, gaugeConnToHam
+	use wannier,	 	only: 		isNormal,calcWcent, calcWsprd,&
+									genUnkW, interpConnCurv  !,bandInterpol,gaugeUnk, calcConnViaK, gaugeConnToHam
+	!
+	use polarization0,	only:		calc0ElPol, calcPolViaA
 	!
 	use semiclassics,	only:		calcFirstOrdP
 	!
@@ -23,7 +25,8 @@ program main
 
 	
     real(dp), 		allocatable,	dimension(:,:)		:: 	wCent, wSprd
-    complex(dp),	allocatable,	dimension(:,:,:)	:: 	wnF, unk, unkW, Uh, Aconn, Fcurv, Aint, veloBwf, bWf !, ukn basCoeff,
+    real(dp),		allocatable,	dimension(:,:,:)	::	Aconn, Fcurv
+    complex(dp),	allocatable,	dimension(:,:,:)	:: 	wnF, unk, unkW, Uh, Aint, veloBwf, bWf !, ukn basCoeff,
     complex(dp),	allocatable,	dimension(:,:,:,:)	::	Velo
     real(dp),		allocatable,	dimension(:,:)		:: 	En
     real(dp) 											:: 	pEl(2), pIon(2), pTot(2), pElViaA(2), pInt(2), p1(3)
@@ -126,6 +129,14 @@ program main
 	write(*,*)"[main]: done with first order polarization calculation"
 	call cpu_time(scT1)
 	scT	= scT1 - scT0
+
+
+	write(*,*)"[main]:**************************PEIERLS SUB*************************"
+
+
+
+
+
 
 	!OUTPUTING RESULTS SECTION
 	write(*,*)"[main]:**************************WRITE OUTPUT*************************"

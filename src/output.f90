@@ -143,18 +143,15 @@ module output
 
 
 	subroutine writeWaveFunc(unk, Aconn, Fcurv)
-		complex(dp),	intent(in)		:: unk(:,:,:), Aconn(:,:,:), Fcurv(:,:,:)
-		real(dp),		allocatable		:: unkR(:,:,:), unkI(:,:,:), AconnR(:,:,:), AconnI(:,:,:)
+		complex(dp),	intent(in)		:: unk(:,:,:)
+		real(dp),		intent(in)		:: Aconn(:,:,:), Fcurv(:,:,:)
+		real(dp),		allocatable		:: unkR(:,:,:), unkI(:,:,:)
 		!
 		allocate(	unkR(	size(unk,1)		, size(unk,2)	, size(unk,3)		)			)
 		allocate(	unkI(	size(unk,1)		, size(unk,2)	, size(unk,3)		)			)
-		allocate(	AconnR(	size(Aconn,1)	, size(Aconn,2)	, size(Aconn,3)		)			)	
-		allocate(	AconnI(	size(Aconn,1)	, size(Aconn,2)	, size(Aconn,3)		)			)
 		!
 		unkR 	= dreal(unk)
 		unkI 	= dimag(unk)
-		AconnR	= dreal(Aconn)
-		AconnI	= dimag(Aconn)
 		!
 		!LATTICE PERIODIC FUNCTIONS
 		open(unit=400,file='rawData/unkR.dat',form='unformatted',access='stream',action='write')
@@ -168,30 +165,14 @@ module output
 		!
 		!CONNECTION
 		open(unit=410,file='rawData/AconnR.dat',form='unformatted',access='stream',action='write')
-		write(410)	AconnR
+		write(410)	Aconn
 		close(410)
-		!
-		open(unit=415,file='rawData/AconnI.dat',form='unformatted',access='stream',action='write')
-		write(415)	AconnI
-		close(415)
 		!
 		!
 		!CURVATURE	
-		AconnR	= dreal(Fcurv)
-		AconnI	= dimag(Fcurv)
 		open(unit=420,file='rawData/FcurvR.dat',form='unformatted',access='stream',action='write')
-		write(420)	AconnR		!420!!!!!!open(unit=410,file='rawData/AconnR.dat',form='unformatted',access='stream',action='write')
-		write(410)	AconnR
-		close(410)
-		!
-		open(unit=415,file='rawData/AconnI.dat',form='unformatted',access='stream',action='write')
-		write(415)	AconnI
-		close(415)
+		write(420) Fcurv		!420!!!!!!open(unit=410,file='rawData/AconnR.dat',form='unformatted',access='stream',action='write')
 		close(420)
-		!
-		open(unit=425,file='rawData/FcurvI.dat',form='unformatted',access='stream',action='write')
-		write(425)	AconnI
-		close(425)
 		!
 		!
 		return

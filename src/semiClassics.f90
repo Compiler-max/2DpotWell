@@ -31,12 +31,14 @@ module semiClassics
 	subroutine	calcFirstOrdP(Fcurv, Aconn, Velo, En, p1)
 		!calculates the first order polarization p1 according to
 		!	P'= -int_dk [0.5 (Curv.Velo)*B_ext + a']
-		complex(dp),	intent(in)		:: 	Fcurv(:,:,:) 	,Aconn(:,:,:), 	Velo(:,:,:,:)		!	Fcurv(3,nKs,nWfs) Velo(3, nK, nWfs,nWfs)	
+		real(dp),		intent(in)		::	Fcurv(:,:,:), Aconn(:,:,:)
+		complex(dp),	intent(in)		:: 	Velo(:,:,:,:)		!	Fcurv(3,nKs,nWfs) Velo(3, nK, nWfs,nWfs)	
 		real(dp),		intent(in)		::	En(:,:)				!	En(			nK, nWfs)						
 		real(dp),		intent(out)		:: 	p1(3)
 		complex(dp), 	allocatable		::	f(:,:)
 		real(dp)						::	pn(3)
 		real(dp)						:: 	Fmat(3,3)
+		complex(dp)						:: 	densCorr(3)
 		integer							:: 	n, ki, nSize, kSize
 		!
 		nSize	= size(Velo,3)
@@ -54,7 +56,8 @@ module semiClassics
 			!FILL INTEGRATION ARRAY
 			do ki = 1, kSize
 				!PHASE SPACE DENSITY CORRECTION
-				f(:,ki)	= f(:,ki) + 0.5_dp * dot_product(		Fcurv(:,ki,n), Aconn(:,ki,n) 	)		* Bext
+				densCorr	= 0.5_dp * dot_product(		Fcurv(:,ki,n), Aconn(:,ki,n) 	)		* Bext
+				f(:,ki)		= f(:,ki) + densCorr
 				!POSITIONAL SHIFT
 				call calcFmat(n,ki,Velo,En, Fmat)
 				f(:,ki)	= f(:,ki) + matmul(Fmat, Bext) 

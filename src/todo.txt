@@ -1,14 +1,13 @@
-tomorrow do:
-	- calculate velocity operator matrix elements
-	- finish nius first order pol
-	- debug zero order pol calcualtion
+today toDo:
+	- Peierls substitution
+	- curvature & connection plot
+	- plotting: mark atoms in the bwf and wnf plots
 
 
+todo:
+	
 
-
-
-other stuff:
-	- git (online)
+	- documentation
 
 	
 	- write test for boundary condition of polarization -> use unk boundary condition
@@ -19,15 +18,13 @@ other stuff:
 
 
 
-	
-	- plotting: mark atoms in the bwf and wnf plots
+	- git (online)
+	- build on cluster
+	- on cluster: convergence tests
 
 
 	
-	- curvature:
-		calcualation routine
 
-	
 
 	DEBUG:
 
@@ -45,18 +42,25 @@ other stuff:
 
 	-first order polarization
 		via Niu
-		via Peierls
-
-	
-
-
-
-
-
-
+		via Peierl
 
 	- peierls
 		watch out for chern insulator breakdown
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+BEYOND:
 
 	- yuriy also mentioned playing around with non collinearity, talk to frank about that again
 		-> maybe only do that in FLEUR	
