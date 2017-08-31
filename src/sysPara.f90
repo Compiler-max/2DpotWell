@@ -143,10 +143,10 @@ module sysPara
 		radX	= atR(1,at)
 		radY	= atR(2,at)
 		!
-		if( posX-radX <= x .and. x <= posX+radX ) then
+		if( posX-radX <= xRel .and. xRel <= posX+radX ) then
 			insideX = .true.
 		end if
-		if( posY-radY <= y .and. y <= posY+radY) then
+		if( posY-radY <= yRel .and. yRel <= posY+radY) then
 			insideY = .true.
 		end if
 

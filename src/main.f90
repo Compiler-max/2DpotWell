@@ -7,12 +7,12 @@ program main
 									nG, Gcut, nK, nKx, nKy, nKw, nKxW, nKyW, nWfs, nSC, nR, dx, dy, dkx, dky, &
 									Gvec, atPos, atR, kpts, rpts
 	!
-	use potWellModel, 	only: 		solveHam, calcVeloMat, calcConn, calcCurv
+	use potWellModel, 	only: 		solveHam
 	!
-	use wannier,	 	only: 		isNormal,calcWcent, calcWsprd,&
+	use berryWF,		only:		calcConn, calcCurv, calcVeloMat, calcPolViaA
+	!
+	use wannier,	 	only: 		isNormal, calcWcent, calcWsprd, calc0ElPol,&
 									genUnkW, interpConnCurv  !,bandInterpol,gaugeUnk, calcConnViaK, gaugeConnToHam
-	!
-	use polarization0,	only:		calc0ElPol, calcPolViaA
 	!
 	use semiclassics,	only:		calcFirstOrdP
 	!

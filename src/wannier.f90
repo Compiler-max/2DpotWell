@@ -12,7 +12,7 @@ module wannier
 	implicit none
 
 	private
-	public :: isNormal, calcWcent, calcWsprd, genUnkW, interpConnCurv
+	public :: isNormal, calcWcent, calcWsprd, calc0ElPol, genTBham, genUnkW, interpConnCurv
 
 	contains
 
@@ -143,6 +143,78 @@ module wannier
 
 
 
+	subroutine calc0ElPol(wCent,pE, pI, pT)
+		!calcuates 0 order polarization from the wannier centers
+		!	this is only defined up to a uncertainty quantum of e*\vec{a}/V0, 
+		!	where e is electron charge, \vec{a} a bravais lattice vector and V0 the volume of the unit cell
+		!	uncertainty is resolved by projecting the wannier centers into the first unit cell at (0,0) 
+		real(dp), intent(in)	:: wCent(:,:)
+		real(dp), intent(out)	:: pE(2), pI(2), pT(2)
+		integer 				:: n, at
+		real(dp) 				:: vol, cent(2)
+		!
+		
+		vol 	= aX * aY !1D
+		pT		= 0.0_dp
+		pE	 	= 0.0_dp
+		pI		= 0.0_dp
+		!
+		!ELECTRONIC
+		do n = 1,size(wCent,2)
+			cent(1) = dmod(wCent(1,n),aX) !get current center by projection into first unit cell
+			cent(2)	= dmod(wCent(2,n),aY)
+			!!
+			!write(*,'(a,f8.5,a,f8.5,a,f8.6,a,f8.6,a)')"[calc0ElPol]: Wcent = (",wCent(1,n),", ",wCent(2,n),") modified cent = (", cent(1),", ",cent(2),")"
+			pE = pE + cent				
+		end do
+		!IONIC
+		do at = 1, nAt
+			pI = pI + Zion(at) * atPos(:,at) 
+		end do
+		!NORMALIZE
+		!pE = pE / vol
+		!pI = pI / vol
+		!
+		!SHIFT WITH RESPECT TO CENTER OF UNIT CELL
+		cent(1)	= aX * 0.5_dp
+		cent(2)	= aY * 0.5_dp
+		pE = pE - cent
+		pI = pI - cent 
+		!TOTAL
+		pT = pI + pE												
+		!
+		return
+	end
+
+	!TIGHT BINDING MODEL
+	subroutine genTBham(ki, wnF, Htb)
+		!subroutine generates a tight binding Hamiltonian via
+		!
+		!	H_n,m = \sum{R} exp{i k.R} <0n|H(k)|Rm>
+		!
+		integer,		intent(in)		:: ki
+		complex(dp),	intent(in)		:: wnF(:,:,:)	!wnF(nR	, nSC, nWfs	)
+		complex(dp),	intent(out)		:: Htb(:,:) 	!Htb(nWfs,nWfs)
+		integer							:: n,m, R
+		complex(dp)						:: phaseR
+		!
+		Htb	= dcmplx(0.0_dp)
+		!
+		!
+		do m = 1, nWfs
+			do n = 1, nWfs
+				!SUM OVER CELLS R
+				do R = 1, nSC
+					phaseR		= myExp( 	dot_product( kpts(:,ki) , Rcell(:,R) )			)	
+					Htb(n,m)	= Htb(n,m) + phaseR * Hwnf(n,m,ki,R, wnF)
+				end do
+			end do
+		end do
+		!
+		return
+	end
+
+
 
 
 
@@ -180,10 +252,6 @@ module wannier
 		!
 		return
 	end
-
-
-
-
 
 
 	subroutine interpConnCurv(wnF, Aconn, Fcurv)
@@ -225,6 +293,22 @@ module wannier
 		!
 		return
 	end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -286,6 +370,39 @@ module wannier
 		!
 		return
 	end
+
+
+	complex(dp) function Hwnf(n,m, ki, R, wnF)
+		!calculates the Hamiltonian expectation value
+		!
+		!	<0n|H(ki)|Rm>
+		!
+		integer,		intent(in)		:: n, m, ki, R
+		complex(dp),	intent(in)		:: wnF(:,:,:)	!!wnF(nR	, nSC, nWfs	)
+		real(dp)						:: Htmp
+		complex(dp),	allocatable		:: f(:)
+		integer							:: ri, at
+		!
+		allocate(	f(nR)	)
+		!
+		do ri = 1, nR
+			!SET UP HAM ON REAL SPACE GRID
+			Htmp	= 0.5_dp	* dot_product(kpts(:,ki),kpts(:,ki))			!hbar**2 / (2*me) * k**2 kin.energy
+			do at = 1, nAt
+				if( insideAt(at,rpts(:,ri))		) then
+					Htmp	= Htmp + atPot(at)
+				end if
+			end do
+			!FILL INTEGRATION ARRAY
+			f(ri)	= dconjg( wnF(ri,R0,n) )	*	dcmplx( Htmp )		*	wnF(ri,R,m)
+		end do
+		!
+		Hwnf	= nIntegrate(nR, nRx,nRy, dx,dy, f)
+		!
+		!
+		return
+	end
+
 
 
 
