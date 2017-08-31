@@ -6,13 +6,18 @@ module mathematics
 	private
 
 
-	public :: dp, PI_dp, i_dp, myExp, Cangle, myLeviCivita, nIntegrate, isUnit, isIdentity, isHermitian, SVD, eigSolver, myMatInvSqrt
+	public :: dp, PI_dp, i_dp, myExp, Cangle, myLeviCivita, nIntegrate, crossP, isUnit, isIdentity, isHermitian, SVD, eigSolver, myMatInvSqrt
 
 
 	interface nIntegrate
 		module procedure nIntegrateREAL
 		module procedure nIntegrateCPLX
 	end interface nIntegrate
+
+	interface crossP
+		module procedure crossPreal
+		module procedure crossPcplx
+	end interface crossP
 
 
 	!for clean double precision convention through the code
@@ -29,15 +34,23 @@ module mathematics
 
 	!physical constants
 
-
-
-
-
-
-
-
-
 	contains
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 !public
 	complex(dp) function myExp(x)
@@ -311,6 +324,29 @@ module mathematics
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 !private:  
 
 
@@ -356,6 +392,34 @@ module mathematics
 		!
 		return
 	end
+
+
+	function crossPreal(a,b)
+		!cross product of two real 3dim vectors a,b
+		real(dp),		intent(in)	:: a(3), b(3)
+		real(dp)					:: crossPreal(3)
+		!
+		crossPreal(1)	=	a(2) * b(3)		-	a(3) * b(2)	 
+		crossPreal(2)	=	a(3) * b(1)		-	a(1) * b(3) 
+		crossPreal(3)	=	a(1) * b(2)		-	a(2) * b(1) 
+		!
+		return
+	end
+
+
+	function crossPcplx(a,b)
+		!cross product of two complex 3dim vectors a,b
+		complex(dp),	intent(in)	:: a(3), b(3)
+		complex(dp)					:: crossPcplx(3)
+		!
+		crossPcplx(1)	=	a(2) * b(3)		-	a(3) * b(2)	 
+		crossPcplx(2)	=	a(3) * b(1)		-	a(1) * b(3) 
+		crossPcplx(3)	=	a(1) * b(2)		-	a(2) * b(1) 
+		!
+		return
+	end
+
+
 
 
 
