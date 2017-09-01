@@ -9,10 +9,10 @@ program main
 	!
 	use potWellModel, 	only: 		solveHam
 	!
-	use berry,			only:		calcConn, calcCurv, calcVeloMat, calcPolViaA
+	use berry,			only:		isKperiodic, calcConn, calcCurv, calcVeloMat, calcPolViaA
 	!
 	use wannier,	 	only: 		isNormal, calcWcent, calcWsprd, calc0ElPol,&
-									genUnkW, interpConnCurv  !,bandInterpol,gaugeUnk, calcConnViaK, gaugeConnToHam
+									genUnkW, interpConnCurv  !,bandInterpol,gaugeUnk, gaugeConnToHam
 	!
 	use semiclassics,	only:		calcFirstOrdP
 	!
@@ -29,9 +29,9 @@ program main
     complex(dp),	allocatable,	dimension(:,:,:)	:: 	wnF, unk, unkW, Uh, Aint, veloBwf, bWf !, ukn basCoeff,
     complex(dp),	allocatable,	dimension(:,:,:,:)	::	Velo
     real(dp),		allocatable,	dimension(:,:)		:: 	En
-    real(dp) 											:: 	pEl(2), pIon(2), pTot(2), pElViaA(2), pInt(2), p1(3)
+    real(dp) 											:: 	pEl(2), pIon(2), pTot(2), pElViaA(2), pInt(2), pNiu(3), pPei(3)
     real												:: 	mastT0,mastT1,mastT,aT0,aT1,aT,kT0,kT1,kT,wT0,wT1,wT, oT0, oT1, oT,&
-    														wI0, wI1, wI, scT0, scT1, scT
+    														wI0, wI1, wI, scT0, scT1, scT, peiT, peiT0, peiT1
     integer 											::	xi,ki
     call cpu_time(mastT0)
 
@@ -69,16 +69,18 @@ program main
 	write(*,*)"[main]:**************************ELECTRONIC STRUCTURE PART*************************"
 	call cpu_time(kT0)
 	!
+	!
 	call solveHam(Uh, wnF, unk, En, veloBwf)
-	!Get Velocity operator matrix
+	!check boundary condition on unk files
+	if( .not. isKperiodic(unk)	) then
+		write(*,*)"[main]: problem with unk gauge, wave functions are NOT periodic in k space"
+	end if
 	call calcVeloMat(unk, veloBwf, Velo)
-
-	!connection & curvature
 	call calcConn(unk, nKx, nKy, Aconn)  
 	call calcCurv(En, Velo, Fcurv)
-
 	!polarization (integration of connection)
 	call calcPolViaA(Aconn, pElViaA)
+	!
 	!
 	call cpu_time(kT1)
 	write(*,*)"[main]: done solving Schroedinger eq."
@@ -96,21 +98,23 @@ program main
 	write(*,*)"*"
 	write(*,*)"*"
 	write(*,*)"[main]:**************************WANNIER CENTERS & POLARIZATION*************************"
+	call cpu_time(wT0)
+	!
+	!
 	if( .not. isNormal(wnF) ) then
 		write(*,*)"[main]: the used Wannier functions are not properly normalized"
 	else
 		write(*,*)"[main]: Wannier functions in home unit cell are properly normalized"
 	end if
-
-	call cpu_time(wT0)
+	!
+	!
 	call calcWcent(wnF,	wCent)
 	call calcWsprd(wnF, wCent, wSprd)
 	call calc0ElPol(wCent, pEl, pIon, pTot)
-	write(*,*)"[main]: done with center polarization calc"
-
-	
-	
+	!
+	!
 	call cpu_time(wT1)
+	write(*,*)"[main]: done with center polarization calc"
 	wT 	= wT1 - wT0
 
 
@@ -125,13 +129,19 @@ program main
 
 	write(*,*)"[main]:**************************SEMICLASSICS*************************"
 	call cpu_time(scT0)
-	call calcFirstOrdP(Fcurv, Aconn, Velo, En, p1)
-	write(*,*)"[main]: done with first order polarization calculation"
+	call calcFirstOrdP(Fcurv, Aconn, Velo, En, pNiu)
 	call cpu_time(scT1)
+	write(*,*)"[main]: done with first order polarization calculation"
 	scT	= scT1 - scT0
 
 
 	write(*,*)"[main]:**************************PEIERLS SUB*************************"
+	call cpu_time(peiT0)
+	!
+	!
+	call cpu_time(peiT1)
+	write(*,*)"[main]: done with peierls substitution"
+	peiT = peiT1 - peiT0
 
 
 
@@ -149,7 +159,7 @@ program main
 	write(*,*)"[main]: ...wrote unks and connection"
 	call writeWannFiles(wnF, wCent, wSprd)			!call writeWannFiles(gnr, wnF, wCent, wSprd, Aconn, unkW)
 	write(*,*)"[main]: ...wrote wannier functions"
-	call writePolFile(pEl, pIon, pTot, pElViaA, pInt, p1 )
+	call writePolFile(pEl, pIon, pTot, pElViaA, pInt, pNiu, pPei )
 	write(*,*)"[main]: ...wrote polarization txt file"
 	
 	call cpu_time(oT1)
@@ -169,7 +179,7 @@ program main
 	write(*,*)"*"
 	write(*,*)"*"
 	write(*,*) '**************TIMING INFORMATION************************'
-	call printTiming(aT, kT, wT, oT, wI, scT, mastT)
+	call printTiming(aT, kT, wI, scT, peiT, wT, oT, mastT)
 
 	stop
 end 

@@ -58,11 +58,11 @@ module wannGen
 		if( .not. isUnit(U) 			) then
 			write(*,*)"[projectBwf]: U matrix is not a unitary matrix !"
 		end if
-		thres = 1e-2_dp
+		thres = 1e-4_dp
 		if( .not. isOrthonorm(thres,lobWf)	) then
-			write(*,*)"[projectBwf]: loBwf is not a orthonormal basis set"
+			write(*,'(a,f16.12)')"[projectBwf]: loBwf is NOT a orthonormal basis set, accuracy=",thres
 		else
-			write(*,*)"[projectBWf]: projected states form orthonormalized basis"
+			write(*,*)"[projectBWf]: projected states form orthonormal basis set"
 		end if
 		!
 		return
@@ -80,7 +80,7 @@ module wannGen
 		!
 		do n = 1, nWfs
 			do Ri = 1, nSC
-				cellP = -1 * dot_product(	kpts(:,ki) , Rcell(:,Ri)	) 
+				cellP = -1.0_dp * dot_product(	kpts(:,ki) , Rcell(:,Ri)	) 
 				do xi = 1, nR		
 						wnF(xi,Ri,n) = wnF(xi,Ri,n) + bWf(xi,n) * myExp(cellP) / real(nK,dp)
 				end do
@@ -206,13 +206,14 @@ module wannGen
 		!calculates the sqrt inv. of the overlap matrix S
 		complex(dp),	intent(in)	:: A(:,:)
 		complex(dp),	intent(out)	:: S(:,:)
-		complex(dp),	allocatable	:: Acon(:,:),Sold(:,:)
+		complex(dp),	allocatable	:: Acon(:,:),Sold(:,:), Ssqr(:,:)
 		real(dp)					:: thres
 		integer						:: m,n, i,j
 		m = size(A,1)
 		n = size(A,2)
 		allocate(	Acon(n,m)	)
 		allocate(	Sold(n,n)	)
+		allocate(	Ssqr(n,n)	)
 		!
 		S = dcmplx(0.0_dp)
 		Acon = transpose(A)
@@ -223,28 +224,15 @@ module wannGen
 		call myMatInvSqrt(S)
 
 
-		!Check if S is really the inverse sqrt
+		!DEBUG: Check if S is really the inverse sqrt
 		thres = 1e-4_dp
-		Sold = matmul(Sold,S)
-		Sold = matmul(Sold,S)
+		Ssqr = matmul(S,S)
+		Sold = matmul(Sold,Ssqr)
 		
-		do i=1,n
-			!check Diago
-			if(dreal(Sold(i,i))-1 > thres ) then
-				write(*,*)"[calcInvSmat]: there seams to be a problem with mat inversion (diago element not 1)"
-			else if(dimag(Sold(i,i)) > thres) then
-				write(*,*)"[calcInvSmat]: there seams to be a problem with mat inversion (has imag part)"
-			end if
-			!OFF diago
-			do j=1,n
-				if(j /= i) then
-					if(abs(Sold(i,j)) -1 > thres) then
-						write(*,*)"[calcInvSmat]: there seams to be a problem with mat inversion (non zero off diago)"
-					end if
-				end if
-			end do
-		end do
-
+		if( .not. isUnit(Sold) ) then
+			write(*,*)"[calcInvSmat]: problem with mat inversion, seems to be not inverse square root"
+		end if
+		!
 		!
 		return
 	end

@@ -3,7 +3,8 @@ module output
 	use mathematics,	only:	dp, PI_dp
 	use sysPara    , 	only: 	aX, aY, nAt, relXpos, relYpos, atRx, atRy, atPot,&
 								nG,nG0, Gcut, nKx, nKy,nK, nKw, nSC, nR, nRx, nRy, dx, dy, dkx, dky, nWfs, &
-								Gvec, atPos, atR, kpts, kptsW, rpts, Rcell, trialOrbVAL, Zion
+								Gvec, atPos, atR, kpts, kptsW, rpts, Rcell, trialOrbVAL, Zion, &
+								Bext
 
 
 	implicit none
@@ -237,8 +238,8 @@ module output
 	end
 
 
-	subroutine writePolFile(pEl, pIon, pTot, pElA, pInt, p1 )
-		real(dp),		intent(in)		:: pEl(2), pIon(2), pTot(2), pElA(2), pInt(2), p1(3)
+	subroutine writePolFile(pEl, pIon, pTot, pElA, pInt, pNiu, pPei )
+		real(dp),		intent(in)		:: pEl(2), pIon(2), pTot(2), pElA(2), pInt(2), pNiu(3), pPei(3)
 		!	
 		!	
 		open(unit=600,file='polOutput.txt',action='write')
@@ -247,11 +248,12 @@ module output
 		write(600,*)"*"
 		write(600,*)"*"
 		write(600,*)"*"
-		write(600,*)"ZION:"
+		write(600,*)"**************ZION:"
 		write(600,*) Zion
 		write(600,*)"*"
 		write(600,*)"*"
-		write(600,*)"POL:"
+		!
+		write(600,*)"**************POL:"
 		write(600,'(a,f16.12,a,f16.12,a,f16.12,a)')	"pEl = ",norm2(pEl)	," * (", &	
 																pEl(1)/norm2(pEl) 	,	", ",	pEl(2)/norm2(pEl),		")"
 		write(600,'(a,f16.12,a,f16.12,a,f16.12,a)')	"pElA= ",norm2(pElA)," * (", &	
@@ -262,10 +264,18 @@ module output
 																pIon(1)/norm2(pIon)	,	", ",	pIon(2)/norm2(pIon),	")"
 		write(600,'(a,f16.12,a,f16.12,a,f16.12,a)')	"pTot= ",norm2(pTot)," * (", &	
 																pTot(1)/norm2(pTot),	", ",	pTot(2)/norm2(pTot),	")"
-		write(600,*)"PERTURBATION:"
-		write(600,'(a,f16.12,a,f16.12,a,f16.12,a,f16.12,a)')	"pTot= ",norm2(p1)," * (", &	
-																p1(1)/norm2(p1),	", ",	p1(2)/norm2(p1),", ", p1(3)/norm2(p1),	")"
+		!
+		!
+		write(600,*)"**************PERTURBATION:"
+		write(600,'(a,f16.12,a,f16.12,a,f16.12,a,f16.12,a)')	"Bext= ",norm2(Bext) ," * (", &
+											Bext(1)/norm2(Bext),	", ",	Bext(2)/norm2(Bext),", ", Bext(3)/norm2(Bext),	")"
+		write(600,*)"*"
+		write(600,'(a,f16.12,a,f16.12,a,f16.12,a,f16.12,a)')	"pNiu= ",norm2(pNiu)," * (", &	
+											pNiu(1)/norm2(pNiu),	", ",	pNiu(2)/norm2(pNiu),", ", pNiu(3)/norm2(pNiu),	")"
+		write(600,'(a,f16.12,a,f16.12,a,f16.12,a,f16.12,a)')	"pPei= ",norm2(pPei)," * (", &	
+											pPei(1)/norm2(pPei),	", ",	pPei(2)/norm2(pPei),", ", pPei(3)/norm2(pPei),	")"
 		close(600)
+		!
 		!
 		return
 	end
@@ -273,8 +283,8 @@ module output
 
 
 
-	subroutine printTiming(aT,kT,wT,oT,wI,scT,mastT)
-		real,	intent(in)	:: aT, kT, wT, oT, wI, scT, mastT
+	subroutine printTiming(aT,kT,wI,scT,peiT,wT,oT,mastT)
+		real,	intent(in)	:: aT, kT, wT, oT, wI, scT,peiT, mastT
 		!
 		print '    ("r&alloc  time spend     = ",f15.7," seconds = ",f15.7,"% of overall time")',& 
 									aT 				, 100*aT		   	/mastT
@@ -285,7 +295,9 @@ module output
 		print '    ("wannier interpolation   = ",f15.7," seconds = ",f15.7,"% of overall time")',& 
 									wI 				, 100*wI		   	/mastT
 		print '    ("semiclassics            = ",f15.7," seconds = ",f15.7,"% of overall time")',& 
-									scT 				, 100*scT		   	/mastT							
+									scT 			, 100*scT		   	/mastT							
+		print '    ("peierls substitution    = ",f15.7," seconds = ",f15.7,"% of overall time")',& 
+									peiT 			, 100*peiT		   	/mastT														
 		print '    ("writing  time spend     = ",f15.7," seconds = ",f15.7,"% of overall time")',& 
 									oT 				, 100*oT		   	/mastT
 		print '    ("other    time spend     = ",f15.7," seconds = ",f15.7,"% of overall time")',& 

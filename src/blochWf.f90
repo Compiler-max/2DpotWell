@@ -1,5 +1,5 @@
 module blochWf
-	!GENERATING BLOCH WAFEFUNCTIONS & LATT PERIOD FUNCTIONS
+	!generates bloch and lattice periodic functions given a basCoeff matrix
 	use mathematics,	only:	dp, PI_dp,i_dp, myExp, myLeviCivita, eigSolver, nIntegrate
 	use sysPara,		only: 	readInp, getKindex, getRindex, &
 									dim, aX, aY,vol, nAt, atR, atPos, atPot,&
@@ -138,6 +138,7 @@ module blochWf
 
 	!VELOCITY HELPERS
 	subroutine calcVeloBasVec(ki,ri,basVec)
+		!the velocity basi
 		integer,		intent(in)		:: ki, ri
 		complex(dp),	intent(out)		:: basVec(:)
 		real(dp)				 :: tmp(2)

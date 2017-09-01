@@ -46,6 +46,7 @@ todo:
 
 	- peierls
 		watch out for chern insulator breakdown
+		shift wannier functions instead of solving model again
 
 
 

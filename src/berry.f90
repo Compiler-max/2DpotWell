@@ -9,7 +9,7 @@ module berry
 	implicit none
 
 	private
-	public	::	calcConn, calcCurv, calcVeloMat, calcPolViaA
+	public	::	isKperiodic, calcConn, calcCurv, calcVeloMat, calcPolViaA
 
 	contains
 
@@ -21,7 +21,69 @@ module berry
 
 
 !public
-		subroutine calcConn(unk,nxk, nyk, A)
+	logical function isKperiodic(unk)
+		!	Test the condition u_nk = e^{iGr} u_nk+G
+		!	see	King-Smith Vanderbilt PRB 48.7 4442 (1993)
+		!
+		!	the values at each x direction boundary (kx,1) is compared with (kx,nKy)
+		!	analog for y direction
+		!
+		complex(dp),	intent(in)		:: unk(:,:,:)
+		integer							:: n, kix, kiy, ri
+		real(dp)						:: G(2), thres
+		complex(dp)						:: phase, u0, u1
+		logical							:: isX, isY
+		!
+		G(1)	= 2.0_dp * PI_dp / aX
+		G(2)	= 0.0_dp
+		isX 	= .true.
+		isY		= .true.
+		thres	= 1e-4_dp
+		!
+		!
+		n = 1
+		do while(	n <= nWfs .and. (isX .and. isY) )
+			!CHECK IN X DIRECTION
+			kix	= 1
+			do  while(kix <= nKx .and. isX)
+				do ri = 1, nR
+					phase 	= myExp( 	dot_product( G(:) , rpts(:,ri) )		)
+					u0 		= unk( ri, getKindex(kix,1  ), n)
+					u1		= unk( ri, getKindex(kix,nKy), n)
+					if( abs(abs(u0-phase*u1) -1.0_dp) > thres	) then 
+						write(*,'(a,i4,a,i3,a,i3)')"[isSufficient]: problem at ri=",ri," kix =",kix," n=",n
+						isX = .false.
+					end if
+				end do
+				kix = kix +1
+			end do
+
+			!CHECK IN Y DIRECTION
+			kiy	= 1
+			do  while(kiy <= nKy .and. isY)
+				do ri = 1, nR
+					phase 	= myExp( 	dot_product( G(:) , rpts(:,ri) )		)
+					u0 		= unk( ri, getKindex(1  ,kiy), n)
+					u1		= unk( ri, getKindex(nKx,kiy), n)
+					if( abs(abs(u0-phase*u1) -1.0_dp) > thres	) then 
+						write(*,'(a,i4,a,i3,a,i3)')"[isSufficient]: problem at ri=",ri," kiy =",kiy," n=",n
+						isY = .false.
+					end if
+				end do
+				kiy = kiy +1
+			end do
+			!
+			!
+			n = n + 1
+		end do
+		!
+		!
+		isKperiodic = isX .and. isY
+		return
+	end	
+
+
+	subroutine calcConn(unk,nxk, nyk, A)
 		!finite difference on lattice periodic unk to calculate the Berry connection A
 		!	A_n(k) 	= <u_n(k)|i \nabla_k|u_n(k)>
 		!		 	= i  <u_n(k)| \sum_b{ w_b * b * [u_n(k+b)-u_n(k)]}
@@ -72,10 +134,10 @@ module berry
 					!
 					!write(*,'(a,f15.12,a,f15.12)')"[calcConn]: Mxl=",dreal(Mxl),"+i*",dimag(Mxl)
 					!FD SUM OVER NEAREST NEIGHBOURS
-					A(1:2,ki,n) = A(1:2,ki,n) + wbx * bxl(:) * dimag( Mxl - one )
-					A(1:2,ki,n) = A(1:2,ki,n) + wbx * bxr(:) * dimag( Mxr - one )
-					A(1:2,ki,n) = A(1:2,ki,n) + wby * byl(:) * dimag( Myl - one )
-					A(1:2,ki,n) = A(1:2,ki,n) + wby * byr(:) * dimag( Myr - one )
+					A(1:2,ki,n) = A(1:2,ki,n) + wbx * bxl(:) * dimag( Mxl )!- one )
+					A(1:2,ki,n) = A(1:2,ki,n) + wbx * bxr(:) * dimag( Mxr )!- one )
+					A(1:2,ki,n) = A(1:2,ki,n) + wby * byl(:) * dimag( Myl )!- one )
+					A(1:2,ki,n) = A(1:2,ki,n) + wby * byr(:) * dimag( Myr )!- one )
 					!FD SUM OVER NEAREST NEIGHBOURS
 					!A(:,ki,n) = A(:,ki,n) + wbx * bxl(:) * dimag(	log( Mxl ) )
 					!A(:,ki,n) = A(:,ki,n) + wbx * bxr(:) * dimag(	log( Mxr ) )

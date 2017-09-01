@@ -178,13 +178,14 @@ module wannier
 		!SHIFT WITH RESPECT TO CENTER OF UNIT CELL
 		cent(1)	= aX * 0.5_dp
 		cent(2)	= aY * 0.5_dp
-		pE = pE - cent
-		pI = pI - cent 
+		pE = (pE - cent ) / vol
+		pI = (pI - cent ) / vol 
 		!TOTAL
 		pT = pI + pE												
 		!
 		return
 	end
+
 
 	!TIGHT BINDING MODEL
 	subroutine genTBham(ki, wnF, Htb)
@@ -194,7 +195,7 @@ module wannier
 		!
 		integer,		intent(in)		:: ki
 		complex(dp),	intent(in)		:: wnF(:,:,:)	!wnF(nR	, nSC, nWfs	)
-		complex(dp),	intent(out)		:: Htb(:,:) 	!Htb(nWfs,nWfs)
+		complex(dp),	intent(out)		:: Htb(:,:,:) 	!Htb(R, nWfs,nWfs)
 		integer							:: n,m, R
 		complex(dp)						:: phaseR
 		!
@@ -206,7 +207,7 @@ module wannier
 				!SUM OVER CELLS R
 				do R = 1, nSC
 					phaseR		= myExp( 	dot_product( kpts(:,ki) , Rcell(:,R) )			)	
-					Htb(n,m)	= Htb(n,m) + phaseR * Hwnf(n,m,ki,R, wnF)
+					Htb(R,n,m)	= Htb(R,n,m) + phaseR * Hwnf(n,m,ki,R, wnF)
 				end do
 			end do
 		end do
