@@ -10,7 +10,7 @@ module semiClassics
 
 
 	private
-	public ::			dummy,		calcFirstOrdP
+	public ::			calcFirstOrdP
 
 
 
@@ -22,10 +22,6 @@ module semiClassics
 
 
 !public
-
-	subroutine dummy()
-		return
-	end
 
 
 	subroutine	calcFirstOrdP(Fcurv, Aconn, Velo, En, p1)
@@ -156,7 +152,7 @@ module semiClassics
 		!	F^(2)_ij = +- Re \sum_{n/=0} \eps_{j,k,l}  * (v^k_0 V^l_n0 V^i_0n) / ( (E0-En)**3  )
 		!
 		integer,		intent(in)		:: n0, ki
-		complex(dp),	intent(in)		:: Velo(:,:,:,:)  	!V(3,nWfs,nWfs,nK)
+		complex(dp),	intent(in)		:: Velo(:,:,:,:)  	!Velo(		3		,	nK		,nWfs, nwFs)
 		real(dp),		intent(in)		:: En(:,:)			!En(	nK	,	nWfs)
 		real(dp),		intent(out)		:: Fmat(:,:)
 		complex(dp)						:: Vtmp
@@ -173,11 +169,11 @@ module semiClassics
 						do n = 1, nSize
 							if( n/=n0 ) then
 								!VELOCITIES
-								Vtmp		= Velo(k,ki,n0,n0) * Velo(l,n,ki,n0) * Velo(i,ki,n0,n) 
+								Vtmp		= Velo(k,ki,n0,n0) * Velo(l,ki,n,n0) * Velo(i,ki,n0,n) 
 								!ENERGIES
 								eDiff		= ( 	En(ki,n0) - En(ki,n)	 )**3 	
 								!MATRIX
-								Fmat(i,j) 	= Fmat(i,j) +  myLeviCivita(j,k,l) * dreal(		Vtmp / dcmplx(eDiff)	)
+								Fmat(i,j) 	= Fmat(i,j) -  myLeviCivita(j,k,l) * dreal(		Vtmp / dcmplx(eDiff)	)
 							end if
 						end do
 						!

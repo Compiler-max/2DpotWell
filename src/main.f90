@@ -26,7 +26,7 @@ program main
 	
     real(dp), 		allocatable,	dimension(:,:)		:: 	wCent, wSprd
     real(dp),		allocatable,	dimension(:,:,:)	::	Aconn, Fcurv
-    complex(dp),	allocatable,	dimension(:,:,:)	:: 	wnF, unk, unkW, Uh, Aint, veloBwf, bWf !, ukn basCoeff,
+    complex(dp),	allocatable,	dimension(:,:,:)	:: 	wnF, unk, Uh, Aint, veloBwf, bWf !, ukn basCoeff,
     complex(dp),	allocatable,	dimension(:,:,:,:)	::	Velo
     real(dp),		allocatable,	dimension(:,:)		:: 	En
     real(dp) 											:: 	pEl(2), pIon(2), pTot(2), pElViaA(2), pInt(2), pNiu(3), pPei(3)
@@ -106,7 +106,7 @@ program main
 	!	write(*,*)"[main]: Wannier functions in home unit cell are properly normalized"
 	!end if
 	!
-	write(*,'(a)')"[main]: note that wannier function normalization is not tested between different cells currently!"
+	write(*,'(a)')"[main]: note that wannier function normalization is not tested currently!"
 	!
 	call calcWcent(wnF,	wCent)
 	call calcWsprd(wnF, wCent, wSprd)

@@ -79,7 +79,7 @@ module potWellModel
 			
 			call genWannF(ki, lobWf, wnF)
 
-			call genUnk(ki, bWf, unkW(:, ki, :))
+			call genUnk(ki, lobWf, unkW(:, ki, :))
 			!
 		end do
 		write(*,'(a,f16.15,a,f16.12)') "[solveHam]: projection matrix  smin=", smin, " smax=", smax
