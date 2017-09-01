@@ -6,7 +6,8 @@ module mathematics
 	private
 
 
-	public :: dp, PI_dp, i_dp, myExp, Cangle, myLeviCivita, nIntegrate, crossP, isUnit, isIdentity, isHermitian, SVD, eigSolver, myMatInvSqrt
+	public :: dp, PI_dp, i_dp, acc, setAcc, machineP, myExp, Cangle, myLeviCivita, nIntegrate, crossP,& 
+				isUnit, isIdentity, isHermitian, SVD, eigSolver, myMatInvSqrt
 
 
 	interface nIntegrate
@@ -21,11 +22,10 @@ module mathematics
 
 
 	!for clean double precision convention through the code
-	integer, parameter 	:: dp 		= kind(0.d0)
-	real(dp), parameter	:: thres 	= 1e-2_dp 
-
-
-
+	integer, 	parameter 	:: dp 		= kind(0.d0)
+	real(dp), 	parameter	:: machineP = 1e-15_dp
+	real(dp)				:: acc		= 1e-14_dp
+	
 	!mathematical constants
 	real(dp), 		parameter :: PI_dp = 4 * datan (1.0_dp)
 	complex(dp),	parameter :: i_dp = dcmplx(0.0_dp, 1.0_dp)
@@ -53,6 +53,12 @@ module mathematics
 
 
 !public
+	subroutine setAcc(thres)
+		real(dp),		intent(in)	:: thres
+		acc	= thres
+		return
+	end
+
 	complex(dp) function myExp(x)
 		!supposed to boost performance
 		real(dp), intent(in) :: x
@@ -190,13 +196,13 @@ module mathematics
       end
 
 
-	subroutine myMatInvSqrt(Mat)
+	subroutine myMatInvSqrt(Mat, minS, maxS)
 		!routine calculates the inverse sqrt (Mat)^{-1/2} of the complex matrix Mat
 		!
 		complex(dp),	intent(inout)	:: Mat(:,:)
+		real(dp),		intent(out)		:: minS, maxS
 		complex(dp),	allocatable		:: U(:,:), Vt(:,:), TMP(:,:)
 		real(dp),		allocatable		:: s(:)
-		real(dp)						:: smin, smax
 		integer							:: i,j, m, n
 		
 		m 		= size(	Mat	,	1 )
@@ -212,9 +218,9 @@ module mathematics
 		call SVD(Mat, U,s,Vt)
 
 		!diagnostics both values should be positive and larger then zero
-		smax = maxval(s)
-		smin = minval(s)
-		write(*,'(a,G,a,f10.5)')"[myMatInvSqrt]: smin= ",smin,",    smax= ",smax
+		maxS	= maxval(s)
+		minS	= minval(s)
+		!write(*,'(a,G,a,f10.5)')"[myMatInvSqrt]: smin= ",minS ,",    smax= ",maxS
 
 		!scaling, i.e. perform inversion and sqrt
 		do i = 1, size(s)
@@ -276,11 +282,11 @@ module mathematics
 				n = 1
 				do while( n<= size(I,1) .and. isIdentity )
 					if(n == m) then 
-						if(  abs(abs(dreal(I(n,n)))-1.0_dp) > thres  .or. abs(dimag(I(n,n))) > thres	) then
+						if(  abs(abs(dreal(I(n,n)))-1.0_dp) > machineP  .or. abs(dimag(I(n,n))) > machineP	) then
 							isIdentity = .false. !set to false and ...
 						end if
 					else
-						if( abs(I(n,m)) > thres ) then
+						if( abs(I(n,m)) > machineP ) then
 							isIdentity = .false.
 						end if
 					end if
@@ -310,7 +316,7 @@ module mathematics
 			do while ( i <= n .and. isHermitian) 
 				j = 1
 				do while ( j <= n .and. isHermitian) 
-					if(		abs( 	H(i,j) - dconjg( H(j,i) ) 	) 		> thres			) then
+					if(		abs( 	H(i,j) - dconjg( H(j,i) ) 	) 		> machineP			) then
 						isHermitian = .false.
 					end if
 					j = j + 1

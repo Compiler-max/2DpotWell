@@ -1,6 +1,6 @@
 program main
 	!TWO dimensional potential well code
-	use mathematics, 	only: 		dp, PI_dp, eigSolver
+	use mathematics, 	only: 		dp, PI_dp, acc, eigSolver
 	!
 	use sysPara,	 	only: 		readInp, &
 									aX, aY,vol, nAt, relXpos, relYpos, atRx, atRy, atPot,&
@@ -38,7 +38,6 @@ program main
 
 
 
-   write(*,*)nWfs
 
 
     !INPUT & ALLOCATION SECTION
@@ -72,8 +71,8 @@ program main
 	!
 	call solveHam(Uh, wnF, unk, En, veloBwf)
 	!check boundary condition on unk files
-	if( .not. isKperiodic(unk)	) then
-		write(*,*)"[main]: problem with unk gauge, wave functions are NOT periodic in k space"
+	if( isKperiodic(unk)	 /= 0 ) then
+		write(*,*)	"[main]: problem with unk gauge, wave functions are NOT periodic in k space"
 	end if
 	call calcVeloMat(unk, veloBwf, Velo)
 	call calcConn(unk, nKx, nKy, Aconn)  
@@ -101,12 +100,13 @@ program main
 	call cpu_time(wT0)
 	!
 	!
-	if( .not. isNormal(wnF) ) then
-		write(*,*)"[main]: the used Wannier functions are not properly normalized"
-	else
-		write(*,*)"[main]: Wannier functions in home unit cell are properly normalized"
-	end if
+	!if(  isNormal(wnF) /= 0 ) then
+	!	write(*,*)"[main]: the used Wannier functions are not properly normalized"
+	!else
+	!	write(*,*)"[main]: Wannier functions in home unit cell are properly normalized"
+	!end if
 	!
+	write(*,'(a)')"[main]: note that wannier function normalization is not tested between different cells currently!"
 	!
 	call calcWcent(wnF,	wCent)
 	call calcWsprd(wnF, wCent, wSprd)
@@ -118,7 +118,10 @@ program main
 	wT 	= wT1 - wT0
 
 
-
+	write(*,*)"*"
+	write(*,*)"*"
+	write(*,*)"*"
+	write(*,*)"*"
 	write(*,*)"[main]:**************************WANNIER INTERPOLATION*************************"
 	call cpu_time(wI0)
 	!call interpConnCurv(wnF, Aint, Fcurv)
@@ -126,7 +129,10 @@ program main
 	call cpu_time(wI1)
 	wI	= wI1 - wI0
 
-
+	write(*,*)"*"
+	write(*,*)"*"
+	write(*,*)"*"
+	write(*,*)"*"
 	write(*,*)"[main]:**************************SEMICLASSICS*************************"
 	call cpu_time(scT0)
 	call calcFirstOrdP(Fcurv, Aconn, Velo, En, pNiu)
@@ -134,7 +140,10 @@ program main
 	write(*,*)"[main]: done with first order polarization calculation"
 	scT	= scT1 - scT0
 
-
+	write(*,*)"*"
+	write(*,*)"*"
+	write(*,*)"*"
+	write(*,*)"*"
 	write(*,*)"[main]:**************************PEIERLS SUB*************************"
 	call cpu_time(peiT0)
 	!
@@ -148,7 +157,11 @@ program main
 
 
 
-	!OUTPUTING RESULTS SECTION
+
+	write(*,*)"*"
+	write(*,*)"*"
+	write(*,*)"*"
+	write(*,*)"*"
 	write(*,*)"[main]:**************************WRITE OUTPUT*************************"
 	call cpu_time(oT0)
 	!call writeSysInfo() 
@@ -161,7 +174,8 @@ program main
 	write(*,*)"[main]: ...wrote wannier functions"
 	call writePolFile(pEl, pIon, pTot, pElViaA, pInt, pNiu, pPei )
 	write(*,*)"[main]: ...wrote polarization txt file"
-	
+	!
+	write(*,'(a,E10.3)')"[main]: overlap warnings etc. where given for diviations from expected above the threshold: ",acc
 	call cpu_time(oT1)
 	oT = oT1 - oT0
 	

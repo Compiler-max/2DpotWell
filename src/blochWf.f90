@@ -9,7 +9,7 @@ module blochWf
 	implicit none
 
 	private
-	public	::	genBlochWf, BwFisLattSym, calcVeloBwf, genUnk
+	public	::	genBlochWf, calcVeloBwf, genUnk
 
 
 	contains
@@ -57,26 +57,26 @@ module blochWf
 	end
 
 
-	logical function BwFisLattSym(bWf)
-		!ToDo
-		!checks if bwf(k) = bwf(k+G)
-		complex(dp),	intent(in)		:: bWf(:,:,:) !nR, nK , nG or nWfs
-		integer							:: k00, k10, k01, k11, n ! edge point indices
-
-		BwFisLattSym = .true.
-		k00 = getKindex(	1	, 1		)
-		k10	= getKindex(	nKx	, 1		)
-		k01 = getKindex(	1	, nKy	)
-		k11 = getKindex(	nKx , nKy	)
-		write(*,'(a,i3,a,i3,a,i3,a,i3)')"[isLattSym]: k00 =",k00,", k10=",k10,", k01=",k01,", k11=",k11 
-
-
-		do n = 1, size(bwf,3) ! loop states
-
-		end do
-
-		return
-	end
+	!logical function BwFisLattSym(bWf)
+	!	!ToDo
+	!	!checks if bwf(k) = bwf(k+G)
+	!	complex(dp),	intent(in)		:: bWf(:,:,:) !nR, nK , nG or nWfs
+	!	integer							:: k00, k10, k01, k11, n ! edge point indices
+!
+!	!	BwFisLattSym = .true.
+!	!	k00 = getKindex(	1	, 1		)
+!	!	k10	= getKindex(	nKx	, 1		)
+!	!	k01 = getKindex(	1	, nKy	)
+!	!	k11 = getKindex(	nKx , nKy	)
+!	!	write(*,'(a,i3,a,i3,a,i3,a,i3)')"[isLattSym]: k00 =",k00,", k10=",k10,", k01=",k01,", k11=",k11 
+!
+!
+!	!	do n = 1, size(bwf,3) ! loop states
+!
+!	!	end do
+!
+!	!	return
+	!end
 
 
 	subroutine genUnk(ki, bWf, unk)

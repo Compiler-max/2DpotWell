@@ -2,7 +2,7 @@ module wannGen
 	!module contains all the functions to generate the wannier functions
 	!	this includes the calculation of the orthonormalized projected bloch wavefunctions
 	!	and the FT of the bwfs to calculate the wannier functions
-	use mathematics, only: dp, PI_dp, myExp, nIntegrate, myMatInvSqrt, isUnit, isIdentity
+	use mathematics, only: dp, PI_dp, acc, myExp, nIntegrate, myMatInvSqrt, isUnit, isIdentity
 	use sysPara    , only: 		readInp, insideAt, &
 										dim, aX, aY,vol, nAt, atR, atPos, atPot,&
 										nG, nG0, Gcut, nK, nWfs, nSC,nR, nRx, nRy, dx, dy, dkx, dky, &
@@ -27,15 +27,16 @@ module wannGen
 
 	contains
 !public:
-	subroutine projectBwf(ki, bWf, loBwf, U)
+	subroutine projectBwf(ki, bWf, loBwf, U, failCount, smin, smax)
 		!does the projection onto Loewdin-orthonormalized Bloch-like states
 		!see Marzari, Vanderbilt PRB 56, 12847 (1997) Sec.IV.G.1 for detailed description of the method 
-		integer		,	intent(in)	:: ki
-		complex(dp)	,	intent(in)	:: bWf(:,:)   ! bWf(nR,nG)
-		complex(dp)	,	intent(out)	:: loBwf(:,:), U(:,:)   !U(nWfs,nWfs)
-		complex(dp)	,	allocatable	:: gnr(:,:), A(:,:), S(:,:), phi(:,:)
-		integer						:: n, nBands, xi
-		real(dp)					:: thres
+		integer		,	intent(in)		:: ki
+		complex(dp)	,	intent(in)		:: bWf(:,:)   ! bWf(nR,nG)
+		complex(dp)	,	intent(out)		:: loBwf(:,:), U(:,:)   !U(nWfs,nWfs)
+		integer,		intent(inout)	:: failCount
+		real(dp),		intent(inout)	:: smin, smax
+		complex(dp)	,	allocatable		:: gnr(:,:), A(:,:), S(:,:), phi(:,:)
+		integer							:: n, nBands, xi
 		!
 		allocate(	gnr(nR,nWfs)		)
 		allocate( 	S(nWfs,nWfs)		)
@@ -46,7 +47,7 @@ module wannGen
 		!SET UP ROTATION MATRIX U
 		call genTrialOrb(gnr)
 		call calcAmat(bwf,gnr, A)
-		call calcInvSmat(A, S)
+		call calcInvSmat(A, S, smin, smax)
 		U = matmul(S, A)
 		!
 		!ROTATE BLOCH STATES
@@ -58,11 +59,9 @@ module wannGen
 		if( .not. isUnit(U) 			) then
 			write(*,*)"[projectBwf]: U matrix is not a unitary matrix !"
 		end if
-		thres = 1e-4_dp
-		if( .not. isOrthonorm(thres,lobWf)	) then
-			write(*,'(a,f16.12)')"[projectBwf]: loBwf is NOT a orthonormal basis set, accuracy=",thres
-		else
-			write(*,*)"[projectBWf]: projected states form orthonormal basis set"
+		if(	 .not. isOrthonorm(lobWf)	) then
+			write(*,'(a,f16.12)')"[projectBwf]: loBwf is NOT a orthonormal basis set, accuracy=",acc
+			failCount = failCount + 1
 		end if
 		!
 		return
@@ -202,13 +201,14 @@ module wannGen
 
 
 
-	subroutine calcInvSmat(A, S)
+	subroutine calcInvSmat(A, S, smin, smax)
 		!calculates the sqrt inv. of the overlap matrix S
-		complex(dp),	intent(in)	:: A(:,:)
-		complex(dp),	intent(out)	:: S(:,:)
-		complex(dp),	allocatable	:: Acon(:,:),Sold(:,:), Ssqr(:,:)
-		real(dp)					:: thres
-		integer						:: m,n, i,j
+		complex(dp),	intent(in)		:: A(:,:)
+		complex(dp),	intent(out)		:: S(:,:)
+		real(dp),		intent(inout)	:: smin, smax
+		complex(dp),	allocatable		:: Acon(:,:),Sold(:,:), Ssqr(:,:)
+		integer							:: m,n, i,j
+		real(dp)						:: mi, ma
 		m = size(A,1)
 		n = size(A,2)
 		allocate(	Acon(n,m)	)
@@ -221,11 +221,16 @@ module wannGen
 		S = matmul(Acon , A)
 		Sold = S
 		!
-		call myMatInvSqrt(S)
+		call myMatInvSqrt(S, mi, ma)
 
+		if( mi < smin ) then
+			smin = mi
+		end if
+		if( ma > smax ) then
+			smax = ma
+		end if
 
 		!DEBUG: Check if S is really the inverse sqrt
-		thres = 1e-4_dp
 		Ssqr = matmul(S,S)
 		Sold = matmul(Sold,Ssqr)
 		
@@ -238,11 +243,10 @@ module wannGen
 	end
 
 
-	logical function isOrthonorm(thres, loBwf)
+	logical function isOrthonorm(loBwf)
 		!cheks wether loBwf is orthonormal by calculating the overlap matrix elements
 		!	<psi_n,k|psi_n,k'> = nSC * \delta(n,m)
 		!	WARNING: DOES NOT CHECK ORTHONORMALIZATION BETWEEN K POINTS
-		real(dp),		intent(in)		:: thres
 		complex(dp),	intent(in)		:: lobWf(:,:)   !lobWf(nR,nWfs)
 		complex(dp),	allocatable		:: f(:)
 		complex(dp)						:: oLap
@@ -265,8 +269,8 @@ module wannGen
 			oLap 		= nIntegrate(nR, nRx, nRy, dx, dy, f)
 			oLap			= oLap / dcmplx( nSC	)
 			!CHECK CONDITIONS
-			realist 	= abs(			abs(dreal(oLap))		-		1.0_dp		) 	> thres
-			imaginist	= abs(			dimag(oLap)								)	> thres
+			realist 	= abs(			abs(dreal(oLap))		-		1.0_dp		) 	> acc
+			imaginist	= abs(			dimag(oLap)								)	> acc
 			if( realist .or. imaginist ) then
 				write(*,'(a,i2,a,f15.10,a,f15.10)')"[isOrthonorm]: overlap(n,n=",n,") = ",dreal(oLap),"+i*",dimag(oLap)
 				isOrthonorm = .false.
@@ -284,7 +288,7 @@ module wannGen
 					oLap 	= nIntegrate(nR, nRx, nRy, dx, dy, f)
 					oLap	= oLap / dcmplx( nSC	)
 					!CHECK CONDITION
-					if(abs(oLap) > thres) then
+					if(abs(oLap) > acc) then
 						write(*,'(a,i2,a,i2,a,f15.10,a,f15.10)')"[isOrthonorm]: overlap(",n,",",m,") = ",dreal(oLap),"+i*",dimag(oLap)
 						isOrthonorm = .false.
 					end if

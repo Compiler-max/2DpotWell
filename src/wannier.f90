@@ -1,7 +1,7 @@
 module wannier
 	!contains subroutines for working with existing wannier functions
 	!	center calculations, etc. 
-	use mathematics,	only:	dp, PI_dp, i_dp, myExp, nIntegrate
+	use mathematics,	only:	dp, PI_dp, i_dp, acc, myExp, nIntegrate
 	use sysPara, 		only: 	readInp, insideAt, getKindex, getRindex, &
 									dim, aX, aY,vol, nAt, atR, atPos, atPot,&
 									nG, nG0, Gcut, &
@@ -34,68 +34,91 @@ module wannier
 
 
 !public:
-	logical function isNormal(wnF)
+	integer function isNormal(wnF)
 		!checks if Wannier functions fullfill
 		!	<Rn|R'm> = \delta(R,R') \delta(n,m)
 		!	CURRENTLY ONLY CHECKING <1n|1m> = \delta(n,m)
 		complex(dp),	intent(in)		:: wnF(:,:,:) !wnF( 	nR, nSC, nWfs		)	
 		complex(dp),	allocatable		:: f(:)
 		complex(dp)						:: oLap
-		real(dp)						:: thres
+		real(dp)						:: avg, dmax
 		logical							:: rLog, iLog
-		integer							:: n, m, ri, sc
+		integer							:: n, m, ri, sc,sc1, sc2, tot, diffSC
 		!
 		allocate(	f(nR)	)
-		isNormal 	= .true.
-		thres		= 1e-2_dp
+		isNormal 	= 0
 		sc			= 1
-
+		dmax		= 0.0_dp
+		avg			= 0.0_dp
+		diffSC		= 0
 		!
 		!
-		n 			= 1
-		do while ( n<= nWfs .and. isNormal )
-			!INTEGRATE OVERLAPS
-			do ri = 1, nR
-				f(ri) 	= dconjg( wnF(ri,sc,n) ) * wnF(ri,sc,n)
-			end do
-			oLap 	= nIntegrate(nR, nRx, nRy, dx, dy, f)
-			!CHECK CONDITIONS
-			rLog 	=	abs(			abs(dreal(oLap))		-		1.0_dp	) 	> thres
-			iLog	=	abs(			dimag(oLap)								)	> thres
-			if( rLog .or. iLog) then
-				write(*,'(a,i2,a,i2,a,i2,a,i2,a,f6.3,a,f6.3)')"[isNormal]: < R=",sc,", n=",n, &
-																" |R=",sc,", m=",n," > = ", dreal(oLap),"+i*",dimag(oLap)
-				isNormal = .false.
-			end if
-			!write(*,'(a,i2,a,i2,a,i2,a,i2,a,f6.3,a,f6.3)')"[isNormal]: < R=",sc,", n=",n, &
-			!									" |R=",sc,", m=",n," > = ", dreal(oLap),"+i*",dimag(oLap)
-			!
-			!
-			!
-			m = 1
-			do while (m<= nWfs	.and. isNormal )
-				if(m /= n) then
+		do sc1 = 1, nSC
+			do sc2 = 1, nSC
+				do n = 1, nWfs
 					!INTEGRATE OVERLAPS
 					do ri = 1, nR
-						f(ri) 	= dconjg( wnF(ri,sc,n) ) * wnF(ri,sc,m)
+						f(ri) 	= dconjg( wnF(ri,sc1,n) ) * wnF(ri,sc2,n)
 					end do
 					oLap 	= nIntegrate(nR, nRx, nRy, dx, dy, f)
 					!CHECK CONDITIONS
-					if( abs(oLap) > thres ) then
-						write(*,'(a,i2,a,i2,a,i2,a,i2,a,f6.3,a,f6.3)')"[isNormal]: < R=",sc,", n=",n, &
-																" |R=",sc,", m=",m," > = ", dreal(oLap),"+i*",dimag(oLap)	
-						isNormal = .false.						
+					if( sc1 == sc2) then
+						rLog 	=	abs(	abs(dreal(oLap))	-		1.0_dp	) 	> acc
+						iLog	=	abs(	dimag(oLap)							)	> acc
+					else
+						rLog 	=	abs(	abs(dreal(oLap))					) 	> acc
+						iLog	=	abs(	dimag(oLap)							)	> acc
+						if( rLog .or. iLog) then
+							diffSC = diffSC + 1
+						end if 
+					end if
+					if( rLog .or. iLog) then
+						!write(*,'(a,i2,a,i2,a,i2,a,i2,a,f6.3,a,f6.3)')"[isNormal]: < R=",sc,", n=",n, &
+						!												" |R=",sc,", m=",n," > = ", dreal(oLap),"+i*",dimag(oLap)
+						isNormal	= isNormal + 1
+						avg			= avg + abs(oLap) -1.0_dp
+						if( abs(oLap)-1.0_dp > dmax) then
+							dmax	= abs(oLap)
+						end if
 					end if
 					!write(*,'(a,i2,a,i2,a,i2,a,i2,a,f6.3,a,f6.3)')"[isNormal]: < R=",sc,", n=",n, &
-					!										" |R=",sc,", m=",m," > = ", dreal(oLap),"+i*",dimag(oLap)	!
-				end if
-				m	= m+1
+					!									" |R=",sc,", m=",n," > = ", dreal(oLap),"+i*",dimag(oLap)
+					!
+					!
+					if(sc1 /= sc2) then
+						do m = 1, nWfs
+							if(m /= n) then
+								!INTEGRATE OVERLAPS
+								do ri = 1, nR
+									f(ri) 	= dconjg( wnF(ri,sc1,n) ) * wnF(ri,sc2,m)
+								end do
+								oLap 	= nIntegrate(nR, nRx, nRy, dx, dy, f)
+								!CHECK CONDITIONS
+								if( abs(oLap) > acc ) then
+									!write(*,'(a,i2,a,i2,a,i2,a,i2,a,f6.3,a,f6.3)')"[isNormal]: < R=",sc,", n=",n, &
+									!										" |R=",sc,", m=",m," > = ", dreal(oLap),"+i*",dimag(oLap)	
+									isNormal	= isNormal + 1
+									avg			= avg + abs(oLap)
+									if( abs(oLap) > dmax) then
+										dmax	= abs(oLap)
+									end if		
+								end if
+								!write(*,'(a,i2,a,i2,a,i2,a,i2,a,f6.3,a,f6.3)')"[isNormal]: < R=",sc,", n=",n, &
+								!										" |R=",sc,", m=",m," > = ", dreal(oLap),"+i*",dimag(oLap)	!
+							end if
+							tot = tot + 1
+						end do
+					end if
+					!
+					tot = tot + 1
+				end do
 			end do
-			!
-			!
-			!
-			n 		= n + 1
 		end do
+		!
+		avg	= avg / real(isNormal,dp)
+		write(*,'(a,i5,a,i8,a,f16.12,a,f16.12)')	"[isNormal]: ",isNormal," of ",tot, &
+													" are not properly normalized. dmax=",dmax," avg diff=",avg 
+		write(*,'(a,i8)')	"[isNormal]: found ",diffSC, "issues between different unit cells "
 		!
 		return
 	end
@@ -321,16 +344,15 @@ module wannier
 		integer,		intent(in)	:: R1, R2, n, m
 		complex(dp),	intent(in)	:: wnF(:,:,:)	 !wnF( nRpts, nSupC,		nWfs)
 		real(dp),		intent(out)	:: res(2)		
-		real(dp)				 	:: norm, thres
+		real(dp)				 	:: norm
 		real(dp), allocatable	 	:: fx(:),fy(:)
 		integer 				 	:: xi
 		!
-		thres = 1e-3_dp
 		allocate(	fx(nR) 	)
 		allocate(	fy(nR)	)
 		!
 		do xi = 1, nR	 
-			if(dimag( dconjg(wnF(xi,R1,n)) * wnF(xi,R2,m)) > thres  ) then
+			if(dimag( dconjg(wnF(xi,R1,n)) * wnF(xi,R2,m)) > acc  ) then
 				write(*,*)"[wXw]: waning wnf overlap not strictly real =",dimag( dconjg(wnF(xi,R1,n)) * wnF(xi,R2,m))
 			end if
 			fx(xi)	=  rpts(1,xi)		*	dreal( dconjg(wnF(xi,R1,n)) * wnF(xi,R2,m)  )

@@ -1,6 +1,6 @@
 module sysPara
 	!this modules reads the input file and generates the meshes accordingly
-	use mathematics, only: dp, PI_dp
+	use mathematics, only: dp, PI_dp, setAcc
 	use m_config
 	implicit none
 	private
@@ -16,7 +16,7 @@ module sysPara
 	integer  										:: 	dim=2, nAt=0, nG=11, nG0,  nKx=1, nKy=1,nK , nSCx=1, nSCy=1,& 
 														nKxW=1, nKyW=1, nKw, &
 														nRx=10, nRy=10, nR, R0=1, nWfs=1, nSC, gaugeSwitch, trialOrbSw
-	real(dp) 										::	aX=0.0_dp, aY=0.0_dp,vol=0.0_dp, Gcut=2*PI_dp,& 
+	real(dp) 										::	aX=0.0_dp, aY=0.0_dp,vol=0.0_dp, Gcut=2*PI_dp, thres,& 
 														dx, dy, dkx, dky, dkxW, dkyW, B0, Bext(3)											
 	real(dp),	allocatable,	dimension(:)		::	relXpos, relYpos, atRx, atRy, atPot, trialOrbVAL, Zion
 	real(dp),	allocatable,	dimension(:,:)		::	Gvec, atPos, atR, kpts, rpts, Rcell, kptsW 
@@ -62,6 +62,7 @@ module sysPara
 		call CFG_add_get(my_cfg,	"numerics%nSCy"     ,	nSCy   		,	"#			supercells "				)
 		call CFG_add_get(my_cfg,	"numerics%nRx"     	,	nRx      	,	"amount of r points used"				)
 		call CFG_add_get(my_cfg,	"numerics%nRy"     	,	nRy      	,	"amount of r points used"				)
+		call CFG_add_get(my_cfg,	"numerics%thres"    ,	thres      	,	"threshold for overlap warnings"		)
 		![wannier]
 		call CFG_add_get(my_cfg,	"wann%gaugeSwitch"	,	gaugeSwitch ,	"switch gauge the basis coeff directly"	)
 		call CFG_add_get(my_cfg,	"wann%nWfs"			,	nWfs	 	,	"# wannier functions to generate"		)
@@ -111,7 +112,7 @@ module sysPara
 		call CFG_add_get(my_cfg,	"wann%trialOrbVAL"	,	trialOrbVAL	,	"weight of trial orbital for each atom"	)
 
 		!calculate desired quantities from input: aLatt,kpts,rpts(aLatt),gVec
-		
+		call setAcc(thres)
 		call kmeshGen()
 		call rmeshGen()
 		call popGvec()

@@ -10,9 +10,7 @@ todo:
 	- documentation
 
 	
-	- write test for boundary condition of polarization -> use unk boundary condition
 	- test 2D integration routine
-
 	- check weird bug with writting the bwfs in solveHam again
 	
 
@@ -41,7 +39,7 @@ todo:
 
 
 	-first order polarization
-		via Niu
+		via Niu		-> debug indices seem to point in x not in y direction currtently
 		via Peierl
 
 	- peierls

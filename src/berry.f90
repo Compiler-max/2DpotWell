@@ -1,7 +1,7 @@
 module berry
 	!module contains methods related to the Berry phase theory of modern polarization
 	!	i.e. calculation of connection, velocities, curvatures and polarization
-	use mathematics,	only:	dp, PI_dp, i_dp, myExp, myLeviCivita, nIntegrate
+	use mathematics,	only:	dp, PI_dp, i_dp, acc, myExp, myLeviCivita, nIntegrate
 	use sysPara,		only: 	readInp, getKindex, getRindex, &
 									dim, aX, aY,vol, nAt, atR, atPos, atPot,&
 									nG, nG0, Gcut, nK, nKx, nKy, nWfs, nSC, nSCx, nSCy, nR, nRx, nRy, dx, dy, dkx, dky, &
@@ -21,7 +21,7 @@ module berry
 
 
 !public
-	logical function isKperiodic(unk)
+	integer function isKperiodic(unk)
 		!	Test the condition u_nk = e^{iGr} u_nk+G
 		!	see	King-Smith Vanderbilt PRB 48.7 4442 (1993)
 		!
@@ -29,62 +29,74 @@ module berry
 		!	analog for y direction
 		!
 		complex(dp),	intent(in)		:: unk(:,:,:)
-		integer							:: n, kix, kiy, ri
-		real(dp)						:: Gx(2), Gy(2), thres
+		integer							:: n, kix, kiy, ri, totC, isX, isY
+		real(dp)						:: Gx(2), Gy(2), val,dmax, avg
 		complex(dp)						:: phase, u0, u1
-		logical							:: isX, isY
 		!
-		Gx(1)	= 2.0_dp * PI_dp / aX
-		Gx(2)	= 0.0_dp
-		Gy(1)	= 0.0_dp
-		Gy(2)	= 2.0_dp * PI_dp / aX
-		isX 	= .true.
-		isY		= .true.
-		thres	= 1e-4_dp
+		Gx(1)		= 2.0_dp * PI_dp / aX
+		Gx(2)		= 0.0_dp
+		Gy(1)		= 0.0_dp
+		Gy(2)		= 2.0_dp * PI_dp / aX
+		isKperiodic = 0
+		isX			= 0
+		isY			= 0
+		totC		= 0
+		dmax		= 0.0_dp
+		avg			= 0.0_dp
 		!
 		!
-		n = 1
-		do while(	n <= nWfs .and. (isX .and. isY) )
+		do 	n = 1, nWfs 
 			!CHECK IN X DIRECTION
-			kix	= 1
-			do  while(kix <= nKx .and. isX)
+			do  kix = 1, nKx 
 				do ri = 1, nR
 					phase 	= myExp( 	dot_product( Gx(:) , rpts(:,ri) )		)
 					u0 		= unk( ri, getKindex(kix,1  ), n)
 					u1		= unk( ri, getKindex(kix,nKy), n)
-					if( abs(u0-phase*u1)  > thres	) then 
-						write(*,'(a,i5,a,i3,a,i3,a,f16.12)')	"[isSufficient]: problem at ri=",ri," kix =",kix," n=",n,&
-																" delta=", abs(u0-phase*u1)
-						isX = .false.
+					val 	= abs(u0-phase*u1)
+					if(  val > acc	) then 
+						isKperiodic = isKperiodic 	+ 1
+						isX			= isX			+ 1
+						avg			= avg + val
+						if( val > dmax) then
+							dmax = val
+						end if 
 					end if
-				end do
-				kix = kix +1
+					totC = totC + 1
+				end do	
 			end do
-
+			!
 			!CHECK IN Y DIRECTION
-			kiy	= 1
-			do  while(kiy <= nKy .and. isY)
+			do  kiy = 1, nKy
 				do ri = 1, nR
 					phase 	= myExp( 	dot_product( Gy(:) , rpts(:,ri) )		)
 					u0 		= unk( ri, getKindex(1  ,kiy), n)
 					u1		= unk( ri, getKindex(nKx,kiy), n)
-					if( abs(u0-phase*u1) > thres	) then 
-						write(*,'(a,i5,a,i3,a,i3,a,f16.12)')	"[isSufficient]: problem at ri=",ri," kiy =",kiy," n=",n,&
-																" delta=", abs(u0-phase*u1)
-						isY = .false.
+					val		= abs(u0-phase*u1)
+					if( val > acc	) then 
+						isKperiodic = isKperiodic	+ 1
+						isY			= isY			+ 1
+						avg			= avg + val
+						if(val > dmax) then
+							dmax = val
+						end if 
 					end if
+					totC = totC + 1
 				end do
-				kiy = kiy +1
 			end do
-			!
-			!
-			n = n + 1
 		end do
 		!
 		!
-		isKperiodic = isX .and. isY
+		avg	= avg/ real(isKperiodic,dp)
+		if(isKperiodic /= 0) then
+			write(*,'(a,i8,a,i8,a,f16.12,a,f16.12)')	"[isKperiodic]: ",isKperiodic," of ", totC,&
+														" unk test didnt pass; max delta=",dmax, &
+														" average diff=",avg
+			write(*,'(a,i8,a,i8)')	"[isKperiodic]:  fails along x boundary =",isX, "; along y=", isY 
+		end if
+		!
 		return
-	end	
+	end
+
 
 
 	subroutine calcConn(unk,nxk, nyk, A)
@@ -99,10 +111,9 @@ module berry
 		integer,		intent(in)		:: nxk, nyk
 		real(dp),		intent(out)		:: A(:,:,:)			!Aconn(	3,nK, nWfs)		)	
 		complex(dp)						:: Mxl, Mxr, Myl, Myr, M, one
-		integer							:: n, Z, ki, kx, ky, kxl, kxr, kyl, kyr
-		real(dp)						:: thres, wbx,wby, bxl(2), bxr(2), byl(2), byr(2) !for nearest neighbours, assuming cubic mesh
+		integer							:: n, Z, ki, kx, ky, kxl, kxr, kyl, kyr, found, tot
+		real(dp)						:: wbx,wby, bxl(2), bxr(2), byl(2), byr(2),dmax, avg, val 
 		!
-		thres	= 1e-3_dp
 		A 		= 0.0_dp
 		Z 		= 4	!amount of nearest neighbours( 2 for 2D cubic unit cell)
 		wbx 	= 3.0_dp / 		( real(Z,dp) * dkx**2 )
@@ -117,8 +128,13 @@ module berry
 		byl(2)	= -dky
 		byr(1) 	= 0.0_dp
 		byr(2)	= +dky
-
-
+		!
+		found	= 0
+		tot		= 0
+		dmax	= 0.0_dp
+		avg		= 0.0_dp
+		!
+		!
 		do n = 1, nWfs
 			do kx = 1, nxk
 				kxl	= getLeft(kx,nxk)
@@ -142,21 +158,27 @@ module berry
 					A(1:2,ki,n) = A(1:2,ki,n) + wbx * bxr(:) * dimag( Mxr )!- one )
 					A(1:2,ki,n) = A(1:2,ki,n) + wby * byl(:) * dimag( Myl )!- one )
 					A(1:2,ki,n) = A(1:2,ki,n) + wby * byr(:) * dimag( Myr )!- one )
-					!FD SUM OVER NEAREST NEIGHBOURS
-					!A(:,ki,n) = A(:,ki,n) + wbx * bxl(:) * dimag(	log( Mxl ) )
-					!A(:,ki,n) = A(:,ki,n) + wbx * bxr(:) * dimag(	log( Mxr ) )
-					!A(:,ki,n) = A(:,ki,n) + wby * byl(:) * dimag(	log( Myl ) )
-					!A(:,ki,n) = A(:,ki,n) + wby * byr(:) * dimag(	log( Myr ) )
-					!
-					!
-					if(abs( abs(one) - 1.0_dp ) > thres ) then
-						write(*,'(a,i2,a,i7,a,f16.8,a,f16.8)')	"[calcConn]: n=",n," unk normalization problem at ki=",ki,&
-													" one=",dreal(one),"+i*",dimag(one)
+					!DEBUG:
+					val	= abs( abs(one) - 1.0_dp )
+					if( val > acc ) then
+						!write(*,'(a,i2,a,i7,a,f16.8,a,f16.8)')	"[calcConn]: n=",n," unk normalization problem at ki=",ki,&
+						!							" one=",dreal(one),"+i*",dimag(one)
+						found 	= found + 1
+						avg		= avg + val
+						if( val > dmax) then
+							dmax = val
+						end if 
 					end if
+					tot = tot + 1
 				end do
 			end do
 		end do
 		!
+		!DEBUG
+		avg	= avg / real(found,dp)
+		write(*,'(a,i6,a,i6,a,f16.12,a,f16.12)')	"[calcConn]: ",found," of ",tot,&
+										" checked unk functions had normalization issues;  max delta=",dmax,&
+										" avg diff=",avg
 		!
 		return
 	end
@@ -240,13 +262,13 @@ module berry
 		real(dp),		intent(in)		:: A(:,:,:)			!A(2,	 nK, nWfs	)	
 		real(dp),		intent(out)		:: pElA(:)
 		complex(dp)	,	allocatable		:: val(:)
-		real(dp)						:: thres
+		real(dp)						:: machine
 		integer							:: n, ki
 		!
 		allocate(	val( size(A,1) )	)
 		val		= dcmplx(0.0_dp)
 		pElA	= 0.0_dp
-		thres	= 1e-10_dp
+		machine	= 1e-15_dp
 		!
 		!SUM OVER K SPACE AND OVER STATES
 		do n 	= 1, size(A,3)
@@ -266,7 +288,7 @@ module berry
 		pElA(2) = mod( pElA(2), aY )
 		!
 		!DEBUGGING
-		if(		dimag( val(1) ) > thres 	.or. 	dimag( val(2) ) > thres		) then
+		if(		dimag( val(1) ) > machine 	.or. 	dimag( val(2) ) > machine		) then
 			write(*,*)"[calcPolViaA]: non zero imaginary part of polarization"
 		end if
 		return

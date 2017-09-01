@@ -1,12 +1,12 @@
 module potWellModel
 	!this modules sets up the Hamiltonian matrix and solves it for each k point
 	!	in the process the wannier functions are generated aswell with routines from wannGen module
-	use mathematics,	only:	dp, PI_dp,i_dp, myExp, myLeviCivita, eigSolver, nIntegrate, isHermitian
+	use mathematics,	only:	dp, PI_dp,i_dp, machineP, myExp, myLeviCivita, eigSolver, nIntegrate, isHermitian
 	use sysPara,		only: 	readInp, getKindex, getRindex, &
 									dim, aX, aY,vol, nAt, atR, atPos, atPot,&
 									nG, nG0, Gcut, nK, nKx, nKy, nWfs, nSC, nSCx, nSCy, nR, nRx, nRy, dx, dy, dkx, dky, &
 									Gvec, atPos, atR, kpts, rpts, gaugeSwitch
-	use blochWf,		only:	genBlochWf, BwFisLattSym, calcVeloBwf, genUnk									
+	use blochWf,		only:	genBlochWf, calcVeloBwf, genUnk									
 	use wannGen,		only:	projectBwf, genWannF
 	use output,			only:	printMat
 	implicit none	
@@ -33,8 +33,8 @@ module potWellModel
 		real(dp),		intent(out)		::	En(:,:)																	
 		complex(dp),	allocatable		::	Hmat(:,:), bWf(:,:), lobWf(:,:), gnr(:,:)
 		real(dp),		allocatable		::	EnT(:), bwfR(:,:), bwfI(:,:)	 
-		integer							:: 	ki, xi , n
-		real(dp)						::	kVal(dim)
+		integer							:: 	ki, xi , n, failCount
+		real(dp)						::	kVal(dim), smin, smax
 		!
 		allocate(	Hmat(	nG,	nG	)			)
 		allocate(	EnT(		nG		)			)
@@ -44,10 +44,13 @@ module potWellModel
 		allocate(	lobWf(	nR, nWfs)			)
 		allocate(	gnr(	nR,	nWfs)			)
 		
-		wnF		=	dcmplx(0.0_dp)
-		bWf		=	dcmplx(0.0_dp)
-		unkW	=	dcmplx(0.0_dp)
-		veloBwf	=	dcmplx(0.0_dp)
+		wnF			=	dcmplx(0.0_dp)
+		bWf			=	dcmplx(0.0_dp)
+		unkW		=	dcmplx(0.0_dp)
+		veloBwf		=	dcmplx(0.0_dp)
+		failCount	=	0
+		smin		=	1.0_dp
+		smax		= 	0.0_dp
 		!
 		
 		!call genTrialOrb(gnr) !ToDo
@@ -56,7 +59,7 @@ module potWellModel
 		open(unit=210, file='rawData/bwfR.dat'		, form='unformatted', access='stream', action='write')
 		open(unit=211, file='rawData/bwfI.dat'		, form='unformatted', access='stream', action='write')
 		do ki = 1, nK
-			write(*,*)"[solveHam]: ki=",ki
+			!write(*,*)"[solveHam]: ki=",ki
 			kVal	=	kpts(:,ki)
 			!
 			call populateH(kVal, Hmat)	
@@ -72,13 +75,15 @@ module potWellModel
 			write(210)bWfR
 			write(211)bwfI
 			!
-			call projectBwf(ki, bWf, loBwf, U(:,:,ki))
+			call projectBwf(ki, bWf, loBwf, U(:,:,ki), failCount, smin, smax)
 			
 			call genWannF(ki, lobWf, wnF)
 
 			call genUnk(ki, bWf, unkW(:, ki, :))
 			!
 		end do
+		write(*,'(a,f16.15,a,f16.12)') "[solveHam]: projection matrix  smin=", smin, " smax=", smax
+		write(*,'(a,i7,a)')"[solveHam]: ",failCount," of the projected bloch like functions are not orthonormal"
 		close(200)
 		close(210)
 		close(211)
@@ -120,7 +125,7 @@ module potWellModel
 			write(*,*)"[populateH]: Hamiltonian matrix is not Hermitian :"
 			call printMat(nG, Hmat)
 		else
-			write(*,*)"[populateH]: Hmat is hermitian"
+			!write(*,*)"[populateH]: Hmat is hermitian"
 		end if
 		return
 	end
@@ -164,12 +169,11 @@ module potWellModel
 		integer,	intent(in)	::	i, j
 		integer					::	at
 		complex(dp)				::	Vx, Vy, Vpot
-		real(dp)				::  xL, yL, xR, yR, dGx, dGy, thres
+		real(dp)				::  xL, yL, xR, yR, dGx, dGy
 		!
 		V 		= dcmplx(0.0_dp)
 		dGx		= Gvec(1,j) - Gvec(1,i)
 		dGy		= Gvec(2,j) - Gvec(2,i)
-		thres	= 1e-15_dp
 		!
 		do at = 1, nAt
 			Vpot	=	dcmplx(atPot(at))
@@ -178,7 +182,7 @@ module potWellModel
 			yL	=	atPos(2,at) - atR(2,at)
 			yR	=	atPos(2,at) + atR(2,at) 
 			!
-			if( abs(dGx) < thres ) then
+			if( abs(dGx) < machineP ) then
 				!write(*,*)"zero x difference i=",i," j=",j
 				Vx	= ( xR - xL )
 			else
@@ -186,7 +190,7 @@ module potWellModel
 			end if
 			
 
-			if( abs(dGy) < thres ) then
+			if( abs(dGy) < machineP ) then
 				!write(*,*)"zero y difference i=",i," j=",j
 				Vy	= ( yR - yL )
 			else
