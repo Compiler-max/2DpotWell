@@ -30,12 +30,14 @@ module berry
 		!
 		complex(dp),	intent(in)		:: unk(:,:,:)
 		integer							:: n, kix, kiy, ri
-		real(dp)						:: G(2), thres
+		real(dp)						:: Gx(2), Gy(2), thres
 		complex(dp)						:: phase, u0, u1
 		logical							:: isX, isY
 		!
-		G(1)	= 2.0_dp * PI_dp / aX
-		G(2)	= 0.0_dp
+		Gx(1)	= 2.0_dp * PI_dp / aX
+		Gx(2)	= 0.0_dp
+		Gy(1)	= 0.0_dp
+		Gy(2)	= 2.0_dp * PI_dp / aX
 		isX 	= .true.
 		isY		= .true.
 		thres	= 1e-4_dp
@@ -47,11 +49,12 @@ module berry
 			kix	= 1
 			do  while(kix <= nKx .and. isX)
 				do ri = 1, nR
-					phase 	= myExp( 	dot_product( G(:) , rpts(:,ri) )		)
+					phase 	= myExp( 	dot_product( Gx(:) , rpts(:,ri) )		)
 					u0 		= unk( ri, getKindex(kix,1  ), n)
 					u1		= unk( ri, getKindex(kix,nKy), n)
-					if( abs(abs(u0-phase*u1) -1.0_dp) > thres	) then 
-						write(*,'(a,i4,a,i3,a,i3)')"[isSufficient]: problem at ri=",ri," kix =",kix," n=",n
+					if( abs(u0-phase*u1)  > thres	) then 
+						write(*,'(a,i5,a,i3,a,i3,a,f16.12)')	"[isSufficient]: problem at ri=",ri," kix =",kix," n=",n,&
+																" delta=", abs(u0-phase*u1)
 						isX = .false.
 					end if
 				end do
@@ -62,11 +65,12 @@ module berry
 			kiy	= 1
 			do  while(kiy <= nKy .and. isY)
 				do ri = 1, nR
-					phase 	= myExp( 	dot_product( G(:) , rpts(:,ri) )		)
+					phase 	= myExp( 	dot_product( Gy(:) , rpts(:,ri) )		)
 					u0 		= unk( ri, getKindex(1  ,kiy), n)
 					u1		= unk( ri, getKindex(nKx,kiy), n)
-					if( abs(abs(u0-phase*u1) -1.0_dp) > thres	) then 
-						write(*,'(a,i4,a,i3,a,i3)')"[isSufficient]: problem at ri=",ri," kiy =",kiy," n=",n
+					if( abs(u0-phase*u1) > thres	) then 
+						write(*,'(a,i5,a,i3,a,i3,a,f16.12)')	"[isSufficient]: problem at ri=",ri," kiy =",kiy," n=",n,&
+																" delta=", abs(u0-phase*u1)
 						isY = .false.
 					end if
 				end do
