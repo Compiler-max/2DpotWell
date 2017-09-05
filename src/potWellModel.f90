@@ -20,21 +20,22 @@ module potWellModel
 
 	contains
 !public:
-	subroutine solveHam(U, wnF, unkW, En, veloBwf)
+	subroutine solveHam(wnF, unkW)
 		!solves Hamiltonian at each k point
 		!also generates the Wannier functions on the fly (sum over all k)
-		complex(dp),	intent(out)		::	U(:,:,:), wnF(:,:,:), unkW(:,:,:), veloBwf(:,:,:)		!Uh(  nWfs	, nWfs,		nK		)	
+		complex(dp),	intent(out)		::	wnF(:,:,:), unkW(:,:,:)!, veloBwf(:,:,:)		!Uh(  nWfs	, nWfs,		nK		)	
 																				!wnF( nR	, nSupC,	nWfs	)	
 																				!unkW(nR	, nKpts,	nWfs	)
 																				!veloBwf(nR,nK,2*nG)
-		real(dp),		intent(out)		::	En(:,:)																	
-		complex(dp),	allocatable		::	Hmat(:,:), bWf(:,:), lobWf(:,:), gnr(:,:)
+		!real(dp),		intent(out)		::	En(:,:)																	
+		complex(dp),	allocatable		::	Hmat(:,:), bWf(:,:), lobWf(:,:), gnr(:,:), U(:,:)
 		real(dp),		allocatable		::	EnT(:), bwfR(:,:), bwfI(:,:)	 
 		integer							:: 	qi, xi , n, failCount
 		real(dp)						::	kVal(dim), smin, smax
 		!
 		allocate(	Hmat(	nG,	nG	)			)
-		allocate(	EnT(		nG		)			)
+		allocate(	U(		nG, nG	)			)
+		allocate(	EnT(		nG	)			)	
 		allocate(	bWf(	nR, nG	)			)
 		allocate(	bWfR(	nR, nG	)			)
 		allocate(	bWfI(	nR, nG	)			)
@@ -44,7 +45,7 @@ module potWellModel
 		wnF			=	dcmplx(0.0_dp)
 		bWf			=	dcmplx(0.0_dp)
 		unkW		=	dcmplx(0.0_dp)
-		veloBwf		=	dcmplx(0.0_dp)
+		!veloBwf		=	dcmplx(0.0_dp)
 		failCount	=	0
 		smin		=	1.0_dp
 		smax		= 	0.0_dp
@@ -62,17 +63,17 @@ module potWellModel
 			call populateH(kVal, Hmat)	
 			call eigSolver(Hmat, EnT)
 			write(200)	EnT
-			En(qi,:) = EnT(1:nWfs) 
+			!En(qi,:) = EnT(1:nWfs) 
 			!
 			call gaugeCoeff(kVal, Hmat)
 			call genBlochWf(qi, Hmat, bWf)		
-			call calcVeloBwf(qi,Hmat, veloBwf)
+			!call calcVeloBwf(qi,Hmat, veloBwf)
 			bWfR 	= dreal(bWf)                 !Todo fix that
 			bWfI	= dimag(bWf)
 			write(210)bWfR
 			write(211)bwfI
 			!
-			call projectBwf(qi, bWf, loBwf, U(:,:,qi), failCount, smin, smax)
+			call projectBwf(qi, bWf, loBwf, U(:,:), failCount, smin, smax)
 			
 			call genWannF(qi, lobWf, wnF)
 

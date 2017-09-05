@@ -70,7 +70,7 @@ program main
 	call cpu_time(kT0)
 	!
 	!
-	call solveHam(Uh, wnF, unk, En, veloBwf)
+	call solveHam(wnF, unk)
 	!check boundary condition on unk files
 	if( isKperiodic(unk)	 /= 0 ) then
 		write(*,*)	"[main]: problem with unk gauge, wave functions are NOT periodic in k space"
