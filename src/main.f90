@@ -39,14 +39,11 @@ program main
     call cpu_time(aT0)
 	call readInp()
 	!electronic structure arrays
-	allocate(			En(					nQ		,	nWfs		)			)
-	
-	allocate(			unk(	nR		, 	nQ		, nWfs		)			) 
-	allocate(			Uh(		nWfs	, 	nWfs	,	nQ		)			)
+	allocate(			unk(	nR		, 	nQ		, nWfs		)				) 
 	!wannier functions
-	allocate(			wnF( 		nR		, 	nSC		, nWfs		)			)
-	allocate(			wCent(		2		, 	nWfs				)			)
-	allocate(			wSprd(		2		, 	nWfs				)			)
+	allocate(			wnF( 		nR	, 	nSC		, nWfs		)				)
+	allocate(			wCent(		2	, 	nWfs				)				)
+	allocate(			wSprd(		2	, 	nWfs				)				)
 	!wannier interpolation arrays
 	allocate(			Ah(		3		,	nK		, nWfs, nWfs	)			)
 	allocate(			Fh(		3		,	nK		, nWfs, nWfs	)			)
@@ -54,6 +51,8 @@ program main
 	allocate(			EnH(				nK		,	 nWfs		)			)
 	
 	!
+	!allocate(			En(					nQ		,	nWfs		)			)
+	!allocate(			Uh(		nWfs	, 	nWfs	,	nQ		)			)
 	!allocate(			Aint(		2		,	nK		, nWfs	)				)
 	!allocate(			VeloBwf(	nR		,	nQ		, 2*nWfs)				)
 	!allocate(			Velo(		3		,	nQ		,nWfs, nwFs)			)
@@ -145,6 +144,7 @@ program main
 	write(*,*)"[main]:**************************PEIERLS SUB*************************"
 	call cpu_time(peiT0)
 	!
+	call peierlsSub(wnF, 	unk, Ah, Fh, Vh, EnH, pPei )
 	!
 	call cpu_time(peiT1)
 	write(*,*)"[main]: done with peierls substitution"

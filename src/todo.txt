@@ -1,14 +1,14 @@
 today toDo:
-	- velos on dense mesh
-
+	
 
 	- Peierls substitution
 		-> after peierls is written, proably remove the blochWF.f90 module (move subroutines back to potWellModel)
+		-> peierls changes all the quantities passed to it, so writing them should be done before and after peierls sub!!!!!
+
 
 	- build on cluster
 
 	- please remember that the obtained conn etc. are now on the interpolated grid, this means the polarization, etc. routines might need adjusting
-
 
 
 
@@ -53,7 +53,11 @@ todo:
 		via Niu		-> debug indices seem to point in x not in y direction currtently
 		via Peierl
 
+	- niu
+		see if zero field gives zero pol
+
 	- peierls
+		run with zero field should obtain zero order polarization
 		watch out for chern insulator breakdown
 		shift wannier functions instead of solving model again
 
