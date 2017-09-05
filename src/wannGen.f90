@@ -3,10 +3,7 @@ module wannGen
 	!	this includes the calculation of the orthonormalized projected bloch wavefunctions
 	!	and the FT of the bwfs to calculate the wannier functions
 	use mathematics, only: dp, PI_dp, acc, myExp, nIntegrate, myMatInvSqrt, isUnit, isIdentity
-	use sysPara    , only: 		readInp, insideAt, &
-										dim, aX, aY,vol, nAt, atR, atPos, atPot,&
-										nG, nG0, Gcut, nK, nWfs, nSC,nR, nRx, nRy, dx, dy, dkx, dky, &
-										Gvec, atPos, atR, kpts, rpts,Rcell, gaugeSwitch, trialOrbSw, trialOrbVAL
+	use sysPara
 	implicit none	
 	
 	private

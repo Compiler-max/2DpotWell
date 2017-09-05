@@ -1,7 +1,21 @@
 today toDo:
+	- velos on dense mesh
+
+
 	- Peierls substitution
-	- curvature & connection plot
-	- plotting: mark atoms in the bwf and wnf plots
+
+
+	- please remember that the obtained conn etc. are now on the interpolated grid, this means the polarization, etc. routines might need adjusting
+
+
+
+
+
+
+
+
+
+
 
 
 todo:
@@ -14,27 +28,24 @@ todo:
 	- check weird bug with writting the bwfs in solveHam again
 	
 
-
+	- plotting: mark atoms in the bwf and wnf plots
 
 	- git (online)
 	- build on cluster
 	- on cluster: convergence tests
 
 
+	-polarization:
+		via Wannier centers
+		via Connection (real & k space version) 
+		units
 	
 
 
 	DEBUG:
 
-	- connection:
-		via projected states directly -> still not the correct value, try interpolation, might be related to bad FD on coarse mesh
-		via unk generated from wannier functions (INTERPOLATION)
-
-	-polarization:
-		via Wannier
-		via Connection
-		units
-	
+	- compare interpolated energy bands with original energy bands
+	- complet new kpts array notsation!!!!!!!!!!!!!!!!!!!!!!!
 
 
 

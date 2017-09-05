@@ -6,20 +6,20 @@ module sysPara
 	private
 	public :: 	readInp, insideAt, getRindex, getKindex, &
 				dim, aX, aY, vol, nAt, relXpos, relYpos, atRx, atRy, atPot,&
-				nG, nG0, Gcut, nK, nKx, nKy, nKxW, nKyW, nKw, nSC, nSCx, nSCy, nR, nRx, nRy, R0,  dx, dy, dkx, dky, dkxW, dkyW, &
-				gaugeSwitch, nWfs, &
-				Gvec, atPos, atR, kpts, rpts, Rcell, kptsW, trialOrbVAL, trialOrbSw, Zion, &
+				nG, nG0, Gcut, nQ, nQx, nQy, nKx, nKy, nK, nSC, nSCx, nSCy, nR, nRx, nRy, R0,  dx, dy, dqx, dqy, dkx, dky, &
+				gaugeSwitch, nWfs, connSwitch, &
+				Gvec, atPos, atR, qpts, rpts, Rcell, kpts, trialOrbVAL, trialOrbSw, Zion, &
 				Bext
 
 
 	!
-	integer  										:: 	dim=2, nAt=0, nG=11, nG0,  nKx=1, nKy=1,nK , nSCx=1, nSCy=1,& 
-														nKxW=1, nKyW=1, nKw, &
+	integer  										:: 	dim=2, nAt=0, nG=11, nG0,  nQx=1, nQy=1,nQ , nSCx=1, nSCy=1,& 
+														nKx=1, nKy=1, nK, connSwitch=0, &
 														nRx=10, nRy=10, nR, R0=1, nWfs=1, nSC, gaugeSwitch, trialOrbSw
 	real(dp) 										::	aX=0.0_dp, aY=0.0_dp,vol=0.0_dp, Gcut=2*PI_dp, thres,& 
-														dx, dy, dkx, dky, dkxW, dkyW, B0, Bext(3)											
+														dx, dy, dqx, dqy, dkx, dky, B0, Bext(3)											
 	real(dp),	allocatable,	dimension(:)		::	relXpos, relYpos, atRx, atRy, atPot, trialOrbVAL, Zion
-	real(dp),	allocatable,	dimension(:,:)		::	Gvec, atPos, atR, kpts, rpts, Rcell, kptsW 
+	real(dp),	allocatable,	dimension(:,:)		::	Gvec, atPos, atR, qpts, rpts, Rcell, kpts 
 
 
 
@@ -56,8 +56,8 @@ module sysPara
 		![numerics]
 		call CFG_add_get(my_cfg,	"numerics%nG"       ,	nG	     	,	"amount of G_n used"					)
 		call CFG_add_get(my_cfg,	"numerics%Gcut"		,	Gcut	    ,	"k space cut of parameter"				)
-		call CFG_add_get(my_cfg,	"numerics%nKx"     	,	nKx      	,	"amount of k points used"				)
-		call CFG_add_get(my_cfg,	"numerics%nKy"     	,	nKy      	,	"amount of k points used"				)
+		call CFG_add_get(my_cfg,	"numerics%nQx"     	,	nQx      	,	"amount of k points used"				)
+		call CFG_add_get(my_cfg,	"numerics%nQy"     	,	nQy      	,	"amount of k points used"				)
 		call CFG_add_get(my_cfg,	"numerics%nSCx"     ,	nSCx   		,	"#			supercells "				)
 		call CFG_add_get(my_cfg,	"numerics%nSCy"     ,	nSCy   		,	"#			supercells "				)
 		call CFG_add_get(my_cfg,	"numerics%nRx"     	,	nRx      	,	"amount of r points used"				)
@@ -68,20 +68,22 @@ module sysPara
 		call CFG_add_get(my_cfg,	"wann%nWfs"			,	nWfs	 	,	"# wannier functions to generate"		)
 		call CFG_add_get(my_cfg,	"wann%trialOrbSw"	,	trialOrbSw	,	"switch different trial orbitals"		)
 		call CFG_add_get(my_cfg,	"wann%R0"			,	R0			,	"home unit cell used for wann cent calc")
-		call CFG_add_get(my_cfg,	"wann%nKxW"			,	nKxW		,	"# k x points of interpolation mesh"	)
-		call CFG_add_get(my_cfg,	"wann%nKyW"			,	nKyW		,	"# k x points of interpolation mesh"	)
+		call CFG_add_get(my_cfg,	"wann%nKx"			,	nKx			,	"# k x points of interpolation mesh"	)
+		call CFG_add_get(my_cfg,	"wann%nKy"			,	nKy			,	"# k x points of interpolation mesh"	)
+		call CFG_add_get(my_cfg,	"wann%connSwitch"	,	connSwitch	,	"connection via K or via R space"		)
 		![perturbation]
 		call CFG_add_get(my_cfg,	"perturbation%B0"	,	B0			,	"scaling fact. of ext. magnetic field"	)
 		call CFG_add_get(my_cfg,	"perturbation%Bext"	,	Bext		,	"vector of ext. magnetic field"			)
 
+
 		dim = 	2
-		vol	=	aX * aY
 		nG	=	floor(	sqrt(real(nG,dp))	)**2 !makes sure that bove dimensions get equal basis vectors
-		nK 	= 	nKx 	*	nKy
+		vol	=	aX 		* 	aY
 		nR 	= 	nRx 	*	nRy
+		nQ 	= 	nQx 	*	nQy
 		nSC =	nSCx	*	nSCy
-		nKw =	nKxW	*	nKyW
-		Bext=	B0 * Bext
+		nK =	nKx		*	nKy
+		Bext=	B0 		* 	Bext
 
 		!basis
 		allocate(	Gvec(dim,nG)		)
@@ -96,10 +98,10 @@ module sysPara
 		allocate(	trialOrbVAL(nAt)	)
 		allocate(	Zion(nAt)			)
 		!meshes
-		allocate(	kpts(dim,nK)		)
+		allocate(	qpts(dim,nQ)		)
 		allocate(	rpts(dim,nR)		)
 		allocate(	Rcell(dim,nSC)		)
-		allocate(	kptsW(dim,nKw)		)
+		allocate(	kpts(dim,nK)		)
 		
 		![atoms]
 		call CFG_add_get(my_cfg,	"atoms%relXpos"		,	relXpos		,	"relative positions in unit cell"		)
@@ -165,10 +167,10 @@ module sysPara
 	end
 
 
-	integer function getKindex(kx,ky)
-		integer,	intent(in)		:: kx, ky
+	integer function getKindex(qx,qy)
+		integer,	intent(in)		:: qx, qy
 		!
-		getKindex = (ky-1) * nKx + kx
+		getKindex = (qy-1) * nQx + qx
 		return
 	end
 
@@ -187,19 +189,19 @@ module sysPara
 !privat:
 	subroutine kmeshGen()
 		!generates the (coarse) k point mesh for solving electronic structure
-		integer		:: kIx, kIy, kI
-		real(dp)	:: kxMin, kyMin
+		integer		:: qIx, qIy, qI
+		real(dp)	:: qxMin, qyMin
 		!
-		kxMin	= -1.0_dp * PI_dp /  aX
-		dkx		=  2.0_dp * PI_dp / (aX * nKx)
-		kyMin	= -1.0_dp * PI_dp /  aY
-		dky		=  2.0_dp * PI_dp / (aY * nKy)
+		qxMin	= -1.0_dp * PI_dp /  aX
+		dqx		=  2.0_dp * PI_dp / (aX * nQx)
+		qyMin	= -1.0_dp * PI_dp /  aY
+		dqy		=  2.0_dp * PI_dp / (aY * nQy)
 		!
-		do kIy = 1, nKy
-			do kIx = 1, nKx
-				kI	=	(kIy-1) * nKx + kIx
-				kpts(1,kI)	=	kxMin + (kIx-1) * dkx  		!x component
-				kpts(2,kI)	=	kyMin + (kIy-1) * dky  		!y component
+		do qIy = 1, nQy
+			do qIx = 1, nQx
+				qI	=	(qIy-1) * nQx + qIx
+				qpts(1,qI)	=	qxMin + (qIx-1) * dqx  		!x component
+				qpts(2,qI)	=	qyMin + (qIy-1) * dqy  		!y component
 			end do
 		end do
 		!
@@ -213,15 +215,15 @@ module sysPara
 		real(dp)	:: kxMin, kyMin
 		!
 		kxMin	= -1.0_dp * PI_dp /  aX
-		dkxW	=  2.0_dp * PI_dp / (aX * nKxW)
+		dkx	=  2.0_dp * PI_dp / (aX * nKx)
 		kyMin	= -1.0_dp * PI_dp /  aY
-		dkyW	=  2.0_dp * PI_dp / (aY * nKyW)
+		dky	=  2.0_dp * PI_dp / (aY * nKy)
 		!
-		do kIy = 1, nKyW
-			do kIx = 1, nKxW
-				kI	=	(kIy-1) * nKxW + kIx
-				kptsW(1,kI)	=	kxMin + (kIx-1) * dkxW  		!x component
-				kptsW(2,kI)	=	kyMin + (kIy-1) * dkyW  		!y component
+		do kIy = 1, nKy
+			do kIx = 1, nKx
+				kI	=	(kIy-1) * nKx + kIx
+				kpts(1,kI)	=	kxMin + (kIx-1) * dkx  		!x component
+				kpts(2,kI)	=	kyMin + (kIy-1) * dky  		!y component
 			end do
 		end do
 		!

@@ -7,7 +7,7 @@ module mathematics
 
 
 	public :: dp, PI_dp, i_dp, acc, setAcc, machineP, myExp, Cangle, myLeviCivita, nIntegrate, crossP,& 
-				isUnit, isIdentity, isHermitian, SVD, eigSolver, myMatInvSqrt
+				isUnit, isIdentity, isHermitian, SVD, eigSolver, myMatInvSqrt, rotMat, myCommutat
 
 
 	interface nIntegrate
@@ -326,6 +326,39 @@ module mathematics
 		end if
 		return
 	end
+
+
+
+
+
+	subroutine rotMat(U, Mat, res)
+		! res = U^dagger * Mat * U
+		complex(dp),	intent(in)		:: U(:,:), Mat(:,:)
+		complex(dp),	intent(out)		:: res(:,:)
+		!
+		res	= matmul(	Mat						,		U		)
+		res	= matmul(	dconjg(transpose(U))	, 		res		)
+		!
+		return
+	end
+
+	subroutine myCommutat(M, N, res)
+		!	computes the commutator of matrix M and N
+		!	[M,N] = MN - NM
+		complex(dp),	intent(in)		:: M(:,:), N(:,:)
+		complex(dp),	intent(out)		:: res(:,:)
+		!
+		if( size(M,2) /= size(N,2)  .or. size(N,1) /= size(M,1)	) then
+			write(*,*)"[myCommutat]: Matrix ranks dont match. can not compute commutator"
+		else
+			res		= matmul(M,N) - matmul(N,M)
+		end if
+		!
+		!
+		return
+	end
+
+
 
 
 

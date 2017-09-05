@@ -2,16 +2,20 @@ module berry
 	!module contains methods related to the Berry phase theory of modern polarization
 	!	i.e. calculation of connection, velocities, curvatures and polarization
 	use mathematics,	only:	dp, PI_dp, i_dp, acc, myExp, myLeviCivita, nIntegrate
-	use sysPara,		only: 	readInp, getKindex, getRindex, &
-									dim, aX, aY,vol, nAt, atR, atPos, atPot,&
-									nG, nG0, Gcut, nK, nKx, nKy, nWfs, nSC, nSCx, nSCy, nR, nRx, nRy, dx, dy, dkx, dky, &
-									Gvec, atPos, atR, kpts, rpts, gaugeSwitch
+	use sysPara
 	implicit none
 
 	private
-	public	::	isKperiodic, calcConn, calcCurv, calcVeloMat, calcPolViaA
-
+	public	::	isKperiodic, calcWaveMat
 	contains
+
+
+
+
+
+
+
+
 
 
 
@@ -29,7 +33,7 @@ module berry
 		!	analog for y direction
 		!
 		complex(dp),	intent(in)		:: unk(:,:,:)
-		integer							:: n, kix, kiy, ri, totC, isX, isY
+		integer							:: n, qix, qiy, ri, totC, isX, isY
 		real(dp)						:: Gx(2), Gy(2), val,dmax, avg
 		complex(dp)						:: phase, u0, u1
 		!
@@ -47,11 +51,11 @@ module berry
 		!
 		do 	n = 1, nWfs 
 			!CHECK IN X DIRECTION
-			do  kix = 1, nKx 
+			do  qix = 1, nQx 
 				do ri = 1, nR
 					phase 	= myExp( 	dot_product( Gx(:) , rpts(:,ri) )		)
-					u0 		= unk( ri, getKindex(kix,1  ), n)
-					u1		= unk( ri, getKindex(kix,nKy), n)
+					u0 		= unk( ri, getKindex(qix,1  ), n)
+					u1		= unk( ri, getKindex(qix,nQy), n)
 					val 	= abs(u0-phase*u1)
 					if(  val > acc	) then 
 						isKperiodic = isKperiodic 	+ 1
@@ -66,11 +70,11 @@ module berry
 			end do
 			!
 			!CHECK IN Y DIRECTION
-			do  kiy = 1, nKy
+			do  qiy = 1, nQy
 				do ri = 1, nR
 					phase 	= myExp( 	dot_product( Gy(:) , rpts(:,ri) )		)
-					u0 		= unk( ri, getKindex(1  ,kiy), n)
-					u1		= unk( ri, getKindex(nKx,kiy), n)
+					u0 		= unk( ri, getKindex(1  ,qiy), n)
+					u1		= unk( ri, getKindex(nQx,qiy), n)
 					val		= abs(u0-phase*u1)
 					if( val > acc	) then 
 						isKperiodic = isKperiodic	+ 1
@@ -99,7 +103,102 @@ module berry
 
 
 
-	subroutine calcConn(unk,nxk, nyk, A)
+
+
+
+	subroutine calcWaveMat(unk, Hw, Hwa, Aw, Fw)
+		!calculates the matrices described in Wang/Vanderbilt PRB 74, 195118 (2006)
+		!	via integration k space
+		complex(dp),	intent(in)		:: unk(:,:,:)
+		complex(dp),	intent(out)		:: Hw(:,:,:), Hwa(:,:,:,:), Aw(:,:,:,:), Fw(:,:,:,:,:)		!Hw(nKi, nWfs, nWfs)
+		complex(dp)						:: Hnmq, qphase
+		real(dp),	allocatable		:: AwCoarse(:,:,:,:)
+		integer							:: m, n, ki, qi, R, a,b
+		!
+		allocate(	AwCoarse(3,nQ,nWfs, nWfs)	)
+		call calcConnOnCoarse(unk, AwCoarse)
+		!
+		Hw	= dcmplx(0.0_dp)
+		Hwa	= dcmplx(0.0_dp)
+		Aw	= dcmplx(0.0_dp)
+		Fw	= dcmplx(0.0_dp)
+		!
+		do m = 1, nWfs
+			do n =  1, nWfs
+				do ki = 1, nK
+					!SUM OVER CELLS & COARSE K MESH
+					do R = 1, nSC
+						do qi = 1, nQ
+							qphase			= myExp( 	dot_product(	kpts(:,ki) - qpts(:,qi)	, Rcell(:,R)	)		)	
+							!HAMILTONIAN QUANTITIES
+							Hnmq 			= unHum(n,m,qi, unk)
+							Hw(ki,n,m) 		= Hw(ki,n,m) 		+ 						qphase * Hnmq 				/ nQ
+							Hwa(:,ki,n,m)	= Hwa(:,ki,n,m) 	+ i_dp * Rcell(:,R)	*	qphase * Hnmq 				/ nQ
+							!POSITIONAL QUANTITIES
+							Aw(:,ki,n,m)	= Aw(:,ki,n,m)		+ 						qphase * AwCoarse(:,qi,n,m) / nQ
+							do b = 1, 3
+								do a = 1, 3
+									Fw(a,b,ki,n,m)	= Fw(a,b,ki,n,m)	+ i_dp * Rcell(a,R)	*	qphase * AwCoarse(b,qi,n,m)	/ nQ 
+									Fw(a,b,ki,n,m)	= Fw(a,b,ki,n,m)	- i_dp * Rcell(b,R)	*	qphase * AwCoarse(a,qi,n,m)	/ nQ
+								end do
+							end do
+						end do	
+					end do
+					!
+				end do
+			end do
+		end do
+		!
+		!
+		return
+	end
+
+
+
+
+
+
+
+
+
+!privat
+	complex(dp) function unHum(n,m,qi, unk )
+		!calculates the matrix element
+		!
+		!	<u_nq|H(q)|u_mq>
+		!on the coarse k point mesh
+		integer,		intent(in)		:: n,m, qi
+		complex(dp),	intent(in)		:: unk(:,:,:)
+		complex(dp),	allocatable		:: f(:)
+		complex(dp)						:: phase, ham
+		integer							:: ri, at
+		!
+		allocate(	f(nR)	)
+		!
+		do ri = 1, nR	
+			!SET UP HAMILTONIAN AT CURRENT ri
+			ham 	= 0.5_dp * dot_product(qpts(:,qi),qpts(:,qi))
+			do at = 1, nAt
+				if(insideAt(at,rpts(:,ri)))	then
+					ham = ham + atPot(at)
+				end if
+			end do
+			phase	= myExp( dot_product(qpts(:,qi), rpts(:,ri)	)	)
+			ham 	= dconjg(phase) * ham * phase
+			!FILL INTEGRATION ARRAY
+			f(ri)	= dconjg(	unk(ri,qi,n)	) * ham * unk(ri,qi,m)
+		end do
+		!
+		unHum = nIntegrate(nR, nRx,nRy, dx,dy, f)
+		!
+		!
+		return
+	end
+
+
+
+
+	subroutine calcConnOnCoarse(unk, A)
 		!finite difference on lattice periodic unk to calculate the Berry connection A
 		!	A_n(k) 	= <u_n(k)|i \nabla_k|u_n(k)>
 		!		 	= i  <u_n(k)| \sum_b{ w_b * b * [u_n(k+b)-u_n(k)]}
@@ -108,26 +207,25 @@ module berry
 		! see Mazari, Vanderbilt PRB.56.12847 (1997), Appendix B
 		!
 		complex(dp),	intent(in)		:: unk(:,:,:)		!unk(	nR, nK/nKw, nWfs/nG	)
-		integer,		intent(in)		:: nxk, nyk
-		real(dp),		intent(out)		:: A(:,:,:)			!Aconn(	3,nK, nWfs)		)	
-		complex(dp)						:: Mxl, Mxr, Myl, Myr, M, one
-		integer							:: n, Z, ki, kx, ky, kxl, kxr, kyl, kyr, found, tot
+		real(dp),		intent(out)		:: A(:,:,:,:)			!Aconn(	3,nK, nWfs)		)	
+		complex(dp)						:: Mxl, Mxr, Myl, Myr, one
+		integer							:: n, m, Z, qi, qx, qy, qxl, qxr, qyl, qyr, found, tot
 		real(dp)						:: wbx,wby, bxl(2), bxr(2), byl(2), byr(2),dmax, avg, val 
 		!
 		A 		= 0.0_dp
 		Z 		= 4	!amount of nearest neighbours( 2 for 2D cubic unit cell)
-		wbx 	= 3.0_dp / 		( real(Z,dp) * dkx**2 )
-		wby 	= 3.0_dp /		( real(Z,dp) * dky**2 )
+		wbx 	= 3.0_dp / 		( real(Z,dp) * dqx**2 )
+		wby 	= 3.0_dp /		( real(Z,dp) * dqy**2 )
 		!b vector two nearest X neighbours:
-		bxl(1) 	= -dkx				
+		bxl(1) 	= -dqx				
 		bxl(2)	= 0.0_dp
-		bxr(1) 	= +dkx
+		bxr(1) 	= +dqx
 		bxr(2)	= 0.0_dp
 		!b vector two nearest Y neighbours:
 		byl(1) 	= 0.0_dp
-		byl(2)	= -dky
+		byl(2)	= -dqy
 		byr(1) 	= 0.0_dp
-		byr(2)	= +dky
+		byr(2)	= +dqy
 		!
 		found	= 0
 		tot		= 0
@@ -135,41 +233,43 @@ module berry
 		avg		= 0.0_dp
 		!
 		!
-		do n = 1, nWfs
-			do kx = 1, nxk
-				kxl	= getLeft(kx,nxk)
-				kxr	= getRight(kx,nxk)
-				!
-				do ky = 1, nyk
-					kyl	= getLeft(ky,nyk)
-					kyr = getRight(ky,nyk)
-					ki	= getKindex(kx,ky)
+		do m = 1, nWfs
+			do n = 1, nWfs
+				do qx = 1, nQx
+					qxl	= getLeft( qx,nQx)
+					qxr	= getRight(qx,nQx)
 					!
-					!OVERLAP TO NEAREST NEIGHBOURS
-					one = UNKoverlap(	n, 		ki		, 		ki					, unk	)
-					Mxl	= UNKoverlap(	n, 		ki		, getKindex( kxl, ky ) 		, unk	) 
-					Mxr	= UNKoverlap(	n, 		ki		, getKindex( kxr, ky )		, unk	)
-					Myl	= UNKoverlap(	n, 		ki		, getKindex( kx ,kyl )		, unk	)
-					Myr	= UNKoverlap(	n, 		ki		, getKindex( kx ,kyr )		, unk	)
-					!
-					!write(*,'(a,f15.12,a,f15.12)')"[calcConn]: Mxl=",dreal(Mxl),"+i*",dimag(Mxl)
-					!FD SUM OVER NEAREST NEIGHBOURS
-					A(1:2,ki,n) = A(1:2,ki,n) + wbx * bxl(:) * dimag( Mxl )!- one )
-					A(1:2,ki,n) = A(1:2,ki,n) + wbx * bxr(:) * dimag( Mxr )!- one )
-					A(1:2,ki,n) = A(1:2,ki,n) + wby * byl(:) * dimag( Myl )!- one )
-					A(1:2,ki,n) = A(1:2,ki,n) + wby * byr(:) * dimag( Myr )!- one )
-					!DEBUG:
-					val	= abs( abs(one) - 1.0_dp )
-					if( val > acc ) then
-						!write(*,'(a,i2,a,i7,a,f16.8,a,f16.8)')	"[calcConn]: n=",n," unk normalization problem at ki=",ki,&
-						!							" one=",dreal(one),"+i*",dimag(one)
-						found 	= found + 1
-						avg		= avg + val
-						if( val > dmax) then
-							dmax = val
-						end if 
-					end if
-					tot = tot + 1
+					do qy = 1, nQy
+						qyl	= getLeft(  qy,nQy)
+						qyr = getRight( qy,nQy)
+						qi	= getKindex(qx,qy)
+						!
+						!OVERLAP TO NEAREST NEIGHBOURS
+						one = UNKoverlap(	n,		m, 		qi		, 		qi					, unk	)
+						Mxl	= UNKoverlap(	n,		m, 		qi		, getKindex( qxl, qy ) 		, unk	) 
+						Mxr	= UNKoverlap(	n,		m, 		qi		, getKindex( qxr, qy )		, unk	)
+						Myl	= UNKoverlap(	n,		m, 		qi		, getKindex( qx ,qyl )		, unk	)
+						Myr	= UNKoverlap(	n,		m, 		qi		, getKindex( qx ,qyr )		, unk	)
+						!
+						!write(*,'(a,f15.12,a,f15.12)')"[calcConn]: Mxl=",dreal(Mxl),"+i*",dimag(Mxl)
+						!FD SUM OVER NEAREST NEIGHBOURS
+						A(1:2,qi,n,m) = A(1:2,qi,n,m) + wbx * bxl(:) * dimag( Mxl )!- one )
+						A(1:2,qi,n,m) = A(1:2,qi,n,m) + wbx * bxr(:) * dimag( Mxr )!- one )
+						A(1:2,qi,n,m) = A(1:2,qi,n,m) + wby * byl(:) * dimag( Myl )!- one )
+						A(1:2,qi,n,m) = A(1:2,qi,n,m) + wby * byr(:) * dimag( Myr )!- one )
+						!DEBUG:
+						val	= abs( abs(one) - 1.0_dp )
+						if( val > acc ) then
+							!write(*,'(a,i2,a,i7,a,f16.8,a,f16.8)')	"[calcConn]: n=",n," unk normalization problem at ki=",ki,&
+							!							" one=",dreal(one),"+i*",dimag(one)
+							found 	= found + 1
+							avg		= avg + val
+							if( val > dmax) then
+								dmax = val
+							end if 
+						end if
+						tot = tot + 1
+					end do
 				end do
 			end do
 		end do
@@ -186,126 +286,13 @@ module berry
 
 
 
-	subroutine calcCurv(En, Velo, Fcurv)
-	!Calculates the connection via Kubo formula on matrix elements of velocity operator
-	!see Wang/Vanderbilt PRB 74, 195118 (2006) eq.(5)
-	!
-	!	F_n,c(k) = \sum{a,b} leviCivi(a,b,c) F_n,{a,b}(k)
-	!
-	!
-		real(dp),		intent(in)		:: En(:,:)		!En(nK,nWfs)
-		complex(dp),	intent(in)		:: Velo(:,:,:,:) !Velo(3,nK,nWfs,nWfs)
-		real(dp),		intent(out)		:: Fcurv(:,:,:)  !Fcurv(3,nK,nWfs)
-		integer							:: n, ki, a,b,c
-		!
-		Fcurv = dcmplx(0.0_dp)
-		do n = 1, nWfs
-			do ki = 1, nK
-				do c = 1,3
-					do b= 1,3
-						do a=1,3
-							if( myLeviCivita(a,b,c) /= 0) then
-								Fcurv(c,ki,n) = Fcurv(c,ki,n) + myLeviCivita(a,b,c) * omega(n,a,b,ki,Velo, En)
-							end if
-						end do 
-					end do
-				end do
-			end do
-		end do
-		!
-		!
-		return
-	end
 
 
-
-	subroutine calcVeloMat(unk, veloBwf, Velo)
-		!calculates matrix elements of the velocity operator
-		!	velocity operator is analytically applied to the plane wave basis 
-		!	and then weighted by the basCoeff obtained from the solver and stored in veloBwf
-		!	
-		complex(dp),		intent(in)		:: unk(:,:,:), veloBwf(:,:,:)	!	unk(nR, nK, nWfs) , veloBwf(nR,nK ,2*nWfs)
-		complex(dp),		intent(out)		:: Velo(:,:,:,:)   !Velo(3,	nK,	nWfs	, nwFs)		
-		integer								:: ki, n,m, ri
-		complex(dp),		allocatable		:: fx(:), fy(:)
-
-		allocate(	fx(nR)	)
-		allocate(	fy(nR)	)
-
-		
-		do m = 1, nWfs
-			do n = 1, nWfs
-				do ki = 1, nK
-					!FILL INTEGRATION ARRAY
-					do ri = 1, nWfs
-						fx(ri)	= myExP( 	dot_product( kpts(:,ki), rpts(:,ri) )		)	*unk(ri,ki,n)	* veloBwf(ri, ki,	m		)
-						fy(ri)	= myExP( 	dot_product( kpts(:,ki), rpts(:,ri) )		)	*unk(ri,ki,n)	* veloBwf(ri, ki,	nWfs+m	)
-					end do
-					!INTEGRATE
-					Velo(1,ki,n,m)	= nIntegrate(nR, nRx, nRy, dx, dy, fx)
-					Velo(2,ki,n,m)	= nIntegrate(nR, nRx, nRy, dx, dy, fy)
-					Velo(3,ki,n,m) 	= dcmplx(0.0_dp)
-				end do
-			end do
-		end do
-		!	
-		!
-		return
-	end
-
-
-	subroutine calcPolViaA(A, pElA)
-		!calculates the polarization by integrating connection over the brillouin zone
-		! r_n 	= <0n|r|0n> 
-		!		=V/(2pi)**2 \integrate_BZ <unk|i \nabla_k|unk>
-		!		=V/(2pi)**2 \integrate_BZ A(k)
-		real(dp),		intent(in)		:: A(:,:,:)			!A(2,	 nK, nWfs	)	
-		real(dp),		intent(out)		:: pElA(:)
-		complex(dp)	,	allocatable		:: val(:)
-		real(dp)						:: machine
-		integer							:: n, ki
-		!
-		allocate(	val( size(A,1) )	)
-		val		= dcmplx(0.0_dp)
-		pElA	= 0.0_dp
-		machine	= 1e-15_dp
-		!
-		!SUM OVER K SPACE AND OVER STATES
-		do n 	= 1, size(A,3)
-			do ki = 1, size(A,2)
-				val(:)	= val(:) + A(:,ki,n)
-			end do
-		end do
-		!
-		!NORMALIZE
-		val		= val / real(size(A,2),dp)
-		!
-		!HARVEST
-		pElA	= val !/ (aX*aY)
-		!
-		!MOD TO FIRST UNIT CELL
-		pElA(1)	= mod( pElA(1), aX )
-		pElA(2) = mod( pElA(2), aY )
-		!
-		!DEBUGGING
-		if(		dimag( val(1) ) > machine 	.or. 	dimag( val(2) ) > machine		) then
-			write(*,*)"[calcPolViaA]: non zero imaginary part of polarization"
-		end if
-		return
-	end
-
-
-
-
-
-
-
-!privat
-	real(dp) function omega(n,a,b,ki,Velo,En)
+	real(dp) function omega(n,a,b,qi,Velo,En)
 		!returns curvature tensor element a,b
 		!see Wang/Vanderbilt PRB 74, 195118 (2006) eq.(9)
 		!
-		integer,		intent(in)		:: n, a, b, ki
+		integer,		intent(in)		:: n, a, b, qi
 		complex(dp),	intent(in)		:: Velo(:,:,:,:)!Velo(3,nK,nWfs,nWfs)
 		real(dp),		intent(in)		:: En(:,:)!En(nK,nWfs)
 		integer							:: m
@@ -313,7 +300,7 @@ module berry
 		omega	= 0.0_dp
 		do m = 1, nWfs
 			if(m /= n) then
-				omega = omega +		dimag(	Velo(a,ki,n,m) * Velo(b,ki,m,n)	) 	/ 	( En(ki,m) - En(ki,n) )**2
+				omega = omega +		dimag(	Velo(a,qi,n,m) * Velo(b,qi,m,n)	) 	/ 	( En(qi,m) - En(qi,n) )**2
 			end if 
 		end do		
 		omega	= -2.0_dp * omega
@@ -324,12 +311,12 @@ module berry
 
 
 	!CONNECTION HELPERS
-	complex(dp) function UNKoverlap(n, ki, knb, unk)
+	complex(dp) function UNKoverlap(n, m, qi, knb, unk)
 		!HELPER for calcConn
-		!calculates the overlap between unk at ki and at a neigbhouring k point knb
+		!calculates the overlap between unk at qi and at a neigbhouring k point knb
 		!	integration only over the first unit cell
 		!
-		integer,		intent(in)		:: n, ki, knb
+		integer,		intent(in)		:: n, m, qi, knb
 		complex(dp),	intent(in)		:: unk(:,:,:)  !unk(	nR, nK, nWfs/nG	)
 		complex(dp),	allocatable		:: f(:)
 		integer							:: xi,yi,ri,rloc, nRx1, nRy1, nR1
@@ -346,7 +333,7 @@ module berry
 			do xi = 1, nRx1
 				ri		= getRindex(xi,yi)			!overall index, to get correct position from unk
 				rloc 	= (yi-1) * nRx1 + xi		!for mapping to f array
-				f(rloc)	= dconjg( unk(ri,ki,n) ) * unk(ri,knb,n)
+				f(rloc)	= dconjg( unk(ri,qi,n) ) * unk(ri,knb,m)
 				!write(*,'(a,f10.6,a,f10.6)')	"[overlap] f=",dreal(f(rloc)),"+i*",dimag(f(rloc))
 			end do
 		end do
@@ -389,6 +376,189 @@ module berry
 		!
 		return
 	end
+
+
+
+
+
+
+!	subroutine gaugeConn(Aw, unkW, EnH, Uh, Ah)
+!		!	transforms connection from Wannier gauge Aw back to Hamiltonian gauge Ah
+!		!	
+!		!	Ah 		= Ahbar + i*Dh
+!		!	Ahbar 	= (U*) Aw U 
+!		!	Dh_(n,m)= (U*) Hw_(n,m) U / (Em - En)
+!		!
+!		!	see Wang/Vanderbilt PRB 74, 195118 (2006) 
+!		real(dp),		intent(in)		:: Aw(:,:,:,:), EnH(:,:)		!Aconn(	3	, nK, nWfs	), En(nK, nWfs)		
+!		complex(dp),	intent(in)		:: unkW(:,:,:), Uh(:,:,:)	!unk(	nR	, nK, nWfs	), 	Uh(	nWfs, nWfs,	nK)		
+!		real(dp),		intent(out)		:: Ah(:,:,:,:)				!Ah(3, nK, nWfs, nWfs)
+!		complex(dp),	allocatable		:: Dh(:,:,:), Atmp(:,:,:)				!Dh(3,		nWfs, nWfs)
+!		integer							:: ki, n, m, i
+!		!
+!		allocate(		Dh(		size(Aw,1),		size(Aw,3), size(Aw,4)	)		)
+!		allocate(		Atmp(	size(Aw,1),		size(Aw,3),	size(AW,4)	)		)
+!		Ah	= dcmplx(0.0_dp)
+!		!
+!		!
+!		do ki = 1, nK
+!			call calcAHbar(ki, Aw, Uh, Atmp)
+!			call calcDh(ki, unkW, EnH, Dh)
+!
+!			Ah(:,ki,:,:)	= Atmp(:,:,:) + i_dp * Dh(:,:,:)	!test
+!			!do m = 1, nWfs
+!			!	do n = 1, nWfs
+!			!		do i = 1, 3
+!			!			Ah(i,ki,n,m)	= Ah(i,n,m) + Dh(i,n,m)
+!			!		end do
+!			!	end do
+!			!end do
+!		end do
+!		!
+!		!
+!		return
+!	end
+!
+!
+!
+!	subroutine calcAHbar(ki, Aw, Uh, Ahbar)
+!		!rotates A from wannier gauge to hamiltonian gauge	
+!		!	Ahbar 	= (U*) Aw U  
+!		!
+!		integer,		intent(in)		:: ki
+!		real(dp),		intent(in)		:: Aw(:,:,:,:)
+!		complex(dp),	intent(in)		:: Uh(:,:,:)
+!		complex(dp),	intent(out)		:: Ahbar(:,:,:)
+!		complex(dp),	allocatable		:: Uconjg(:,:), Atmp(:,:)
+!		integer							:: i
+!		!
+!		allocate(	Uconjg( size(Uh,2), size(Uh,2) 	)		)
+!		allocate(	Atmp( 	size(Aw,3), size(Aw,4)	)		)
+!		!
+!		!
+!		Uconjg	= dconjg( transpose(Uh(:,:,ki)	)	)
+!		do i = 1, 3
+!			Ahbar(i,:,:)	= matmul( 	dcmplx(Aw(i,ki,:,:))	, 	Uh(:,:,ki)				) 
+!			Ahbar(i,:,:)	= matmul(	Uconjg(:,:)				,	Ahbar(i,:,:)			)
+!			!Atmp(:,:)		= Ahbar(i,:,:)
+!			!Ahbar(i,:,:)	= matmul(	Uconjg(:,:)				,	Atmp(:,:)				)
+!		end do
+!		!
+!		return
+!	end
+!
+!
+!	subroutine calcDh(ki, unkW, EnH, Dh)
+!		!
+!		!
+!		!
+!		integer,		intent(in)		:: ki
+!		complex(dp),	intent(in)		:: unkW(:,:,:)		!unk(nR,nK,nWfs)
+!		real(dp),		intent(in)		:: EnH(:,:)			!EnH(nK, nWfs)		
+!		complex(dp),	intent(out)		:: Dh(:,:,:)		!Dh(	3	, nWfs, nWfs	)	
+!		complex(dp),	allocatable		:: Hbar(:,:,:)
+!		integer							:: n,m,i
+!		!
+!		allocate(		Hbar(size(Dh,1), size(Dh,2), size(Dh,3))		)
+!		!
+!		Dh	= dcmplx(0.0_dp)
+!		call calcHbar(ki, unkW, Hbar)
+!		do m = 1, size(Dh,3)
+!			do n =1, size(Dh,2)
+!				if( n /= m) then
+!					do i = 1, 3
+!						Dh(i,n,m)	= Hbar(i,n,m)	/ (	EnH(ki,m)	-	EnH(ki,n)	)	
+!					end do
+!				end if
+!			end do
+!		end do
+!		!
+!		!
+!		return
+!	end 
+!
+!
+!
+!	!call calcHbar(ki, unkW, Hbar)
+!
+!
+!
+!
+
+
+
+
+
+	!subroutine calcCurv(En, Velo, Fcurv)
+	!!Calculates the connection via Kubo formula on matrix elements of velocity operator
+	!!see Wang/Vanderbilt PRB 74, 195118 (2006) eq.(5)
+	!!
+	!!	F_n,c(k) = \sum{a,b} leviCivi(a,b,c) F_n,{a,b}(k)
+	!!
+	!!
+	!	real(dp),		intent(in)		:: En(:,:)		!En(nK,nWfs)
+	!	complex(dp),	intent(in)		:: Velo(:,:,:,:) !Velo(3,nK,nWfs,nWfs)
+	!	real(dp),		intent(out)		:: Fcurv(:,:,:)  !Fcurv(3,nK,nWfs)
+	!	integer							:: n, ki, a,b,c
+	!	!
+	!	Fcurv = dcmplx(0.0_dp)
+	!	do n = 1, nWfs
+	!		do ki = 1, nK
+	!			do c = 1,3
+	!				do b= 1,3
+	!					do a=1,3
+	!						if( myLeviCivita(a,b,c) /= 0) then
+	!							Fcurv(c,ki,n) = Fcurv(c,ki,n) + myLeviCivita(a,b,c) * omega(n,a,b,ki,Velo, En)
+	!						end if
+	!					end do 
+	!				end do
+	!			end do
+	!		end do
+	!	end do
+	!	!
+	!	!
+	!	return
+	!end
+
+
+!
+!	subroutine calcVeloMat(unk, veloBwf, Velo)
+!		!calculates matrix elements of the velocity operator
+!		!	velocity operator is analytically applied to the plane wave basis 
+!		!	and then weighted by the basCoeff obtained from the solver and stored in veloBwf
+!		!	
+!		complex(dp),		intent(in)		:: unk(:,:,:), veloBwf(:,:,:)	!	unk(nR, nK, nWfs) , veloBwf(nR,nK ,2*nWfs)
+!		complex(dp),		intent(out)		:: Velo(:,:,:,:)   !Velo(3,	nK,	nWfs	, nwFs)		
+!		integer								:: ki, n,m, ri
+!		complex(dp),		allocatable		:: fx(:), fy(:)
+!
+!		allocate(	fx(nR)	)
+!		allocate(	fy(nR)	)
+!
+!		
+!		do m = 1, nWfs
+!			do n = 1, nWfs
+!				do ki = 1, nK
+!					!FILL INTEGRATION ARRAY
+!					do ri = 1, nWfs
+!						fx(ri)	= myExP( 	dot_product( kpts(:,ki), rpts(:,ri) )		)	*unk(ri,ki,n)	* veloBwf(ri, ki,	m		)
+!						fy(ri)	= myExP( 	dot_product( kpts(:,ki), rpts(:,ri) )		)	*unk(ri,ki,n)	* veloBwf(ri, ki,	nWfs+m	)
+!					end do
+!					!INTEGRATE
+!					Velo(1,ki,n,m)	= nIntegrate(nR, nRx, nRy, dx, dy, fx)
+!					Velo(2,ki,n,m)	= nIntegrate(nR, nRx, nRy, dx, dy, fy)
+!					Velo(3,ki,n,m) 	= dcmplx(0.0_dp)
+!				end do
+!			end do
+!		end do
+!		!	
+!		!
+!		return
+!	end
+!
+
+
+
 
 
 

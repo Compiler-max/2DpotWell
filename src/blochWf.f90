@@ -1,10 +1,7 @@
 module blochWf
 	!generates bloch and lattice periodic functions given a basCoeff matrix
 	use mathematics,	only:	dp, PI_dp,i_dp, myExp, myLeviCivita, eigSolver, nIntegrate
-	use sysPara,		only: 	readInp, getKindex, getRindex, &
-									dim, aX, aY,vol, nAt, atR, atPos, atPot,&
-									nG, nG0, Gcut, nK, nKx, nKy, nWfs, nSC, nSCx, nSCy, nR, nRx, nRy, dx, dy, dkx, dky, &
-									Gvec, atPos, atR, kpts, rpts, gaugeSwitch
+	use sysPara
 
 	implicit none
 
@@ -79,9 +76,9 @@ module blochWf
 	!end
 
 
-	subroutine genUnk(ki, bWf, unk)
+	subroutine genUnk(qi, bWf, unk)
 		! generates the lattice periodic part from given bloch wave functions
-		integer,		intent(in)		:: ki
+		integer,		intent(in)		:: qi
 		complex(dp),	intent(in)		:: bWf(:,:) !lobWf(	nR, nWfs)
 		complex(dp),	intent(out)		:: unk(:,:)   !unk(	nR, nWfs)
 		integer							:: xi, n
@@ -89,7 +86,7 @@ module blochWf
 		!
 		do n = 1, nWfs
 			do xi = 1, nR
-				phase = myExp( -1.0_dp 	*	 dot_product( kpts(:,ki) , rpts(:,xi)	) 			)
+				phase = myExp( -1.0_dp 	*	 dot_product( qpts(:,qi) , rpts(:,xi)	) 			)
 				unk(xi,n) = phase * bWf(xi,n)
 			end do
 		end do
@@ -111,18 +108,18 @@ module blochWf
 
 
 !privat
-	subroutine calcBasVec(ki, ri, basVec)
+	subroutine calcBasVec(qi, ri, basVec)
 		!calculates the basis vectors e^i(k+G).r
 		!	if |k+G| is larger then the cutoff the basis vector is set to zero
 		!	the cutoff enforces a symmetric base at each k point
-		integer,	 intent(in)  :: ki, ri
+		integer,	 intent(in)  :: qi, ri
 		complex(dp), intent(out) :: basVec(:)
 		real(dp)				 :: tmp(dim)
 		integer 				 ::	i 
 		!
 
 		do i =1, nG
-			tmp(:) = kpts(:,ki) + Gvec(:,i)
+			tmp(:) = qpts(:,qi) + Gvec(:,i)
 			!
 			if( norm2(tmp) < Gcut ) then
 				basVec(i) = myExp( 		dot_product( tmp, rpts(:,ri) )			)
@@ -137,21 +134,21 @@ module blochWf
 
 
 	!VELOCITY HELPERS
-	subroutine calcVeloBasVec(ki,ri,basVec)
-		!the velocity basi
-		integer,		intent(in)		:: ki, ri
+	subroutine calcVeloBasVec(qi,ri,basVec)
+		!the velocity basis
+		integer,		intent(in)		:: qi, ri
 		complex(dp),	intent(out)		:: basVec(:)
 		real(dp)				 :: tmp(2)
 		integer 				 ::	i 
 		!
 		do i =1, nG
-			tmp(:) = kpts(:,ki) + Gvec(:,i)
+			tmp(:) = qpts(:,qi) + Gvec(:,i)
 			!
 			if( norm2(tmp) < Gcut ) then
 				!X COMPONENT
-				basVec(i) 		= i_dp * (	kpts(1,ki) + Gvec(1,i)	) * myExp( 		dot_product( tmp, rpts(:,ri) )			)
+				basVec(i) 		= i_dp * (	qpts(1,qi) + Gvec(1,i)	) * myExp( 		dot_product( tmp, rpts(:,ri) )			)
 				!Y COMPONENT
-				basVec(i+nG)	= i_dp * (	kpts(2,ki) + Gvec(2,i)	) * myExp(		dot_product( tmp, rpts(:,ri) )			)
+				basVec(i+nG)	= i_dp * (	qpts(2,qi) + Gvec(2,i)	) * myExp(		dot_product( tmp, rpts(:,ri) )			)
 			else
 				basVec(i) = dcmplx( 0.0_dp )
 			end if

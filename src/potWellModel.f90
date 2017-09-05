@@ -2,10 +2,7 @@ module potWellModel
 	!this modules sets up the Hamiltonian matrix and solves it for each k point
 	!	in the process the wannier functions are generated aswell with routines from wannGen module
 	use mathematics,	only:	dp, PI_dp,i_dp, machineP, myExp, myLeviCivita, eigSolver, nIntegrate, isHermitian
-	use sysPara,		only: 	readInp, getKindex, getRindex, &
-									dim, aX, aY,vol, nAt, atR, atPos, atPot,&
-									nG, nG0, Gcut, nK, nKx, nKy, nWfs, nSC, nSCx, nSCy, nR, nRx, nRy, dx, dy, dkx, dky, &
-									Gvec, atPos, atR, kpts, rpts, gaugeSwitch
+	use sysPara
 	use blochWf,		only:	genBlochWf, calcVeloBwf, genUnk									
 	use wannGen,		only:	projectBwf, genWannF
 	use output,			only:	printMat
@@ -33,7 +30,7 @@ module potWellModel
 		real(dp),		intent(out)		::	En(:,:)																	
 		complex(dp),	allocatable		::	Hmat(:,:), bWf(:,:), lobWf(:,:), gnr(:,:)
 		real(dp),		allocatable		::	EnT(:), bwfR(:,:), bwfI(:,:)	 
-		integer							:: 	ki, xi , n, failCount
+		integer							:: 	qi, xi , n, failCount
 		real(dp)						::	kVal(dim), smin, smax
 		!
 		allocate(	Hmat(	nG,	nG	)			)
@@ -58,28 +55,28 @@ module potWellModel
 		open(unit=200, file='rawData/bandStruct.dat', form='unformatted', access='stream', action='write')
 		open(unit=210, file='rawData/bwfR.dat'		, form='unformatted', access='stream', action='write')
 		open(unit=211, file='rawData/bwfI.dat'		, form='unformatted', access='stream', action='write')
-		do ki = 1, nK
-			!write(*,*)"[solveHam]: ki=",ki
-			kVal	=	kpts(:,ki)
+		do qi = 1, nQ
+			!write(*,*)"[solveHam]: qi=",qi
+			kVal	=	qpts(:,qi)
 			!
 			call populateH(kVal, Hmat)	
 			call eigSolver(Hmat, EnT)
 			write(200)	EnT
-			En(ki,:) = EnT(1:nWfs) 
+			En(qi,:) = EnT(1:nWfs) 
 			!
 			call gaugeCoeff(kVal, Hmat)
-			call genBlochWf(ki, Hmat, bWf)		
-			call calcVeloBwf(ki,Hmat, veloBwf)
+			call genBlochWf(qi, Hmat, bWf)		
+			call calcVeloBwf(qi,Hmat, veloBwf)
 			bWfR 	= dreal(bWf)                 !Todo fix that
 			bWfI	= dimag(bWf)
 			write(210)bWfR
 			write(211)bwfI
 			!
-			call projectBwf(ki, bWf, loBwf, U(:,:,ki), failCount, smin, smax)
+			call projectBwf(qi, bWf, loBwf, U(:,:,qi), failCount, smin, smax)
 			
-			call genWannF(ki, lobWf, wnF)
+			call genWannF(qi, lobWf, wnF)
 
-			call genUnk(ki, lobWf, unkW(:, ki, :))
+			call genUnk(qi, lobWf, unkW(:, qi, :))
 			!
 		end do
 		write(*,'(a,f16.15,a,f16.12)') "[solveHam]: projection matrix  smin=", smin, " smax=", smax
@@ -108,7 +105,7 @@ module potWellModel
 	!POPULATION OF H MATRIX
 	subroutine populateH(k, Hmat)
 		!populates the Hamiltonian matrix by adding 
-		!	1. kinetic energy terms
+		!	1. qinetic energy terms
 		!	2. potential terms
 		!and checks if the resulting matrix is still hermitian( for debugging)
 		real(dp)   , intent(in)    :: k(dim)
@@ -131,15 +128,15 @@ module potWellModel
 	end
 
 
-	subroutine Hkin(k, Hmat)
+	subroutine Hkin(q, Hmat)
 		!add kinetic energy to Hamiltonian
-		real(dp)   , intent(in)	   :: k(2)
+		real(dp)   , intent(in)	   :: q(2)
 		complex(dp), intent(inout) :: Hmat(:,:)
 		integer 				   :: i
 		real(dp)				   :: fact, kg(2)
 		fact = 0.5_dp	!hbar*hbar/(2*me) in a.u.
 		do i = 1, nG
-			kg(:) = k(:) + Gvec(:,i)
+			kg(:) = q(:) + Gvec(:,i)
 			Hmat(i,i) = Hmat(i,i) +  dcmplx(	fact * dot_product(kg,kg) , 0.0_dp	) 
 		end do
 		return

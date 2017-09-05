@@ -1,15 +1,8 @@
 module peierls
 	use mathematics,	only:	dp, PI_dp, i_dp, myExp, crossP, nIntegrate, eigSolver
-	use sysPara, 		only: 	readInp, insideAt, getKindex, getRindex, &
-									dim, aX, aY,vol, nAt, atR, atPos, atPot,&
-									nG, nG0, Gcut, &
-									nK, nKx, nKy, nKw, nKxW, nKyW,  nWfs, nSC, nSCx, nSCy, dkx, dky, &
-									nR, nRx, nRy, R0, dx, dy, &
-									Gvec, atPos, atR, kpts, kptsW, rpts,Rcell, gaugeSwitch, trialOrbSw, trialOrbVAL, Zion,&
-									Bext
+	use sysPara
 	use wannier,		only:	genTBham
 	use blochWf,		only:	genBlochWf, genUnk
-	use berry,			only:	calcConn, calcPolViaA
 	implicit none
 	
 
@@ -37,17 +30,17 @@ module peierls
 		!	after solving the Ham, the connection & polarization is calculated from the new unks
 		complex(dp),	intent(in)		:: wnF(:,:,:)		!wnF(nR, nSC, nWfs	)		
 		real(dp),		intent(out)		:: pPei(3)
-		real(dp),		allocatable		:: Amag(:,:), Epei(:,:), Aconn(:,:,:)
+		real(dp),		allocatable		:: Amag(:,:), Epei(:,:), Aconn(:,:,:,:)
 		complex(dp),	allocatable		:: Htb(:,:,:), Hk(:,:), bwf(:,:), unk(:,:,:)
 		integer							:: ki
 		!
-		allocate(	Amag(3,nR)			)
-		allocate(	Epei(nK,nWfs)		)
-		allocate(	Htb(nR,nWfs,nWfs)	)
-		allocate(	Hk(nWfs,nWfs)		)
-		allocate(	bwf(nR,nWfs)		)
-		allocate(	unk(nR,nK,nWfs)		)	
-		allocate(	Aconn(3,nK,nWfs)	)	
+		allocate(	Amag(3,nR)				)
+		allocate(	Epei(nK,nWfs)			)
+		allocate(	Htb(nR,nWfs,nWfs)		)
+		allocate(	Hk(nWfs,nWfs)			)
+		allocate(	bwf(nR,nWfs)			)
+		allocate(	unk(nR,nK,nWfs)			)	
+		allocate(	Aconn(3,nK,nWfs,nWfs)	)	
 		!
 		!CALC VECTOR POTENTIAL OF EXT. MAG FIELD
 		call calcVecPot(Bext, Amag)
@@ -69,8 +62,8 @@ module peierls
 		!
 		!CALC CONN & POL
 		pPei = 0.0_dp
-		call calcConn(unk, nKx, nKy, Aconn)
-		call calcPolViaA(Aconn, pPei)
+		!call calcConn(unk, nKx, nKy, Aconn)
+		!call calcPolViaA(Aconn, pPei)
 		!
 		!write Epei to file for comparisson
 
@@ -135,16 +128,16 @@ module peierls
 	end
 
 
-	subroutine calcKspaceHam(ki, Htb, Hk)
+	subroutine calcKspaceHam(qi, Htb, Hk)
 		!Fourier Trafo of tight binding Hamiltonian to k space
-		integer,		intent(in)		:: ki
+		integer,		intent(in)		:: qi
 		complex(dp),	intent(in)		:: Htb(:,:,:)
 		complex(dp),	intent(out)		:: Hk(:,:)
 		integer							:: R, n, m
 		real(dp)						:: cellP
 		!
 		do R = 1, nSC
-			cellP	= dot_product( kpts(:,ki), Rcell(:,R) )
+			cellP	= dot_product( qpts(:,qi), Rcell(:,R) )
 			do m = 1, nWfs
 				do n = 1, nWfs
 					Hk(n,m)	= Hk(n,m) + myExp(cellP) * Htb(R,n,m) 

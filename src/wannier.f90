@@ -2,17 +2,12 @@ module wannier
 	!contains subroutines for working with existing wannier functions
 	!	center calculations, etc. 
 	use mathematics,	only:	dp, PI_dp, i_dp, acc, myExp, nIntegrate
-	use sysPara, 		only: 	readInp, insideAt, getKindex, getRindex, &
-									dim, aX, aY,vol, nAt, atR, atPos, atPot,&
-									nG, nG0, Gcut, &
-									nK, nKx, nKy, nKw, nKxW, nKyW,  nWfs, nSC, nSCx, nSCy, dkx, dky, &
-									nR, nRx, nRy, R0, dx, dy, &
-									Gvec, atPos, atR, kpts, kptsW, rpts,Rcell, gaugeSwitch, trialOrbSw, trialOrbVAL, Zion
+	use sysPara
 
 	implicit none
 
 	private
-	public :: isNormal, calcWcent, calcWsprd, calc0ElPol, genTBham, genUnkW, interpConnCurv
+	public :: isNormal, calcWcent, calcWsprd, genTBham, genUnkW, calcWannMat
 
 	contains
 
@@ -166,48 +161,7 @@ module wannier
 
 
 
-	subroutine calc0ElPol(wCent,pE, pI, pT)
-		!calcuates 0 order polarization from the wannier centers
-		!	this is only defined up to a uncertainty quantum of e*\vec{a}/V0, 
-		!	where e is electron charge, \vec{a} a bravais lattice vector and V0 the volume of the unit cell
-		!	uncertainty is resolved by projecting the wannier centers into the first unit cell at (0,0) 
-		real(dp), intent(in)	:: wCent(:,:)
-		real(dp), intent(out)	:: pE(2), pI(2), pT(2)
-		integer 				:: n, at
-		real(dp) 				:: vol, cent(2)
-		!
-		
-		vol 	= aX * aY !1D
-		pT		= 0.0_dp
-		pE	 	= 0.0_dp
-		pI		= 0.0_dp
-		!
-		!ELECTRONIC
-		do n = 1,size(wCent,2)
-			cent(1) = dmod(wCent(1,n),aX) !get current center by projection into first unit cell
-			cent(2)	= dmod(wCent(2,n),aY)
-			!!
-			!write(*,'(a,f8.5,a,f8.5,a,f8.6,a,f8.6,a)')"[calc0ElPol]: Wcent = (",wCent(1,n),", ",wCent(2,n),") modified cent = (", cent(1),", ",cent(2),")"
-			pE = pE + cent				
-		end do
-		!IONIC
-		do at = 1, nAt
-			pI = pI + Zion(at) * atPos(:,at) 
-		end do
-		!NORMALIZE
-		!pE = pE / vol
-		!pI = pI / vol
-		!
-		!SHIFT WITH RESPECT TO CENTER OF UNIT CELL
-		cent(1)	= aX * 0.5_dp
-		cent(2)	= aY * 0.5_dp
-		pE = (pE - cent ) / vol
-		pI = (pI - cent ) / vol 
-		!TOTAL
-		pT = pI + pE												
-		!
-		return
-	end
+
 
 
 	!TIGHT BINDING MODEL
@@ -243,32 +197,75 @@ module wannier
 
 
 	!INTERPOLATION
-	subroutine genUnkW(wnF, unk)
+	subroutine genUnkW(wnF, unkW)
 		!generates lattice periodic functions unk from the Wannier functions wnf
-		!	currently uses the intial k points again, but could also be interpolated into coarse mesh
+		!	uses the dense k point mesh
 		complex(dp),	intent(in)		:: wnF(:,:,:)			!	wnF( 	nR, nSC, nWfs	)	
-		complex(dp),	intent(out)		:: unk(:,:,:)
+		complex(dp),	intent(out)		:: unkW(:,:,:)
 		integer							:: n, R, ki, xi
 		real(dp)						:: cellP
 		!
-		unk = dcmplx(0.0_dp)
+		unkW	= dcmplx(0.0_dp)
 		!GENERATE BLOCH LIKE FUNCTIONS
 		do n = 1, nWfs
-			do R = 1, nSC
-				do ki = 1, nKw
-					cellP = dot_product(	kptsW(:,ki) , 	Rcell(:,R)	)
+			do ki = 1, nK
+				do R = 1, nSC
 					do xi = 1, nR
-						unk(xi,ki,n) = unk(xi,ki,n) + myExp(cellP) * wnF(xi,R,n) 	  
+						cellP = -1.0_dp * dot_product(	kpts(:,ki) , 	rpts(:,xi)-Rcell(:,R)	)
+						unkW(xi,ki,n) = unkW(xi,ki,n) + myExp(cellP) * wnF(xi,R,n) 	  
 					end do
 				end do
 			end do
 		end do
-		!EXTRACT LATTICE PERIODIC PART
-		do n = 1, nWfs
-			do ki = 1, nKw
-				do xi = 1, nR
-					cellP			= -1.0_dp * dot_product( kpts(:,ki) ,	rpts(:,xi)	)	
-					unk(xi,ki,n)	= myExp(cellP) * unk(xi,ki,n)
+		!
+		!
+		return
+	end
+
+
+
+
+	subroutine calcWannMat(wnF, Hw, Hwa, Aw, Fw)
+		!calculates the Matrix elements in wannier gauge
+		!	see Wang/Vanderbilt PRB 74, 195118 (2006)
+		complex(dp),	intent(in)		:: wnF(:,:,:)		!wnF( 	nR	, nSC, nWfs	)
+		complex(dp),	intent(out)		:: Hw(:,:,:)		!Hw(nKi, nWfs, nWfs)
+		complex(dp),	intent(out)		:: Hwa(:,:,:,:)		!Hwa(3,nKi, nWfs, nWfs)
+		complex(dp),	intent(out)		:: Aw(:,:,:,:)		!Aw(3,nKi, nWfs, nWfs)
+		complex(dp),	intent(out)		:: Fw(:,:,:,:,:)	!Fw(3,3,nKi,nWfs,nWfs)
+		complex(dp)						:: Rphase, Hexp
+		real(dp)						:: rExp(3)
+		integer							:: m, n, ki, R, i,j
+		!
+		Hw			= dcmplx(0.0_dp)
+		Hwa			= dcmplx(0.0_dp)
+		Aw			= dcmplx(0.0_dp)
+		Fw			= dcmplx(0.0_dp)
+		rExp(3)		= 0.0_dp
+		!
+		do m = 1, nWfs
+			do n =  1, nWfs
+				do ki = 1, nK
+					do R = 1, nSC
+						Rphase	= myExp( dot_product( 	kpts(:,ki), Rcell(:,R)		) )
+						!
+						!ENERGY QUANTITIES
+						call wHw(R0,R,n,m, wnf, Hexp)
+						Hw(ki,n,m) 		= 			Hw(ki,n,m)			+ Rphase 						* Hexp
+						Hwa(:,ki,n,m)	= 			Hwa(:,ki,n,m)		+ Rphase * i_dp * Rcell(:,R) 	* Hexp
+						!
+						!POSITIONAL QUANTITIES
+						call wXw(R0,R,n,m, wnF, rExp(1:2))
+						Aw(1:2,ki,n,m)	= 			Aw(1:2,ki,n,m)		+ Rphase 						* rExp(1:2)
+						!
+						do i = 1,2
+							do j = 1,2
+								Fw(i,j,ki,n,m)	= 	Fw(i,j,ki,n,m) 		+ Rphase * i_dp * Rcell(i,R) 	* rExp(j)
+								Fw(i,j,ki,n,m)	= 	Fw(i,j,ki,n,m) 		- Rphase * i_dp * Rcell(j,R) 	* rExp(i)
+							end do
+						end do
+						!
+					end do
 				end do
 			end do
 		end do
@@ -276,54 +273,6 @@ module wannier
 		!
 		return
 	end
-
-
-	subroutine interpConnCurv(wnF, Aconn, Fcurv)
-		!calculates the Berry connection from the Wannier centers
-		!
-		!	A_n(k)		= \sum_R exp^{i k.R} <0n|r|Rn>
-		!
-		!and the connection via
-		!
-		! 	F_a,b_n(K)	= d_a A_b - d_b A_a
-		!
-		!where the derivatives are evaluated analytically
-		!	d_a A_b 	= d_a \sum_R exp^{i k.R} <0n|r_b|Rn>
-		!				= \sum_R (i R_a) exp^{i k.R} <0n|r_b|Rn>
-		!
-		complex(dp),	intent(in)		:: wnF(:,:,:)					 !		wnF( 	nR		, 	nSC		, nWfs	)	
-		complex(dp),	intent(out)		:: Aconn(:,:,:), Fcurv(:,:,:,:)  !		Aconn(	2	,	nK	, nWfs	)		
-		integer							:: n, Ri, ki
-		real(dp)						:: cellP, rExpec(2)
-		!
-		Aconn	= dcmplx(0.0_dp)
-		Fcurv	= dcmplx(0.0_dp)
-		!
-		do n = 1, nWfs
-			do Ri = 1, nSC
-				call wXw(1,Ri,n,n,wnF, rExpec)
-				do ki =1, nKw
-					cellP			= dot_product( 	kptsW(:,ki)	,	Rcell(:,Ri)		)		
-					Aconn(:,ki,n)	= Aconn(:,ki,n) +  myExp(cellP) * dcmplx( rExpec )
-					!xy
-					Fcurv(1,2,ki,n)	= Fcurv(1,2,ki,n) + myExp(cellP) * i_dp * dcmplx( Rcell(1,n) * rExpec(2) )
-					Fcurv(1,2,ki,n)	= Fcurv(1,2,ki,n) - myExp(cellP) * i_dp * dcmplx( Rcell(2,n) * rExpec(1) )
-					!yx
-					Fcurv(2,1,ki,n)	= Fcurv(2,1,ki,n) + myExp(cellP) * i_dp * dcmplx( Rcell(2,n) * rExpec(1) )
-					Fcurv(2,1,ki,n)	= Fcurv(2,1,ki,n) - myExp(cellP) * i_dp * dcmplx( Rcell(1,n) * rExpec(2) )
-				end do
-			end do
-		end do
-		!
-		return
-	end
-
-
-
-
-
-
-
 
 
 
@@ -339,14 +288,120 @@ module wannier
 
 
 !privat:
-		subroutine wXw(R1,R2,n,m, wnF, res)
+	subroutine wHw(R1,R2,n,m, wnF, res)
+		!Hamilton operator expectation value wHw
+		!
+		!	wHw	= <R1,n|H(r)|R2,m>
+		!		= -hbar**2/(2me)	<R1,n|\nabla**2 + V(r)|R2,m>
+		!		= -0.5			[	<R1,n| dx**2 |R2,m>	 + <R1,n| dy**2 |R2,m>	+ <R1,n|V(r)|R2,m>]
+		!
+		integer,		intent(in)		:: R1, R2, n, m
+		complex(dp),	intent(in)		:: wnF(:,:,:)	 !wnF( nRpts, nSupC,		nWfs)
+		complex(dp),	intent(out)		:: res
+		complex(dp)						:: resX, resY, resV, Vri
+		real(dp),		allocatable		:: fx(:), fy(:), fv(:), fxx(:), fyy(:)
+		integer							:: xi, yi, ri, lx, rx, ly, ry, at
+		!
+		allocate(	fx(nR)	)	
+		allocate(	fy(nR)	)	
+		allocate(	fv(nR)	)	
+		allocate(	fxx(nR)	)
+		allocate(	fyy(nR)	)		
+		!
+		!CALCULATE DERIVATIVES 
+		do yi = 1, nRy
+			do xi = 1, nRx
+				ri 	= getRindex(xi,yi)
+				!
+				!X deriv
+				call getNeighbX(xi,yi,lx,rx)
+				fxx(ri)	= dconjg( wnF(ri,R1,n) )	* (		wnF(lx,R2,m) - 2.0_dp*wnF(ri,R2,m) + wnF(rx,R2,m)		)	/ dx**2
+				!
+				!Y deriv
+				call getNeighbY(xi,yi,ly,ry)
+				fyy(ri)	= dconjg( wnF(ri,R1,n))		* (		wnF(ly,R2,m) - 2.0_dp*wnF(ri,R2,m) + wnF(ry,R2,m)		)	/ dy**2
+			end do
+		end do
+		!
+		!FILL INTEGRATION ARRAY
+		do ri = 1, nR
+			fx(ri)	= -0.5_dp * dconjg(	wnF(ri,R1,n)	) * fxx(ri)
+			fy(ri)	= -0.5_dp * dconjg(	wnF(ri,R1,n)	) * fyy(ri)
+			!
+			Vri	= dcmplx(0.0_dp)
+			do at = 1, nAt
+				if( insideAt(at,rpts(:,ri))	) then
+					Vri = dcmplx( atPot(at) )
+				end if	
+			end do
+			fv(ri)	= -0.5_dp * dconjg( wnF(ri,R1,n)	) * wnF(ri,R2,m) * Vri
+		end do
+		!
+		resX	= nIntegrate(nR, nRx, nRy, dx, dy, fx)
+		resY	= nIntegrate(nR, nRx, nRy, dx, dy, fy)
+		resV	= nIntegrate(nR, nRx, nRy, dx, dy, fv)
+		!
+		res		= resX + resY + resV
+		!
+		!
+		return
+	end
+
+
+	subroutine getNeighbX(xi,yi, lx, rx)
+		!Helper for wHw
+		integer,	intent(in)		:: xi,yi
+		integer,	intent(out)		:: lx, rx
+		!LEFT X NEIGHBOUR
+		if(xi == 1) then
+			lx	= getRindex( nRx	, yi	)
+		else
+			lx	= getRindex( xi-1	, yi	)
+		end if
+		!
+		!RIGHT X
+		if( xi == nRx ) then
+			rx	= getRindex( 1		, yi	)
+		else
+			rx	= getRindex( xi+1	, yi 	)
+		end if
+		!
+		!
+		return
+
+	end
+
+	subroutine getNeighbY(xi, yi, ly, ry)
+		!Helper for wHw
+		integer,	intent(in)		:: xi,yi
+		integer,	intent(out)		:: ly, ry
+		!LEFT X NEIGHBOUR
+		if(yi == 1) then
+			ly	= getRindex( xi		, nRy	)
+		else
+			ly	= getRindex( xi		, yi-1	)
+		end if
+		!
+		!RIGHT X
+		if( yi == nRy ) then
+			ry	= getRindex( xi		, 1	)
+		else
+			ry = getRindex( xi		, yi+1 	)
+		end if
+		!
+		!
+		return
+	end
+
+
+	subroutine wXw(R1,R2,n,m, wnF, res)
 		!positional operator expectation value
-		integer,		intent(in)	:: R1, R2, n, m
-		complex(dp),	intent(in)	:: wnF(:,:,:)	 !wnF( nRpts, nSupC,		nWfs)
-		real(dp),		intent(out)	:: res(2)		
-		real(dp)				 	:: norm
-		real(dp), allocatable	 	:: fx(:),fy(:)
-		integer 				 	:: xi
+		integer,		intent(in)		:: R1, R2, n, m
+		complex(dp),	intent(in)		:: wnF(:,:,:)	 !wnF( nRpts, nSupC,		nWfs)
+		real(dp),		intent(out)		:: res(2)		
+		real(dp)				 		:: norm
+		real(dp), 		allocatable	 	:: fx(:),fy(:)
+		integer 				 		:: xi
 		!
 		allocate(	fx(nR) 	)
 		allocate(	fy(nR)	)

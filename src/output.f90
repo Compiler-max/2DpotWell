@@ -1,10 +1,7 @@
 module output
 	!module contains several routines for printing and writing data
 	use mathematics,	only:	dp, PI_dp
-	use sysPara    , 	only: 	aX, aY, nAt, relXpos, relYpos, atRx, atRy, atPot,&
-								nG,nG0, Gcut, nKx, nKy,nK, nKw, nSC, nR, nRx, nRy, dx, dy, dkx, dky, nWfs, &
-								Gvec, atPos, atR, kpts, kptsW, rpts, Rcell, trialOrbVAL, Zion, &
-								Bext
+	use sysPara 
 
 
 	implicit none
@@ -64,14 +61,14 @@ module output
 		!!
 		!K MESH
 		write(100,*)"*******************K POINT MESH******************************"
-		do i = 1, nK
-			write(100,'(a,i4,a,f15.12,a,f15.12,a)')				"k(",i,") = (", kpts(1,i) , "," , kpts(2,i), " )"
+		do i = 1, nQ
+			write(100,'(a,i4,a,f15.12,a,f15.12,a)')				"q(",i,") = (", qpts(1,i) , "," , qpts(2,i), " )"
 		end do
 		!!
 		!K 	INTERPOLATION
 		write(100,*)"*******************K INTERPOLATION MESH******************************"
-		do i = 1, nKw
-			write(100,'(a,i4,a,f15.12,a,f15.12,a)')				"k(",i,") = (", kptsW(1,i) , "," , kptsW(2,i), " )"
+		do i = 1, nK
+			write(100,'(a,i4,a,f15.12,a,f15.12,a)')				"k(",i,") = (", kpts(1,i) , "," , kpts(2,i), " )"
 		end do
 		!!
 		!ATOM POSITION AND RADII
@@ -97,9 +94,9 @@ module output
 		open(unit=300,file='rawData/sysPara.dat',form='unformatted',access='stream',action='write')
 		write(300) nAt
 		write(300) nG
-		write(300) nK
-		write(300) nKx
-		write(300) nKy
+		write(300) nQ
+		write(300) nQx
+		write(300) nQy
 		write(300) nR
 		write(300) nRx
 		write(300) nRy
@@ -129,13 +126,13 @@ module output
 		close(310)
 		!
 		!K MESH
-		open(unit=320,file='rawData/kpts.dat',form='unformatted',access='stream',action='write')
-		write(320) kpts
+		open(unit=320,file='rawData/qpts.dat',form='unformatted',access='stream',action='write')
+		write(320) qpts
 		close(320)
 		!
 		!K INTERPOLATION
-		open(unit=325,file='rawData/kptsW.dat',form='unformatted',access='stream',action='write')
-		write(325) kptsW
+		open(unit=325,file='rawData/kpts.dat',form='unformatted',access='stream',action='write')
+		write(325) kpts
 		close(325)
 		!
 		!
@@ -145,7 +142,7 @@ module output
 
 	subroutine writeWaveFunc(unk, Aconn, Fcurv)
 		complex(dp),	intent(in)		:: unk(:,:,:)
-		real(dp),		intent(in)		:: Aconn(:,:,:), Fcurv(:,:,:)
+		real(dp),		intent(in)		:: Aconn(:,:,:,:), Fcurv(:,:,:)
 		real(dp),		allocatable		:: unkR(:,:,:), unkI(:,:,:)
 		!
 		allocate(	unkR(	size(unk,1)		, size(unk,2)	, size(unk,3)		)			)

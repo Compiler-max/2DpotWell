@@ -1,21 +1,15 @@
 program main
 	!TWO dimensional potential well code
 	use mathematics, 	only: 		dp, PI_dp, acc, eigSolver
-	!
-	use sysPara,	 	only: 		readInp, &
-									aX, aY,vol, nAt, relXpos, relYpos, atRx, atRy, atPot,&
-									nG, Gcut, nK, nKx, nKy, nKw, nKxW, nKyW, nWfs, nSC, nR, dx, dy, dkx, dky, &
-									Gvec, atPos, atR, kpts, rpts
-	!
+
+	use sysPara
 	use potWellModel, 	only: 		solveHam
-	!
-	use berry,			only:		isKperiodic, calcConn, calcCurv, calcVeloMat, calcPolViaA
-	!
-	use wannier,	 	only: 		isNormal, calcWcent, calcWsprd, calc0ElPol,&
-									genUnkW, interpConnCurv  !,bandInterpol,gaugeUnk, gaugeConnToHam
-	!
+	use berry,			only:		isKperiodic!, calcCurv, calcVeloMat 
+	use wannier,	 	only: 		isNormal, calcWcent, calcWsprd, genUnkW 	
+	use gaugeTrafo,		only:		calcConnCurv
+	use polarization,	only:		calcPolWannCent, calcPolViaA
 	use semiclassics,	only:		calcFirstOrdP
-	!
+	!use peierls,		only:		
 	use output,		 	only:		writeMeshInfo, writeMeshBin, writeWaveFunc, writeWannFiles,writePolFile,& 
 									printTiming	!printMat, printInp, printWannInfo,writeSysInfo  
 
@@ -25,10 +19,11 @@ program main
 
 	
     real(dp), 		allocatable,	dimension(:,:)		:: 	wCent, wSprd
-    real(dp),		allocatable,	dimension(:,:,:)	::	Aconn, Fcurv
+    real(dp),		allocatable,	dimension(:,:,:)	::	Fcurv
     complex(dp),	allocatable,	dimension(:,:,:)	:: 	wnF, unk, Uh, Aint, veloBwf, bWf !, ukn basCoeff,
-    complex(dp),	allocatable,	dimension(:,:,:,:)	::	Velo
-    real(dp),		allocatable,	dimension(:,:)		:: 	En
+    complex(dp),	allocatable,	dimension(:,:,:,:)	::	Velo, Ah, Fh
+    real(dp),		allocatable,	dimension(:,:)		:: 	En, EnH
+    real(dp),		allocatable,	dimension(:,:,:,:)	::	Aconn
     real(dp) 											:: 	pEl(2), pIon(2), pTot(2), pElViaA(2), pInt(2), pNiu(3), pPei(3)
     real												:: 	mastT0,mastT1,mastT,aT0,aT1,aT,kT0,kT1,kT,wT0,wT1,wT, oT0, oT1, oT,&
     														wI0, wI1, wI, scT0, scT1, scT, peiT, peiT0, peiT1
@@ -43,19 +38,24 @@ program main
     !INPUT & ALLOCATION SECTION
     call cpu_time(aT0)
 	call readInp()
+	!electronic structure arrays
+	allocate(			En(			nQ		,	nWfs				)			)
+	
+	allocate(			unk(		nR		, 	nQ		, nWfs		)			) 
+	allocate(			Uh(			nWfs	, 	nWfs	,	nQ		)			)
+	!wannier functions
+	allocate(			wnF( 		nR		, 	nSC		, nWfs		)			)
+	allocate(			wCent(		2		, 	nWfs				)			)
+	allocate(			wSprd(		2		, 	nWfs				)			)
+	!wannier interpolation arrays
+	allocate(			Ah(		3		,	nK		, nWfs, nWfs	)			)
+	allocate(			Fh(		3		,	nK		, nWfs, nWfs	)			)
+	allocate(			EnH(	nK		,	 nWfs					)			)
+	
 	!
-	allocate(			En(			nK		,	nWfs)							)
-	allocate(			wnF( 		nR		, 	nSC		, nWfs	)				)
-	allocate(			unk(		nR		, 	nK		, nWfs	)				) 
-	allocate(			Uh(			nWfs	, 	nWfs	,	nK	)				)
-	allocate(			Aconn(		3		,	nK		, nWfs	)				)
-	allocate(			Fcurv(		3		,	nK		, nWfs	)				)
-	allocate(			wCent(		2		, 	nWfs			)				)
-	allocate(			wSprd(		2		, 	nWfs			)				)
-	!
-	!allocate(			Aint(		2		,	nKw		, nWfs	)				)
-	allocate(			VeloBwf(	nR		,	nK		, 2*nWfs)				)
-	allocate(			Velo(		3		,	nK		,nWfs, nwFs)			)
+	!allocate(			Aint(		2		,	nK		, nWfs	)				)
+	allocate(			VeloBwf(	nR		,	nQ		, 2*nWfs)				)
+	allocate(			Velo(		3		,	nQ		,nWfs, nwFs)			)
 	
 	
 	
@@ -74,11 +74,11 @@ program main
 	if( isKperiodic(unk)	 /= 0 ) then
 		write(*,*)	"[main]: problem with unk gauge, wave functions are NOT periodic in k space"
 	end if
-	call calcVeloMat(unk, veloBwf, Velo)
-	call calcConn(unk, nKx, nKy, Aconn)  
-	call calcCurv(En, Velo, Fcurv)
-	!polarization (integration of connection)
-	call calcPolViaA(Aconn, pElViaA)
+	!call calcVeloMat(unk, veloBwf, Velo)
+	!call calcConn(unk, nKx, nKy, Aconn)  
+	!call calcCurv(En, Velo, Fcurv)
+	!!polarization (integration of connection)
+	!call calcPolViaA(Aconn, pElViaA)
 	!
 	!
 	call cpu_time(kT1)
@@ -110,7 +110,7 @@ program main
 	!
 	call calcWcent(wnF,	wCent)
 	call calcWsprd(wnF, wCent, wSprd)
-	call calc0ElPol(wCent, pEl, pIon, pTot)
+	call calcPolWannCent(wCent, pEl, pIon, pTot)
 	!
 	!
 	call cpu_time(wT1)
@@ -124,8 +124,8 @@ program main
 	write(*,*)"*"
 	write(*,*)"[main]:**************************WANNIER INTERPOLATION*************************"
 	call cpu_time(wI0)
-	!call interpConnCurv(wnF, Aint, Fcurv)
-	!call calcPolViaA(Aint, pInt)
+	call calcConnCurv(unk, wnF, Ah, Fh, EnH)
+	call calcPolViaA(dreal(Ah), pInt)		!test if Ah is really real (iam real am real am really realy real, the reason why i know you very well......)
 	call cpu_time(wI1)
 	wI	= wI1 - wI0
 
@@ -135,7 +135,7 @@ program main
 	write(*,*)"*"
 	write(*,*)"[main]:**************************SEMICLASSICS*************************"
 	call cpu_time(scT0)
-	call calcFirstOrdP(Fcurv, Aconn, Velo, En, pNiu)
+	!call calcFirstOrdP(Fcurv, Aconn, Velo, En, pNiu)
 	call cpu_time(scT1)
 	write(*,*)"[main]: done with first order polarization calculation"
 	scT	= scT1 - scT0
