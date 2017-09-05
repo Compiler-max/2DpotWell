@@ -7,15 +7,15 @@ module gaugeTrafo
 	implicit none
 
 	private
-	public ::	calcConnCurv
+	public ::	calcConnCurv, testIfReal
 
 	contains
 
 !public
-	subroutine calcConnCurv(unk, wnF, Ah, Fh, EnH)
+	subroutine calcConnCurv(unk, wnF, Ah, Fh, Vh, EnH)
 		!uses the Wannier functions to generate the four matrix elements Hw, Hwa, Aw, Fw
 		complex(dp),	intent(in)		:: unk(:,:,:), wnF(:,:,:)
-		complex(dp),	intent(out)		:: Ah(:,:,:,:), Fh(:,:,:,:)
+		complex(dp),	intent(out)		:: Ah(:,:,:,:), Fh(:,:,:,:), Vh(:,:,:,:)
 		real(dp),		intent(out)		:: EnH(:,:)
 		complex(dp),	allocatable		:: Hw(:,:,:), Hwa(:,:,:,:), Aw(:,:,:,:), Fw(:,:,:,:,:), Fhtens(:,:,:,:,:)
 		integer							:: n,m,ki,a,b,c
@@ -41,7 +41,7 @@ module gaugeTrafo
 		end select 
 		!
 		!
-		call shiftToHamGauge(Hw, Hwa, Aw, Fw, Ah, FhTens, EnH)
+		call shiftToHamGauge(Hw, Hwa, Aw, Fw, Ah, FhTens, Vh, EnH)
 		!
 		!CONVERT OMEGA TENSOR TO VECTOR
 		do m = 1, nWfs
@@ -68,7 +68,47 @@ module gaugeTrafo
 
 
 
+	subroutine testIfReal(Ah, Fh)
+		complex(dp),	intent(in)		:: Ah(:,:,:,:), Fh(:,:,:,:)
+		integer							:: a, ki, n, m
+		integer							:: cntA, cntF, tot
+		real(dp)						:: avgA, avgF
+		!
+		cntA	= 0
+		cntF	= 0
+		tot 	= 0
+		avgA	= 0.0_dp
+		avgF 	= 0.0_dp
+		!
+		do m = 1, nWfs
+			do n = 1, nWfs
+				do ki = 1, nK
+					do a = 1, 3
+						!check connection
+						avgA	= avgA + abs(dimag(Ah(a,ki,n,m)))
+						if( abs(dimag(Ah(a,ki,n,m))) > acc	) then
+							cntA = cntA +1
+						end if 
 
+						!check curvature
+						avgF	= avgF + abs(dimag(Fh(a,ki,n,m)))
+						if( abs(dimag(Fh(a,ki,n,m))) > acc	) then
+							cntF = cntF + 1
+						end if
+						tot = tot + 1
+					end do
+				end do
+			end do
+		end do
+
+		avgA	= avgA / tot
+		avgF	= avgF / tot
+		write(*,'(a,i8,a,i8,a,f15.12,a,f15.12)')	"[testIfReal]: ",cntA, " of ",tot," = ",cntA/real(tot,dp),&
+														"% checked conn. vals. are not strictly real, average imag.=",avgA
+		write(*,'(a,i8,a,i8,a,f15.12,a,f15.12)')	"[testIfReal]: ",cntF, " of ",tot," = ",cntF/real(tot,dp),&
+														"% checked curv. vals. are not strictly real, average imag.=",avgF												
+		return
+	end	
 
 
 
@@ -77,7 +117,7 @@ module gaugeTrafo
 
 
 !privat
-	subroutine shiftToHamGauge(Hw, Hwa, Aw, Fw, Ah, FhTens, EnH)
+	subroutine shiftToHamGauge(Hw, Hwa, Aw, Fw, Ah, FhTens, Vh, EnH)
 		!Shift given matrices to Ham Gauge
 		!	see Wang/Vanderbilt PRB 74, 195118 (2006)
 		!
@@ -86,7 +126,7 @@ module gaugeTrafo
 		complex(dp),	intent(in)		:: Hwa(:,:,:,:)		!Hwa(3,nKw, nWfs, nWfs)
 		complex(dp),	intent(in)		:: Aw(:,:,:,:)		!Aw(3,nKw, nWfs, nWfs)
 		complex(dp),	intent(in)		:: Fw(:,:,:,:,:)	!Fw(3,3,nKw,nWfs,nWfs)
-		complex(dp),	intent(out)		:: Ah(:,:,:,:), FhTens(:,:,:,:,:)
+		complex(dp),	intent(out)		:: Ah(:,:,:,:), FhTens(:,:,:,:,:), Vh(:,:,:,:)
 		real(dp),		intent(out)		:: EnH(:,:)
 		complex(dp),	allocatable		:: Dh(:,:,:), U(:,:), Ahbar(:,:,:)
 		integer							:: ki, i
@@ -105,6 +145,7 @@ module gaugeTrafo
 			call calcDmat(ki, EnH, U, Hwa, 	Dh)
 			call calcAmat(ki, Ahbar, Dh, 	Ah)
 			call calcFmat(ki, Fw, U, Ahbar, Dh, 	FhTens)
+			call calcVmat(ki, Hwa, U, Ahbar, EnH,	Vh)
 		end do
 		!
 		!
@@ -118,7 +159,7 @@ module gaugeTrafo
 
 
 	subroutine calcFmat(ki, Fw, U, Ahbar, Dh , FhTens)
-		!	the curvature is genarted by summing up 4 contributions
+		!	the curvature is genarted by summing up 4 contributions (PRB 74, 195118 (2006))
 		!
 		!	F^H_ab = 	Fbar^H_ab				(1)
 		!				-	[Dh_a, Ahbar_b]		(2)
@@ -229,7 +270,37 @@ module gaugeTrafo
 	end
 
 
-
+	subroutine calcVmat(ki, Hwa, U, Ahbar, EnH,	Vh)
+		!calulates the velocity matrix (PRB 74, 195118 (2006): eq(31)	)
+		!
+		!	V^(H)_nm,a = Hbar^(H)_nm,a - i (E^(H)_m - E^(H)_n) Abar^(H)_nm,a
+		!
+		integer,		intent(in)		:: ki
+		complex(dp),	intent(in)		:: Hwa(:,:,:,:), U(:,:), Ahbar(:,:,:)
+		real(dp),		intent(in)		:: EnH(:,:)
+		complex(dp),	intent(out)		:: Vh(:,:,:,:)
+		complex(dp),	allocatable		:: HhbarA(:,:,:)
+		integer							:: n, m, a
+		!
+		allocate( HhBarA(3,nWfs,nWfs))
+		!
+		!CALC H^(H)_a
+		do a = 1,3
+			call rotMat( U(:,:), Hwa(a,ki,:,:), HhBarA(a,:,:) )
+		end do
+		!
+		!VELCOITIES
+		do m = 1, nWfs
+			do n = 1, nWfs
+				do a = 1, 3
+					Vh(a,ki,n,m) = HhBarA(a,n,m) - i_dp * ( EnH(ki,m)-EnH(ki,n) ) * Ahbar(a,n,m)
+				end do
+			end do
+		end do
+		!
+		!
+		return
+	end
 
 
 

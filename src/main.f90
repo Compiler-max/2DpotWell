@@ -6,7 +6,7 @@ program main
 	use potWellModel, 	only: 		solveHam
 	use berry,			only:		isKperiodic!, calcCurv, calcVeloMat 
 	use wannier,	 	only: 		isNormal, calcWcent, calcWsprd, genUnkW 	
-	use gaugeTrafo,		only:		calcConnCurv
+	use gaugeTrafo,		only:		calcConnCurv,  testIfReal
 	use polarization,	only:		calcPolWannCent, calcPolViaA
 	use semiclassics,	only:		calcFirstOrdP
 	!use peierls,		only:		
@@ -21,7 +21,7 @@ program main
     real(dp), 		allocatable,	dimension(:,:)		:: 	wCent, wSprd
     real(dp),		allocatable,	dimension(:,:,:)	::	Fcurv
     complex(dp),	allocatable,	dimension(:,:,:)	:: 	wnF, unk, Uh, Aint, veloBwf, bWf !, ukn basCoeff,
-    complex(dp),	allocatable,	dimension(:,:,:,:)	::	Velo, Ah, Fh
+    complex(dp),	allocatable,	dimension(:,:,:,:)	::	Velo, Ah, Fh, Vh
     real(dp),		allocatable,	dimension(:,:)		:: 	En, EnH
     real(dp),		allocatable,	dimension(:,:,:,:)	::	Aconn
     real(dp) 											:: 	pEl(2), pIon(2), pTot(2), pElViaA(2), pInt(2), pNiu(3), pPei(3)
@@ -39,10 +39,10 @@ program main
     call cpu_time(aT0)
 	call readInp()
 	!electronic structure arrays
-	allocate(			En(			nQ		,	nWfs				)			)
+	allocate(			En(					nQ		,	nWfs		)			)
 	
-	allocate(			unk(		nR		, 	nQ		, nWfs		)			) 
-	allocate(			Uh(			nWfs	, 	nWfs	,	nQ		)			)
+	allocate(			unk(	nR		, 	nQ		, nWfs		)			) 
+	allocate(			Uh(		nWfs	, 	nWfs	,	nQ		)			)
 	!wannier functions
 	allocate(			wnF( 		nR		, 	nSC		, nWfs		)			)
 	allocate(			wCent(		2		, 	nWfs				)			)
@@ -50,12 +50,13 @@ program main
 	!wannier interpolation arrays
 	allocate(			Ah(		3		,	nK		, nWfs, nWfs	)			)
 	allocate(			Fh(		3		,	nK		, nWfs, nWfs	)			)
-	allocate(			EnH(	nK		,	 nWfs					)			)
+	allocate(			Vh(		3		,	nK		, nWfs, nWfs	)			)
+	allocate(			EnH(				nK		,	 nWfs		)			)
 	
 	!
 	!allocate(			Aint(		2		,	nK		, nWfs	)				)
-	allocate(			VeloBwf(	nR		,	nQ		, 2*nWfs)				)
-	allocate(			Velo(		3		,	nQ		,nWfs, nwFs)			)
+	!allocate(			VeloBwf(	nR		,	nQ		, 2*nWfs)				)
+	!allocate(			Velo(		3		,	nQ		,nWfs, nwFs)			)
 	
 	
 	
@@ -74,13 +75,7 @@ program main
 	if( isKperiodic(unk)	 /= 0 ) then
 		write(*,*)	"[main]: problem with unk gauge, wave functions are NOT periodic in k space"
 	end if
-	!call calcVeloMat(unk, veloBwf, Velo)
-	!call calcConn(unk, nKx, nKy, Aconn)  
-	!call calcCurv(En, Velo, Fcurv)
-	!!polarization (integration of connection)
-	!call calcPolViaA(Aconn, pElViaA)
-	!
-	!
+	
 	call cpu_time(kT1)
 	write(*,*)"[main]: done solving Schroedinger eq."
 	kT = kT1-kT0
@@ -124,9 +119,12 @@ program main
 	write(*,*)"*"
 	write(*,*)"[main]:**************************WANNIER INTERPOLATION*************************"
 	call cpu_time(wI0)
-	call calcConnCurv(unk, wnF, Ah, Fh, EnH)
-	call calcPolViaA(dreal(Ah), pInt)		!test if Ah is really real (iam real am real am really realy real, the reason why i know you very well......)
+	call calcConnCurv(unk, wnF, Ah, Fh, Vh, EnH)
+	write(*,*)"[main]: interpolation of connection & curvature done, test if they are real now..."
+	call testIfReal(Ah, Fh)
+	call calcPolViaA(dreal(Ah), pInt)		
 	call cpu_time(wI1)
+	write(*,*)"[main]: done with wannier interpolation"
 	wI	= wI1 - wI0
 
 	write(*,*)"*"
@@ -135,7 +133,7 @@ program main
 	write(*,*)"*"
 	write(*,*)"[main]:**************************SEMICLASSICS*************************"
 	call cpu_time(scT0)
-	!call calcFirstOrdP(Fcurv, Aconn, Velo, En, pNiu)
+	call calcFirstOrdP(dreal(Fh), dreal(Ah), Vh, EnH, pNiu)
 	call cpu_time(scT1)
 	write(*,*)"[main]: done with first order polarization calculation"
 	scT	= scT1 - scT0

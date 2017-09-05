@@ -3,7 +3,9 @@ today toDo:
 
 
 	- Peierls substitution
+		-> after peierls is written, proably remove the blochWF.f90 module (move subroutines back to potWellModel)
 
+	- build on cluster
 
 	- please remember that the obtained conn etc. are now on the interpolated grid, this means the polarization, etc. routines might need adjusting
 
@@ -20,6 +22,7 @@ today toDo:
 
 todo:
 	
+	- on cluster: convergence tests
 
 	- documentation
 
@@ -31,13 +34,10 @@ todo:
 	- plotting: mark atoms in the bwf and wnf plots
 
 	- git (online)
-	- build on cluster
-	- on cluster: convergence tests
+	
 
 
 	-polarization:
-		via Wannier centers
-		via Connection (real & k space version) 
 		units
 	
 

@@ -259,7 +259,7 @@ module berry
 						A(1:2,qi,n,m) = A(1:2,qi,n,m) + wby * byr(:) * dimag( Myr )!- one )
 						!DEBUG:
 						val	= abs( abs(one) - 1.0_dp )
-						if( val > acc ) then
+						if( (val > acc .and. n==m) .or. (abs(val-1.0_dp)>acc .and. n/=m)  ) then
 							!write(*,'(a,i2,a,i7,a,f16.8,a,f16.8)')	"[calcConn]: n=",n," unk normalization problem at ki=",ki,&
 							!							" one=",dreal(one),"+i*",dimag(one)
 							found 	= found + 1
@@ -276,7 +276,7 @@ module berry
 		!
 		!DEBUG
 		avg	= avg / real(found,dp)
-		write(*,'(a,i6,a,i6,a,f16.12,a,f16.12)')	"[calcConn]: ",found," of ",tot,&
+		write(*,'(a,i6,a,i6,a,f16.12,a,f16.12)')	"[calcConnOnCoarse]: ",found," of ",tot,&
 										" checked unk functions had normalization issues;  max delta=",dmax,&
 										" avg diff=",avg
 		!
