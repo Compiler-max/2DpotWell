@@ -112,6 +112,10 @@ program main
 	wT 	= wT1 - wT0
 
 
+
+
+
+
 	write(*,*)"*"
 	write(*,*)"*"
 	write(*,*)"*"
@@ -119,12 +123,18 @@ program main
 	write(*,*)"[main]:**************************WANNIER INTERPOLATION*************************"
 	call cpu_time(wI0)
 	call calcConnCurv(unk, wnF, Ah, Fh, Vh, EnH)
-	write(*,*)"[main]: interpolation of connection & curvature done, test if they are real now..."
+	write(*,*)"[main]: interpolation of connection & curvature done, test if they are real now and calc pol"
 	call testIfReal(Ah, Fh)
 	call calcPolViaA(dreal(Ah), pInt)		
 	call cpu_time(wI1)
 	write(*,*)"[main]: done with wannier interpolation"
 	wI	= wI1 - wI0
+
+
+
+
+
+
 
 	write(*,*)"*"
 	write(*,*)"*"
@@ -136,6 +146,13 @@ program main
 	call cpu_time(scT1)
 	write(*,*)"[main]: done with first order polarization calculation"
 	scT	= scT1 - scT0
+
+
+
+
+
+
+
 
 	write(*,*)"*"
 	write(*,*)"*"
