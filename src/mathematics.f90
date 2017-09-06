@@ -57,7 +57,7 @@ module mathematics
 		real(dp),		intent(in)	:: thres
 		acc	= thres
 		return
-	end
+	end subroutine
 
 	complex(dp) function myExp(x)
 		!supposed to boost performance
@@ -66,7 +66,7 @@ module mathematics
 		myExp = dcmplx(  dcos(x) , dsin(x) ) 
 		!
 		return
-	end
+	end function
 
 	real(dp) function Cangle(z)
 		!returns principale value between -pi and pi
