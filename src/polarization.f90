@@ -55,7 +55,7 @@ use mathematics,	only:	dp, PI_dp, i_dp, acc, myExp, nIntegrate
 		pT = pI + pE												
 		!
 		return
-	end
+	end subroutine
 
 
 
@@ -93,7 +93,7 @@ use mathematics,	only:	dp, PI_dp, i_dp, acc, myExp, nIntegrate
 			write(*,*)"[calcPolViaA]: non zero imaginary part of polarization"
 		end if
 		return
-	end
+	end subroutine
 
 
 

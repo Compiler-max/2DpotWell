@@ -62,7 +62,7 @@ module wannGen
 		end if
 		!
 		return
-	end
+	end subroutine
 		
 
 	subroutine genWannF(qi, bWf, wnF)
@@ -84,7 +84,7 @@ module wannGen
 		end do
 		!
 		return
-	end
+	end subroutine
 
 
 
@@ -125,7 +125,7 @@ module wannGen
 		end do
 		!
 		return
-	end
+	end subroutine
 
 
 	complex(dp) function gVal(at, n, xi)
@@ -140,7 +140,7 @@ module wannGen
 		end select
 		!
 		return
-	end
+	end function
 
 
 	complex(dp) function infPotWell(at, n, xi)
@@ -158,7 +158,7 @@ module wannGen
 		infPotWell = A * dcmplx(		 dsin(	dot_product( k , xrel)		) 	)
 		!
 		return
-	end
+	end function
 
 
 
@@ -194,7 +194,7 @@ module wannGen
 		end do
 		!
 		return
-	end
+	end subroutine
 
 
 
@@ -237,7 +237,7 @@ module wannGen
 		!
 		!
 		return
-	end
+	end subroutine
 
 
 	logical function isOrthonorm(loBwf)
@@ -296,7 +296,7 @@ module wannGen
 		end do
 		!
 		return
-	end
+	end function
 		
 
 

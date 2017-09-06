@@ -64,7 +64,7 @@ module gaugeTrafo
 		!
 		!
 		return
-	end
+	end subroutine
 
 
 
@@ -108,7 +108,7 @@ module gaugeTrafo
 		write(*,'(a,i8,a,i8,a,f15.12,a,f15.12)')	"[testIfReal]: ",cntF, " of ",tot," = ",cntF/real(tot,dp),&
 														"% checked curv. vals. are not strictly real, average imag.=",avgF												
 		return
-	end	
+	end	subroutine
 
 
 
@@ -150,7 +150,7 @@ module gaugeTrafo
 		!
 		!
 		return
-	end
+	end subroutine
 
 
 
@@ -194,7 +194,7 @@ module gaugeTrafo
 		end do
 		!
 		return
-	end
+	end subroutine
 
 
 
@@ -219,7 +219,7 @@ module gaugeTrafo
 		call eigSolver(U, En(ki,:))
 		!
 		return
-	end
+	end subroutine
 
 
 	subroutine calcDmat(ki, EnH, U, Hwa, Dh)
@@ -250,7 +250,7 @@ module gaugeTrafo
 		!
 		!
 		return
-	end
+	end subroutine
 
 	
 
@@ -267,7 +267,7 @@ module gaugeTrafo
 			Ah(i,ki,:,:)	= Ahbar(i,:,:)	+	i_dp * Dh(i,:,:)
 		end do
 		return
-	end
+	end subroutine
 
 
 	subroutine calcVmat(ki, Hwa, U, Ahbar, EnH,	Vh)
@@ -300,7 +300,7 @@ module gaugeTrafo
 		!
 		!
 		return
-	end
+	end subroutine
 
 
 

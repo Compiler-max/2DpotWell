@@ -71,7 +71,7 @@ module semiClassics
 		p1 = p1 / kSize !	?!
 		!
 		return
-	end
+	end subroutine
 
 
 !privat
@@ -89,7 +89,7 @@ module semiClassics
 		call addF3(n0, ki, Velo, En, Fmat)
 		!
 		return
-	end
+	end subroutine
 
 
 
@@ -142,7 +142,7 @@ module semiClassics
 		!
 		!
 		return
-	end
+	end subroutine
 
 
 
@@ -184,9 +184,8 @@ module semiClassics
 		end do
 		!
 		!
-
 		return
-	end
+	end subroutine
 
 
 

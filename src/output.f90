@@ -86,7 +86,7 @@ module output
 		!
 		close(100)
 		return
-	end
+	end subroutine
 
 
 	subroutine writeMeshBin()
@@ -137,7 +137,7 @@ module output
 		!
 		!
 		return
-	end
+	end subroutine
 
 
 	subroutine writeWaveFunc(unk, Aconn, Fcurv)
@@ -174,7 +174,7 @@ module output
 		!
 		!
 		return
-	end
+	end subroutine
 
 
 
@@ -211,7 +211,7 @@ module output
 		!
 		!
 		return
-	end
+	end subroutine
 
 
 	subroutine writeInterpolFiles(Aconn)
@@ -232,7 +232,7 @@ module output
 		close(555)
 		!
 		return
-	end
+	end subroutine
 
 
 	subroutine writePolFile(pEl, pIon, pTot, pElA, pInt, pNiu, pPei )
@@ -275,7 +275,7 @@ module output
 		!
 		!
 		return
-	end
+	end subroutine
 
 
 
@@ -302,7 +302,7 @@ module output
 		print '    ("overall  time spend     = ",f15.7," seconds.")', mastT
 		!
 		return
-	end
+	end subroutine
 
 
 

@@ -124,7 +124,7 @@ module sysPara
 		call kWmeshGen()
 
 		return
-	end
+	end subroutine
 
 
 	logical function insideAt(at, r)
@@ -156,7 +156,7 @@ module sysPara
 		insideAt = insideX .and. insideY
 		!
 		return
-	end
+	end function
 
 
 	integer function getRindex(xi,yi)
@@ -164,7 +164,7 @@ module sysPara
 		!
 		getRindex = (yi-1) * nRx + xi
 		return
-	end
+	end function
 
 
 	integer function getKindex(qx,qy)
@@ -172,7 +172,7 @@ module sysPara
 		!
 		getKindex = (qy-1) * nQx + qx
 		return
-	end
+	end function
 
 
 
@@ -206,7 +206,7 @@ module sysPara
 		end do
 		!
 		return
-	end
+	end subroutine
 
 
 	subroutine kWmeshGen()
@@ -215,9 +215,9 @@ module sysPara
 		real(dp)	:: kxMin, kyMin
 		!
 		kxMin	= -1.0_dp * PI_dp /  aX
-		dkx	=  2.0_dp * PI_dp / (aX * nKx)
+		dkx		=  2.0_dp * PI_dp / (aX * nKx)
 		kyMin	= -1.0_dp * PI_dp /  aY
-		dky	=  2.0_dp * PI_dp / (aY * nKy)
+		dky		=  2.0_dp * PI_dp / (aY * nKy)
 		!
 		do kIy = 1, nKy
 			do kIx = 1, nKx
@@ -228,7 +228,7 @@ module sysPara
 		end do
 		!
 		return
-	end
+	end subroutine
 
 
 	subroutine rmeshGen()
@@ -251,7 +251,7 @@ module sysPara
 		end do
 		!
 		return
-	end 
+	end subroutine
 
 
 	subroutine popGvec()
@@ -276,7 +276,7 @@ module sysPara
 		end do
 		!
 		return
-	end
+	end subroutine
 
 
 	subroutine popAtPos()
@@ -289,7 +289,7 @@ module sysPara
 		end do
 		!
 		return
-	end
+	end subroutine
 
 	subroutine popAtR()
 		!populates the atom radius vector
@@ -301,7 +301,7 @@ module sysPara
 		end do
 		!
 		return
-	end
+	end subroutine
 
 
 	subroutine calcRcell()
@@ -316,7 +316,7 @@ module sysPara
 		end do
 
 		return
-	end
+	end subroutine
 
 
 
