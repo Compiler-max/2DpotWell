@@ -332,7 +332,7 @@ module output
 		end do
 		!
 		return
-	end
+	end subroutine
 
 
 
