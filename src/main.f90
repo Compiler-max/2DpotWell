@@ -9,7 +9,7 @@ program main
 	use gaugeTrafo,		only:		calcConnCurv,  testIfReal
 	use polarization,	only:		calcPolWannCent, calcPolViaA
 	use semiclassics,	only:		calcFirstOrdP
-	!use peierls,		only:		
+	use peierls,		only:		peierlsSub
 	use output,		 	only:		writeMeshInfo, writeMeshBin, writeWaveFunc, writeWannFiles,writePolFile,& 
 									printTiming	!printMat, printInp, printWannInfo,writeSysInfo  
 

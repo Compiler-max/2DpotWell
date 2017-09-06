@@ -196,23 +196,23 @@ module wannier
 
 
 
-	!INTERPOLATION
+	
 	subroutine genUnkW(wnF, unkW)
 		!generates lattice periodic functions unk from the Wannier functions wnf
-		!	uses the dense k point mesh
+		!	uses the coarse k point mesh
 		complex(dp),	intent(in)		:: wnF(:,:,:)			!	wnF( 	nR, nSC, nWfs	)	
 		complex(dp),	intent(out)		:: unkW(:,:,:)
-		integer							:: n, R, ki, xi
+		integer							:: n, R, qi, xi
 		real(dp)						:: cellP
 		!
 		unkW	= dcmplx(0.0_dp)
 		!GENERATE BLOCH LIKE FUNCTIONS
 		do n = 1, nWfs
-			do ki = 1, nK
+			do qi = 1, nQ
 				do R = 1, nSC
 					do xi = 1, nR
-						cellP = -1.0_dp * dot_product(	kpts(:,ki) , 	rpts(:,xi)-Rcell(:,R)	)
-						unkW(xi,ki,n) = unkW(xi,ki,n) + myExp(cellP) * wnF(xi,R,n) 	  
+						cellP = -1.0_dp * dot_product(	qpts(:,qi) , 	rpts(:,xi)-Rcell(:,R)	)
+						unkW(xi,qi,n) = unkW(xi,qi,n) + myExp(cellP) * wnF(xi,R,n) 	  
 					end do
 				end do
 			end do
@@ -224,7 +224,7 @@ module wannier
 
 
 
-
+	!INTERPOLATION
 	subroutine calcWannMat(wnF, Hw, Hwa, Aw, Fw)
 		!calculates the Matrix elements in wannier gauge
 		!	see Wang/Vanderbilt PRB 74, 195118 (2006)

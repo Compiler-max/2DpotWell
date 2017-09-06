@@ -82,15 +82,11 @@ use mathematics,	only:	dp, PI_dp, i_dp, acc, myExp, nIntegrate
 			end do
 		end do
 		!
-		!NORMALIZE
+		!NORMALIZE K INTEGRATION	
 		val		= val / real(size(A,2),dp)
 		!
 		!HARVEST
-		pElA	= val !/ (aX*aY)
-		!
-		!MOD TO FIRST UNIT CELL
-		pElA(1)	= mod( pElA(1), aX )
-		pElA(2) = mod( pElA(2), aY )
+		pElA	= val / (aX*aY)
 		!
 		!DEBUGGING
 		if(		dimag( val(1) ) > machine 	.or. 	dimag( val(2) ) > machine		) then
