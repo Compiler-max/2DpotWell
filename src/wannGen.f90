@@ -24,10 +24,10 @@ module wannGen
 
 	contains
 !public:
-	subroutine projectBwf(ki, bWf, loBwf, U, failCount, smin, smax)
+	subroutine projectBwf(qi, bWf, loBwf, U, failCount, smin, smax)	!projectBwf(qi, bWf, loBwf, U(:,:), failCount, smin, smax)
 		!does the projection onto Loewdin-orthonormalized Bloch-like states
 		!see Marzari, Vanderbilt PRB 56, 12847 (1997) Sec.IV.G.1 for detailed description of the method 
-		integer		,	intent(in)		:: ki
+		integer		,	intent(in)		:: qi
 		complex(dp)	,	intent(in)		:: bWf(:,:)   ! bWf(nR,nG)
 		complex(dp)	,	intent(out)		:: loBwf(:,:), U(:,:)   !U(nWfs,nWfs)
 		integer,		intent(inout)	:: failCount
@@ -65,10 +65,10 @@ module wannGen
 	end
 		
 
-	subroutine genWannF(ki, bWf, wnF)
+	subroutine genWannF(qi, bWf, wnF)
 		! generates wannier functions from (projected) bloch wavefunctions
 		!
-		integer,		intent(in)		:: ki
+		integer,		intent(in)		:: qi
 		complex(dp), 	intent(in)  	:: bWf(:,:) ! lobWf(nRpts,nWfs)	
 		complex(dp), 	intent(inout) 	:: wnF(:,:,:) ! wnF( 	nR, nSC, nWfs		)	
 		integer 				 :: n,xi,Ri
@@ -76,7 +76,7 @@ module wannGen
 		!
 		do n = 1, nWfs
 			do Ri = 1, nSC
-				cellP = -1.0_dp * dot_product(	kpts(:,ki) , Rcell(:,Ri)	) 
+				cellP = -1.0_dp * dot_product(	qpts(:,qi) , Rcell(:,Ri)	) 
 				do xi = 1, nR		
 						wnF(xi,Ri,n) = wnF(xi,Ri,n) + bWf(xi,n) * myExp(cellP) / real(nK,dp)
 				end do
