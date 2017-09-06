@@ -7,7 +7,7 @@ module peierls
 	
 
 	private
-	public ::	peierlsPol
+	public ::	peierlsSub
 
 
 	contains
@@ -114,8 +114,22 @@ module peierls
 	!end
 
 
-
-
+real(dp) function integrateA(rMax, rMin)
+	!integrates the vector potential A(r) analytically
+	!	A(r)	= -0.5 cross_p[r,B]
+	!	return 	= Integrate^\vec{rMax]_\vec{rMin} 		\vec{A(r')}.\vec{dr'}
+	!			= -0.5 cross_p[rMin,B].(rMax - rMin)
+	real(dp),		intent(in)		:: rMax(2), rMin(2)
+	real(dp)						:: rU(3), rL(3)
+	rU(1:2)		= rMax(1:2)
+	rU(3)		= 0.0_dp
+	rL(1:2)		= rMin(1:2)
+	rL(3)		= 0.0_dp
+	!
+	integrateA	= -0.5_dp * dot_product( crossP(rL,Bext)	, (rU-rL)	)
+	!
+	return
+end
 
 
 
