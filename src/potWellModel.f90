@@ -80,7 +80,7 @@ module potWellModel
 			call genUnk(qi, lobWf, unkW(:, qi, :))
 			!
 		end do
-		write(*,'(a,f16.15,a,f16.12)') "[solveHam]: projection matrix  smin=", smin, " smax=", smax
+		write(*,'(a,f16.13,a,f16.12)') "[solveHam]: projection matrix  smin=", smin, " smax=", smax
 		write(*,'(a,i7,a)')"[solveHam]: ",failCount," of the projected bloch like functions are not orthonormal"
 		close(200)
 		close(210)

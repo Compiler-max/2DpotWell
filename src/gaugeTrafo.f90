@@ -19,6 +19,7 @@ module gaugeTrafo
 		real(dp),		intent(out)		:: EnH(:,:)
 		complex(dp),	allocatable		:: Hw(:,:,:), Hwa(:,:,:,:), Aw(:,:,:,:), Fw(:,:,:,:,:), Fhtens(:,:,:,:,:)
 		integer							:: n,m,ki,a,b,c
+		real							:: T0,T1,T, Pt0, Pt1, Pt
 		!
 		allocate(	Hw(		nK, nWfs, nWfs)			)
 		allocate(	Hwa(	3, nK, nWfs, nWfs)		)
@@ -28,6 +29,7 @@ module gaugeTrafo
 		!
 
 		!GET DESIRED MATRICES VIA K SPACE (calcWaveMat) OR VIA R SPACE (calcWannMat)
+		call cpu_time(T0)
 		select case(connSwitch)
 			case(0)
 				write(*,*)"[calcConnCurv]: via K space"
@@ -38,10 +40,17 @@ module gaugeTrafo
 			case default
 				write(*,*)"[calcConnCurv]: via K space"
 				call calcWaveMat(unk, Hw, Hwa, Aw, Fw)
-		end select 
+		end select
+		call cpu_time(T1) 
+		T	= T1 -T0
+		write(*,'(a,f12.8,a)')"[calcConnCurv]: the 4 matrices on coarse mesh where calculated in ",T," seconds"
 		!
 		!
+		call cpu_time(Pt0)
 		call shiftToHamGauge(Hw, Hwa, Aw, Fw, Ah, FhTens, Vh, EnH)
+		call cpu_time(Pt1)
+		Pt	= Pt1-Pt0
+		write(*,'(a,f12.8,a)')"[calcConnCurv]: the conversion to Ham gauge took ",Pt," seconds"
 		!
 		!CONVERT OMEGA TENSOR TO VECTOR
 		do m = 1, nWfs

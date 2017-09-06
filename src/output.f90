@@ -74,7 +74,7 @@ module output
 		!ATOM POSITION AND RADII
 		write(100,*)"*******************ATOMS******************************"
 		do i = 1, nAt
-			write(100,'(a,i3,a,f7.5,a,f7.5,a,a,f7.5,a,f7.5,a)')	"atom(",i,") at (",atPos(1,i),", ",atPos(2,i),") ",&
+			write(100,'(a,i3,a,f8.5,a,f8.5,a,a,f8.5,a,f8.5,a)')	"atom(",i,") at (",atPos(1,i),", ",atPos(2,i),") ",&
 																"w. rad = (", atR(1,i), ", ", atR(2,i), " )"	
 		end do
 		!

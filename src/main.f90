@@ -116,19 +116,19 @@ program main
 
 
 
-	!write(*,*)"*"
-	!write(*,*)"*"
-	!write(*,*)"*"
-	!write(*,*)"*"
-	!write(*,*)"[main]:**************************WANNIER INTERPOLATION*************************"
-	!call cpu_time(wI0)
-	!call calcConnCurv(unk, wnF, Ah, Fh, Vh, EnH)
-	!write(*,*)"[main]: interpolation of connection & curvature done, test if they are real now and calc pol"
-	!call testIfReal(Ah, Fh)
-	!call calcPolViaA(dreal(Ah), pInt)		
-	!call cpu_time(wI1)
-	!write(*,*)"[main]: done with wannier interpolation"
-	!wI	= wI1 - wI0
+	write(*,*)"*"
+	write(*,*)"*"
+	write(*,*)"*"
+	write(*,*)"*"
+	write(*,*)"[main]:**************************WANNIER INTERPOLATION*************************"
+	call cpu_time(wI0)
+	call calcConnCurv(unk, wnF, Ah, Fh, Vh, EnH)
+	write(*,*)"[main]: interpolation of connection & curvature done, test if they are real now and calc pol"
+	call testIfReal(Ah, Fh)
+	call calcPolViaA(dreal(Ah), pInt)		
+	call cpu_time(wI1)
+	write(*,*)"[main]: done with wannier interpolation"
+	wI	= wI1 - wI0
 
 
 
