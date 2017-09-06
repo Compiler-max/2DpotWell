@@ -1,5 +1,5 @@
 module blochWf
-	!generates bloch and lattice periodic functions given a basCoeff matrix
+	!generates bloch and lattice periodidc functions given a basCoeff matrix
 	use mathematics,	only:	dp, PI_dp,i_dp, myExp, myLeviCivita, eigSolver, nIntegrate
 	use sysPara
 
@@ -18,9 +18,9 @@ module blochWf
 
 
 !public
-	subroutine genBlochWf(ki,basCoeff, bWf)
+	subroutine genBlochWf(qi,basCoeff, bWf)
 		!generates the bloch wavefunctions, with  the basCoeff from eigSolver
-		integer		, intent(in)	:: ki
+		integer		, intent(in)	:: qi
 		complex(dp)	, intent(in)	:: basCoeff(:,:)
 		complex(dp)	, intent(out)	:: bWf(:,:)	!bWf(nRpts,nG)			
 		complex(dp)	, allocatable	:: basVec(:)
@@ -28,12 +28,12 @@ module blochWf
 		allocate(	basVec(nG)	)
 		!
 		do xi = 1, nR
-				call calcBasVec(ki,xi, basVec)
+				call calcBasVec(qi,xi, basVec)
 				bWf(xi,:) = matmul(	 basVec , basCoeff	)  /  dsqrt(vol)
 		end do
 		!
 		return 
-	end
+	end subroutine
 
 
 	subroutine calcVeloBwf(ki,basCoeff, velobWf)
@@ -51,7 +51,7 @@ module blochWf
 		end do
 		!
 		return 
-	end
+	end subroutine
 
 
 	!logical function BwFisLattSym(bWf)
@@ -92,7 +92,7 @@ module blochWf
 		end do
 		!
 		return
-	end
+	end subroutine
 
 
 
@@ -114,7 +114,7 @@ module blochWf
 		!	the cutoff enforces a symmetric base at each k point
 		integer,	 intent(in)  :: qi, ri
 		complex(dp), intent(out) :: basVec(:)
-		real(dp)				 :: tmp(dim)
+		real(dp)				 :: tmp(2)
 		integer 				 ::	i 
 		!
 
@@ -129,7 +129,7 @@ module blochWf
 		end do
 		!
 		return
-	end
+	end subroutine
 
 
 
@@ -156,7 +156,7 @@ module blochWf
 		!		
 		!
 		return
-	end
+	end subroutine
 
 
 

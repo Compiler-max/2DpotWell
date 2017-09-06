@@ -57,8 +57,8 @@ program main
 	!allocate(			VeloBwf(	nR		,	nQ		, 2*nWfs)				)
 	!allocate(			Velo(		3		,	nQ		,nWfs, nwFs)			)
 	
-	
-	
+	write(*,*)"[main]: nK=",nK
+	write(*,*)"[main]: nQ=",nQ
 	!
 	call cpu_time(aT1)
 	aT = aT1 - aT0
@@ -116,19 +116,19 @@ program main
 
 
 
-	write(*,*)"*"
-	write(*,*)"*"
-	write(*,*)"*"
-	write(*,*)"*"
-	write(*,*)"[main]:**************************WANNIER INTERPOLATION*************************"
-	call cpu_time(wI0)
-	call calcConnCurv(unk, wnF, Ah, Fh, Vh, EnH)
-	write(*,*)"[main]: interpolation of connection & curvature done, test if they are real now and calc pol"
-	call testIfReal(Ah, Fh)
-	call calcPolViaA(dreal(Ah), pInt)		
-	call cpu_time(wI1)
-	write(*,*)"[main]: done with wannier interpolation"
-	wI	= wI1 - wI0
+	!write(*,*)"*"
+	!write(*,*)"*"
+	!write(*,*)"*"
+	!write(*,*)"*"
+	!write(*,*)"[main]:**************************WANNIER INTERPOLATION*************************"
+	!call cpu_time(wI0)
+	!call calcConnCurv(unk, wnF, Ah, Fh, Vh, EnH)
+	!write(*,*)"[main]: interpolation of connection & curvature done, test if they are real now and calc pol"
+	!call testIfReal(Ah, Fh)
+	!call calcPolViaA(dreal(Ah), pInt)		
+	!call cpu_time(wI1)
+	!write(*,*)"[main]: done with wannier interpolation"
+	!wI	= wI1 - wI0
 
 
 
@@ -136,16 +136,16 @@ program main
 
 
 
-	write(*,*)"*"
-	write(*,*)"*"
-	write(*,*)"*"
-	write(*,*)"*"
-	write(*,*)"[main]:**************************SEMICLASSICS*************************"
-	call cpu_time(scT0)
-	call calcFirstOrdP(dreal(Fh), dreal(Ah), Vh, EnH, pNiu)
-	call cpu_time(scT1)
-	write(*,*)"[main]: done with first order polarization calculation"
-	scT	= scT1 - scT0
+	!write(*,*)"*"
+	!write(*,*)"*"
+	!write(*,*)"*"
+	!write(*,*)"*"
+	!write(*,*)"[main]:**************************SEMICLASSICS*************************"
+	!call cpu_time(scT0)
+	!call calcFirstOrdP(dreal(Fh), dreal(Ah), Vh, EnH, pNiu)
+	!call cpu_time(scT1)
+	!write(*,*)"[main]: done with first order polarization calculation"
+	!scT	= scT1 - scT0
 
 
 
@@ -154,18 +154,18 @@ program main
 
 
 
-	write(*,*)"*"
-	write(*,*)"*"
-	write(*,*)"*"
-	write(*,*)"*"
-	write(*,*)"[main]:**************************PEIERLS SUB*************************"
-	call cpu_time(peiT0)
-	!
-	call peierlsSub(wnF, 	unk, Ah, Fh, Vh, EnH, pPei )
-	!
-	call cpu_time(peiT1)
-	write(*,*)"[main]: done with peierls substitution"
-	peiT = peiT1 - peiT0
+	!write(*,*)"*"
+	!write(*,*)"*"
+	!write(*,*)"*"
+	!write(*,*)"*"
+	!write(*,*)"[main]:**************************PEIERLS SUB*************************"
+	!call cpu_time(peiT0)
+	!!
+	!call peierlsSub(wnF, 	unk, Ah, Fh, Vh, EnH, pPei )
+	!!
+	!call cpu_time(peiT1)
+	!write(*,*)"[main]: done with peierls substitution"
+	!peiT = peiT1 - peiT0
 
 
 
@@ -211,5 +211,5 @@ program main
 	call printTiming(aT, kT, wI, scT, peiT, wT, oT, mastT)
 
 	stop
-end 
+end program
 

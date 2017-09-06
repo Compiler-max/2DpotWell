@@ -116,7 +116,7 @@ module wannier
 		write(*,'(a,i8)')	"[isNormal]: found ",diffSC, "issues between different unit cells "
 		!
 		return
-	end
+	end function
 
 
 
@@ -137,7 +137,7 @@ module wannier
 		end do
 		!
 		return
-	end
+	end subroutine
 
 
 	subroutine calcWsprd(wnF, xc, sprd)
@@ -157,7 +157,7 @@ module wannier
 		end do
 		!
 		return
-	end
+	end subroutine
 
 
 
@@ -190,7 +190,7 @@ module wannier
 		end do
 		!
 		return
-	end
+	end subroutine
 
 
 
@@ -220,7 +220,7 @@ module wannier
 		!
 		!
 		return
-	end
+	end subroutine
 
 
 
@@ -272,7 +272,7 @@ module wannier
 		!
 		!
 		return
-	end
+	end subroutine
 
 
 
@@ -345,7 +345,7 @@ module wannier
 		!
 		!
 		return
-	end
+	end subroutine
 
 
 	subroutine getNeighbX(xi,yi, lx, rx)
@@ -368,8 +368,8 @@ module wannier
 		!
 		!
 		return
+	end subroutine
 
-	end
 
 	subroutine getNeighbY(xi, yi, ly, ry)
 		!Helper for wHw
@@ -391,7 +391,7 @@ module wannier
 		!
 		!
 		return
-	end
+	end subroutine
 
 
 	subroutine wXw(R1,R2,n,m, wnF, res)
@@ -421,7 +421,7 @@ module wannier
 		!write(*,*)"[wXw]: scaling with ",1.0_dp/norm
 		!wXw = wXw  /norm
 		return
-	end
+	end subroutine
 
 
 	subroutine wXXw(R1,R2,n,m, wnF, res)
@@ -447,7 +447,7 @@ module wannier
 		!wXXw = wXXw  / norm
 		!
 		return
-	end
+	end subroutine
 
 
 	complex(dp) function Hwnf(n,m, ki, R, wnF)
@@ -479,7 +479,7 @@ module wannier
 		!
 		!
 		return
-	end
+	end function
 
 
 

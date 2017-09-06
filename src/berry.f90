@@ -99,7 +99,7 @@ module berry
 		end if
 		!
 		return
-	end
+	end function
 
 
 
@@ -151,7 +151,7 @@ module berry
 		!
 		!
 		return
-	end
+	end subroutine
 
 
 
@@ -193,7 +193,7 @@ module berry
 		!
 		!
 		return
-	end
+	end function
 
 
 
@@ -281,7 +281,7 @@ module berry
 										" avg diff=",avg
 		!
 		return
-	end
+	end subroutine
 
 
 
@@ -307,7 +307,7 @@ module berry
 		!
 		!
 		return
-	end
+	end function
 
 
 	!CONNECTION HELPERS
@@ -345,7 +345,7 @@ module berry
 		!
 		!
 		return
-	end
+	end function
 
 
 	integer function getLeft(i,N)
@@ -360,7 +360,7 @@ module berry
 		end if
 		!
 		return
-	end
+	end function
 
 
 	integer function getRight(i,N)
@@ -375,7 +375,7 @@ module berry
 		end if
 		!
 		return
-	end
+	end function
 
 
 

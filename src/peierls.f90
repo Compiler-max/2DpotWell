@@ -39,7 +39,7 @@ module peierls
 		!
 		!
 		return
-	end
+	end subroutine
 
 
 	subroutine 	shiftWannF(wnF)
@@ -61,7 +61,7 @@ module peierls
 		!
 		!
 		return
-	end
+	end subroutine
 
 
 
@@ -81,7 +81,7 @@ real(dp) function integrateA(rMin, rMax)
 	integrateA	= -0.5_dp * dot_product( crossP(rL,Bext)	, (rU-rL)	)
 	!
 	return
-end
+end function
 
 
 
@@ -106,7 +106,7 @@ end
 		!
 		!
 		return
-	end
+	end subroutine
 
 
 	subroutine peierlSubst(Amag, Htb)
@@ -133,7 +133,7 @@ end
 		!
 		!
 		return
-	end
+	end subroutine
 
 
 	subroutine calcKspaceHam(qi, Htb, Hk)
@@ -155,7 +155,7 @@ end
 		!
 		!
 		return
-	end
+	end subroutine
 
 
 

@@ -31,16 +31,16 @@ module potWellModel
 		complex(dp),	allocatable		::	Hmat(:,:), bWf(:,:), lobWf(:,:), gnr(:,:), U(:,:)
 		real(dp),		allocatable		::	EnT(:), bwfR(:,:), bwfI(:,:)	 
 		integer							:: 	qi, xi , n, failCount
-		real(dp)						::	kVal(dim), smin, smax
+		real(dp)						::	kVal(2), smin, smax
 		!
-		allocate(	Hmat(	nG,	nG	)			)
-		allocate(	U(		nG, nG	)			)
-		allocate(	EnT(		nG	)			)	
-		allocate(	bWf(	nR, nG	)			)
-		allocate(	bWfR(	nR, nG	)			)
-		allocate(	bWfI(	nR, nG	)			)
-		allocate(	lobWf(	nR, nWfs)			)
-		allocate(	gnr(	nR,	nWfs)			)
+		allocate(	Hmat(	nG,	nG		)			)
+		allocate(	U(		nWfs, nWfs	)			)
+		allocate(	EnT(		nG		)			)	
+		allocate(	bWf(	nR, nG		)			)
+		allocate(	bWfR(	nR, nG		)			)
+		allocate(	bWfI(	nR, nG		)			)
+		allocate(	lobWf(	nR, nWfs	)			)
+		allocate(	gnr(	nR,	nWfs	)			)
 		
 		wnF			=	dcmplx(0.0_dp)
 		bWf			=	dcmplx(0.0_dp)
@@ -73,7 +73,7 @@ module potWellModel
 			write(210)bWfR
 			write(211)bwfI
 			!
-			call projectBwf(qi, bWf, loBwf, U(:,:), failCount, smin, smax)
+			call projectBwf(qi, bWf, loBwf, U, failCount, smin, smax)
 			
 			call genWannF(qi, lobWf, wnF)
 
@@ -87,7 +87,7 @@ module potWellModel
 		close(211)
 		!
 		return
-	end
+	end subroutine
 
 
 
@@ -109,7 +109,7 @@ module potWellModel
 		!	1. qinetic energy terms
 		!	2. potential terms
 		!and checks if the resulting matrix is still hermitian( for debugging)
-		real(dp)   , intent(in)    :: k(dim)
+		real(dp)   , intent(in)    :: k(2)
 		complex(dp), intent(inout) :: Hmat(:,:)
 		!init to zero
 		Hmat = dcmplx(0.0_dp) 
@@ -126,7 +126,7 @@ module potWellModel
 			!write(*,*)"[populateH]: Hmat is hermitian"
 		end if
 		return
-	end
+	end subroutine
 
 
 	subroutine Hkin(q, Hmat)
@@ -141,7 +141,7 @@ module potWellModel
 			Hmat(i,i) = Hmat(i,i) +  dcmplx(	fact * dot_product(kg,kg) , 0.0_dp	) 
 		end do
 		return
-	end
+	end subroutine
 
 
 	subroutine Hpot( Hmat)
@@ -158,7 +158,7 @@ module potWellModel
 		end do
 		!
 		return
-	end
+	end subroutine
 
 
 	complex(dp) function V(i,j)
@@ -202,7 +202,7 @@ module potWellModel
 		end do
 		!
 		return
-	end
+	end function
 
 
 
@@ -216,7 +216,7 @@ module potWellModel
 		!	controled via the gaugeSwitch from the input file
 		!	this should only be used for testing & understanding purposes,
 		!	since this gauge trafo is not saved in the U matrix (U matrix rotates between ham & wann gauge)
-		real(dp),		intent(in)		:: k(dim)
+		real(dp),		intent(in)		:: k(2)
 		complex(dp),	intent(inout) 	:: basCoeff(:,:)
 		!
 		select case (gaugeSwitch)
@@ -234,7 +234,7 @@ module potWellModel
 		end select
 		!
 		return
-	end
+	end subroutine
 
 
 	subroutine gaugeCoeff1(basCoeff)
@@ -257,7 +257,7 @@ module potWellModel
 		end do
 		!
 		return
-	end
+	end subroutine
 
 
 	!subroutine gaugeCoeff2(k, basCoeff)

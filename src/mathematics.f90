@@ -79,7 +79,7 @@ module mathematics
 		Cangle = Cangle / PI_dp
 		!
 		return
-	end
+	end function
 
 
 	integer function myLeviCivita(i,j,k)
@@ -105,7 +105,7 @@ module mathematics
 		end if
 		!
 		return
-	end
+	end function
 
 
 	subroutine SVD(Mat, U,s,Vt)
@@ -149,7 +149,7 @@ module mathematics
 		end if
 		!
 		return
-	end
+	end subroutine
 
 
 	subroutine eigSolver(A, w)
@@ -193,7 +193,7 @@ module mathematics
             end if
             !
             return 
-      end
+      end subroutine
 
 
 	subroutine myMatInvSqrt(Mat, minS, maxS)
@@ -237,7 +237,7 @@ module mathematics
 		Mat = matmul(U, TMP)
 		!
 		return
-	end
+	end subroutine
 
 
 	logical function isUnit(U)
@@ -263,7 +263,7 @@ module mathematics
 		end if
 		!
 		return
-	end
+	end function
 
 
 	logical function isIdentity(I)
@@ -298,7 +298,7 @@ module mathematics
 		end if
 		!
 		return
-	end
+	end function
 
 
 	logical function isHermitian(H)
@@ -325,7 +325,7 @@ module mathematics
 			end do
 		end if
 		return
-	end
+	end function
 
 
 
@@ -340,7 +340,7 @@ module mathematics
 		res	= matmul(	dconjg(transpose(U))	, 		res		)
 		!
 		return
-	end
+	end subroutine
 
 	subroutine myCommutat(M, N, res)
 		!	computes the commutator of matrix M and N
@@ -356,7 +356,7 @@ module mathematics
 		!
 		!
 		return
-	end
+	end subroutine
 
 
 
@@ -402,7 +402,7 @@ module mathematics
 		nIntegrateCPLX = dcmplx(	rel , img	)
 		!
 		return
-	end
+	end function
 
 
 	real(dp) function nIntegrateREAL(nR, nRx,nRy, dx,dy, f)
@@ -430,7 +430,7 @@ module mathematics
 		call hiordqWrapper(dy, fy, nIntegrateREAL)
 		!
 		return
-	end
+	end function
 
 
 	function crossPreal(a,b)
@@ -443,7 +443,7 @@ module mathematics
 		crossPreal(3)	=	a(1) * b(2)		-	a(2) * b(1) 
 		!
 		return
-	end
+	end function
 
 
 	function crossPcplx(a,b)
@@ -456,7 +456,7 @@ module mathematics
 		crossPcplx(3)	=	a(1) * b(2)		-	a(2) * b(1) 
 		!
 		return
-	end
+	end function
 
 
 
@@ -473,7 +473,7 @@ module mathematics
 		!
 		call  hiordq( ntab, dx, f, work, res )
 		return
-	end
+	end subroutine
 
 
 	!EIGSOLVER HELPERS
@@ -492,7 +492,7 @@ module mathematics
 		endif
 		!
 		return
-    end
+    end subroutine
 
 
 	subroutine normalCheck(n,eigVec)
@@ -512,7 +512,7 @@ module mathematics
 		end do
 		!
 		return
-	end
+	end subroutine
 
 
 
