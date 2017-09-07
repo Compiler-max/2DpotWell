@@ -69,12 +69,13 @@ module potWellModel
 			
 			!
 			call projectBwf(qi, bWf(:,:,qi), loBwf(:,:,qi), U, failCount, smin, smax)
+			call genWannF(qi, lobWf(:,:,qi), wnF)
 			call genUnk(qi, lobWf(:,:,qi), unkW(:, qi, :))
 			!
 		end do
 
 
-		call genWannF(lobWf, wnF)
+		
 		
 
 		open(unit=200, file='rawData/bandStruct.dat', form='unformatted', access='stream', action='write')
