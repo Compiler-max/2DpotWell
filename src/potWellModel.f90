@@ -53,10 +53,7 @@ module potWellModel
 		!
 		
 	
-		!$OMP PARALLEL DO &
-		!$OMP& SCHEDULE(STATIC) &
-		!$OMP& DEFAULT(SHARED), PRIVATE(qi, kval, Hmat, U) &
-		!$OMP& REDUCTION(+:failCount), REDUCTION(min:smin), REDUCTION(max:smax)
+		
 		do qi = 1, nQ
 			!write(*,*)"[solveHam]: qi=",qi
 			kVal	=	qpts(:,qi)
@@ -75,7 +72,7 @@ module potWellModel
 			call genUnk(qi, lobWf(:,:,qi), unkW(:, qi, :))
 			!
 		end do
-		!$OMP END PARALLEL DO 
+
 
 		call genWannF(lobWf, wnF)
 		
