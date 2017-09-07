@@ -6,7 +6,6 @@ today toDo:
 		-> peierls changes all the quantities passed to it, so writing them should be done before and after peierls sub!!!!!
 
 
-	- build on cluster
 
 	- please remember that the obtained conn etc. are now on the interpolated grid, this means the polarization, etc. routines might need adjusting
 
@@ -17,9 +16,6 @@ today toDo:
 	- raum buchen für vortrag
 
 
-
-	working compiler command for omp:
-			 ifort -mkl -qopenmp src/*.f90 thirdparty/config_fortran/m_config.f90 thirdparty/quadpack/intlib.f90 -o bin/a.out
 
 todo:
 	

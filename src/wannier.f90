@@ -1,6 +1,7 @@
 module wannier
 	!contains subroutines for working with existing wannier functions
 	!	center calculations, etc. 
+	use omp_lib
 	use mathematics,	only:	dp, PI_dp, i_dp, acc, myExp, nIntegrate
 	use sysPara
 
@@ -235,7 +236,7 @@ module wannier
 		complex(dp),	intent(out)		:: Fw(:,:,:,:,:)	!Fw(3,3,nKi,nWfs,nWfs)
 		complex(dp)						:: Rphase, Hexp
 		real(dp)						:: rExp(3)
-		integer							:: m, n, ki, R, i,j
+		integer							:: m, n, ki, R, i, j, myID
 		!
 		Hw			= dcmplx(0.0_dp)
 		Hwa			= dcmplx(0.0_dp)
@@ -243,9 +244,16 @@ module wannier
 		Fw			= dcmplx(0.0_dp)
 		rExp(3)		= 0.0_dp
 		!
+
+
+
+		!
+		!
+		!$OMP PARALLEL DO SCHEDULE(STATIC) COLLAPSE(3) DEFAULT(SHARED) PRIVATE(Rphase, Hexp, rExp, m, n, ki, R, i, j, myID)
 		do m = 1, nWfs
 			do n =  1, nWfs
 				do ki = 1, nK
+					!FOURIER TRAFO (sequential)
 					do R = 1, nSC
 						Rphase	= myExp( dot_product( 	kpts(:,ki), Rcell(:,R)		) )
 						!
@@ -258,17 +266,20 @@ module wannier
 						call wXw(R0,R,n,m, wnF, rExp(1:2))
 						Aw(1:2,ki,n,m)	= 			Aw(1:2,ki,n,m)		+ Rphase 						* rExp(1:2)
 						!
-						do i = 1,2
-							do j = 1,2
+						do i = 1, 2
+							do j = 1, 2
 								Fw(i,j,ki,n,m)	= 	Fw(i,j,ki,n,m) 		+ Rphase * i_dp * Rcell(i,R) 	* rExp(j)
 								Fw(i,j,ki,n,m)	= 	Fw(i,j,ki,n,m) 		- Rphase * i_dp * Rcell(j,R) 	* rExp(i)
 							end do
 						end do
-						!
 					end do
+					!
+					myID	= OMP_GET_THREAD_NUM()
+					write(*,'(a,i3,a,i3,a,i3,a,i3)')		"[calcWaveMat,id=",myID,"]: I did m=",m," n=",n," ki=",ki
 				end do
 			end do
 		end do
+		!$OMP END PARALLEL DO
 		!
 		!
 		return
@@ -408,7 +419,7 @@ module wannier
 		!
 		do xi = 1, nR	 
 			if(dimag( dconjg(wnF(xi,R1,n)) * wnF(xi,R2,m)) > acc  ) then
-				write(*,*)"[wXw]: waning wnf overlap not strictly real =",dimag( dconjg(wnF(xi,R1,n)) * wnF(xi,R2,m))
+				write(*,*)"[wXw]: waning wnf overlap not strictly real =",dimag( dconjg(wnF(xi,R1,n)) * wnF(xi,R2,m)	)
 			end if
 			fx(xi)	=  rpts(1,xi)		*	dreal( dconjg(wnF(xi,R1,n)) * wnF(xi,R2,m)  )
 			fy(xi)	=  rpts(2,xi)		*	dreal( dconjg(wnF(xi,R1,n)) * wnF(xi,R2,m)  )

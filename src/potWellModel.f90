@@ -1,6 +1,7 @@
 module potWellModel
 	!this modules sets up the Hamiltonian matrix and solves it for each k point
 	!	in the process the wannier functions are generated aswell with routines from wannGen module
+	use omp_lib
 	use mathematics,	only:	dp, PI_dp,i_dp, machineP, myExp, myLeviCivita, eigSolver, nIntegrate, isHermitian
 	use sysPara
 	use blochWf,		only:	genBlochWf, calcVeloBwf, genUnk									
@@ -28,18 +29,18 @@ module potWellModel
 																				!unkW(nR	, nKpts,	nWfs	)
 																				!veloBwf(nR,nK,2*nG)
 		!real(dp),		intent(out)		::	En(:,:)																	
-		complex(dp),	allocatable		::	Hmat(:,:), bWf(:,:), lobWf(:,:), gnr(:,:), U(:,:)
-		real(dp),		allocatable		::	EnT(:), bwfR(:,:), bwfI(:,:)	 
+		complex(dp),	allocatable		::	Hmat(:,:), bWf(:,:,:), lobWf(:,:,:), gnr(:,:), U(:,:)
+		real(dp),		allocatable		::	EnT(:,:), bwfR(:,:,:), bwfI(:,:,:)	 
 		integer							:: 	qi, xi , n, failCount
 		real(dp)						::	kVal(2), smin, smax
 		!
 		allocate(	Hmat(	nG,	nG		)			)
 		allocate(	U(		nWfs, nWfs	)			)
-		allocate(	EnT(		nG		)			)	
-		allocate(	bWf(	nR, nG		)			)
-		allocate(	bWfR(	nR, nG		)			)
-		allocate(	bWfI(	nR, nG		)			)
-		allocate(	lobWf(	nR, nWfs	)			)
+		allocate(	EnT(		nG,nQ	)			)	
+		allocate(	bWf(	nR, nG, nQ	)			)
+		allocate(	bWfR(	nR, nG, nQ	)			)
+		allocate(	bWfI(	nR, nG, nQ	)			)
+		allocate(	lobWf(	nR, nWfs, nQ)			)
 		allocate(	gnr(	nR,	nWfs	)			)
 		
 		wnF			=	dcmplx(0.0_dp)
@@ -51,40 +52,51 @@ module potWellModel
 		smax		= 	0.0_dp
 		!
 		
-		!call genTrialOrb(gnr) !ToDo
-		!
-		open(unit=200, file='rawData/bandStruct.dat', form='unformatted', access='stream', action='write')
-		open(unit=210, file='rawData/bwfR.dat'		, form='unformatted', access='stream', action='write')
-		open(unit=211, file='rawData/bwfI.dat'		, form='unformatted', access='stream', action='write')
+	
+		!$OMP PARALLEL DO &
+		!$OMP& SCHEDULE(STATIC) &
+		!$OMP& DEFAULT(SHARED), PRIVATE(qi, kval, Hmat, U) &
+		!$OMP& REDUCTION(+:failCount), REDUCTION(min:smin), REDUCTION(max:smax)
 		do qi = 1, nQ
 			!write(*,*)"[solveHam]: qi=",qi
 			kVal	=	qpts(:,qi)
 			!
 			call populateH(kVal, Hmat)	
-			call eigSolver(Hmat, EnT)
-			write(200)	EnT
+			call eigSolver(Hmat, EnT(:,qi))
+			
 			!En(qi,:) = EnT(1:nWfs) 
 			!
 			call gaugeCoeff(kVal, Hmat)
-			call genBlochWf(qi, Hmat, bWf)		
+			call genBlochWf(qi, Hmat, bWf(:,:,qi))		
 			!call calcVeloBwf(qi,Hmat, veloBwf)
-			bWfR 	= dreal(bWf)                 !Todo fix that
-			bWfI	= dimag(bWf)
-			write(210)bWfR
-			write(211)bwfI
-			!
-			call projectBwf(qi, bWf, loBwf, U, failCount, smin, smax)
 			
-			call genWannF(qi, lobWf, wnF)
-
-			call genUnk(qi, lobWf, unkW(:, qi, :))
+			!
+			call projectBwf(qi, bWf(:,:,qi), loBwf(:,:,qi), U, failCount, smin, smax)
+			call genUnk(qi, lobWf(:,:,qi), unkW(:, qi, :))
 			!
 		end do
-		write(*,'(a,f16.13,a,f16.12)') "[solveHam]: projection matrix  smin=", smin, " smax=", smax
-		write(*,'(a,i7,a)')"[solveHam]: ",failCount," of the projected bloch like functions are not orthonormal"
+		!$OMP END PARALLEL DO 
+
+		call genWannF(lobWf, wnF)
+		
+
+		open(unit=200, file='rawData/bandStruct.dat', form='unformatted', access='stream', action='write')
+		open(unit=210, file='rawData/bwfR.dat'		, form='unformatted', access='stream', action='write')
+		open(unit=211, file='rawData/bwfI.dat'		, form='unformatted', access='stream', action='write')
+		!
+		write(200) EnT
+		bWfR 	= dreal(bWf)                 !Todo fix that
+		bWfI	= dimag(bWf)
+		write(210)bWfR
+		write(211)bwfI
+		!
 		close(200)
 		close(210)
 		close(211)
+
+		write(*,'(a,f16.13,a,f16.12)') "[solveHam]: projection matrix  smin=", smin, " smax=", smax
+		write(*,'(a,i7,a)')"[solveHam]: ",failCount," of the projected bloch like functions are not orthonormal"
+		
 		!
 		return
 	end subroutine

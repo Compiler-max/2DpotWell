@@ -65,23 +65,32 @@ module wannGen
 	end subroutine
 		
 
-	subroutine genWannF(qi, bWf, wnF)
+	subroutine genWannF(bWf, wnF)
 		! generates wannier functions from (projected) bloch wavefunctions
 		!
-		integer,		intent(in)		:: qi
-		complex(dp), 	intent(in)  	:: bWf(:,:) ! lobWf(nRpts,nWfs)	
+		complex(dp), 	intent(in)  	:: bWf(:,:,:) ! lobWf(nRpts,nWfs, nQ)	
 		complex(dp), 	intent(inout) 	:: wnF(:,:,:) ! wnF( 	nR, nSC, nWfs		)	
-		integer 				 :: n,xi,Ri
-		real(dp)				 :: cellP
+		integer 						:: n, Ri, xi, qi
+		real(dp)						:: cellP
 		!
+		
+		!$OMP PARALLEL DO COLLAPSE(3)&
+		!$OMP& SCHEDULE(STATIC) &
+		!$OMP& DEFAULT(SHARED), PRIVATE(n,xi,Ri,qi,cellP) 
 		do n = 1, nWfs
 			do Ri = 1, nSC
-				cellP = -1.0_dp * dot_product(	qpts(:,qi) , Rcell(:,Ri)	) 
-				do xi = 1, nR		
-						wnF(xi,Ri,n) = wnF(xi,Ri,n) + bWf(xi,n) * myExp(cellP) / real(nK,dp)
+				do xi = 1, nR
+					!ft sequential:
+					do qi = 1, nQ	
+						cellP = -1.0_dp * dot_product(	qpts(:,qi) , Rcell(:,Ri)	) 	
+						wnF(xi,Ri,n) = wnF(xi,Ri,n) + bWf(xi,n,qi) * myExp(cellP) / real(nK,dp)
+					end do
+					!
 				end do
 			end do
 		end do
+		!$OMP END PARALLEL DO
+		!
 		!
 		return
 	end subroutine
