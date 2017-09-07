@@ -1,5 +1,6 @@
 program main
 	!TWO dimensional potential well code
+	use omp_lib
 	use mathematics, 	only: 		dp, PI_dp, acc, eigSolver
 
 	use sysPara
@@ -63,8 +64,20 @@ program main
 	call cpu_time(aT1)
 	aT = aT1 - aT0
 
+
+
+	write(*,*)"[main]: openMP thread introdcution: nthreads=",OMP_GET_NUM_THREADS()
+	!$OMP PARALLEL
+		write(*,*)"[main]: HELLO THERE from id=", OMP_GET_THREAD_NUM()," nthreads=",OMP_GET_NUM_THREADS()
+	!$OMP END PARALLEL
+
+
 	
 	!SOLVE ELECTRONIC STRUCTURE & GENERATE THE WANNIER FUNCTIONS ON THE FLY
+	write(*,*)"*"
+	write(*,*)"*"
+	write(*,*)"*"
+	write(*,*)"*"
 	write(*,*)"[main]:**************************ELECTRONIC STRUCTURE PART*************************"
 	call cpu_time(kT0)
 	!
@@ -74,7 +87,7 @@ program main
 	if( isKperiodic(unk)	 /= 0 ) then
 		write(*,*)	"[main]: problem with unk gauge, wave functions are NOT periodic in k space"
 	end if
-	
+	!
 	call cpu_time(kT1)
 	write(*,*)"[main]: done solving Schroedinger eq."
 	kT = kT1-kT0
@@ -83,9 +96,8 @@ program main
 
 
 
-
 	
-	!!WANNIER CENTERS & POLARIZATION
+	!WANNIER CENTERS & POLARIZATION
 	write(*,*)"*"
 	write(*,*)"*"
 	write(*,*)"*"

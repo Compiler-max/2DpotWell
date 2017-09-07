@@ -1,6 +1,7 @@
 module berry
 	!module contains methods related to the Berry phase theory of modern polarization
 	!	i.e. calculation of connection, velocities, curvatures and polarization
+	use omp_lib
 	use mathematics,	only:	dp, PI_dp, i_dp, acc, myExp, myLeviCivita, nIntegrate
 	use sysPara
 	implicit none
@@ -111,9 +112,9 @@ module berry
 		!	via integration k space
 		complex(dp),	intent(in)		:: unk(:,:,:)
 		complex(dp),	intent(out)		:: Hw(:,:,:), Hwa(:,:,:,:), Aw(:,:,:,:), Fw(:,:,:,:,:)		!Hw(nKi, nWfs, nWfs)
-		complex(dp)						:: Hnmq, qphase
+		complex(dp)						:: Hnmq, qphase, HwTmp, HwaTmp, AwTmp, FwTmp
 		real(dp),	allocatable		:: AwCoarse(:,:,:,:)
-		integer							:: m, n, ki, qi, R, a,b
+		integer							:: m, n, ki, qi, R, a,b, myID, nThreads, chunk
 		!
 		allocate(	AwCoarse(3,nQ,nWfs, nWfs)	)
 		call calcConnOnCoarse(unk, AwCoarse)
@@ -123,10 +124,19 @@ module berry
 		Aw	= dcmplx(0.0_dp)
 		Fw	= dcmplx(0.0_dp)
 		!
+
+		
+		!myID	= OMP_GET_THREAD_NUM()
+		!nThreads= OMP_GET_NUM_THREADS()
+		!write(*,'(a,i3,a,i3,a)')	"[calcWaveMat]: hello from omp thread ",myID,"of ",nThreads," threads"
+		
+		!
+
+		!$OMP PARALLEL DO SCHEDULE(STATIC) COLLAPSE(3) DEFAULT(SHARED) PRIVATE(m, n, ki, R, qi, Hnmq, qphase)
 		do m = 1, nWfs
 			do n =  1, nWfs
-				do ki = 1, nK
-					!SUM OVER CELLS & COARSE K MESH
+				do ki = 1, nK	
+					!SUM OVER CELLS & COARSE K MESH (SEQUENTIAL)
 					do R = 1, nSC
 						do qi = 1, nQ
 							qphase			= myExp( 	dot_product(	kpts(:,ki) - qpts(:,qi)	, Rcell(:,R)	)		)	
@@ -145,9 +155,12 @@ module berry
 						end do	
 					end do
 					!
+					myID	= OMP_GET_THREAD_NUM()
+					write(*,'(a,i3,a,i3,a,i3,a,i3)')		"[calcWaveMat,id=",myID,"]: I did m=",m," n=",n," ki=",ki
 				end do
 			end do
 		end do
+		!$OMP END PARALLEL DO
 		!
 		!
 		return

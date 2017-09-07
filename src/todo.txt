@@ -18,7 +18,8 @@ today toDo:
 
 
 
-
+	working compiler command for omp:
+			 ifort -mkl -qopenmp src/*.f90 thirdparty/config_fortran/m_config.f90 thirdparty/quadpack/intlib.f90 -o bin/a.out
 
 todo:
 	
