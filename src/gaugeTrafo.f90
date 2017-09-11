@@ -47,6 +47,15 @@ module gaugeTrafo
 		!
 		!
 		call cpu_time(Pt0)
+
+		!select case(gaugeBack)
+		!	case(0)
+		!		call copyMat(Hw, Hwa, Aw, Fw, Ah, FhTens, Vh, EnH)
+		!	case(1)
+!
+!		!	case(default)
+!
+		!end select
 		call shiftToHamGauge(Hw, Hwa, Aw, Fw, Ah, FhTens, Vh, EnH)
 		call cpu_time(Pt1)
 		Pt	= Pt1-Pt0
@@ -75,6 +84,14 @@ module gaugeTrafo
 		return
 	end subroutine
 
+
+	subroutine copyMat(Hw, Hwa, Aw, Fw, Ah, FhTens, Vh, EnH)
+		complex(dp),	intent(in)		:: Hw(:,:,:), Hwa(:,:,:,:), Aw(:,:,:,:), Fw(:,:,:,:,:)
+		complex(dp),	intent(out)		:: Ah(:,:,:,:), Fhtens(:,:,:,:,:), Vh(:,:,:,:), EnH(:,:)
+
+		!todo
+		return
+	end
 
 
 	subroutine testIfReal(Ah, Fh)
@@ -217,7 +234,7 @@ module gaugeTrafo
 		real(dp),		intent(out)		:: En(:,:)			!EnH(ki, nWfs)
 		!
 		!COPY Hw to U 							
-		if (	size(U,1)==size(Hw,1) .and. size(U,2)==size(Hw,2)	) then
+		if (	size(U,1)==size(Hw,2) .and. size(U,2)==size(Hw,3)	) then
 			U = Hw(ki,:,:)
 		else
 			U = dcmplx(0.0_dp)

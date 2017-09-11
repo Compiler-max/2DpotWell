@@ -273,7 +273,7 @@ module mathematics
 		!
 		isIdentity 	= .true.
 		!
-		if(size(I,n) /= size(I,m) ) then
+		if(size(I,1) /= size(I,2) ) then
 			write(*,*)"[isIdentity]: ERROR - only implemented for square matrices"
 			isIdentity = .false.
 		else
@@ -418,7 +418,7 @@ module mathematics
 		allocate(	fy(nRy)		)
 		fy = 0.0_dp
 		!
-		!X INTEGRATION
+		!X INTEGRATION (fill fy array)
 		do yI = 1, nRy
 			min = (yI-1) * nRx + 1
 			max = (yI-1) * nRx + nRx
@@ -431,6 +431,18 @@ module mathematics
 		!
 		return
 	end function
+
+	!real(dp) function nIntegrateREAL(nR, nRx,nRy, dx,dy, f)
+	!	!2D integration routine
+	!		!integrates for each y point integrate over whole x direction
+	!	integer,		intent(in)		:: nR, nRx, nRy
+	!	real(dp),		intent(in)		:: dx, dy
+	!	real(dp),		intent(in)		:: f(:)				!f(nR)
+	!	!
+	!	nIntegrateREAL = sum( f(:) ) / real(size(f),dp)
+	!	!
+	!	return
+	!end function
 
 
 	function crossPreal(a,b)

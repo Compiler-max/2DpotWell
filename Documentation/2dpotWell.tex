@@ -1,0 +1,228 @@
+\documentclass{scrreprt}
+%\documentclass[a4paper,10pt]{scrartcl}
+
+\usepackage[utf8]{inputenc}
+\usepackage{graphicx}
+\usepackage{listings}      
+\usepackage{subcaption}
+\usepackage{bm}
+\usepackage{braket}
+\usepackage{amsmath}
+\usepackage{mathtools}
+\usepackage{color} %colored text
+\usepackage{empheq} %box around multiple equations 
+
+
+%my additional commands
+\newcommand*\widefbox[1]{\fbox{\hspace{2em}#1\hspace{2em}}} %needed for the multi equation box 
+\newcommand{\todo}[1]{\textcolor{red}{[ToDo: #1]} }
+
+
+%additional math commands
+\newcommand{\pder}[2]{\frac{\partial#1}{\partial#2}}
+\newcommand{\tder}[2]{\frac{\text{d}#1}{\text{d}#2}}
+\newcommand{\tpder}[2]{\tfrac{\partial#1}{\partial#2}}
+\newcommand{\ttder}[2]{\tfrac{\text{d}#1}{\text{d}#2}}
+
+
+\pdfinfo{%
+  /Title    (semiclassical approach)
+  /Author   (Maximilian Merte)
+  /Creator  ()
+  /Producer ()
+  /Subject  ()
+  /Keywords ()
+}
+
+\begin{document}
+\begin{flushright}
+FZ Juelich,\today \\
+\bigskip
+\end{flushright}
+\begin{flushleft}
+ {\huge 2D potential well code}\\
+ \bigskip
+ \bigskip
+ by Maximilian Merte \\
+ Matr.-Nr.: 363285 \\
+\bigskip
+\bigskip
+\end{flushleft}
+
+
+\tableofcontents
+
+\chapter{Introduction}
+
+
+blablabla
+
+
+\chapter{code documentation}
+
+\section{input file}
+
+\section{Hamiltonian}
+
+\section{Wannier functions \& centers}
+
+
+
+\section{connection \& curvature}
+Due to the projections of the wavefunctions on the trial orbitals, the obtained Bloch like wavefunctions and the Wannier functions have a 
+different choice of gauge compared to the original wavefunctions. Quantities "in the Wannier gauge" are denoted with a superscript (W) and in the original gauge, the Hamiltonian gauge, with superscript (H). The following subsection describes how to transform Berry connection, curvature and the velocity matrix from the Wannier gauge back to the Hamiltonian gauge. After that two methods are presented how to calculate the inital Wannier gauge quantities.
+
+
+
+
+
+
+
+
+\subsection{From Wannier to Hamiltonian gauge}
+The unitary matrix $U$ which transforms from Wannier to Hamiltonian gauge is obtained by diagonalizing the Hamiltonian matrix in Wannier gauge
+\begin{equation}
+  U^\dagger (\mathbf{k}) H^{(W)} (\mathbf{k})  U (\mathbf{k}) = H^{(H)} (\mathbf{k})
+\end{equation}
+where
+\begin{equation}
+  H^{(W)} (\mathbf{k})  = \bra{ u^{(W)}_{ n\mathbf{k} } } \hat{H}(\mathbf{k}) \ket{ u^{(W)}_{ m\mathbf{k} }  }.
+\end{equation}
+For any matrix $O$ it is defined
+\begin{equation}
+  \bar{O}^{(H)} = U^\dagger O^{(W)} U,
+\end{equation}
+for gauge covariant matrices the following holds \cite{wang2006}
+\begin{equation}
+    \bar{O}^{(H)} = O^{(H)}.
+\end{equation}
+With these definitions the desired matrices in Hamiltonian gauge can be calculated as following.
+The connection is given by
+\begin{align}
+A^{(H)}_\alpha &= U^\dagger A^{(W)}_\alpha U + i U^\dagger \partial_\alpha U  \nonumber \\
+            &= \bar{A}^{(H)}_\alpha + i D^{(H)}_\alpha,
+\end{align}
+where $D^{(H)}_\alpha$ is defined as
+\begin{equation}
+  D^{(H)}_{nm,\alpha} \equiv (U^\dagger  \partial_\alpha U)_{nm} = \begin{Bmatrix}
+ \tfrac{\bar{H}^{(H)}_{nm,\alpha} }{\epsilon^{(H)}_m -\epsilon^{(H)}_n } & \text{if } n \neq m\\
+ 0 & \text{if } n = m
+\end{Bmatrix}
+\end{equation}
+
+The curvature
+\begin{equation}
+  \Omega^{(H)}_{\alpha \beta} = \bar{\Omega}^{(H)}_{\alpha \beta} - [D^{(H)}_\alpha,\bar{A}^{(H)}_\beta] + [D^{(H)}_\beta, \bar{A}^{(H)}_\alpha ] -i [D^{(H)}_\alpha , D^{(H)}_\beta]
+\end{equation}
+And the velocities
+\begin{equation}
+  v^{(H)}_{nm, \alpha} = \tfrac{1}{\hbar} \bar{H}^{(H)}_{nm, \alpha} - \tfrac{i}{\hbar} (\epsilon^{(H)}_m -\epsilon^{(H)}_n) \bar{A}^{(H)}_{nm, \alpha}
+\end{equation}
+
+The following two sections present methods for calculating the Wannier gauge matrices $H^{(W)}$, $H^{(W)}_\alpha$, $A^{(W)}_\alpha$, $\Omega^{(W)}_{\alpha \beta}$.
+
+
+
+
+
+
+
+
+
+
+
+\subsection{Real space method}
+Here the constructed Wannier functions $\ket{\mathbf{R}n}$ are used to calculate the four matrices
+\begin{align}
+  H^{(W)}_{nm} (\mathbf{k}) &= \sum_{\mathbf{k}} e^{i \mathbf{k} \cdot \mathbf{R}} \bra{\mathbf{0}n} \hat{H} (\mathbf{k}) \ket{\mathbf{R}m} \\
+  H^{(W)}_{nm, \alpha} (\mathbf{k}) &= \sum_{\mathbf{k}} e^{i \mathbf{k} \cdot \mathbf{R}} i R_\alpha \bra{\mathbf{0}n} \hat{H} (\mathbf{k}) \ket{\mathbf{R}m} \\
+  A^{(W)}_{nm, \alpha} (\mathbf{k}) &= \sum_{\mathbf{k}} e^{i \mathbf{k} \cdot \mathbf{R}}  \bra{\mathbf{0}n} \hat{r}_\alpha  \ket{\mathbf{R}m} \\
+  \Omega^{(W)}_{nm, \alpha \beta} (\mathbf{k}) &= \sum_{\mathbf{k}} e^{i \mathbf{k} \cdot \mathbf{R}} ( i R_\alpha \bra{\mathbf{0}n} \hat{r}_\beta  \ket{\mathbf{R}m} -  i R_\beta \bra{\mathbf{0}n} \hat{r}_\alpha  \ket{\mathbf{R}m} ).
+  \label{eq:FThamGauge}
+\end{align}
+Note that it is possible to evaluate this on any k point mesh $\mathbf{k}$, allowing to use a fine mesh without raising computational effort significantly. To calculate the expectation values of the Wannier functions, integrations over the whole real space, i.e. all unit cells, has to be performed. Opposed to that is the k space method described in the next section.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\subsection{k space method}
+Here one evaluates $H^{(W)}(\mathbf{q})$ and $A^{(W)}_\alpha (\mathbf{q})$  on the initial k point set $\mathbf{q}$ used to solve the electronic structure problem. 
+The Hamiltonian matrix is given by calculating the expecation value of the Hamilton operator using the Bloch like wavefunctions. For the connection the following finite difference formula is used \cite{wang2006}
+\begin{equation}
+  A^{(W)}_{nm,\alpha}(\mathbf{q}) \simeq i \sum_\mathbf{b} w_b b_\alpha ( \bra{u^{(W)}_{n\mathbf{q}}} \ket{u^{(W)}_{m,\mathbf{q}+\mathbf{b}}} - \delta_{nm})
+\end{equation}
+
+TODO write second possible formula for A aswell
+
+The Fourier transform of these quantities 
+\begin{align}
+  \bra{\mathbf{0}n} \hat{H}  \ket{\mathbf{R}m} &= \tfrac{1}{N_q} \sum_\mathbf{q} e^{-i \mathbf{q} \cdot \mathbf{R} } H^{(W)}_{nm}(\mathbf{q}) \\
+  \bra{\mathbf{0}n} \hat{r}_\alpha  \ket{\mathbf{R}m} &= \tfrac{1}{N_q} \sum_\mathbf{q} e^{-i \mathbf{q} \cdot \mathbf{R} } A^{(W)}_{nm,\alpha}(\mathbf{q}),
+\end{align}
+can the be used in \ref{eq:FThamGauge}.
+
+
+
+
+
+\newpage
+\section{electric polarization}
+The code calculates the electric polarization via two different methods.
+The first method is by summing up the Wannier centers $\mathbf{r}_n = \bra{\mathbf{0}n} \mathbf{r}  \ket{\mathbf{0}n} $ \cite{todo}
+\begin{equation}
+  \mathbf{P}_{\text{el}} = \tfrac{e}{V} \sum_n \mathbf{r}_n,
+\end{equation}
+which is again a real space method. In k space the polarization can be calculated by integrating the Berry connection over the first Brillouin zone \cite{todo2}
+\begin{equation}
+  \mathbf{P}_{\text{el}} = \tfrac{e}{(2\pi)^2} = \sum_n \int_{\text{BZ}} d\mathbf{k} \bra{u_{n\mathbf{k}} } i \nabla_{\mathbf{k}} \ket{u_{n\mathbf{k}} }.
+\end{equation}
+
+First order polarization due to an external magnetic field are the calculated via an semiclassical wavepacket approach and via Peierls substituion.
+\subsection{semiclassic first order polarization}
+
+
+\subsection{Peierls substitution}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+%BIB
+\bibliographystyle{unsrt}
+\bibliography{myBib}
+
+
+
+
+\end{document}

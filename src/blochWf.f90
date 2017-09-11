@@ -1,12 +1,12 @@
 module blochWf
 	!generates bloch and lattice periodidc functions given a basCoeff matrix
-	use mathematics,	only:	dp, PI_dp,i_dp, myExp, myLeviCivita, eigSolver, nIntegrate
+	use mathematics,	only:	dp, PI_dp,i_dp, acc, myExp, myLeviCivita, eigSolver, nIntegrate
 	use sysPara
 
 	implicit none
 
 	private
-	public	::	genBlochWf, calcVeloBwf, genUnk
+	public	::	genBlochWf, calcVeloBwf, genUnk, testNormal
 
 
 	contains
@@ -80,14 +80,14 @@ module blochWf
 		! generates the lattice periodic part from given bloch wave functions
 		integer,		intent(in)		:: qi
 		complex(dp),	intent(in)		:: bWf(:,:) !lobWf(	nR, nWfs)
-		complex(dp),	intent(out)		:: unk(:,:)   !unk(	nR, nWfs)
+		complex(dp),	intent(out)		:: unk(:,:,:)   !unk(	nR, nWfs)
 		integer							:: xi, n
 		complex(dp)						:: phase
 		!
 		do n = 1, nWfs
 			do xi = 1, nR
 				phase = myExp( -1.0_dp 	*	 dot_product( qpts(:,qi) , rpts(:,xi)	) 			)
-				unk(xi,n) = phase * bWf(xi,n)
+				unk(xi,qi,n) = phase * bWf(xi,n)
 			end do
 		end do
 		!
@@ -95,6 +95,58 @@ module blochWf
 	end subroutine
 
 
+	subroutine testNormal(bwf)
+		! <Y_nk1|Y_mk2> = N * \delta_n,m * \delta_k1,k2
+		complex(dp),	intent(in)		:: bwf(:,:,:)
+		complex(dp),	allocatable		:: f(:)
+		integer							:: ri, q1,q2, n,m, count, tot
+		complex(dp)						:: oLap
+		real(dp)						:: avg
+		!
+		allocate(	f(nR)	)
+		!
+		count	= 0
+		avg		= 0.0_dp
+		tot		= 0
+		!
+		do m = 1, nG
+			do n = 1, nG
+				do q1 = 1, nG
+					do q2 = 1, nG
+						!FILL INTEGRATION ARRAY
+						do ri = 1, nR
+							f(ri)	= dconjg(bwf(ri,q1,n)) * bwf(ri,q2,m)
+						end do
+						oLap	= nIntegrate(nR, nRx,nRy, dx,dy, f)
+						!CHECK CONDITION
+						if( dimag(oLap) > acc ) then
+							count	= count + 1
+							avg		= avg	+ abs(dreal(oLap)-nSC)
+						else
+							if(n==m .and. q1==q2) then
+								if(abs(dreal(oLap)-nSC) > acc )then
+									count	= count + 1
+									avg		= avg	+ abs(dreal(oLap)-nSC)
+								end if
+							else
+								if(abs(dreal(oLap)) > acc )then
+									count	= count + 1
+									avg		= avg	+ abs(dreal(oLap)-nSC)
+								end if
+							end if
+						end if
+						!
+						!
+						tot	= tot + 1
+					end do
+				end do
+			end do
+		end do
+		avg	= avg / real(tot,dp)
+		write(*,*)"[testNormal]: found ",count," points of ",tot," not normalized bwfs, avg diff=",avg
+
+		return
+	end subroutine
 
 
 

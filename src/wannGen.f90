@@ -78,7 +78,7 @@ module wannGen
 			do Ri = 1, nSC
 				cellP = -1.0_dp * dot_product(	qpts(:,qi) , Rcell(:,Ri)	) 	
 				do xi = 1, nR
-						wnF(xi,Ri,n) = wnF(xi,Ri,n) + bWf(xi,n) * myExp(cellP) / real(nK,dp)
+						wnF(xi,Ri,n) = wnF(xi,Ri,n) + bWf(xi,n) * myExp(cellP) / real(nQ,dp)
 				end do
 			end do
 		end do
@@ -264,8 +264,8 @@ module wannGen
 			do ri = 1, nR
 				f(ri) = dconjg( lobWf(ri,n) ) * lobWf(ri,n)
 			end do
-			oLap 		= nIntegrate(nR, nRx, nRy, dx, dy, f)
-			oLap			= oLap / dcmplx( nSC	)
+			oLap	= nIntegrate(nR, nRx, nRy, dx, dy, f)
+			oLap	= oLap / dcmplx( nSC	)
 			!CHECK CONDITIONS
 			realist 	= abs(			abs(dreal(oLap))		-		1.0_dp		) 	> acc
 			imaginist	= abs(			dimag(oLap)								)	> acc

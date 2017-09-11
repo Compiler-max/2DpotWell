@@ -8,7 +8,7 @@ module wannier
 	implicit none
 
 	private
-	public :: isNormal, calcWcent, calcWsprd, genTBham, genUnkW, calcWannMat
+	public :: isNormal, isReal, calcWcent, calcWsprd, genTBham, genUnkW, calcWannMat
 
 	contains
 
@@ -118,6 +118,35 @@ module wannier
 		!
 		return
 	end function
+
+
+	subroutine isReal(wnF)
+		complex(dp),	intent(in)		:: wnF(:,:,:)
+		integer							:: ri, R, n, count, tot
+		real(dp)						:: avg
+		!
+		count	= 0
+		avg		= 0.0_dp
+		tot 	= 0
+		!
+		do n = 1, nWfs
+			do R = 1, nSC
+				do ri = 1, nR
+					if(	abs(dimag(wnF(ri,R,n))) > acc  ) then
+						count 	= count + 1 
+						avg 	= avg + abs(dimag(wnF(ri,R,n)))
+					end if
+					tot	= tot + 1
+				end do
+			end do
+		end do
+		!
+		write(*,'(a,i7,a,i8,a,f16.12)')	"[isReal]: ",count," of ",tot,&
+										" tested Wannier function grid points had non zero imaginary part; avgerage diff=",avg
+		!
+		!
+		return
+	end subroutine
 
 
 
@@ -275,7 +304,7 @@ module wannier
 					end do
 					!
 					myID	= OMP_GET_THREAD_NUM()
-					write(*,'(a,i3,a,i3,a,i3,a,i3)')		"[calcWaveMat,id=",myID,"]: I did m=",m," n=",n," ki=",ki
+					write(*,'(a,i3,a,i3,a,i3,a,i3)')		"[calcWannMat,id=",myID,"]: I did m=",m," n=",n," ki=",ki
 				end do
 			end do
 		end do
@@ -419,7 +448,7 @@ module wannier
 		!
 		do xi = 1, nR	 
 			if(dimag( dconjg(wnF(xi,R1,n)) * wnF(xi,R2,m)) > acc  ) then
-				write(*,*)"[wXw]: waning wnf overlap not strictly real =",dimag( dconjg(wnF(xi,R1,n)) * wnF(xi,R2,m)	)
+				!write(*,*)"[wXw]: waning wnf overlap not strictly real =",dimag( dconjg(wnF(xi,R1,n)) * wnF(xi,R2,m)	)
 			end if
 			fx(xi)	=  rpts(1,xi)		*	dreal( dconjg(wnF(xi,R1,n)) * wnF(xi,R2,m)  )
 			fy(xi)	=  rpts(2,xi)		*	dreal( dconjg(wnF(xi,R1,n)) * wnF(xi,R2,m)  )

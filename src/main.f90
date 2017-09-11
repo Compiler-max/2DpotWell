@@ -5,8 +5,8 @@ program main
 
 	use sysPara
 	use potWellModel, 	only: 		solveHam
-	use berry,			only:		isKperiodic!, calcCurv, calcVeloMat 
-	use wannier,	 	only: 		isNormal, calcWcent, calcWsprd, genUnkW 	
+	use berry,			only:		isKperiodic, calcConnOnCoarse, calcVeloMat, calcCurv 
+	use wannier,	 	only: 		isNormal, isReal, calcWcent, calcWsprd, genUnkW 	
 	use gaugeTrafo,		only:		calcConnCurv,  testIfReal
 	use polarization,	only:		calcPolWannCent, calcPolViaA
 	use semiclassics,	only:		calcFirstOrdP
@@ -20,11 +20,11 @@ program main
 
 	
     real(dp), 		allocatable,	dimension(:,:)		:: 	wCent, wSprd
-    real(dp),		allocatable,	dimension(:,:,:)	::	Fcurv
     complex(dp),	allocatable,	dimension(:,:,:)	:: 	wnF, unk, Uh, Aint, veloBwf, bWf !, ukn basCoeff,
-    complex(dp),	allocatable,	dimension(:,:,:,:)	::	Velo, Ah, Fh, Vh
-    real(dp),		allocatable,	dimension(:,:)		:: 	En, EnH
-    real(dp),		allocatable,	dimension(:,:,:,:)	::	Aconn
+    complex(dp),	allocatable,	dimension(:,:,:,:)	::	vW,Velo, Ah, Fh, Vh
+    real(dp),		allocatable,	dimension(:,:)		:: 	EnW, EnH
+    real(dp),		allocatable,	dimension(:,:,:)	::	Fw
+    real(dp),		allocatable,	dimension(:,:,:,:)	::	Aw
     real(dp) 											:: 	pEl(2), pIon(2), pTot(2), pElViaA(2), pInt(2), pNiu(3), pPei(3)
     real												:: 	mastT0,mastT1,mastT,aT0,aT1,aT,kT0,kT1,kT,wT0,wT1,wT, oT0, oT1, oT,&
     														wI0, wI1, wI, scT0, scT1, scT, peiT, peiT0, peiT1
@@ -45,18 +45,26 @@ program main
 	allocate(			wnF( 		nR	, 	nSC		, nWfs		)				)
 	allocate(			wCent(		2	, 	nWfs				)				)
 	allocate(			wSprd(		2	, 	nWfs				)				)
+	
+
+	!coarse mesh quanties
+	allocate(			EnW(				nQ		, nWfs		)				)
+	allocate(			Aw(		3		,	nQ		, nWfs,nWfs	)				)
+	allocate(			vW(		3		,	nQ		, nWfs,nWfs	)				)
+	allocate(			FW(		3		,	nQ		, nWfs		)				)
+
 	!wannier interpolation arrays
-	allocate(			Ah(		3		,	nK		, nWfs, nWfs	)			)
-	allocate(			Fh(		3		,	nK		, nWfs, nWfs	)			)
-	allocate(			Vh(		3		,	nK		, nWfs, nWfs	)			)
-	allocate(			EnH(				nK		,	 nWfs		)			)
+	!allocate(			Ah(		3		,	nK		, nWfs, nWfs	)			)
+	!allocate(			Fh(		3		,	nK		, nWfs, nWfs	)			)
+	!allocate(			Vh(		3		,	nK		, nWfs, nWfs	)			)
+	!allocate(			EnH(				nK		,	 nWfs		)			)
 	
 	!
 	!allocate(			En(					nQ		,	nWfs		)			)
 	!allocate(			Uh(		nWfs	, 	nWfs	,	nQ		)			)
 	!allocate(			Aint(		2		,	nK		, nWfs	)				)
-	!allocate(			VeloBwf(	nR		,	nQ		, 2*nWfs)				)
-	!allocate(			Velo(		3		,	nQ		,nWfs, nwFs)			)
+	allocate(			VeloBwf(	nR		,	nQ		, 2*nWfs)				)
+	allocate(			Velo(		3		,	nQ		,nWfs, nwFs)			)
 	
 	write(*,*)"[main]: nK=",nK
 	write(*,*)"[main]: nQ=",nQ
@@ -82,7 +90,7 @@ program main
 	call cpu_time(kT0)
 	!
 	!
-	call solveHam(wnF, unk)
+	call solveHam(wnF, unk, EnW, VeloBwf)
 	!check boundary condition on unk files
 	if( isKperiodic(unk)	 /= 0 ) then
 		write(*,*)	"[main]: problem with unk gauge, wave functions are NOT periodic in k space"
@@ -97,12 +105,12 @@ program main
 
 
 	
-	!WANNIER CENTERS & POLARIZATION
+
 	write(*,*)"*"
 	write(*,*)"*"
 	write(*,*)"*"
 	write(*,*)"*"
-	write(*,*)"[main]:**************************WANNIER CENTERS & POLARIZATION*************************"
+	write(*,*)"[main]:**************************WANNIER FUNCTION METHOD*************************"
 	call cpu_time(wT0)
 	!
 	!
@@ -113,6 +121,7 @@ program main
 	!end if
 	!
 	write(*,'(a)')"[main]: note that wannier function normalization is not tested currently!"
+	!call isReal(wnF)
 	!
 	call calcWcent(wnF,	wCent)
 	call calcWsprd(wnF, wCent, wSprd)
@@ -125,7 +134,20 @@ program main
 
 
 
-
+	write(*,*)"*"
+	write(*,*)"*"
+	write(*,*)"*"
+	write(*,*)"*"
+	write(*,*)"[main]:**************************WAVEFUNCTION METHOD*************************"
+	!WAnnier gauge quantities
+	call cpu_time(wI0)
+	call calcConnOnCoarse(unk, Aw)
+	call calcPolViaA(Aw,pElViaA)
+	call calcVeloMat(unk, VeloBwf, Velo)
+	call calcCurv(EnW, Velo, Fw)
+	call cpu_time(wI1)
+	write(*,*)"[main]: done with wavefunction method "
+	wI	= wI1 - wI0
 
 
 	!write(*,*)"*"
@@ -142,22 +164,22 @@ program main
 	!write(*,*)"[main]: done with wannier interpolation"
 	!wI	= wI1 - wI0
 !
+!
 
 
 
 
 
-
-	!write(*,*)"*"
-	!write(*,*)"*"
-	!write(*,*)"*"
-	!write(*,*)"*"
-	!write(*,*)"[main]:**************************SEMICLASSICS*************************"
-	!call cpu_time(scT0)
-	!call calcFirstOrdP(dreal(Fh), dreal(Ah), Vh, EnH, pNiu)
-	!call cpu_time(scT1)
-	!write(*,*)"[main]: done with first order polarization calculation"
-	!scT	= scT1 - scT0
+	write(*,*)"*"
+	write(*,*)"*"
+	write(*,*)"*"
+	write(*,*)"*"
+	write(*,*)"[main]:**************************SEMICLASSICS*************************"
+	call cpu_time(scT0)
+	call calcFirstOrdP(Fw, Aw, Velo, EnW, pNiu)
+	call cpu_time(scT1)
+	write(*,*)"[main]: done with first order polarization calculation"
+	scT	= scT1 - scT0
 
 
 
@@ -195,7 +217,7 @@ program main
 	call writeMeshInfo() 
 	call writeMeshBin()
 	write(*,*)"[main]: ...wrote mesh info"
-	call writeWaveFunc(unk, Aconn, Fcurv)
+	call writeWaveFunc(unk, Aw, Fw)
 	write(*,*)"[main]: ...wrote unks and connection"
 	call writeWannFiles(wnF, wCent, wSprd)			!call writeWannFiles(gnr, wnF, wCent, wSprd, Aconn, unkW)
 	write(*,*)"[main]: ...wrote wannier functions"

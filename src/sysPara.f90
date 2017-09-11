@@ -7,14 +7,14 @@ module sysPara
 	public :: 	readInp, insideAt, getRindex, getKindex, &
 				dim, aX, aY, vol, nAt, relXpos, relYpos, atRx, atRy, atPot,&
 				nG, nG0, Gcut, nQ, nQx, nQy, nKx, nKy, nK, nSC, nSCx, nSCy, nR, nRx, nRy, R0,  dx, dy, dqx, dqy, dkx, dky, &
-				gaugeSwitch, nWfs, connSwitch, &
+				gaugeSwitch, nWfs, connSwitch, gaugeBack, &
 				Gvec, atPos, atR, qpts, rpts, Rcell, kpts, trialOrbVAL, trialOrbSw, Zion, &
 				Bext
 
 
 	!
 	integer  										:: 	dim=2, nAt=0, nG=11, nG0,  nQx=1, nQy=1,nQ , nSCx=1, nSCy=1,& 
-														nKx=1, nKy=1, nK, connSwitch=0, &
+														nKx=1, nKy=1, nK, connSwitch=0, gaugeBack, &
 														nRx=10, nRy=10, nR, R0=1, nWfs=1, nSC, gaugeSwitch, trialOrbSw
 	real(dp) 										::	aX=0.0_dp, aY=0.0_dp,vol=0.0_dp, Gcut=2*PI_dp, thres,& 
 														dx, dy, dqx, dqy, dkx, dky, B0, Bext(3)											
@@ -71,6 +71,7 @@ module sysPara
 		call CFG_add_get(my_cfg,	"wann%nKx"			,	nKx			,	"# k x points of interpolation mesh"	)
 		call CFG_add_get(my_cfg,	"wann%nKy"			,	nKy			,	"# k x points of interpolation mesh"	)
 		call CFG_add_get(my_cfg,	"wann%connSwitch"	,	connSwitch	,	"connection via K or via R space"		)
+		call CFG_add_get(my_cfg,	"wann%gaugeBack"	,	gaugeBack	,	"switch for trafo: Wann to Ham gauge"	)
 		![perturbation]
 		call CFG_add_get(my_cfg,	"perturbation%B0"	,	B0			,	"scaling fact. of ext. magnetic field"	)
 		call CFG_add_get(my_cfg,	"perturbation%Bext"	,	Bext		,	"vector of ext. magnetic field"			)
@@ -291,6 +292,7 @@ module sysPara
 		return
 	end subroutine
 
+
 	subroutine popAtR()
 		!populates the atom radius vector
 		integer		:: at
@@ -306,12 +308,12 @@ module sysPara
 
 	subroutine calcRcell()
 		integer		:: nI, nJ, n
-
+		!
 		do nJ = 1, nSCy
 			do nI = 1, nSCx
 				n = (nJ-1) * nSCx + nI  !rI	=	(rIy-1) * nRy + rIx
-				Rcell(1,n)	= (nI-1) * aX
-				Rcell(2,n)	= (nJ-1) * aY
+				Rcell(1,n)	= real((nI-1),dp) * aX
+				Rcell(2,n)	= real((nJ-1),dp) * aY
 			end do
 		end do
 

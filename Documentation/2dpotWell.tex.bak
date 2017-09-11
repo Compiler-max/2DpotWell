@@ -1,0 +1,125 @@
+\documentclass{scrreprt}
+%\documentclass[a4paper,10pt]{scrartcl}
+
+\usepackage[utf8]{inputenc}
+\usepackage{graphicx}
+\usepackage{listings}      
+\usepackage{subcaption}
+\usepackage{bm}
+\usepackage{braket}
+\usepackage{amsmath}
+\usepackage{mathtools}
+\usepackage{color} %colored text
+\usepackage{empheq} %box around multiple equations 
+
+
+%my additional commands
+\newcommand*\widefbox[1]{\fbox{\hspace{2em}#1\hspace{2em}}} %needed for the multi equation box 
+\newcommand{\todo}[1]{\textcolor{red}{[ToDo: #1]} }
+
+
+%additional math commands
+\newcommand{\pder}[2]{\frac{\partial#1}{\partial#2}}
+\newcommand{\tder}[2]{\frac{\text{d}#1}{\text{d}#2}}
+\newcommand{\tpder}[2]{\tfrac{\partial#1}{\partial#2}}
+\newcommand{\ttder}[2]{\tfrac{\text{d}#1}{\text{d}#2}}
+
+
+\pdfinfo{%
+  /Title    (semiclassical approach)
+  /Author   (Maximilian Merte)
+  /Creator  ()
+  /Producer ()
+  /Subject  ()
+  /Keywords ()
+}
+
+\begin{document}
+\begin{flushright}
+FZ Juelich,\today \\
+\bigskip
+\end{flushright}
+\begin{flushleft}
+ {\huge 2D potential well code}\\
+ \bigskip
+ \bigskip
+ by Maximilian Merte \\
+ Matr.-Nr.: 363285 \\
+\bigskip
+\bigskip
+\end{flushleft}
+
+
+\tableofcontents
+
+\chapter{Introduction}
+
+
+blablabla
+
+
+\chapter{code documentation}
+
+\section{input file}
+
+\section{Hamiltonian}
+
+\section{Wannier functions \& centers}
+
+
+The connection is given by
+\begin{align}
+A^{(H)}_\alpha &= U^\dagger A^{(W)}_\alpha U + i U^\dagger \partial_\alpha U  \nonumber \\
+						&= \bar{A}^{(H)}_\alpha + i D^{(H)}_\alpha,
+\end{align}
+where $D^{(H)}_\alpha$ is defined as
+\begin{equation}
+	D^{(H)}_{nm,\alpha} \equiv (U^\dagger  \partial_\alpha U)_{nm} = 
+\end{equation}
+
+
+The curvature
+\begin{equation}
+	\Omega^{(H)}_{\alpha \beta} = \bar{\Omega}^{(H)}_{\alpha \beta} - [D^{(H)}_\alpha,\bar{A}^{(H)}_\beta] + [D^{(H)}_\beta, \bar{A}^{(H)}_\alpha ] -i [D^{(H)}_\alpha , D^{(H)}_\beta]
+\end{equation}
+And the velocities
+\begin{equation}
+	v^{(H)}_{nm, \alpha} = \tfrac{1}{\hbar} \bar{H}^{(H)}_{nm, \alpha} - \tfrac{i}{\hbar} (\epsilon^{(H)}_m -\epsilon^{(H)}_n) \bar{A}^{(H)}_{nm, \alpha}
+\end{equation}
+\section{connection \& curvature}
+
+\section{electric polarization}
+
+\section{semiclassic first order polarization}
+
+\section{Peierls substitution}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+%BIB
+\bibliographystyle{unsrt}
+\bibliography{myBib}
+
+
+
+
+\end{document}

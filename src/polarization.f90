@@ -66,12 +66,12 @@ use mathematics,	only:	dp, PI_dp, i_dp, acc, myExp, nIntegrate
 		!		=V/(2pi)**2 \integrate_BZ A(k)
 		real(dp),		intent(in)		:: A(:,:,:,:)			!A(2,	 nK, nWfs, nWfs	)	
 		real(dp),		intent(out)		:: pElA(:)
-		complex(dp)	,	allocatable		:: val(:)
+		real(dp)	,	allocatable		:: val(:)
 		real(dp)						:: machine
 		integer							:: n, ki
 		!
 		allocate(	val( size(A,1) )	)
-		val		= dcmplx(0.0_dp)
+		val		= 0.0_dp
 		pElA	= 0.0_dp
 		machine	= 1e-15_dp
 		!
@@ -83,15 +83,15 @@ use mathematics,	only:	dp, PI_dp, i_dp, acc, myExp, nIntegrate
 		end do
 		!
 		!NORMALIZE K INTEGRATION	
-		val		= val / real(size(A,2),dp)
+		pElA(:)	= val(:) / real(size(A,2),dp)
 		!
-		!HARVEST
-		pElA	= val / (aX*aY)
+		!!HARVEST
+		!pElA	= val / (aX*aY)
 		!
 		!DEBUGGING
-		if(		dimag( val(1) ) > machine 	.or. 	dimag( val(2) ) > machine		) then
-			write(*,*)"[calcPolViaA]: non zero imaginary part of polarization"
-		end if
+		!if(		dimag( val(1) ) > machine 	.or. 	dimag( val(2) ) > machine		) then
+		!	write(*,*)"[calcPolViaA]: non zero imaginary part of polarization"
+		!end if
 		return
 	end subroutine
 

@@ -1,5 +1,35 @@
 today toDo:
 	
+	
+
+
+	- raum buchen für vortrag
+
+	
+
+	- Rcell generation problem does not start with (0,0) at the moment
+	
+
+	- maybe try a manual gauging method aswell (different trial orbitals seem to change polarization direction completly) 
+	- seem like the trial orbital method is responsible for the shitty values
+	-> 	do a manual gauging !!!!!!!!!!!!!!!!!
+
+
+	- version without gauge trafo
+	- version without interpolation : 
+	- try niu and peierl with these quantities
+
+
+	-velocities via finite difference on unks
+	
+	- look at wb i.e. the weight of the coarse connection finite differnce approach
+
+
+	- look at UNKoverlap in berry.f90
+
+	
+
+
 
 	- Peierls substitution
 		-> after peierls is written, proably remove the blochWF.f90 module (move subroutines back to potWellModel)
@@ -11,9 +41,6 @@ today toDo:
 
 
 
-
-
-	- raum buchen für vortrag
 
 
 
@@ -29,9 +56,6 @@ todo:
 	
 
 	- plotting: mark atoms in the bwf and wnf plots
-
-	- git (online)
-	
 
 
 	-polarization:

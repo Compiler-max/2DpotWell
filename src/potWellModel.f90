@@ -2,9 +2,9 @@ module potWellModel
 	!this modules sets up the Hamiltonian matrix and solves it for each k point
 	!	in the process the wannier functions are generated aswell with routines from wannGen module
 	use omp_lib
-	use mathematics,	only:	dp, PI_dp,i_dp, machineP, myExp, myLeviCivita, eigSolver, nIntegrate, isHermitian
+	use mathematics,	only:	dp, PI_dp,i_dp, machineP, myExp, myLeviCivita, eigSolver, nIntegrate, isUnit, isHermitian
 	use sysPara
-	use blochWf,		only:	genBlochWf, calcVeloBwf, genUnk									
+	use blochWf,		only:	genBlochWf, calcVeloBwf, genUnk, testNormal									
 	use wannGen,		only:	projectBwf, genWannF
 	use output,			only:	printMat
 	implicit none	
@@ -21,32 +21,32 @@ module potWellModel
 
 	contains
 !public:
-	subroutine solveHam(wnF, unkW)
+	subroutine solveHam(wnF, unkW, En, veloBwf)
 		!solves Hamiltonian at each k point
 		!also generates the Wannier functions on the fly (sum over all k)
-		complex(dp),	intent(out)		::	wnF(:,:,:), unkW(:,:,:)!, veloBwf(:,:,:)		!Uh(  nWfs	, nWfs,		nK		)	
+		complex(dp),	intent(out)		::	wnF(:,:,:), unkW(:,:,:), veloBwf(:,:,:)		!Uh(  nWfs	, nWfs,		nK		)	
 																				!wnF( nR	, nSupC,	nWfs	)	
 																				!unkW(nR	, nKpts,	nWfs	)
 																				!veloBwf(nR,nK,2*nG)
-		!real(dp),		intent(out)		::	En(:,:)																	
-		complex(dp),	allocatable		::	Hmat(:,:), bWf(:,:,:), lobWf(:,:,:), gnr(:,:), U(:,:)
+		real(dp),		intent(out)		::	En(:,:)																	
+		complex(dp),	allocatable		::	Hmat(:,:), bWf(:,:,:), lobWf(:,:), gnr(:,:), U(:,:)
 		real(dp),		allocatable		::	EnT(:,:), bwfR(:,:,:), bwfI(:,:,:)	 
 		integer							:: 	qi, xi , n, failCount
 		real(dp)						::	kVal(2), smin, smax
 		!
 		allocate(	Hmat(	nG,	nG		)			)
 		allocate(	U(		nWfs, nWfs	)			)
-		allocate(	EnT(		nG,nQ	)			)	
+		allocate(	EnT(	nQ,	nG		)			)	
 		allocate(	bWf(	nR, nG, nQ	)			)
 		allocate(	bWfR(	nR, nG, nQ	)			)
 		allocate(	bWfI(	nR, nG, nQ	)			)
-		allocate(	lobWf(	nR, nWfs, nQ)			)
+		allocate(	lobWf(	nR, nWfs	)			)
 		allocate(	gnr(	nR,	nWfs	)			)
 		
 		wnF			=	dcmplx(0.0_dp)
 		bWf			=	dcmplx(0.0_dp)
 		unkW		=	dcmplx(0.0_dp)
-		!veloBwf		=	dcmplx(0.0_dp)
+		veloBwf		=	dcmplx(0.0_dp)
 		failCount	=	0
 		smin		=	1.0_dp
 		smax		= 	0.0_dp
@@ -59,23 +59,27 @@ module potWellModel
 			kVal	=	qpts(:,qi)
 			!
 			call populateH(kVal, Hmat)	
-			call eigSolver(Hmat, EnT(:,qi))
+			call eigSolver(Hmat, EnT(qi,:))
 			
-			!En(qi,:) = EnT(1:nWfs) 
+			if(.not. isUnit(Hmat)) then
+				write(*,*)"[solveHam]: base coefficients not unitary!"
+			end if
+			En(qi,:) = EnT(qi,1:nWfs) 
 			!
 			call gaugeCoeff(kVal, Hmat)
 			call genBlochWf(qi, Hmat, bWf(:,:,qi))		
-			!call calcVeloBwf(qi,Hmat, veloBwf)
+			call calcVeloBwf(qi,Hmat, veloBwf)
 			
 			!
-			call projectBwf(qi, bWf(:,:,qi), loBwf(:,:,qi), U, failCount, smin, smax)
-			call genWannF(qi, lobWf(:,:,qi), wnF)
-			call genUnk(qi, lobWf(:,:,qi), unkW(:, qi, :))
+			call projectBwf(qi, bWf(:,:,qi), loBwf, U, failCount, smin, smax)
+			call genWannF(qi, lobWf, wnF)
+			!call genUnk(qi, lobWf, unkW )
+			call genUnk(qi, bWf(:,:,qi), unkW)
 			!
 		end do
 
 
-		
+		call testNormal(bwf)
 		
 
 		open(unit=200, file='rawData/bandStruct.dat', form='unformatted', access='stream', action='write')
