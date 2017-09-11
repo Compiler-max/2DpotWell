@@ -5,6 +5,9 @@ today toDo:
 
 	- raum buchen für vortrag
 
+	- normalization of loBwf for different number of k points
+
+
 	
 
 	- Rcell generation problem does not start with (0,0) at the moment

@@ -282,11 +282,11 @@ module mathematics
 				n = 1
 				do while( n<= size(I,1) .and. isIdentity )
 					if(n == m) then 
-						if(  abs(abs(dreal(I(n,n)))-1.0_dp) > machineP  .or. abs(dimag(I(n,n))) > machineP	) then
+						if(  abs(abs(dreal(I(n,n)))-1.0_dp) > acc  .or. abs(dimag(I(n,n))) > acc	) then
 							isIdentity = .false. !set to false and ...
 						end if
 					else
-						if( abs(I(n,m)) > machineP ) then
+						if( abs(I(n,m)) > acc ) then
 							isIdentity = .false.
 						end if
 					end if

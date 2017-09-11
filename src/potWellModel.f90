@@ -29,13 +29,14 @@ module potWellModel
 																				!unkW(nR	, nKpts,	nWfs	)
 																				!veloBwf(nR,nK,2*nG)
 		real(dp),		intent(out)		::	En(:,:)																	
-		complex(dp),	allocatable		::	Hmat(:,:), bWf(:,:,:), lobWf(:,:), gnr(:,:), U(:,:)
+		complex(dp),	allocatable		::	Hmat(:,:), bWf(:,:,:), lobWf(:,:), gnr(:,:), U(:,:), I(:,:)
 		real(dp),		allocatable		::	EnT(:,:), bwfR(:,:,:), bwfI(:,:,:)	 
 		integer							:: 	qi, xi , n, failCount
 		real(dp)						::	kVal(2), smin, smax
 		!
 		allocate(	Hmat(	nG,	nG		)			)
 		allocate(	U(		nWfs, nWfs	)			)
+		allocate(	I(		nG,	nG		)			)
 		allocate(	EnT(	nQ,	nG		)			)	
 		allocate(	bWf(	nR, nG, nQ	)			)
 		allocate(	bWfR(	nR, nG, nQ	)			)
@@ -58,27 +59,30 @@ module potWellModel
 			!write(*,*)"[solveHam]: qi=",qi
 			kVal	=	qpts(:,qi)
 			!
-			call populateH(kVal, Hmat)	
+			call populateH(kVal, Hmat)
+			if(.not. isHermitian(Hmat)) then
+				write(*,*)"[solveHam]: Hamiltonian matrix not Hermitian!"
+			end if	
 			call eigSolver(Hmat, EnT(qi,:))
-			
-			if(.not. isUnit(Hmat)) then
+			En(qi,:) = EnT(qi,1:nWfs) 
+			if(.not. isUnit(Hmat)	) then
 				write(*,*)"[solveHam]: base coefficients not unitary!"
 			end if
-			En(qi,:) = EnT(qi,1:nWfs) 
+			
 			!
 			call gaugeCoeff(kVal, Hmat)
 			call genBlochWf(qi, Hmat, bWf(:,:,qi))		
 			call calcVeloBwf(qi,Hmat, veloBwf)
 			
 			!
-			call projectBwf(qi, bWf(:,:,qi), loBwf, U, failCount, smin, smax)
-			call genWannF(qi, lobWf, wnF)
+			!call projectBwf(qi, bWf(:,:,qi), loBwf, U, failCount, smin, smax)
+			!call genWannF(qi, lobWf, wnF)
 			!call genUnk(qi, lobWf, unkW )
 			call genUnk(qi, bWf(:,:,qi), unkW)
 			!
 		end do
 
-
+		write(*,*)"[solveHam]: test normalization of generated Bloch wavefunctions"
 		call testNormal(bwf)
 		
 

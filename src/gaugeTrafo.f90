@@ -91,7 +91,7 @@ module gaugeTrafo
 
 		!todo
 		return
-	end
+	end subroutine
 
 
 	subroutine testIfReal(Ah, Fh)

@@ -99,7 +99,6 @@ program main
 	call cpu_time(kT1)
 	write(*,*)"[main]: done solving Schroedinger eq."
 	kT = kT1-kT0
-
 	
 
 
@@ -131,6 +130,7 @@ program main
 	call cpu_time(wT1)
 	write(*,*)"[main]: done with center polarization calc"
 	wT 	= wT1 - wT0
+
 
 
 

@@ -109,6 +109,7 @@ module blochWf
 		avg		= 0.0_dp
 		tot		= 0
 		!
+		!$OMP PARALLEL DO SCHEDULE(STATIC) COLLAPSE(3) DEFAULT(SHARED) PRIVATE(m, n,q1, q2, ri,f, oLap) REDUCTION(+:avg,count, tot)
 		do m = 1, nG
 			do n = 1, nG
 				do q1 = 1, nG
@@ -142,6 +143,8 @@ module blochWf
 				end do
 			end do
 		end do
+		!OMP END PARALLEL DO
+
 		avg	= avg / real(tot,dp)
 		write(*,*)"[testNormal]: found ",count," points of ",tot," not normalized bwfs, avg diff=",avg
 
