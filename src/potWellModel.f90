@@ -183,12 +183,15 @@ module potWellModel
 
 		!
 		!DEBUGGING:
-		if ( .not.	isHermitian(Hmat)	) then
-			write(*,*)"[populateH]: Hamiltonian matrix is not Hermitian :"
-			call printMat(nG, Hmat)
-		else
+		!if ( .not.	isHermitian(Hmat)	) then
+		!	write(*,*)"[populateH]: Hamiltonian matrix is not Hermitian :"
+		!	call printMat(nG, Hmat)
+		!else
 			!write(*,*)"[populateH]: Hmat is hermitian"
-		end if
+		!end if
+		
+
+
 		return
 	end subroutine
 
