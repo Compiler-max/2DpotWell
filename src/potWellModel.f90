@@ -83,7 +83,7 @@ module potWellModel
 
 
 			!WANNIER FUNCTION
-			!$OMP PARALLEL DO SCHEDULE(STATIC) COLLAPSE(3) DEFAULT(SHARED) PRIVATE(qi, n, Ri, xi, phase) 
+			!$OMP PARALLEL DO SCHEDULE(STATIC) COLLAPSE(3) DEFAULT(SHARED) PRIVATE(n, Ri, xi, phase) 
 			do n = 1, nWfs
 				do Ri = 1, nSC
 					do xi = 1, nR
@@ -96,10 +96,10 @@ module potWellModel
 
 
 			!UNK
-			!$OMP PARALLEL DO SCHEDULE(STATIC) COLLAPSE(2) DEFAULT(SHARED) PRIVATE(qi, n, xi, phase) 
+			!$OMP PARALLEL DO SCHEDULE(STATIC) COLLAPSE(2) DEFAULT(SHARED) PRIVATE(n, xi, phase) 
 			do n = 1, nWfs
 				do xi = 1, nR
-					phase = myExp( -1.0_dp 	*	 dot_product( qpts(:,qi) , rpts(:,xi)	) 			)
+					phase		 = myExp( -1.0_dp 	*	 dot_product( qpts(:,qi) , rpts(:,xi)	) 			)
 					unk(xi,qi,n) = phase * bWf(xi,n,qi)
 				end do
 			end do
@@ -170,7 +170,7 @@ module potWellModel
 		!$OMP PARALLEL DO SCHEDULE(STATIC) COLLAPSE(2) DEFAULT(SHARED) PRIVATE(j, i, kg, onSite)
 		do j = 1, nG
 			do i = 1, nG
-				if(i == j )then
+				if(i .and. j )	then
 					kg(:) 	= q(:) + Gvec(:,i)
 					onSite	= 0.5_dp * 	( kg(1)**2 + kg(2)**2 )
 					Hmat(i,j)	=	V(i,j)	+	onSite
