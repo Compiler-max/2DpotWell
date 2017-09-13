@@ -151,19 +151,37 @@ module potWellModel
 
 !private:
 	!POPULATION OF H MATRIX
-	subroutine populateH(k, Hmat)
+	subroutine populateH(q, Hmat)
 		!populates the Hamiltonian matrix by adding 
 		!	1. qinetic energy terms
 		!	2. potential terms
 		!and checks if the resulting matrix is still hermitian( for debugging)
-		real(dp)   , intent(in)    :: k(2)
-		complex(dp), intent(inout) :: Hmat(:,:)
+		real(dp)   , intent(in)    	:: q(2)
+		complex(dp), intent(inout) 	:: Hmat(:,:)
+		real(dp)					:: kg(2)
+		complex(dp)					:: onSite
+		integer						:: i, j
 		!init to zero
 		Hmat = dcmplx(0.0_dp) 
 		!
 		!FEATURES:
-		call Hkin(k,Hmat) 
-		call Hpot( Hmat)
+		!call Hkin(k,Hmat) 
+		!call Hpot( Hmat)
+
+		!$OMP PARALLEL DO SCHEDULE(STATIC) COLLAPSE(2) DEFAULT(SHARED) PRIVATE(j, i, kg, onSite)
+		do j = 1, nG
+			do i = 1, nG
+				if(i == j )then
+					kg(:) 	= q(:) + Gvec(:,i)
+					onSite	= 0.5_dp * 	( kg(1)**2 + kg(2)**2 )
+					Hmat(i,j)	=	V(i,j)	+	onSite
+				else
+					Hmat(i,j)	=	V(i,j)
+				end if
+			end do
+		end do
+		!$OMP END PARALLEL DO
+
 		!
 		!DEBUGGING:
 		if ( .not.	isHermitian(Hmat)	) then
@@ -176,36 +194,36 @@ module potWellModel
 	end subroutine
 
 
-	subroutine Hkin(q, Hmat)
-		!add kinetic energy to Hamiltonian
-		real(dp)   , intent(in)	   :: q(2)
-		complex(dp), intent(inout) :: Hmat(:,:)
-		integer 				   :: i
-		real(dp)				   :: fact, kg(2)
-		fact = 0.5_dp	!hbar*hbar/(2*me) in a.u.
-		do i = 1, nG
-			kg(:) = q(:) + Gvec(:,i)
-			Hmat(i,i) = Hmat(i,i) +  dcmplx(	fact * dot_product(kg,kg) , 0.0_dp	) 
-		end do
-		return
-	end subroutine
+	!subroutine Hkin(q, Hmat)
+	!	!add kinetic energy to Hamiltonian
+	!	real(dp)   , intent(in)	   :: q(2)
+	!	complex(dp), intent(inout) :: Hmat(:,:)
+	!	integer 				   :: i
+	!	real(dp)				   :: fact, kg(2)
+	!	fact = 0.5_dp	!hbar*hbar/(2*me) in a.u.
+	!	do i = 1, nG
+	!		kg(:) = q(:) + Gvec(:,i)
+	!		Hmat(i,i) = Hmat(i,i) +  dcmplx(	fact * dot_product(kg,kg) , 0.0_dp	) 
+	!	end do
+	!	return
+	!end subroutine
 
 
-	subroutine Hpot( Hmat)
-		!Add potential to Hamiltonian
-		complex(dp) , intent(inout) :: Hmat(:,:)
-		integer 					:: i,j
-		complex(dp)					:: tmp
-		do i = 1,nG
-			do j = 1,nG
-				tmp			= V(i,j)
-				!write(*,'(a,i2,a,i2,a,f15.10,a,f15.10)')	"[Hpot]: V(",i,",",j,") =",dreal(tmp),"+i*",dimag(tmp)
-				Hmat(i,j)	= Hmat(i,j) + tmp
-			end do
-		end do
-		!
-		return
-	end subroutine
+	!subroutine Hpot( Hmat)
+	!	!Add potential to Hamiltonian
+	!	complex(dp) , intent(inout) :: Hmat(:,:)
+	!	integer 					:: i,j
+	!	complex(dp)					:: tmp
+	!	do i = 1,nG
+	!		do j = 1,nG
+	!			tmp			= V(i,j)
+	!			!write(*,'(a,i2,a,i2,a,f15.10,a,f15.10)')	"[Hpot]: V(",i,",",j,") =",dreal(tmp),"+i*",dimag(tmp)
+	!			Hmat(i,j)	= Hmat(i,j) + tmp
+	!		end do
+	!	end do
+	!	!
+	!	return
+	!end subroutine
 
 
 	complex(dp) function V(i,j)
