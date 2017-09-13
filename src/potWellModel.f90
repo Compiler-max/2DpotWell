@@ -83,12 +83,11 @@ module potWellModel
 
 
 			!WANNIER FUNCTION
-			!$OMP PARALLEL DO SCHEDULE(STATIC) COLLAPSE(2) DEFAULT(SHARED) PRIVATE(qi, n, Ri, xi, phase) 
+			!$OMP PARALLEL DO SCHEDULE(STATIC) COLLAPSE(3) DEFAULT(SHARED) PRIVATE(qi, n, Ri, xi, phase) 
 			do n = 1, nWfs
 				do Ri = 1, nSC
-					phase = myExp(	-1.0_dp * dot_product(	qpts(:,qi) , Rcell(:,Ri)	) 	 )
-					!
 					do xi = 1, nR
+						phase		 = myExp(	-1.0_dp * dot_product(	qpts(:,qi) , Rcell(:,Ri)	) 	 )
 						wnF(xi,Ri,n) = wnF(xi,Ri,n) + bWf(xi,n,qi) * phase / real(nQ,dp)
 					end do
 				end do
