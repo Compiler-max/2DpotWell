@@ -21,23 +21,24 @@ module potWellModel
 
 	contains
 !public:
-	subroutine solveHam(wnF, unkW, En, veloBwf)
+	subroutine solveHam(wnF, unk, En, veloBwf)   !call solveHam(wnF, unk, EnW, VeloBwf)
 		!solves Hamiltonian at each k point
 		!also generates the Wannier functions on the fly (sum over all k)
-		complex(dp),	intent(out)		::	wnF(:,:,:), unkW(:,:,:), veloBwf(:,:,:)		!Uh(  nWfs	, nWfs,		nK		)	
+		complex(dp),	intent(out)		::	wnF(:,:,:), unk(:,:,:), veloBwf(:,:,:)		
 																				!wnF( nR	, nSupC,	nWfs	)	
 																				!unkW(nR	, nKpts,	nWfs	)
 																				!veloBwf(nR,nK,2*nG)
 		real(dp),		intent(out)		::	En(:,:)																	
 		complex(dp),	allocatable		::	Hmat(:,:), bWf(:,:,:), lobWf(:,:), gnr(:,:), U(:,:), I(:,:)
-		real(dp),		allocatable		::	EnT(:,:), bwfR(:,:,:), bwfI(:,:,:)	 
-		integer							:: 	qi, xi , n, failCount
+		real(dp),		allocatable		::	EnT(:), bwfR(:,:,:), bwfI(:,:,:)	 
+		integer							:: 	qi, xi , n, Ri, failCount
 		real(dp)						::	kVal(2), smin, smax
+		complex(dp)						:: 	phase, wTemp
 		!
 		allocate(	Hmat(	nG,	nG		)			)
 		allocate(	U(		nWfs, nWfs	)			)
 		allocate(	I(		nG,	nG		)			)
-		allocate(	EnT(	nQ,	nG		)			)	
+		allocate(	EnT(	nG			)			)	
 		allocate(	bWf(	nR, nG, nQ	)			)
 		allocate(	bWfR(	nR, nG, nQ	)			)
 		allocate(	bWfI(	nR, nG, nQ	)			)
@@ -46,7 +47,7 @@ module potWellModel
 		
 		wnF			=	dcmplx(0.0_dp)
 		bWf			=	dcmplx(0.0_dp)
-		unkW		=	dcmplx(0.0_dp)
+		unk			=	dcmplx(0.0_dp)
 		veloBwf		=	dcmplx(0.0_dp)
 		failCount	=	0
 		smin		=	1.0_dp
@@ -54,54 +55,82 @@ module potWellModel
 		!
 		
 	
-		
+		!open(unit=200, file='rawData/bandStruct.dat', form='unformatted', access='stream', action='write')
 		do qi = 1, nQ
 			!write(*,*)"[solveHam]: qi=",qi
 			kVal	=	qpts(:,qi)
-			!
-			call populateH(kVal, Hmat)
-			if(.not. isHermitian(Hmat)) then
-				write(*,*)"[solveHam]: Hamiltonian matrix not Hermitian!"
-			end if	
-			call eigSolver(Hmat, EnT(qi,:))
-			En(qi,:) = EnT(qi,1:nWfs) 
-			if(.not. isUnit(Hmat)	) then
-				write(*,*)"[solveHam]: base coefficients not unitary!"
-			end if
 			
-			!
-			call gaugeCoeff(kVal, Hmat)
+			!ELECTRONIC STRUCTURE
+			call populateH(kVal, Hmat)
+			call eigSolver(Hmat, EnT)
+			!write(200) EnT
+			En(qi,:) = EnT(1:nWfs) 
+			!if(.not. isUnit(Hmat)	) then
+			!	write(*,*)"[solveHam]: base coefficients not unitary!"
+			!end if
+			
+			!BLOCH WAVEFUNCTIONS
+			!call gaugeCoeff(kVal, Hmat)
 			call genBlochWf(qi, Hmat, bWf(:,:,qi))		
 			call calcVeloBwf(qi,Hmat, veloBwf)
 			
-			!
+			!PROJECTION & WANNIER
 			!call projectBwf(qi, bWf(:,:,qi), loBwf, U, failCount, smin, smax)
 			!call genWannF(qi, lobWf, wnF)
 			!call genUnk(qi, lobWf, unkW )
-			call genUnk(qi, bWf(:,:,qi), unkW)
+			
+
+
+
+			!WANNIER FUNCTION
+			!$OMP PARALLEL DO SCHEDULE(STATIC) COLLAPSE(2) DEFAULT(SHARED) PRIVATE(qi, n, Ri, xi, phase) 
+			do n = 1, nWfs
+				do Ri = 1, nSC
+					phase = myExp(	-1.0_dp * dot_product(	qpts(:,qi) , Rcell(:,Ri)	) 	 )
+					!
+					do xi = 1, nR
+						wnF(xi,Ri,n) = wnF(xi,Ri,n) + bWf(xi,n,qi) * phase / real(nQ,dp)
+					end do
+				end do
+			end do
+			!$OMP END PARALLEL DO
+
+
+			!UNK
+			!$OMP PARALLEL DO SCHEDULE(STATIC) COLLAPSE(2) DEFAULT(SHARED) PRIVATE(qi, n, xi, phase) 
+			do n = 1, nWfs
+				do xi = 1, nR
+					phase = myExp( -1.0_dp 	*	 dot_product( qpts(:,qi) , rpts(:,xi)	) 			)
+					unk(xi,qi,n) = phase * bWf(xi,n,qi)
+				end do
+			end do
+			!$OMP END PARALLEL DO
+			!
 			!
 		end do
+		!close(200)
 
-		write(*,*)"[solveHam]: test normalization of generated Bloch wavefunctions"
-		call testNormal(bwf)
+
+		!write(*,*)"[solveHam]: test normalization of generated Bloch wavefunctions"
+		!call testNormal(bwf)
 		
 
-		open(unit=200, file='rawData/bandStruct.dat', form='unformatted', access='stream', action='write')
-		open(unit=210, file='rawData/bwfR.dat'		, form='unformatted', access='stream', action='write')
-		open(unit=211, file='rawData/bwfI.dat'		, form='unformatted', access='stream', action='write')
+		
+		!open(unit=210, file='rawData/bwfR.dat'		, form='unformatted', access='stream', action='write')
+		!open(unit=211, file='rawData/bwfI.dat'		, form='unformatted', access='stream', action='write')
+		!!
+		!write(200) EnT
+		!bWfR 	= dreal(bWf)                 !Todo fix that
+		!bWfI	= dimag(bWf)
+		!write(210)bWfR
+		!write(211)bwfI
+		!!
 		!
-		write(200) EnT
-		bWfR 	= dreal(bWf)                 !Todo fix that
-		bWfI	= dimag(bWf)
-		write(210)bWfR
-		write(211)bwfI
-		!
-		close(200)
-		close(210)
-		close(211)
-
-		write(*,'(a,f16.13,a,f16.12)') "[solveHam]: projection matrix  smin=", smin, " smax=", smax
-		write(*,'(a,i7,a)')"[solveHam]: ",failCount," of the projected bloch like functions are not orthonormal"
+		!close(210)
+		!close(211)
+!
+		!write(*,'(a,f16.13,a,f16.12)') "[solveHam]: projection matrix  smin=", smin, " smax=", smax
+		!write(*,'(a,i7,a)')"[solveHam]: ",failCount," of the projected bloch like functions are not orthonormal"
 		
 		!
 		return

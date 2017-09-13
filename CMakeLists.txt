@@ -24,7 +24,7 @@ add_subdirectory(thirdparty)
 
 
 #complie flags
-set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -qopenmp -O3")
+set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -qopenmp -O3 -g")
 #linker flags
 set(COVERAGE_LINK_FLAGS "-mkl ${OPENMP_LINK_FLAGS}")
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${COVERAGE_LINK_FLAGS}")

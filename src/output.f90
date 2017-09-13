@@ -101,6 +101,9 @@ module output
 		write(300) nRx
 		write(300) nRy
 		write(300) nWfs
+		write(300) nSC
+		write(300) nSCx
+		write(300) nSCy
 		close(300)
 		!
 		!CELL INFO

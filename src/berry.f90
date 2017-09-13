@@ -222,7 +222,7 @@ module berry
 						Myr	= UNKoverlap(	n,		m, 		qi		, getKindex( qx ,qyr )		, unk	)
 
 						if(n==1 .and. m==1) then
-							write(*,*)	"*"
+							!write(*,*)	"*"
 							!write(*,'(a,f16.12,a,f16.12,a,f16.12,a,f16.12,a)')"[calcConnOnCoarse]: qCe=(",qpts(1, qi					),	",",&	
 							!										qpts(2,	qi						),"). ",	"oLap=(",dreal(one),", ",dimag(one),")."
 							!!
@@ -238,21 +238,21 @@ module berry
 							!write(*,'(a,f16.12,a,f16.12,a,f16.12,a,f16.12,a)')"[calcConnOnCoarse]: qyr=(",qpts(1, getKindex( qx ,qyr )	),	",",&	
 							!										qpts(2,	getKindex( qx ,qyr )	),"). ",	"oLap=(",dreal(Myr),", ",dimag(Myr),")."
 							
-							write(*,*)	"*"
-							write(*,*)"[calcConnOnCoarse]: qCe=(",qpts(1, qi					),	",",&	
-																	qpts(2,	qi						),"). ",	"oLap=(",dreal(one),", ",dimag(one),")."
-							!
-							write(*,*)"[calcConnOnCoarse]: qxl=(",qpts(1, getKindex( qxl, qy )	),	",",&	
-																	qpts(2,	getKindex( qxl, qy )	),"). ",	"oLap=(",dreal(Mxl),", ",dimag(Mxl),")."
-							!
-							write(*,*)"[calcConnOnCoarse]: qxr=(",qpts(1, getKindex( qxr, qy )	),	",",&	
-																	qpts(2,	getKindex( qxr, qy )	),"). ",	"oLap=(",dreal(Mxr),", ",dimag(Mxr),")."
-							!
-							write(*,*)"[calcConnOnCoarse]: qyl=(",qpts(1, getKindex( qx ,qyl )	),	",",&	
-																	qpts(2,	getKindex( qx ,qyl )	),"). ",	"oLap=(",dreal(Myl),", ",dimag(Myl),")."
-							!
-							write(*,*)"[calcConnOnCoarse]: qyr=(",qpts(1, getKindex( qx ,qyr )	),	",",&	
-																	qpts(2,	getKindex( qx ,qyr )	),"). ",	"oLap=(",dreal(Myr),", ",dimag(Myr),")."
+							!write(*,*)	"*"
+							!write(*,*)"[calcConnOnCoarse]: qCe=(",qpts(1, qi					),	",",&	
+							!										qpts(2,	qi						),"). ",	"oLap=(",dreal(one),", ",dimag(one),")."
+							!!
+							!write(*,*)"[calcConnOnCoarse]: qxl=(",qpts(1, getKindex( qxl, qy )	),	",",&	
+							!										qpts(2,	getKindex( qxl, qy )	),"). ",	"oLap=(",dreal(Mxl),", ",dimag(Mxl),")."
+							!!
+							!write(*,*)"[calcConnOnCoarse]: qxr=(",qpts(1, getKindex( qxr, qy )	),	",",&	
+							!										qpts(2,	getKindex( qxr, qy )	),"). ",	"oLap=(",dreal(Mxr),", ",dimag(Mxr),")."
+							!!
+							!write(*,*)"[calcConnOnCoarse]: qyl=(",qpts(1, getKindex( qx ,qyl )	),	",",&	
+							!										qpts(2,	getKindex( qx ,qyl )	),"). ",	"oLap=(",dreal(Myl),", ",dimag(Myl),")."
+							!!
+							!write(*,*)"[calcConnOnCoarse]: qyr=(",qpts(1, getKindex( qx ,qyr )	),	",",&	
+							!										qpts(2,	getKindex( qx ,qyr )	),"). ",	"oLap=(",dreal(Myr),", ",dimag(Myr),")."
 
 						end if
 						!

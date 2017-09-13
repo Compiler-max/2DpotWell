@@ -109,14 +109,13 @@ module blochWf
 		avg		= 0.0_dp
 		tot		= 0
 		!
-		!$OMP PARALLEL DO SCHEDULE(STATIC) COLLAPSE(3) DEFAULT(SHARED) PRIVATE(m, n,q1, q2, ri,f, oLap) REDUCTION(+:avg,count, tot)
-		do m = 1, nG
-			do n = 1, nG
-				do q1 = 1, nG
-					do q2 = 1, nG
+		do m = 1, nWfs
+			do n = 1, nWfs
+				do q1 = 1, nQ
+					!do q2 = 1, nQ
 						!FILL INTEGRATION ARRAY
 						do ri = 1, nR
-							f(ri)	= dconjg(bwf(ri,q1,n)) * bwf(ri,q2,m)
+							f(ri)	= dconjg(bwf(ri,q1,n)) * bwf(ri,q1,m)
 						end do
 						oLap	= nIntegrate(nR, nRx,nRy, dx,dy, f)
 						!CHECK CONDITION
@@ -139,11 +138,10 @@ module blochWf
 						!
 						!
 						tot	= tot + 1
-					end do
+					!end do
 				end do
 			end do
 		end do
-		!OMP END PARALLEL DO
 
 		avg	= avg / real(tot,dp)
 		write(*,*)"[testNormal]: found ",count," points of ",tot," not normalized bwfs, avg diff=",avg

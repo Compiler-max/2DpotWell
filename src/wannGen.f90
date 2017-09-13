@@ -56,10 +56,10 @@ module wannGen
 		if( .not. isUnit(U) 			) then
 			write(*,'(a,i7,a)')"[projectBwf]: qi=",qi," U matrix is not a unitary matrix !"
 		end if
-		if(	 .not. isOrthonorm(lobWf)	) then
-			write(*,'(a,f16.12)')"[projectBwf]: loBwf is NOT a orthonormal basis set, accuracy=",acc
-			failCount = failCount + 1
-		end if
+		!if(	 .not. isOrthonorm(lobWf)	) then
+		!	write(*,'(a,f16.12)')"[projectBwf]: loBwf is NOT a orthonormal basis set, accuracy=",acc
+		!	failCount = failCount + 1
+		!end if
 		!
 		return
 	end subroutine
