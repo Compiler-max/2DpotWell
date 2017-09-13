@@ -24,9 +24,9 @@ add_subdirectory(thirdparty)
 
 
 #complie flags
-set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -qopenmp -O3 -g")
+set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -qopenmp -O3 -g -xMIC-AVX512")
 #linker flags
-set(COVERAGE_LINK_FLAGS "-mkl ${OPENMP_LINK_FLAGS}")
+set(COVERAGE_LINK_FLAGS "-mkl -g -xMIC-AVX512 ${OPENMP_LINK_FLAGS}")
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${COVERAGE_LINK_FLAGS}")
 
 # generate executable and link library
