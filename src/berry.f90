@@ -307,8 +307,8 @@ module berry
 				do qi = 1, nQ
 					!FILL INTEGRATION ARRAY
 					do ri = 1, nWfs
-						fx(ri)	= myExP( 	dot_product( qpts(:,qi), rpts(:,ri) )		)	*unk(ri,qi,n)	* veloBwf(ri, qi,	m		)
-						fy(ri)	= myExP( 	dot_product( qpts(:,qi), rpts(:,ri) )		)	*unk(ri,qi,n)	* veloBwf(ri, qi,	nWfs+m	)
+						fx(ri)	= dconjg(	myExP( 	dot_product( qpts(:,qi), rpts(:,ri) ))	)	*unk(ri,qi,n)	* veloBwf(ri, qi,	m		)
+						fy(ri)	= dconjg(	myExP( 	dot_product( qpts(:,qi), rpts(:,ri) ))	)	*unk(ri,qi,n)	* veloBwf(ri, qi,	nWfs+m	)
 					end do
 					!INTEGRATE
 					Velo(1,qi,n,m)	= nIntegrate(nR, nRx, nRy, dx, dy, fx)
