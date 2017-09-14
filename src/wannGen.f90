@@ -75,15 +75,15 @@ module wannGen
 		complex(dp)						:: phase
 		!
 		!$OMP PARALLEL DO SCHEDULE(STATIC) COLLAPSE(3) DEFAULT(SHARED) PRIVATE(n, Ri, xi, phase) 
-			do n = 1, nWfs
-				do Ri = 1, nSC
-					do xi = 1, nR
-						phase		 = myExp(	-1.0_dp * dot_product(	qpts(:,qi) , Rcell(:,Ri)	) 	 )
-						wnF(xi,Ri,n) = wnF(xi,Ri,n) + bWf(xi,n,qi) * phase / real(nQ,dp)
-					end do
+		do n = 1, nWfs
+			do Ri = 1, nSC
+				do xi = 1, nR
+					phase		 = myExp(	-1.0_dp * dot_product(	qpts(:,qi) , Rcell(:,Ri)	) 	 )
+					wnF(xi,Ri,n) = wnF(xi,Ri,n) + bWf(xi,n) * phase / real(nQ,dp)
 				end do
 			end do
-			!$OMP END PARALLEL DO
+		end do
+		!$OMP END PARALLEL DO
 		!
 		!
 		return

@@ -88,7 +88,7 @@ module blochWf
 		do n = 1, nWfs
 			do xi = 1, nR
 				phase		 = myExp( -1.0_dp 	*	 dot_product( qpts(:,qi) , rpts(:,xi)	) 			)
-				unk(xi,qi,n) = phase * bWf(xi,n,qi)
+				unk(xi,qi,n) = phase * bWf(xi,n)
 			end do
 		end do
 		!$OMP END PARALLEL DO

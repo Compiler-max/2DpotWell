@@ -77,7 +77,7 @@ module potWellModel
 			!PROJECTION & WANNIER
 			call projectBwf(qi, bWf(:,:,qi), loBwf, U, failCount, smin, smax)
 			call genWannF(qi, lobWf, wnF)
-			call genUnk(qi, lobWf, unkW )
+			call genUnk(qi, lobWf, unk )
 			
 			!
 			!
