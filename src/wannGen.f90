@@ -176,28 +176,24 @@ module wannGen
 		!
 		A = dcmplx(0.0_dp)
 	
+
 		do n = 1, nWfs
-			!do m = 1, nWfs 
-				!if band m is to contribute to wannier function n then calculate overlap
-				!if( minBand(n) <= m .and. m <= maxBand(n)) then
 			f = dcmplx(0.0_dp)
-			do xi = 1, nR
-				!write(*,'(a,i3,a,i4,a,f10.5,a,f10.5,a)')"g(n=", n,", xi=",xi,")= " , dreal( gnr(xi,n) ), "+ i* ",dimag( gnr(xi,n) ),")"
+			do xi = 1, nR				
 				f(xi) = dconjg(	bWf(xi,n) ) * gnr(xi,n)
-				!write(*,'(a,i3,a,i4,a,f10.5,a,f10.5,a)')"f(n=", n,", xi=",xi,")= " , dreal( f(xi) ), "+ i* ",dimag( f(xi) ),")"
 			end do
-			A(n,n) = nIntegrate(nR, nRx, nRy, dx, dy, f)
-			
-			!write(*,'(a,i2,a,f15.10,a,f15.10)')	"[calcAmat]: n=,",n," A(n,n)=",dreal(A(n,n))," +i*",dimag(A(n,n))
-				!else
-				!	A(m,n) = dcmplx(0.0_dp)
-				!end if
-				!
-			!end do
+			A(n,n) = nIntegrate(nR, nRx, nRy, dx, dy, f)		
 		end do
 		!
 		return
 	end subroutine
+
+
+
+
+	!
+	!	call zgemm(transa, transb, m, n, k, alpha, a, lda, b, ldb, beta, c, ldc)
+
 
 
 
@@ -207,20 +203,44 @@ module wannGen
 		complex(dp),	intent(out)		:: S(:,:)
 		real(dp),		intent(inout)	:: smin, smax
 		complex(dp),	allocatable		:: Acon(:,:),Sold(:,:), Ssqr(:,:)
-		integer							:: m,n, i,j
+		integer							:: m,n,k,lda,ldb,ldc, i,j
 		real(dp)						:: mi, ma
+		complex(dp)						:: alpha, beta
+		character*1						:: transa, transb
 		m = size(A,1)
 		n = size(A,2)
-		allocate(	Acon(n,m)	)
+		!allocate(	Acon(n,m)	)
 		allocate(	Sold(n,n)	)
 		allocate(	Ssqr(n,n)	)
 		!
-		S = dcmplx(0.0_dp)
-		Acon = transpose(A)
-		Acon = dconjg(Acon)
-		S = matmul(Acon , A)
-		Sold = S
+		!S = dcmplx(0.0_dp)
+		!Acon = transpose(A)
+		!Acon = dconjg(Acon)
+		!S = matmul(Acon , A)
+		
+
+
+		
+		transa	= 'c'
+		transb	= 'n'
+		m		= size(A,1)
+		n		= size(A,2)
+		k		= size(A,2)
+		alpha	= dcmplx(1.0_dp)
+		beta	= dcmplx(0.0_dp)
+		lda		= size(A,1)
+		ldb		= size(A,1)
+		ldc		= size(A,1)
+		!call zgemm(transa, transb, m, n, k, alpha, a, lda, b, ldb, beta, c, ldc)
+		 call zgemm(transa, transb, m, n, k, alpha, A, lda, A, ldb, beta, S, ldc)
+		
 		!
+		
+
+
+
+
+		Sold = S
 		call myMatInvSqrt(S, mi, ma)
 
 		if( mi < smin ) then
@@ -231,8 +251,14 @@ module wannGen
 		end if
 
 		!DEBUG: Check if S is really the inverse sqrt
-		Ssqr = matmul(S,S)
-		Sold = matmul(Sold,Ssqr)
+		!Ssqr = matmul(S,S)
+		!Sold = matmul(Sold,Ssqr)
+		transa	= 'n'
+		transb	= 'n'
+		alpha	= dcmplx(1.0_dp)
+		beta	= dcmplx(0.0_dp)
+		call zgemm(transa, transb, m, n, k, alpha, S   , lda, S   , ldb, beta, Ssqr, ldc)
+		call zgemm(transa, transb, m, n, k, alpha, Sold, lda, Ssqr, ldb, beta, Sold, ldc)
 		
 		if( .not. isUnit(Sold) ) then
 			write(*,*)"[calcInvSmat]: problem with mat inversion, seems to be not inverse square root"
