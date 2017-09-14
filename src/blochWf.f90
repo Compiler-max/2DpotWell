@@ -84,12 +84,14 @@ module blochWf
 		integer							:: xi, n
 		complex(dp)						:: phase
 		!
+		!$OMP PARALLEL DO SCHEDULE(STATIC) COLLAPSE(2) DEFAULT(SHARED) PRIVATE(n, xi, phase) 
 		do n = 1, nWfs
 			do xi = 1, nR
-				phase = myExp( -1.0_dp 	*	 dot_product( qpts(:,qi) , rpts(:,xi)	) 			)
-				unk(xi,qi,n) = phase * bWf(xi,n)
+				phase		 = myExp( -1.0_dp 	*	 dot_product( qpts(:,qi) , rpts(:,xi)	) 			)
+				unk(xi,qi,n) = phase * bWf(xi,n,qi)
 			end do
 		end do
+		!$OMP END PARALLEL DO
 		!
 		return
 	end subroutine

@@ -72,16 +72,18 @@ module wannGen
 		complex(dp), 	intent(in)  	:: bWf(:,:) ! lobWf(nRpts,nWfs)	
 		complex(dp), 	intent(inout) 	:: wnF(:,:,:) ! wnF( 	nR, nSC, nWfs		)	
 		integer 						:: n, Ri, xi
-		real(dp)						:: cellP
+		complex(dp)						:: phase
 		!
-		do n = 1, nWfs
-			do Ri = 1, nSC
-				cellP = -1.0_dp * dot_product(	qpts(:,qi) , Rcell(:,Ri)	) 	
-				do xi = 1, nR
-						wnF(xi,Ri,n) = wnF(xi,Ri,n) + bWf(xi,n) * myExp(cellP) / real(nQ,dp)
+		!$OMP PARALLEL DO SCHEDULE(STATIC) COLLAPSE(3) DEFAULT(SHARED) PRIVATE(n, Ri, xi, phase) 
+			do n = 1, nWfs
+				do Ri = 1, nSC
+					do xi = 1, nR
+						phase		 = myExp(	-1.0_dp * dot_product(	qpts(:,qi) , Rcell(:,Ri)	) 	 )
+						wnF(xi,Ri,n) = wnF(xi,Ri,n) + bWf(xi,n,qi) * phase / real(nQ,dp)
+					end do
 				end do
 			end do
-		end do
+			!$OMP END PARALLEL DO
 		!
 		!
 		return
