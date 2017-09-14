@@ -35,6 +35,7 @@ module blochWf
 				call calcVeloBasVec(qi,xi, basVec)
 				velobWf(xi,qi,:) = matmul(	 basVec , basCoeff	)  /  dsqrt(vol)
 		end do
+		!$OMP END PARALLEL DO
 		!
 		return 
 	end subroutine
