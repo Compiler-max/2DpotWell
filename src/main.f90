@@ -6,7 +6,7 @@ program main
 	use sysPara
 	use potWellModel, 	only: 		solveHam
 	use berry,			only:		isKperiodic, calcConnOnCoarse, calcVeloMat, calcCurv 
-	use wannier,	 	only: 		isNormal, isReal, calcWcent, calcWsprd, genUnkW 	
+	use wannier,	 	only: 		isNormal, isReal, calcCentSpread, genUnkW 	
 	use gaugeTrafo,		only:		calcConnCurv,  testIfReal
 	use polarization,	only:		calcPolWannCent, calcPolViaA
 	use semiclassics,	only:		calcFirstOrdP
@@ -111,8 +111,7 @@ program main
 	write(*,'(a)')"[main]: note that wannier function normalization is not tested currently!"
 	!call isReal(wnF)
 	!
-	call calcWcent(wnF,	wCent)
-	call calcWsprd(wnF, wCent, wSprd)
+	call calcCentSpread(wnF, wCent, wSprd)
 	call calcPolWannCent(wCent, pEl, pIon, pTot)
 	!
 	!
@@ -123,19 +122,19 @@ program main
 
 
 
-	!write(*,*)"*"
-	!write(*,*)"*"
-	!write(*,*)"*"
-	!write(*,*)"*"
-	!write(*,*)"[main]:**************************WAVEFUNCTION METHOD*************************"
+	write(*,*)"*"
+	write(*,*)"*"
+	write(*,*)"*"
+	write(*,*)"*"
+	write(*,*)"[main]:**************************WAVEFUNCTION METHOD*************************"
 	!!WAnnier gauge quantities
 	!call cpu_time(wI0)
-	!call calcConnOnCoarse(unk, Aw)
-	!call calcPolViaA(Aw,pElViaA)
+	call calcConnOnCoarse(unk, Aw)
+	call calcPolViaA(Aw,pElViaA)
 	!!call calcVeloMat(unk, VeloBwf, Vw)
 	!!call calcCurv(EnW, Vw, Fw)
 	!call cpu_time(wI1)
-	!write(*,*)"[main]: done with wavefunction method "
+	write(*,*)"[main]: done with wavefunction method "
 	!wI	= wI1 - wI0
 
 
@@ -210,8 +209,8 @@ program main
 	!write(*,*)"[main]: ...wrote unks and connection"
 	!call writeWannFiles(wnF, wCent, wSprd)			!call writeWannFiles(gnr, wnF, wCent, wSprd, Aconn, unkW)
 	!write(*,*)"[main]: ...wrote wannier functions"
-	!call writePolFile(pEl, pIon, pTot, pElViaA, pInt, pNiu, pPei )
-	!write(*,*)"[main]: ...wrote polarization txt file"
+	call writePolFile(pEl, pIon, pTot, pElViaA, pInt, pNiu, pPei )
+	write(*,*)"[main]: ...wrote polarization txt file"
 	!!
 	!write(*,'(a,E10.3)')"[main]: overlap warnings etc. where given for diviations from expected above the threshold: ",acc
 	!call cpu_time(oT1)

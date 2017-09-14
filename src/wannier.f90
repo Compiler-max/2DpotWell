@@ -8,7 +8,7 @@ module wannier
 	implicit none
 
 	private
-	public :: isNormal, isReal, calcWcent, calcWsprd, genTBham, genUnkW, calcWannMat
+	public :: isNormal, isReal, calcCentSpread, genTBham, genUnkW, calcWannMat
 
 	contains
 
@@ -152,35 +152,20 @@ module wannier
 
 
 	!CENTERS AND POLARIZATION:
-	subroutine calcWcent(wnF, xc)
+	subroutine calcCentSpread(wnF, xc, sprd)
 		!calculates the centers of the wannier functions, by evaluating the wXw expectaion values
 		!	xc(n) = <R0,n|r|R0,n>		, where R0 is the home unit cell specified in the input file
 		!
-		complex(dp), intent(in)  :: wnF(:,:,:) !wnF(nRpts,nSupC,nWfs)
-		real(dp)   , intent(out) :: xc(:,:)
-		integer					 :: n
+		complex(dp), intent(in)  	:: wnF(:,:,:) !wnF(nRpts,nSupC,nWfs)
+		real(dp)   , intent(out) 	:: xc(:,:), sprd(:,:)
+		integer					 	:: n
+		real(dp)					:: tmp(2)
 		!
 		write(*,'(a,i2,a,f10.5,a,f10.5,a)')"[calcWcent]: using R(",R0,")= (",Rcell(1,R0),", ",Rcell(2,R0),") as home unit cell"
 		do n = 1, nWfs
 			call wXw(R0,R0,n,n,wnF, xc(:,n))
 			write(*,'(a,i2,a,f10.6,a,f10.6,a)')"[calcWcent]: n=",n," center= (",xc(1,n),",",xc(2,n),")"
-		end do
-		!
-		return
-	end subroutine
-
-
-	subroutine calcWsprd(wnF, xc, sprd)
-		!calculates the spreads of the wannier functions, by evaluating the wXXw expectaion values
-		!	sprd(n) = <R0,n|r^2|R0,n>		, where R0 is the home unit cell specified in the input file
-		!
-		complex(dp), intent(in)		:: wnF(:,:,:)
-		real(dp),	 intent(in)		:: xc(:,:)
-		real(dp)   , intent(out)	:: sprd(:,:)
-		integer					 	:: n
-		real(dp)					:: tmp(2)
-		!
-		do n = 1, nWfs
+			!
 			call wXXw(R0,R0,n,n, wnF, tmp)
 			sprd(1,n) = abs( tmP(1) - xc(1,n)**2 )
 			sprd(2,n) = abs( tmP(2) - xc(2,n)**2 )

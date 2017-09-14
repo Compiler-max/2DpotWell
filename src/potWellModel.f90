@@ -61,8 +61,8 @@ module potWellModel
 			kVal	=	qpts(:,qi)
 			
 			!ELECTRONIC STRUCTURE
-			call populateH(kVal, Hmat)
-			call eigSolver(Hmat, EnT)
+			call populateH(kVal, Hmat) 	!para
+			call eigSolver(Hmat, EnT)	!para
 			!write(200) EnT
 			En(qi,:) = EnT(1:nWfs) 
 			!if(.not. isUnit(Hmat)	) then
@@ -76,8 +76,8 @@ module potWellModel
 			
 			!PROJECTION & WANNIER
 			call projectBwf(qi, bWf(:,:,qi), loBwf, U, failCount, smin, smax)
-			call genWannF(qi, lobWf, wnF)
-			call genUnk(qi, lobWf, unk )
+			call genWannF(qi, lobWf, wnF) !para
+			call genUnk(qi, lobWf, unk )	!para
 			
 			!
 			!
