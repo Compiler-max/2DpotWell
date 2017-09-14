@@ -6,7 +6,7 @@ module blochWf
 	implicit none
 
 	private
-	public	::	genBlochWf, calcVeloBwf, genUnk, testNormal
+	public	::	genBwfVelo, genUnk, testNormal
 
 
 	contains
@@ -18,40 +18,28 @@ module blochWf
 
 
 !public
-	subroutine genBlochWf(qi,basCoeff, bWf)
+	subroutine genBwfVelo(qi,basCoeff, bWf, velobWf)
 		!generates the bloch wavefunctions, with  the basCoeff from eigSolver
 		integer		, intent(in)	:: qi
 		complex(dp)	, intent(in)	:: basCoeff(:,:)
-		complex(dp)	, intent(out)	:: bWf(:,:)	!bWf(nRpts,nG)			
+		complex(dp)	, intent(out)	:: bWf(:,:,:), velobWf(:,:,:)	!bWf(nRpts,nG)			
 		complex(dp)	, allocatable	:: basVec(:)
-		integer 				 	:: xi,n
+		integer 				 	:: xi
 		allocate(	basVec(nG)	)
-		!
+		!$OMP PARALLEL DO SCHEDULE(STATIC) DEFAULT(SHARED) PRIVATE(xi, basVec)
 		do xi = 1, nR
+				!WAVEFUNCTIONS
 				call calcBasVec(qi,xi, basVec)
-				bWf(xi,:) = matmul(	 basVec , basCoeff	)  /  dsqrt(vol)
+				bWf(xi,:,qi) = matmul(	 basVec , basCoeff	)  /  dsqrt(vol)
+				!VELOCITIES
+				call calcVeloBasVec(qi,xi, basVec)
+				velobWf(xi,qi,:) = matmul(	 basVec , basCoeff	)  /  dsqrt(vol)
 		end do
 		!
 		return 
 	end subroutine
 
 
-	subroutine calcVeloBwf(ki,basCoeff, velobWf)
-		!generates the bloch wavefunctions, with  the basCoeff from eigSolver
-		integer		, intent(in)	:: ki
-		complex(dp)	, intent(in)	:: basCoeff(:,:)
-		complex(dp)	, intent(out)	:: velobWf(:,:,:)	!VeloBwf(	nR		,	nK		, 2*nWfs)			
-		complex(dp)	, allocatable	:: basVec(:)
-		integer 				 	:: xi,n
-		allocate(	basVec(nG)	)
-		!
-		do xi = 1, nR
-				call calcVeloBasVec(ki,xi, basVec)
-				velobWf(xi,ki,:) = matmul(	 basVec , basCoeff	)  /  dsqrt(vol)
-		end do
-		!
-		return 
-	end subroutine
 
 
 	!logical function BwFisLattSym(bWf)

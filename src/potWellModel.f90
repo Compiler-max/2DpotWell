@@ -4,7 +4,7 @@ module potWellModel
 	use omp_lib
 	use mathematics,	only:	dp, PI_dp,i_dp, machineP, myExp, myLeviCivita, eigSolver, nIntegrate, isUnit, isHermitian
 	use sysPara
-	use blochWf,		only:	genBlochWf, calcVeloBwf, genUnk, testNormal									
+	use blochWf,		only:	genBwfVelo, genUnk, testNormal									
 	use wannGen,		only:	projectBwf, genWannF
 	use output,			only:	printMat
 	implicit none	
@@ -61,8 +61,8 @@ module potWellModel
 			kVal	=	qpts(:,qi)
 			
 			!ELECTRONIC STRUCTURE
-			call populateH(kVal, Hmat) 	!para
-			call eigSolver(Hmat, EnT)	!para
+			call populateH(kVal, Hmat) 	!omp
+			call eigSolver(Hmat, EnT)	!mkl
 			!write(200) EnT
 			En(qi,:) = EnT(1:nWfs) 
 			!if(.not. isUnit(Hmat)	) then
@@ -71,13 +71,12 @@ module potWellModel
 			
 			!BLOCH WAVEFUNCTIONS
 			call gaugeCoeff(kVal, Hmat)
-			call genBlochWf(qi, Hmat, bWf(:,:,qi))		
-			call calcVeloBwf(qi,Hmat, veloBwf)
-			
+			call genBwfVelo(qi, Hmat, bWf, veloBwf)	!mkl
+
 			!PROJECTION & WANNIER
-			call projectBwf(qi, bWf(:,:,qi), loBwf, U, failCount, smin, smax)
-			call genWannF(qi, lobWf, wnF) !para
-			call genUnk(qi, lobWf, unk )	!para
+			call projectBwf(qi, bWf(:,:,qi), loBwf, U, failCount, smin, smax)	!todo mkl
+			call genWannF(qi, lobWf, wnF) 	!omp
+			call genUnk(qi, lobWf, unk )	!omp
 			
 			!
 			!
@@ -91,7 +90,7 @@ module potWellModel
 
 		
 		!open(unit=210, file='rawData/bwfR.dat'		, form='unformatted', access='stream', action='write')
-		!open(unit=211, file='rawData/bwfI.dat'		, form='unformatted', access='stream', action='write')
+		!open(unit=211, file='rawData/bwxfI.dat'		, form='unformatted', access='stream', action='write')
 		!!
 		!write(200) EnT
 		!bWfR 	= dreal(bWf)                 !Todo fix that

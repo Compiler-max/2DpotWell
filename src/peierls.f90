@@ -4,7 +4,7 @@ module peierls
 	use wannier,		only:	genTBham, genUnkW
 	use gaugeTrafo,		only:	calcConnCurv, testIfReal
 	use	polarization,	only:	calcPolViaA
-	use blochWf,		only:	genBlochWf, genUnk
+	use blochWf,		only:	 genUnk
 	implicit none
 	
 
