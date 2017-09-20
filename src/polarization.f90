@@ -1,11 +1,11 @@
 module polarization
-use mathematics,	only:	dp, PI_dp, i_dp, acc, myExp, nIntegrate
+	use mathematics,	only:	dp, PI_dp, i_dp, acc, myExp, nIntegrate
 	use sysPara
 
 	implicit none
 
 	private
-	public :: calcPolWannCent, calcPolViaA
+	public :: calcPolWannCent, calcPolViaA, calcIonicPol
 
 	contains
 
@@ -14,21 +14,19 @@ use mathematics,	only:	dp, PI_dp, i_dp, acc, myExp, nIntegrate
 
 
 !public:
-	subroutine calcPolWannCent(wCent,pE, pI, pT)
+	subroutine calcPolWannCent(wCent,pE)
 		!calcuates 0 order polarization from the wannier centers
 		!	this is only defined up to a uncertainty quantum of e*\vec{a}/V0, 
 		!	where e is electron charge, \vec{a} a bravais lattice vector and V0 the volume of the unit cell
 		!	uncertainty is resolved by projecting the wannier centers into the first unit cell at (0,0) 
 		real(dp), intent(in)	:: wCent(:,:)
-		real(dp), intent(out)	:: pE(2), pI(2), pT(2)
+		real(dp), intent(out)	:: pE(2)
 		integer 				:: n, at
 		real(dp) 				:: vol, cent(2)
 		!
 		
 		vol 	= aX * aY !1D
-		pT		= 0.0_dp
 		pE	 	= 0.0_dp
-		pI		= 0.0_dp
 		!
 		!ELECTRONIC
 		do n = 1,size(wCent,2)
@@ -38,10 +36,7 @@ use mathematics,	only:	dp, PI_dp, i_dp, acc, myExp, nIntegrate
 			!write(*,'(a,f8.5,a,f8.5,a,f8.6,a,f8.6,a)')"[calc0ElPol]: Wcent = (",wCent(1,n),", ",wCent(2,n),") modified cent = (", cent(1),", ",cent(2),")"
 			pE = pE + cent				
 		end do
-		!IONIC
-		do at = 1, nAt
-			pI = pI + Zion(at) * atPos(:,at) 
-		end do
+		!
 		!NORMALIZE
 		!pE = pE / vol
 		!pI = pI / vol
@@ -50,9 +45,6 @@ use mathematics,	only:	dp, PI_dp, i_dp, acc, myExp, nIntegrate
 		cent(1)	= aX * 0.5_dp
 		cent(2)	= aY * 0.5_dp
 		pE = (pE - cent ) / vol
-		pI = (pI - cent ) / vol 
-		!TOTAL
-		pT = pI + pE												
 		!
 		return
 	end subroutine
@@ -92,6 +84,21 @@ use mathematics,	only:	dp, PI_dp, i_dp, acc, myExp, nIntegrate
 		!if(		dimag( val(1) ) > machine 	.or. 	dimag( val(2) ) > machine		) then
 		!	write(*,*)"[calcPolViaA]: non zero imaginary part of polarization"
 		!end if
+		return
+	end subroutine
+
+
+	subroutine calcIonicPol(pI)
+		!ionic contribution to total polarization
+		real(dp),		intent(out)		:: pI(2)
+		integer							:: at
+		!
+		pI	= 0.0_dp
+		do at = 1, nAt
+			pI	= pI + Zion(at) * atPos(:,at) 
+		end do
+		!
+		!
 		return
 	end subroutine
 
