@@ -342,26 +342,64 @@ module mathematics
 
 	subroutine rotMat(U, Mat, res)
 		! res = U^dagger * Mat * U
+		!	1. res = Mat * U
+		!	2. res = U^da * res
 		complex(dp),	intent(in)		:: U(:,:), Mat(:,:)
 		complex(dp),	intent(out)		:: res(:,:)
+		integer							:: m, n, k, lda, ldb, ldc
+		complex(dp)						:: alpha, beta
+		character*1						:: transa, transb
 		!
-		res	= matmul(	Mat						,		U		)
-		res	= matmul(	dconjg(transpose(U))	, 		res		)
+		transa	= 'n'
+		transb	= 'n'
+		m		= size(Mat,1)
+		n		= size(U,2)
+		k		= size(Mat,2)
+		lda		= m
+		ldb		= k
+		ldc		= m
+		alpha	= dcmplx(1.0_dp)
+		beta	= dcmplx(0.0_dp)
+		call zgemm(transa, transb, m, n, k, alpha, Mat, lda, U, ldb, beta, res, ldc)
+		!
+		transa	= 'c'
+		transb	= 'n'
+		call zgemm(transa, transb, m, n, k, alpha, U, lda, res, ldb, beta, res, ldc)
+		!
 		!
 		return
 	end subroutine
 
 
-	subroutine myCommutat(M, N, res)
+	subroutine myCommutat(A, B, res)
 		!	computes the commutator of matrix M and N
-		!	[M,N] = MN - NM
-		complex(dp),	intent(in)		:: M(:,:), N(:,:)
-		complex(dp),	intent(out)		:: res(:,:)
+		!	RES	= [A,B] = AB - BA
+		!	1. RES = BA
+		!	2. RES = AB - RES
+		complex(dp),	intent(in)		:: A(:,:), B(:,:)
+		complex(dp),	intent(out)		:: RES(:,:)
+		integer							:: m, n, k, lda, ldb, ldc
+		complex(dp)						:: alpha, beta
+		character*1						:: transa, transb
 		!
-		if( size(M,2) /= size(N,2)  .or. size(N,1) /= size(M,1)	) then
+		if( size(A,2) /= size(B,2)  .or. size(B,1) /= size(A,1)	) then
 			write(*,*)"[myCommutat]: Matrix ranks dont match. can not compute commutator"
 		else
-			res		= matmul(M,N) - matmul(N,M)
+			!res		= matmul(M,N) - matmul(N,M)
+			transa	= 'n'
+			transb	= 'n'
+			m 		= size(B,1)
+			n 		= size(A,2)
+			k		= size(A,1)
+			lda		= m
+			ldb		= k
+			ldc		= m
+			alpha	= dcmplx(1.0_dp)
+			beta	= dcmplx(0.0_dp)
+			call zgemm(transa, transb, m, n, k, alpha, B, lda, A, ldb, beta, RES, ldc)
+
+			beta	= dcmplx(-1.0_dp)
+			call zgemm(transa, transb, m, n, k, alpha, A, lda, B, ldb, beta, RES, ldc)
 		end if
 		!
 		!
