@@ -60,8 +60,9 @@ module potWellModel
 			call populateH(kVal, Hmat) 	!omp
 			write(*,*)	"[solveHam]: Ham matrix set up done"
 			call eigSolver(Hmat, EnT(:,qi))	!mkl
-			En(:,qi)	= EnT(1:nWfs,qi)
 			write(*,*)	"[solveHam]: solved electronic structure"
+			En(:,qi)	= EnT(1:nWfs,qi)
+			write(*,*)	"[solveHam]: copied eigenvalues"
 			!if(.not. isUnit(Hmat)	) then
 			!	write(*,*)"[solveHam]: base coefficients not unitary!"
 			!end if
