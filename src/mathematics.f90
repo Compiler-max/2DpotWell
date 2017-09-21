@@ -59,6 +59,7 @@ module mathematics
 		return
 	end subroutine
 
+
 	complex(dp) function myExp(x)
 		!supposed to boost performance
 		real(dp), intent(in) :: x
@@ -67,6 +68,7 @@ module mathematics
 		!
 		return
 	end function
+
 
 	real(dp) function Cangle(z)
 		!returns principale value between -pi and pi
@@ -242,9 +244,13 @@ module mathematics
 
 	logical function isUnit(U)
 		!return true if matrix u is unitary matrix
+		!	i.e. I = U^H U
 		complex(dp),	intent(in)		:: U(:,:)
-		integer							:: m,n
-		complex(dp),	allocatable		:: Ut(:,:),I(:,:)	
+		complex(dp),	allocatable		:: I(:,:)
+		complex(dp)						:: alpha, beta
+		integer							:: m, n, k, lda, ldb, ldc
+		character*1						:: transa, transb
+		!
 		!
 		isUnit = .false.
 		n	= size(U,1)
@@ -253,11 +259,17 @@ module mathematics
 		if(n /= m )	then
 			write(*,*)"[isUnit]: matrix is not even a square matrix ^^"
 		else
-			allocate(	Ut(n,n)	)
 			allocate(	I( n,n)	)
 			!
-			Ut = dconjg( transpose(U)	)
-			I  = matmul(	Ut , U		)
+			transa	= 'c'
+			transb	= 'n'
+			k		= size(I,1)
+			lda		= size(U,1)
+			ldb		= size(U,2)
+			ldc		= size(I,1)
+			alpha	= dcmplx(1.0_dp)
+			beta	= dcmplx(0.0_dp)
+			call zgemm(transa, transb, m, n, k, alpha, U, lda, U, ldb, beta, I, ldc)
 			!
 			isUnit = isIdentity(I)
 		end if
@@ -328,9 +340,6 @@ module mathematics
 	end function
 
 
-
-
-
 	subroutine rotMat(U, Mat, res)
 		! res = U^dagger * Mat * U
 		complex(dp),	intent(in)		:: U(:,:), Mat(:,:)
@@ -341,6 +350,7 @@ module mathematics
 		!
 		return
 	end subroutine
+
 
 	subroutine myCommutat(M, N, res)
 		!	computes the commutator of matrix M and N
