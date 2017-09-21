@@ -55,8 +55,8 @@ module berry
 			do  qix = 1, nQx 
 				do ri = 1, nR
 					phase 	= myExp( 	dot_product( Gx(:) , rpts(:,ri) )		)
-					u0 		= unk( ri, getKindex(qix,1  ), n)
-					u1		= unk( ri, getKindex(qix,nQy), n)
+					u0 		= unk( ri, n,	getKindex(qix,1  )	)
+					u1		= unk( ri, n,	getKindex(qix,nQy)	)
 					val 	= abs(u0-phase*u1)
 					if(  val > acc	) then 
 						isKperiodic = isKperiodic 	+ 1
@@ -74,8 +74,8 @@ module berry
 			do  qiy = 1, nQy
 				do ri = 1, nR
 					phase 	= myExp( 	dot_product( Gy(:) , rpts(:,ri) )		)
-					u0 		= unk( ri, getKindex(1  ,qiy), n)
-					u1		= unk( ri, getKindex(nQx,qiy), n)
+					u0 		= unk( ri,	n,	getKindex(1  ,qiy)	)
+					u1		= unk( ri,	n,	getKindex(nQx,qiy)	)
 					val		= abs(u0-phase*u1)
 					if( val > acc	) then 
 						isKperiodic = isKperiodic	+ 1
@@ -307,8 +307,8 @@ module berry
 				do qi = 1, nQ
 					!FILL INTEGRATION ARRAY
 					do ri = 1, nWfs
-						fx(ri)	= dconjg(	myExP( 	dot_product( qpts(:,qi), rpts(:,ri) ))	)	*unk(ri,qi,n)	* veloBwf(ri, qi,	m		)
-						fy(ri)	= dconjg(	myExP( 	dot_product( qpts(:,qi), rpts(:,ri) ))	)	*unk(ri,qi,n)	* veloBwf(ri, qi,	nWfs+m	)
+						fx(ri)	= dconjg(	myExP( 	dot_product( qpts(:,qi), rpts(:,ri) )) * unk(ri,qi,n)	)	* veloBwf(ri, qi,m		)
+						fy(ri)	= dconjg(	myExP( 	dot_product( qpts(:,qi), rpts(:,ri) )) * unk(ri,qi,n)	)	* veloBwf(ri, qi,nWfs+m	)
 					end do
 					!INTEGRATE
 					Velo(1,qi,n,m)	= nIntegrate(nR, nRx, nRy, dx, dy, fx)
@@ -322,14 +322,6 @@ module berry
 		return
 	end subroutine
 
-
-	subroutine approxVelo(unk)
-		complex(dp),	intent(in)		:: unk(:,:,:)
-
-
-
-		return
-	end subroutine
 
 
 
@@ -415,7 +407,7 @@ module berry
 			phase	= myExp( dot_product(qpts(:,qi), rpts(:,ri)	)	)
 			ham 	= dconjg(phase) * ham * phase
 			!FILL INTEGRATION ARRAY
-			f(ri)	= dconjg(	unk(ri,qi,n)	) * ham * unk(ri,qi,m)
+			f(ri)	= dconjg(	unk(ri,n,qi)	) * ham * unk(ri,m,qi)
 		end do
 		!
 		unHum = nIntegrate(nR, nRx,nRy, dx,dy, f)
@@ -485,7 +477,7 @@ module berry
 		!
 		allocate( f(nR)	)
 		do ri = 1, nR
-			f(ri)	= dconjg( unk(ri,qi,n) ) * unk(ri,knb,m)
+			f(ri)	= dconjg( unk(ri,n,qi) ) * unk(ri,m,knb)
 		end do
 
 

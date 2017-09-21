@@ -7,7 +7,7 @@ module wannGen
 	implicit none	
 	
 	private
-	public ::	projectBwf, genWannF			
+	public ::	projectBwf, genWannF, genWannF2			
 
 
 
@@ -90,8 +90,32 @@ module wannGen
 	end subroutine
 
 
-
-
+	subroutine genWannF2(unk, wnF)
+		! generates wannier functions from (projected) bloch wavefunctions
+		!
+		complex(dp), 	intent(in)  	:: unk(:,:,:) ! lobWf(nRpts,nWfs)	
+		complex(dp), 	intent(inout) 	:: wnF(:,:,:) ! wnF( 	nR, nSC, nWfs		)	
+		integer 						:: n, Ri, xi, qi
+		complex(dp)						:: phase
+		!
+		wnF	= dcmplx(0.0_dp)
+		!$OMP PARALLEL DO SCHEDULE(STATIC) COLLAPSE(3) DEFAULT(SHARED) PRIVATE(n, Ri, xi, qi, phase) 
+		do n = 1, nWfs
+			do Ri = 1, nSC
+				do xi = 1, nR
+					do qi = 1 , nQ
+						phase			= myExp(	-1.0_dp * dot_product(	qpts(:,qi) , Rcell(:,Ri)	) 	 )
+						phase			= phase * myExp( dot_product( qpts(:,qi) , rpts(:,xi)))
+						wnF(xi,Ri,n) = wnF(xi,Ri,n) + unk(xi,n,qi) * phase / real(nQ,dp)
+					end do
+				end do
+			end do
+		end do
+		!$OMP END PARALLEL DO
+		!
+		!
+		return
+	end subroutine
 
 
 

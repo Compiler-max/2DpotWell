@@ -19,50 +19,58 @@ module blochWf
 
 !public
 	subroutine genBwfVelo(qi,basCoeff, bWf, velobWf)
-		!generates the bloch wavefunctions, with  the basCoeff from eigSolver
+		!generates the bloch wavefunctions, with  the basCoeff from eigSolver, using
+		!	call zgemm(transa, transb, m, n, k, alpha, a	  , lda, b		, ldb, beta, c , ldc)
+		!			c = alpha * op(a) *op(b) + beta * c
 		integer		, intent(in)	:: qi
 		complex(dp)	, intent(in)	:: basCoeff(:,:)
-		complex(dp)	, intent(out)	:: bWf(:,:,:), velobWf(:,:,:)	!bWf(nRpts,nG)			
-		complex(dp)	, allocatable	:: basVec(:)
-		integer 				 	:: xi
-		allocate(	basVec(nG)	)
-		!$OMP PARALLEL DO SCHEDULE(STATIC) DEFAULT(SHARED) PRIVATE(xi, basVec)
+		complex(dp)	, intent(out)	:: bWf(:,:,:), velobWf(:,:,:,:)	!bWf(nRpts,nG)			
+		complex(dp)	, allocatable	:: basVec(:), veloBas(:,:), tmp(:)
+		integer 				 	:: xi, lda, ldb, ldc, m, n, k
+		character*1					:: transa, transb
+		complex(dp)					:: alpha, beta
+		!
+		allocate(	basVec(		nG)		)
+		allocate(	veloBas(2,	nG)		)
+		allocate(	tmp(		nG)		)
+		!
+		transa	= 'n'
+		transb	= 'n'
+		m		= 1
+		n		= nG
+		k 		= nG
+		alpha	= dcmplx(1.0_dp)
+		beta	= dcmplx(0.0_dp)
+		lda		= size(basVec)
+		ldb		= size(basCoeff,2)
+		ldc		= size(tmp)
+		!
+		!
 		do xi = 1, nR
-				!WAVEFUNCTIONS
-				call calcBasVec(qi,xi, basVec)
-				bWf(xi,:,qi) = matmul(	 basVec , basCoeff	)  /  dsqrt(vol)
-				!VELOCITIES
-				call calcVeloBasVec(qi,xi, basVec)
-				velobWf(xi,qi,:) = matmul(	 basVec , basCoeff	)  /  dsqrt(vol)
+				!GET BASIS
+				call calcBasis(qi,xi, basVec, veloBas)
+				!
+				!
+				!WAVE FUNCTIONS
+				call zgemm(transa, transb, m, n, k, alpha, basVec, lda, basCoeff,ldb, beta, tmp,ldc)
+				bWf(xi,:,qi)	= tmp(:) / dsqrt(vol)
+				!
+				!
+				!!VELOCITIES
+				basVec	= veloBas(1,:)
+				call zgemm(transa, transb, m, n, k, alpha, basVec, lda, basCoeff, ldb, beta, tmp, ldc)
+				velobWf(1,xi,:,qi)	= tmp(1:nWfs) / dsqrt(vol)
+				!
+				basVec	= veloBas(2,:)
+				call zgemm(transa, transb, m, n, k, alpha, basVec, lda, basCoeff, ldb, beta, tmp, ldc)
+				velobWf(2,xi,:,qi)	= tmp(1:nWfs) / dsqrt(vol)
 		end do
-		!$OMP END PARALLEL DO
+		!
 		!
 		return 
 	end subroutine
 
 
-
-
-	!logical function BwFisLattSym(bWf)
-	!	!ToDo
-	!	!checks if bwf(k) = bwf(k+G)
-	!	complex(dp),	intent(in)		:: bWf(:,:,:) !nR, nK , nG or nWfs
-	!	integer							:: k00, k10, k01, k11, n ! edge point indices
-!
-!	!	BwFisLattSym = .true.
-!	!	k00 = getKindex(	1	, 1		)
-!	!	k10	= getKindex(	nKx	, 1		)
-!	!	k01 = getKindex(	1	, nKy	)
-!	!	k11 = getKindex(	nKx , nKy	)
-!	!	write(*,'(a,i3,a,i3,a,i3,a,i3)')"[isLattSym]: k00 =",k00,", k10=",k10,", k01=",k01,", k11=",k11 
-!
-!
-!	!	do n = 1, size(bwf,3) ! loop states
-!
-!	!	end do
-!
-!	!	return
-	!end
 
 
 	subroutine genUnk(qi, bWf, unk)
@@ -77,7 +85,7 @@ module blochWf
 		do n = 1, nWfs
 			do xi = 1, nR
 				phase		 = myExp( -1.0_dp 	*	 dot_product( qpts(:,qi) , rpts(:,xi)	) 			)
-				unk(xi,qi,n) = phase * bWf(xi,n)
+				unk(xi,n,qi) = phase * bWf(xi,n)
 			end do
 		end do
 		!$OMP END PARALLEL DO
@@ -152,55 +160,39 @@ module blochWf
 
 
 !privat
-	subroutine calcBasVec(qi, ri, basVec)
+	subroutine calcBasis(qi, ri, basVec, veloBas)
 		!calculates the basis vectors e^i(k+G).r
 		!	if |k+G| is larger then the cutoff the basis vector is set to zero
 		!	the cutoff enforces a symmetric base at each k point
-		integer,	 intent(in)  :: qi, ri
-		complex(dp), intent(out) :: basVec(:)
-		real(dp)				 :: tmp(2)
-		integer 				 ::	i 
+		integer,	 intent(in)		:: qi, ri
+		complex(dp), intent(out)	:: basVec(:), veloBas(:,:)
+		real(dp)				 	:: tmp(2)
+		complex(dp)				 	:: phase
+		integer 				 	::	i 
 		!
 
+		!$OMP PARALLEL DO SCHEDULE(STATIC) DEFAULT(SHARED)	PRIVATE(i, tmp, phase)
 		do i =1, nG
 			tmp(:) = qpts(:,qi) + Gvec(:,i)
 			!
 			if( norm2(tmp) < Gcut ) then
-				basVec(i) = myExp( 		dot_product( tmp, rpts(:,ri) )			)
+				phase			= myExp( dot_product( tmp, rpts(:,ri) )		)
+				basVec(i) 		= phase
+				veloBas(1,i) 	= phase * i_dp * (	qpts(1,qi) + Gvec(1,i)	)
+				veloBas(2,i)	= phase * i_dp * (	qpts(2,qi) + Gvec(2,i)	)
 			else
-				basVec(i) = dcmplx( 0.0_dp )
+				basVec(i) 		= dcmplx( 0.0_dp )
+				veloBas(:,i)	= dcmplx( 0.0_dp )
 			end if
 		end do
+		!$OMP END PARALLEL DO
+		!
 		!
 		return
 	end subroutine
 
 
 
-	!VELOCITY HELPERS
-	subroutine calcVeloBasVec(qi,ri,basVec)
-		!the velocity basis
-		integer,		intent(in)		:: qi, ri
-		complex(dp),	intent(out)		:: basVec(:)
-		real(dp)				 :: tmp(2)
-		integer 				 ::	i 
-		!
-		do i =1, nG
-			tmp(:) = qpts(:,qi) + Gvec(:,i)
-			!
-			if( norm2(tmp) < Gcut ) then
-				!X COMPONENT
-				basVec(i) 		= i_dp * (	qpts(1,qi) + Gvec(1,i)	) * myExp( 		dot_product( tmp, rpts(:,ri) )			)
-				!Y COMPONENT
-				basVec(i+nG)	= i_dp * (	qpts(2,qi) + Gvec(2,i)	) * myExp(		dot_product( tmp, rpts(:,ri) )			)
-			else
-				basVec(i) = dcmplx( 0.0_dp )
-			end if
-		end do
-		!		
-		!
-		return
-	end subroutine
 
 
 

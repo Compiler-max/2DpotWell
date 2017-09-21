@@ -16,22 +16,30 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 #use all files provided in src, i.e. my .f90 files
 file(GLOB_RECURSE sources src/*.f90 src/*.F90)
 
-
+#include_directories("${PROJECT-SOURCE_DIR}/src")
+#add_subdirectory(src)
 
 include_directories("${PROJECT_SOURCE_DIR}/thirdparty")
 add_subdirectory(thirdparty)
 
+# FFLAGS depend on the compiler
+get_filename_component (Fortran_COMPILER_NAME ${CMAKE_Fortran_COMPILER} NAME)
+if (Fortran_COMPILER_NAME MATCHES "gfortran.*")
+  # gfortran
+  set (CMAKE_Fortran_FLAGS_RELEASE "-funroll-all-loops -fno-f2c -O3")
+  set (CMAKE_Fortran_FLAGS_DEBUG   "-fno-f2c -O0 -g")
+elseif (Fortran_COMPILER_NAME MATCHES "ifort.*")
+  # ifort (untested)
+  #set (CMAKE_Fortran_FLAGS_RELEASE "-mkl -O3")
+  set (CMAKE_Fortran_FLAGS_RELEASE "-mkl -O3 -g -qopenmp")
+  set (CMAKE_Fortran_FLAGS_DEBUG   "-mkl -O1 -g -qopenmp")
+endif (Fortran_COMPILER_NAME MATCHES "gfortran.*")
 
-
-#complie flags
-set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -qopenmp -O3 -g -xMIC-AVX512")
 #linker flags
-set(COVERAGE_LINK_FLAGS "-mkl -g  -xMIC-AVX512 ${OPENMP_LINK_FLAGS}")
+set(COVERAGE_LINK_FLAGS "-mkl -g  -qopenmp")
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${COVERAGE_LINK_FLAGS}")
 
 # generate executable and link library
-set(EXEC main.exe)
-add_executable(${EXEC} ${sources})
-target_link_libraries(${EXEC} config_fortran quadpack)
-
+add_executable(main.exe ${sources})
+target_link_libraries(main.exe config_fortran quadpack)
 

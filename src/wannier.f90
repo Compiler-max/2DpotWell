@@ -4,11 +4,14 @@ module wannier
 	use omp_lib
 	use mathematics,	only:	dp, PI_dp, i_dp, acc, myExp, nIntegrate
 	use sysPara
+	use wannGen,		only:	genWannF2
+	use polarization,	only:	calcPolWannCent
+	use output,			only:	writeWannFiles
 
 	implicit none
 
 	private
-	public :: isNormal, isReal, calcCentSpread, genTBham, genUnkW, calcWannMat
+	public :: wannMethod, isNormal, isReal, calcCentSpread, genTBham, genUnkW, calcWannMat
 
 	contains
 
@@ -30,6 +33,43 @@ module wannier
 
 
 !public:
+	subroutine wannMethod(unk, pWann)
+		complex(dp),	intent(in)		:: unk(:,:,:)		!	unk(	nR 	,	nWfs	, nQ	)
+		real(dp),		intent(out)		:: pWann(2)
+		complex(dp),	allocatable		:: wnF(:,:,:)		
+		real(dp),		allocatable		:: wCent(:,:), wSprd(:,:)
+		integer							:: normCount
+		!
+		allocate(			wnF( 		nR		, 	nSC		, nWfs		)				)
+		allocate(			wCent(		2		, 	nWfs				)				)
+		allocate(			wSprd(		2		, 	nWfs				)				)
+		!
+		!Generate Wannier functions and calc polarization from wannier centers
+		call genWannF2(unk, wnF)
+		call calcCentSpread(wnF, wCent, wSprd)
+		call calcPolWannCent(wCent,pWann)
+		!
+		!write results
+		call writeWannFiles(wnF, wCent, wSprd)
+
+
+		!DEBUG 
+		normCount = isNormal(wnF)
+		if(normCount /= 0) then
+			write(*,*)	"[wannMethod]: generated wannier functions have normalization issues"
+		end if
+		!
+		!
+		return
+	end subroutine
+
+
+
+
+
+
+
+
 	integer function isNormal(wnF)
 		!checks if Wannier functions fullfill
 		!	<Rn|R'm> = \delta(R,R') \delta(n,m)

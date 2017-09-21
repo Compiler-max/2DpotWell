@@ -21,31 +21,27 @@ module potWellModel
 
 	contains
 !public:
-	subroutine solveHam(wnF, unk, En, veloBwf)   !call solveHam(wnF, unk, EnW, VeloBwf)
+	subroutine solveHam(unk, En, veloBwf)   !call solveHam(wnF, unk, EnW, VeloBwf)
 		!solves Hamiltonian at each k point
 		!also generates the Wannier functions on the fly (sum over all k)
-		complex(dp),	intent(out)		::	wnF(:,:,:), unk(:,:,:), veloBwf(:,:,:)		
+		complex(dp),	intent(out)		::	unk(:,:,:), veloBwf(:,:,:,:)		
 																				!wnF( nR	, nSupC,	nWfs	)	
-																				!unkW(nR	, nKpts,	nWfs	)
+																				!unkW(nR	,	nWfs,  nKpts	)
 																				!veloBwf(nR,nK,2*nG)
 		real(dp),		intent(out)		::	En(:,:)																	
-		complex(dp),	allocatable		::	Hmat(:,:), bWf(:,:,:), lobWf(:,:), gnr(:,:), U(:,:), I(:,:)
-		real(dp),		allocatable		::	EnT(:), bwfR(:,:,:), bwfI(:,:,:)	 
+		complex(dp),	allocatable		::	Hmat(:,:), bWf(:,:,:), lobWf(:,:), U(:,:)
+		real(dp),		allocatable		::	EnT(:,:), bwfT(:,:,:) 
 		integer							:: 	qi, xi , n, Ri, failCount
 		real(dp)						::	kVal(2), smin, smax
 		complex(dp)						:: 	phase, wTemp
 		!
 		allocate(	Hmat(	nG,	nG		)			)
 		allocate(	U(		nWfs, nWfs	)			)
-		allocate(	I(		nG,	nG		)			)
-		allocate(	EnT(	nG			)			)	
+		allocate(	EnT(	nG	, nQ	)			)	
 		allocate(	bWf(	nR, nG, nQ	)			)
-		allocate(	bWfR(	nR, nG, nQ	)			)
-		allocate(	bWfI(	nR, nG, nQ	)			)
+		allocate(	bWfT(	nR, nG, nQ	)			)
 		allocate(	lobWf(	nR, nWfs	)			)
-		allocate(	gnr(	nR,	nWfs	)			)
 		
-		wnF			=	dcmplx(0.0_dp)
 		bWf			=	dcmplx(0.0_dp)
 		unk			=	dcmplx(0.0_dp)
 		veloBwf		=	dcmplx(0.0_dp)
@@ -55,16 +51,17 @@ module potWellModel
 		!
 		
 	
-		!open(unit=200, file='rawData/bandStruct.dat', form='unformatted', access='stream', action='write')
+		
 		do qi = 1, nQ
-			!write(*,*)"[solveHam]: qi=",qi
+			write(*,*)"[solveHam]: qi=",qi
 			kVal	=	qpts(:,qi)
 			
 			!ELECTRONIC STRUCTURE
 			call populateH(kVal, Hmat) 	!omp
-			call eigSolver(Hmat, EnT)	!mkl
-			!write(200) EnT
-			En(qi,:) = EnT(1:nWfs) 
+			write(*,*)	"[solveHam]: Ham matrix set up done"
+			call eigSolver(Hmat, EnT(:,qi))	!mkl
+			En(:,qi)	= EnT(1:nWfs,qi)
+			write(*,*)	"[solveHam]: solved electronic structure"
 			!if(.not. isUnit(Hmat)	) then
 			!	write(*,*)"[solveHam]: base coefficients not unitary!"
 			!end if
@@ -72,39 +69,40 @@ module potWellModel
 			!BLOCH WAVEFUNCTIONS
 			call gaugeCoeff(kVal, Hmat)
 			call genBwfVelo(qi, Hmat, bWf, veloBwf)	!mkl
+			write(*,*)	"[solveHam]: generated Bloch wavefunctions"
 
 			!PROJECTION & WANNIER
-			call projectBwf(qi, bWf(:,:,qi), loBwf, U, failCount, smin, smax)	!todo mkl
-			call genWannF(qi, lobWf, wnF) 	!omp
+			!call projectBwf(qi, bWf(:,:,qi), loBwf, U, failCount, smin, smax)	!todo mkl
+			write(*,*)	"[solveHam]: projetion of bwf done"
+			!call genWannF(qi, lobWf, wnF) 	!omp
 			call genUnk(qi, lobWf, unk )	!omp
-			
+			write(*,*)	"[solveHam]: generated unks"
 			!
 			!
 		end do
-		!close(200)
+
 
 
 		!write(*,*)"[solveHam]: test normalization of generated Bloch wavefunctions"
 		!call testNormal(bwf)
-		
-
-		
-		!open(unit=210, file='rawData/bwfR.dat'		, form='unformatted', access='stream', action='write')
-		!open(unit=211, file='rawData/bwxfI.dat'		, form='unformatted', access='stream', action='write')
-		!!
-		!write(200) EnT
-		!bWfR 	= dreal(bWf)                 !Todo fix that
-		!bWfI	= dimag(bWf)
-		!write(210)bWfR
-		!write(211)bwfI
-		!!
-		!
-		!close(210)
-		!close(211)
-!
 		!write(*,'(a,f16.13,a,f16.12)') "[solveHam]: projection matrix  smin=", smin, " smax=", smax
 		!write(*,'(a,i7,a)')"[solveHam]: ",failCount," of the projected bloch like functions are not orthonormal"
-		
+
+
+		!WRITE ENERGIES & BWFs
+		open(unit=200, file='rawData/bandStruct.dat', form='unformatted', access='stream', action='write')
+		write(200)	EnT
+		close(200)
+		!
+		bWfT	= dreal(bWf) 
+		open(unit=210, file='rawData/bwfR.dat'		, form='unformatted', access='stream', action='write') 
+		write(210)	bWfT     
+		close(210)
+		!
+		bWfT	= dimag(bWf)
+		open(unit=211, file='rawData/bwxfI.dat'		, form='unformatted', access='stream', action='write')
+		write(211)	bwfT
+		!
 		!
 		return
 	end subroutine
