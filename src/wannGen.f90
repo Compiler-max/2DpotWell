@@ -33,24 +33,37 @@ module wannGen
 		integer,		intent(inout)	:: failCount
 		real(dp),		intent(inout)	:: smin, smax
 		complex(dp)	,	allocatable		:: gnr(:,:), A(:,:), S(:,:), phi(:,:)
-		integer							:: n, nBands, xi
+		complex(dp)						:: alpha, beta
+		integer							:: m, n, k, lda, ldb, ldc, xi
+		character*1						:: transa, transb
 		!
 		allocate(	gnr(nR,nWfs)		)
 		allocate( 	S(nWfs,nWfs)		)
 		allocate( 	A(nWfs,nWfs)		)
-		loBwf 	= dcmplx(0.0_dp)
-		U 		= dcmplx(0.0_dp)
 		!
 		!SET UP ROTATION MATRIX U
 		call genTrialOrb(gnr)
 		call calcAmat(bwf,gnr, A)
 		call calcInvSmat(A, S, smin, smax)
-		U = matmul(S, A)
+		!U = matmul(S, A)
+		transa	= 'n' 
+		transb	= 'n'
+		m		= size(S,1)
+		n		= size(A,2)
+		k		= size(S,2)
+		alpha	= dcmplx(1.0_dp)
+		lda		= size(S,1)
+		ldb		= size(A,1)
+		beta	= dcmplx(0.0_dp)
+		ldc		= size(U,1)
+		call zgemm(transa, transb, m, n, k, alpha, S, lda, A, ldb, beta, U, ldc)
 		!
 		!ROTATE BLOCH STATES
+		!$OMP PARALLEL DO SCHEDULE(STATIC) DEFAULT(SHARED) PRIVATE(xi)
 		do xi = 1, nR
 			loBwf(xi,:) = matmul(	U , bWf(xi,1:nWfs)	)
 		end do
+		!$OMP END PARALLEL DO
 		!
 		!DEBUGGING
 		if( .not. isUnit(U) 			) then
@@ -67,7 +80,7 @@ module wannGen
 
 	subroutine genWannF(qi, bWf, wnF)
 		! generates wannier functions from (projected) bloch wavefunctions
-		!
+		!	DEPRECATED
 		integer,		intent(in)		:: qi
 		complex(dp), 	intent(in)  	:: bWf(:,:) ! lobWf(nRpts,nWfs)	
 		complex(dp), 	intent(inout) 	:: wnF(:,:,:) ! wnF( 	nR, nSC, nWfs		)	
@@ -210,7 +223,7 @@ module wannGen
 				A(m,n) = nIntegrate(nR, nRx, nRy, dx, dy, f)		
 			end do
 		end do
-		!
+		!$OMP END PARALLEL DO
 		!
 		return
 	end subroutine
