@@ -194,20 +194,23 @@ module wannGen
 		complex(dp),	intent(in)	:: bWf(:,:), gnr(:,:) 
 		complex(dp),	intent(out)	:: A(:,:) !A(nWfs,nWfs)
 		complex(dp),	allocatable	:: f(:)
-		complex(dp)					:: overlap
 		integer						:: m,n, xi
+		!
 		allocate(	f(nR)	)
 		!
 		A = dcmplx(0.0_dp)
-	
-
+		!
+		!$OMP PARALLEL DO COLLAPSE(2) SCHEDULE(STATIC) DEFAULT(SHARED) PRIVATE(n, m, f, xi)
 		do n = 1, nWfs
-			f = dcmplx(0.0_dp)
-			do xi = 1, nR				
-				f(xi) = dconjg(	bWf(xi,n) ) * gnr(xi,n)
+			do m = 1, nWfs
+				f = dcmplx(0.0_dp)
+				do xi = 1, nR				
+					f(xi) = dconjg(	bWf(xi,m) ) * gnr(xi,n)
+				end do
+				A(m,n) = nIntegrate(nR, nRx, nRy, dx, dy, f)		
 			end do
-			A(n,n) = nIntegrate(nR, nRx, nRy, dx, dy, f)		
 		end do
+		!
 		!
 		return
 	end subroutine
