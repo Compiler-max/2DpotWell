@@ -226,28 +226,21 @@ module wannGen
 
 	subroutine calcInvSmat(A, S, smin, smax)
 		!calculates the sqrt inv. of the overlap matrix S
+		!
+		!	S	= A^dagger A
 		complex(dp),	intent(in)		:: A(:,:)
 		complex(dp),	intent(out)		:: S(:,:)
 		real(dp),		intent(inout)	:: smin, smax
-		complex(dp),	allocatable		:: Acon(:,:),Sold(:,:), Ssqr(:,:)
+		complex(dp),	allocatable		:: Sold(:,:), Ssqr(:,:)
 		integer							:: m,n,k,lda,ldb,ldc, i,j
 		real(dp)						:: mi, ma
 		complex(dp)						:: alpha, beta
 		character*1						:: transa, transb
-		m = size(A,1)
-		n = size(A,2)
-		!allocate(	Acon(n,m)	)
+		!
 		allocate(	Sold(n,n)	)
 		allocate(	Ssqr(n,n)	)
 		!
-		!S = dcmplx(0.0_dp)
-		!Acon = transpose(A)
-		!Acon = dconjg(Acon)
-		!S = matmul(Acon , A)
-		
-
-
-		
+		!CALCULATE S FROM A 
 		transa	= 'c'
 		transb	= 'n'
 		m		= size(A,1)
@@ -260,13 +253,9 @@ module wannGen
 		ldc		= size(A,1)
 		!call zgemm(transa, transb, m, n, k, alpha, a, lda, b, ldb, beta, c, ldc)
 		 call zgemm(transa, transb, m, n, k, alpha, A, lda, A, ldb, beta, S, ldc)
-		
 		!
-		
-
-
-
-
+		!
+		!CALCULATE INVERSE SQRT OF S
 		Sold = S
 		call myMatInvSqrt(S, mi, ma)
 
@@ -276,17 +265,16 @@ module wannGen
 		if( ma > smax ) then
 			smax = ma
 		end if
-
+		!
+		!
 		!DEBUG: Check if S is really the inverse sqrt
-		!Ssqr = matmul(S,S)
-		!Sold = matmul(Sold,Ssqr)
 		transa	= 'n'
 		transb	= 'n'
 		alpha	= dcmplx(1.0_dp)
 		beta	= dcmplx(0.0_dp)
 		call zgemm(transa, transb, m, n, k, alpha, S   , lda, S   , ldb, beta, Ssqr, ldc)
 		call zgemm(transa, transb, m, n, k, alpha, Sold, lda, Ssqr, ldb, beta, Sold, ldc)
-		
+		!
 		if( .not. isUnit(Sold) ) then
 			write(*,*)"[calcInvSmat]: problem with mat inversion, seems to be not inverse square root"
 		end if
