@@ -45,27 +45,30 @@ module blochWf
 		ldb		= size(basCoeff,2)
 		ldc		= size(tmp)
 		!
-		!
+		!$OMP PARALLEL DO SCHEDULE(STATIC) DEFAULT(SHARED) PRIVATE(xi, basVec, veloBas)
 		do xi = 1, nR
-				!GET BASIS
-				call calcBasis(qi,xi, basVec, veloBas)
-				!
-				!
-				!WAVE FUNCTIONS
-				call zgemm(transa, transb, m, n, k, alpha, basVec, lda, basCoeff,ldb, beta, tmp,ldc)
-				bWf(xi,:,qi)	= tmp(:) / dsqrt(vol)
-				!
-				!
-				!!VELOCITIES
-				basVec	= veloBas(1,:)
-				call zgemm(transa, transb, m, n, k, alpha, basVec, lda, basCoeff, ldb, beta, tmp, ldc)
-				velobWf(1,xi,:,qi)	= tmp(1:nWfs) / dsqrt(vol)
-				!
-				basVec	= veloBas(2,:)
-				call zgemm(transa, transb, m, n, k, alpha, basVec, lda, basCoeff, ldb, beta, tmp, ldc)
-				velobWf(2,xi,:,qi)	= tmp(1:nWfs) / dsqrt(vol)
+			!GET BASIS
+			call calcBasis(qi,xi, basVec, veloBas)
+			!
+			!
+			!WAVE FUNCTIONS
+			bwf(xi,:,qi)	= matmul(basVec,basCoeff) / dsqrt(vol)
+			!call zgemm(transa, transb, m, n, k, alpha, basVec, lda, basCoeff,ldb, beta, tmp,ldc)
+			!bWf(xi,:,qi)	= tmp(:) / dsqrt(vol)
+			!
+			!
+			!!VELOCITIES
+			basVec	= veloBas(1,:)
+			velobWf(1,xi,:,qi)	= matmul(basVec,basCoeff) / dsqrt(vol)
+			!call zgemm(transa, transb, m, n, k, alpha, basVec, lda, basCoeff, ldb, beta, tmp, ldc)
+			!velobWf(1,xi,:,qi)	= tmp(1:nG) / dsqrt(vol)
+			!
+			basVec	= veloBas(2,:)
+			velobWf(2,xi,:,qi)	= matmul(basVec,basCoeff) / dsqrt(vol)
+			!call zgemm(transa, transb, m, n, k, alpha, basVec, lda, basCoeff, ldb, beta, tmp, ldc)
+			!velobWf(2,xi,:,qi)	= tmp(1:nG) / dsqrt(vol)
 		end do
-		!
+		!$OMP END PARALLEL DO
 		!
 		return 
 	end subroutine
