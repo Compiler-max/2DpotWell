@@ -143,7 +143,7 @@ module potWellModel
 		!call Hkin(k,Hmat) 
 		!call Hpot( Hmat)
 
-		!$OMP PARALLEL DO SCHEDULE(STATIC) COLLAPSE(2) DEFAULT(SHARED) PRIVATE(j, i, kg, onSite)
+		!$OMP PARALLEL DO SCHEDULE(DYNAMIC) COLLAPSE(2) DEFAULT(SHARED) PRIVATE(j, i, kg, onSite)
 		do j = 1, nG
 			do i = 1, nG
 				if(i .and. j )	then

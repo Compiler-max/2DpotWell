@@ -26,14 +26,15 @@ module blochWf
 		integer		, intent(in)	:: qi
 		complex(dp)	, intent(in)	:: basCoeff(:,:)
 		complex(dp)	, intent(out)	:: bWf(:,:,:), velobWf(:,:,:,:)	!bWf(nRpts,nG)			
-		complex(dp)	, allocatable	:: basVec(:), veloBas(:,:), tmp(:)
+		complex(dp)	, allocatable	:: basVec(:), veloBasX(:), veloBasY(:), tmp(:)
 		integer 				 	:: xi, lda, ldb, ldc, m, n, k
 		character*1					:: transa, transb
 		complex(dp)					:: alpha, beta
 		!
 		allocate(	basVec(		nG)		)
-		allocate(	veloBas(2,	nG)		)
-		allocate(	tmp(		nG)		)
+		allocate(	veloBasX(	nG)		)
+		allocate(	veloBasY(	nG)		)
+		!allocate(	tmp(		nG)		)
 		!
 		transa	= 'n'
 		transb	= 'n'
@@ -46,28 +47,19 @@ module blochWf
 		ldb		= size(basCoeff,2)
 		ldc		= size(tmp)
 		!
-		!$OMP PARALLEL DO SCHEDULE(STATIC) DEFAULT(SHARED) PRIVATE(xi, basVec, veloBas)
+		!$OMP PARALLEL DO SCHEDULE(STATIC) DEFAULT(SHARED) PRIVATE(xi, basVec, veloBasX, veloBasY)
 		do xi = 1, nR
 			!GET BASIS
-			call calcBasis(qi,xi, basVec, veloBas)
+			call calcBasis(qi,xi, basVec, veloBasX, veloBasY)
 			!
 			!
 			!WAVE FUNCTIONS
 			bwf(xi,:,qi)	= matmul(basVec,basCoeff) / dsqrt(vol)
-			!call zgemm(transa, transb, m, n, k, alpha, basVec, lda, basCoeff,ldb, beta, tmp,ldc)
-			!bWf(xi,:,qi)	= tmp(:) / dsqrt(vol)
-			!
 			!
 			!!VELOCITIES
-			basVec	= veloBas(1,:)
-			velobWf(1,xi,:,qi)	= matmul(basVec,basCoeff) / dsqrt(vol)
-			!call zgemm(transa, transb, m, n, k, alpha, basVec, lda, basCoeff, ldb, beta, tmp, ldc)
-			!velobWf(1,xi,:,qi)	= tmp(1:nG) / dsqrt(vol)
-			!
-			basVec	= veloBas(2,:)
-			velobWf(2,xi,:,qi)	= matmul(basVec,basCoeff) / dsqrt(vol)
-			!call zgemm(transa, transb, m, n, k, alpha, basVec, lda, basCoeff, ldb, beta, tmp, ldc)
-			!velobWf(2,xi,:,qi)	= tmp(1:nG) / dsqrt(vol)
+			velobWf(1,xi,:,qi)	= matmul(veloBasX,basCoeff) / dsqrt(vol)
+			velobWf(2,xi,:,qi)	= matmul(veloBasY,basCoeff) / dsqrt(vol)
+			
 		end do
 		!$OMP END PARALLEL DO
 		!
@@ -216,32 +208,30 @@ module blochWf
 
 
 !privat
-	subroutine calcBasis(qi, ri, basVec, veloBas)
+	subroutine calcBasis(qi, ri, basVec, veloBasX, veloBasY)
 		!calculates the basis vectors e^i(k+G).r
 		!	if |k+G| is larger then the cutoff the basis vector is set to zero
 		!	the cutoff enforces a symmetric base at each k point
 		integer,	 intent(in)		:: qi, ri
-		complex(dp), intent(out)	:: basVec(:), veloBas(:,:)
+		complex(dp), intent(out)	:: basVec(:), veloBasX(:), veloBasY(:)
 		real(dp)				 	:: tmp(2)
 		complex(dp)				 	:: phase
 		integer 				 	::	i 
 		!
-
-		!$OMP PARALLEL DO SCHEDULE(STATIC) DEFAULT(SHARED)	PRIVATE(i, tmp, phase)
 		do i =1, nG
 			tmp(:) = qpts(:,qi) + Gvec(:,i)
 			!
 			if( norm2(tmp) < Gcut ) then
 				phase			= myExp( dot_product( tmp, rpts(:,ri) )		)
 				basVec(i) 		= phase
-				veloBas(1,i) 	= phase * i_dp * (	qpts(1,qi) + Gvec(1,i)	)
-				veloBas(2,i)	= phase * i_dp * (	qpts(2,qi) + Gvec(2,i)	)
+				veloBasX(i) 	= phase * i_dp * (	qpts(1,qi) + Gvec(1,i)	)
+				veloBasY(i)		= phase * i_dp * (	qpts(2,qi) + Gvec(2,i)	)
 			else
 				basVec(i) 		= dcmplx( 0.0_dp )
-				veloBas(:,i)	= dcmplx( 0.0_dp )
+				veloBasX(i)		= dcmplx( 0.0_dp )
+				veloBasY(i)		= dcmplx( 0.0_dp )
 			end if
 		end do
-		!$OMP END PARALLEL DO
 		!
 		!
 		return

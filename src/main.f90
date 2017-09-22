@@ -135,6 +135,15 @@ program main
 	
 
 
+
+
+
+
+
+
+
+
+
 	!write(*,*)"*"
 	!write(*,*)"*"
 	!write(*,*)"*"
@@ -197,7 +206,7 @@ program main
 	call writePolFile(pWann, pIon, pTot, pBerry, pInt, pNiu, pPei )
 	write(*,*)"[main]: ...wrote polarization txt file"
 	!
-	write(*,'(a,E10.3)')"[main]: overlap warnings etc. where given for diviations from expected above the threshold: ",acc
+	
 	call cpu_time(oT1)
 	oT = oT1 - oT0
 	
