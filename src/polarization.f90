@@ -56,11 +56,11 @@ module polarization
 		! r_n 	= <0n|r|0n> 
 		!		=V/(2pi)**2 \integrate_BZ <unk|i \nabla_k|unk>
 		!		=V/(2pi)**2 \integrate_BZ A(k)
-		real(dp),		intent(in)		:: A(:,:,:,:)			!A(2,	 nK, nWfs, nWfs	)	
+		real(dp),		intent(in)		:: A(:,:,:,:)			!A(2,	 nWfs, nWfs, nQ	)	
 		real(dp),		intent(out)		:: pElA(:)
 		real(dp)	,	allocatable		:: val(:)
 		real(dp)						:: machine
-		integer							:: n, ki
+		integer							:: n, qi
 		!
 		allocate(	val( size(A,1) )	)
 		val		= 0.0_dp
@@ -68,14 +68,14 @@ module polarization
 		machine	= 1e-15_dp
 		!
 		!SUM OVER K SPACE AND OVER STATES
-		do n 	= 1, size(A,3)
-			do ki = 1, size(A,2)
-				val(:)	= val(:) + A(:,ki,n,n)
+		do n 	= 1, size(A,2)
+			do qi = 1, size(A,4)
+				val(:)	= val(:) + A(:,n,n,qi)
 			end do
 		end do
 		!
 		!NORMALIZE K INTEGRATION	
-		pElA(:)	= val(:) / real(size(A,2),dp)
+		pElA(:)	= val(:) / real(size(A,4),dp)
 		!
 		!!HARVEST
 		!pElA	= val / (aX*aY)

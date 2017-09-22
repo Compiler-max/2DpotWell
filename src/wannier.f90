@@ -45,17 +45,25 @@ module wannier
 		!
 		!Generate Wannier functions and calc polarization from wannier centers
 		call genWannF2(unk, wnF)
+		write(*,*)	"[wannMethod]: generated the wannier functions"
 		call calcCentSpread(wnF, wCent, wSprd)
+		write(*,*)	"[wannMethod]: calculated centers and spreads"
 		call calcPolWannCent(wCent,pWann)
+		write(*,*)	"[wannMethod]: calculated polarization via centers"
 		!
 		!write results
 		call writeWannFiles(wnF, wCent, wSprd)
+		write(*,*)	"[wannMethod]: wrote wannier files"
 
-
-		!DEBUG 
-		normCount = isNormal(wnF)
-		if(normCount /= 0) then
-			write(*,*)	"[wannMethod]: generated wannier functions have normalization issues"
+		!DEBUG
+		if(debugWann) then 
+			normCount = isNormal(wnF)
+			if(normCount /= 0) then
+				write(*,*)	"[wannMethod]: generated wannier functions have normalization issues"
+			end if
+			!
+			!
+			call isReal(wnF)
 		end if
 		!
 		!

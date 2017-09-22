@@ -27,9 +27,9 @@ module semiClassics
 	subroutine	calcFirstOrdP(Fcurv, Aconn, Velo, En, p1)
 		!calculates the first order polarization p1 according to
 		!	P'= -int_dk [0.5 (Curv.Velo)*B_ext + a']
-		real(dp),		intent(in)		::	Fcurv(:,:,:), Aconn(:,:,:,:)
-		complex(dp),	intent(in)		:: 	Velo(:,:,:,:)		!	Fcurv(3,nKs,nWfs) Velo(3, nK, nWfs,nWfs)	
-		real(dp),		intent(in)		::	En(:,:)				!	En(			nK, nWfs)						
+		real(dp),		intent(in)		::	Fcurv(:,:,:), Aconn(:,:,:,:)	!Fcurv(3,nWfs, nQ)
+		complex(dp),	intent(in)		:: 	Velo(:,:,:,:)		!	 Velo(3, nWfs,nWfs, nQ)	
+		real(dp),		intent(in)		::	En(:,:)				!	En(			nWfs, nQ)						
 		real(dp),		intent(out)		:: 	p1(3)
 		complex(dp), 	allocatable		::	f(:,:)
 		real(dp)						::	pn(3)
@@ -38,10 +38,10 @@ module semiClassics
 		integer							:: 	n, ki, nSize, kSize
 		!
 		nSize	= size(Velo,3)
-		kSize	= size(Velo,2)
+		kSize	= size(Velo,4)
 		allocate(	f(3,nSize )		)
 		p1 = 0.0_dp
-		if(		nSize /= size(En,2)		) then
+		if(		kSize /= size(En,2)		) then
 			write(*,*)"[calcFirstOrdP]: WARNING Energy and connection live on different k meshes!"
 		end if
 		!

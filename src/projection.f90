@@ -67,13 +67,16 @@ module projection
 		!$OMP END PARALLEL DO
 		!
 		!DEBUGGING
-		if( .not. isUnit(U) 			) then
-			write(*,'(a,i7,a)')"[projectBwf]: qi=",qi," U matrix is not a unitary matrix !"
+		if(debugHam) then
+			if( .not. isUnit(U) 			) then
+				write(*,'(a,i7,a)')"[projectBwf]: qi=",qi," U matrix is not a unitary matrix !"
+			end if
+			if(	 .not. isOrthonorm(lobWf)	) then
+				write(*,'(a,f16.12)')"[projectBwf]: loBwf is NOT a orthonormal basis set, accuracy=",acc
+				failCount = failCount + 1
+			end if
 		end if
-		!if(	 .not. isOrthonorm(lobWf)	) then
-		!	write(*,'(a,f16.12)')"[projectBwf]: loBwf is NOT a orthonormal basis set, accuracy=",acc
-		!	failCount = failCount + 1
-		!end if
+		!
 		!
 		return
 	end subroutine
@@ -264,8 +267,10 @@ module projection
 		call zgemm(transa, transb, m, n, k, alpha, S   , lda, S   , ldb, beta, Ssqr, ldc)
 		call zgemm(transa, transb, m, n, k, alpha, Sold, lda, Ssqr, ldb, beta, Sold, ldc)
 		!
-		if( .not. isUnit(Sold) ) then
-			write(*,*)"[calcInvSmat]: problem with mat inversion, seems to be not inverse square root"
+		if(debugHam) then
+			if( .not. isUnit(Sold) ) then
+				write(*,*)"[calcInvSmat]: problem with mat inversion, seems to be not inverse square root"
+			end if
 		end if
 		!
 		!

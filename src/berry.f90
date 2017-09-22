@@ -4,10 +4,13 @@ module berry
 	use omp_lib
 	use mathematics,	only:	dp, PI_dp, i_dp, acc, myExp, myLeviCivita, nIntegrate
 	use sysPara
+	use polarization,	only:	calcPolViaA
+	use semiClassics,	only:	calcFirstOrdP
+	use output,			only:	writeWaveFunc
 	implicit none
 
 	private
-	public	::	isKperiodic, calcWaveMat, calcConnOnCoarse, calcVeloMat, calcCurv
+	public	::	berryMethod, calcWaveMat, calcConnOnCoarse, calcVeloMat, calcCurv
 	contains
 
 
@@ -26,88 +29,217 @@ module berry
 
 
 !public
-	integer function isKperiodic(unk)
-		!	Test the condition u_nk = e^{iGr} u_nk+G
-		!	see	King-Smith Vanderbilt PRB 48.7 4442 (1993)
+	subroutine berryMethod(unk, En, veloBwf, pBerry, pNiu)
+		complex(dp),	intent(in)		:: unk(:,:,:), veloBwf(:,:,:,:)
+		real(dp),		intent(in)		:: En(:,:)
+		real(dp),		intent(out)		:: pBerry(2), pNiu(3)
+		complex(dp),	allocatable		:: velo(:,:,:,:)
+		real(dp),		allocatable		:: Aw(:,:,:,:), FW(:,:,:)
 		!
-		!	the values at each x direction boundary (kx,1) is compared with (kx,nKy)
-		!	analog for y direction
+		allocate(			Aw(			3		, nWfs,nWfs		,	nQ		)				)
+		allocate(			velo(		3		, nWfs,nWfs		,	nQ		)				)
+		allocate(			FW(			3		, nWfs			,	nQ		)				)
+
+		call calcConnOnCoarse(unk, Aw)
+		call calcPolViaA(Aw,pBerry)
+		
+		!ToDo: SWITCH FOR USING NIU
+		if(doNiu) then
+			!Get zero order velocities and curvatures
+			call calcVeloMat(unk, VeloBwf, velo)
+			call calcCurv(En, velo, Fw)
+			!use them for calc of first order pol 
+			call calcFirstOrdP(Fw, Aw, velo, En, pNiu)
+		end if
+
+
+		!OUTPUT
+		call writeWaveFunc(unk, Aw, Fw)
 		!
-		complex(dp),	intent(in)		:: unk(:,:,:)
-		integer							:: n, qix, qiy, ri, totC, isX, isY
-		real(dp)						:: Gx(2), Gy(2), val,dmax, avg
-		complex(dp)						:: phase, u0, u1
 		!
-		Gx(1)		= 2.0_dp * PI_dp / aX
-		Gx(2)		= 0.0_dp
-		Gy(1)		= 0.0_dp
-		Gy(2)		= 2.0_dp * PI_dp / aX
-		isKperiodic = 0
-		isX			= 0
-		isY			= 0
-		totC		= 0
-		dmax		= 0.0_dp
-		avg			= 0.0_dp
+		return
+	end subroutine
+
+
+
+
+
+
+
+
+	subroutine calcConnOnCoarse(unk, A)
+		!finite difference on lattice periodic unk to calculate the Berry connection A
+		!	A_n(k) 	= <u_n(k)|i \nabla_k|u_n(k)>
+		!		 	= i  <u_n(k)| \sum_b{ w_b * b * [u_n(k+b)-u_n(k)]}
+		!			= i \sum_b{		w_b * b * [  <u_n(k)|u_n(k+b)> -  <u_n(k)|u_n(k)>]		}
 		!
+		! see Mazari, Vanderbilt PRB.56.12847 (1997), Appendix B
 		!
-		do 	n = 1, nWfs 
-			!CHECK IN X DIRECTION
-			do  qix = 1, nQx 
-				do ri = 1, nR
-					phase 	= myExp( 	dot_product( Gx(:) , rpts(:,ri) )		)
-					u0 		= unk( ri, n,	getKindex(qix,1  )	)
-					u1		= unk( ri, n,	getKindex(qix,nQy)	)
-					val 	= abs(u0-phase*u1)
-					if(  val > acc	) then 
-						isKperiodic = isKperiodic 	+ 1
-						isX			= isX			+ 1
-						avg			= avg + val
-						if( val > dmax) then
-							dmax = val
-						end if 
-					end if
-					totC = totC + 1
-				end do	
-			end do
-			!
-			!CHECK IN Y DIRECTION
-			do  qiy = 1, nQy
-				do ri = 1, nR
-					phase 	= myExp( 	dot_product( Gy(:) , rpts(:,ri) )		)
-					u0 		= unk( ri,	n,	getKindex(1  ,qiy)	)
-					u1		= unk( ri,	n,	getKindex(nQx,qiy)	)
-					val		= abs(u0-phase*u1)
-					if( val > acc	) then 
-						isKperiodic = isKperiodic	+ 1
-						isY			= isY			+ 1
-						avg			= avg + val
-						if(val > dmax) then
-							dmax = val
-						end if 
-					end if
-					totC = totC + 1
+		complex(dp),	intent(in)		:: unk(:,:,:)		!unk(	nR, nK/nKw, nWfs/nG	)
+		real(dp),		intent(out)		:: A(:,:,:,:)			!Aconn(	3,nK, nWfs)		)	
+		complex(dp)						:: Mxl, Mxr, Myl, Myr, one
+		integer							:: n, m, Z, qi, qx, qy, qxl, qxr, qyl, qyr, found, tot
+		real(dp)						:: wbx,wby, bxl(2), bxr(2), byl(2), byr(2),dmax, avg, val 
+		!
+		A 		= 0.0_dp
+		Z 		= 4	!amount of nearest neighbours( 2 for 2D cubic unit cell)
+		wbx 	= 3.0_dp / 		( real(Z,dp) * dqx**2 )
+		wby 	= 3.0_dp /		( real(Z,dp) * dqy**2 )
+		!b vector two nearest X neighbours:
+		bxl(1) 	= -dqx				
+		bxl(2)	= 0.0_dp
+		bxr(1) 	= +dqx
+		bxr(2)	= 0.0_dp
+		!b vector two nearest Y neighbours:
+		byl(1) 	= 0.0_dp
+		byl(2)	= -dqy
+		byr(1) 	= 0.0_dp
+		byr(2)	= +dqy
+		!
+		found	= 0
+		tot		= 0
+		dmax	= 0.0_dp
+		avg		= 0.0_dp
+		!
+		!$OMP PARALLEL DO COLLAPSE(3) SCHEDULE(STATIC),  &
+		!$OMP& DEFAULT(SHARED), PRIVATE(m, n, qx, qxl, qxr, qy, qyl, qyr, qi, one, Mxl, Mxr, Myl, Myr, val),&
+		!$OMP& REDUCTION(+:found,avg,tot), REDUCTION(max:dmax)
+		do m = 1, nWfs
+			do n = 1, nWfs
+				do qx = 1, nQx
+					qxl	= getLeft( qx,nQx)
+					qxr	= getRight(qx,nQx)
+					!
+					do qy = 1, nQy
+						qyl	= getLeft(  qy,nQy)
+						qyr = getRight( qy,nQy)
+						qi	= getKindex(qx,qy)
+						!
+						!OVERLAP TO NEAREST NEIGHBOURS
+						one = UNKoverlap(	n,		m, 		qi		, 		qi					, unk	)
+						Mxl	= UNKoverlap(	n,		m, 		qi		, getKindex( qxl, qy ) 		, unk	) 
+						Mxr	= UNKoverlap(	n,		m, 		qi		, getKindex( qxr, qy )		, unk	)
+						Myl	= UNKoverlap(	n,		m, 		qi		, getKindex( qx ,qyl )		, unk	)
+						Myr	= UNKoverlap(	n,		m, 		qi		, getKindex( qx ,qyr )		, unk	)
+
+						
+						!FD SUM OVER NEAREST NEIGHBOURS
+						A(1:2,n,m, qi) = A(1:2,n,m, qi) + wbx * bxl(1:2) * dimag( Mxl - one )
+						A(1:2,n,m, qi) = A(1:2,n,m, qi) + wbx * bxr(1:2) * dimag( Mxr - one )
+						A(1:2,n,m, qi) = A(1:2,n,m, qi) + wby * byl(1:2) * dimag( Myl - one )
+						A(1:2,n,m, qi) = A(1:2,n,m, qi) + wby * byr(1:2) * dimag( Myr - one )
+						!DEBUG:
+						val	= abs( abs(one) - 1.0_dp )
+						if( (val > acc .and. n==m) .or. (abs(val-1.0_dp)>acc .and. n/=m)  ) then
+							!write(*,'(a,i2,a,i7,a,f16.8,a,f16.8)')	"[calcConn]: n=",n," unk normalization problem at ki=",ki,&
+							!							" one=",dreal(one),"+i*",dimag(one)
+							found 	= found + 1
+							avg		= avg + val
+							if( val > dmax) then
+								dmax = val
+							end if 
+						end if
+						tot = tot + 1
+					end do
 				end do
 			end do
 		end do
+		!$OMP END PARALLEL DO
 		!
-		!
-		avg	= avg/ real(isKperiodic,dp)
-		if(isKperiodic /= 0) then
-			write(*,'(a,i8,a,i8,a,f16.12,a,f16.12)')	"[isKperiodic]: ",isKperiodic," of ", totC,&
-														" unk test didnt pass; max delta=",dmax, &
-														" average diff=",avg
-			write(*,'(a,i8,a,i8)')	"[isKperiodic]:  fails along x boundary =",isX, "; along y=", isY 
-		end if
+		!DEBUG
+		avg	= avg / real(found,dp)
+		write(*,'(a,i6,a,i6,a,f16.12,a,f16.12)')	"[calcConnOnCoarse]: ",found," of ",tot,&
+										" checked unk functions had normalization issues;  max delta=",dmax,&
+										" avg diff=",avg
 		!
 		return
-	end function
+	end subroutine
+
+
+	subroutine calcVeloMat(unk, veloBwf, Velo)
+		!calculates matrix elements of the velocity operator
+		!	velocity operator is analytically applied to the plane wave basis 
+		!	and then weighted by the basCoeff obtained from the solver and stored in veloBwf
+		!	
+		complex(dp),		intent(in)		:: unk(:,:,:), veloBwf(:,:,:,:)	!	unk(nR, nK, nWfs) , veloBwf(2,nR,nG,nQ)
+		complex(dp),		intent(out)		:: Velo(:,:,:,:)   !Velo(3,	nK,	nWfs	, nwFs)		
+		integer								:: qi, n,m, ri
+		complex(dp),		allocatable		:: fx(:), fy(:)
+		complex(dp)							:: BWFphase
+		!
+		allocate(	fx(nR)	)
+		allocate(	fy(nR)	)
+		!
+		!$OMP PARALLEL DO COLLAPSE(3) SCHEDULE(STATIC), &
+		!$OMP& DEFAULT(SHARED), PRIVATE(m, n, qi, ri, BWFphase, fx, fy)
+		do m = 1, nWfs
+			do n = 1, nWfs
+				do qi = 1, nQ
+					!FILL INTEGRATION ARRAY
+					do ri = 1, nWfs
+						BWFphase= myExP( 	dot_product( qpts(:,qi), rpts(:,ri) ))
+						fx(ri)	= dconjg(	BWFphase * unk(ri,n,qi)	)	* veloBwf(1,ri, m, qi )
+						fy(ri)	= dconjg(	BWFphase * unk(ri,n,qi)	)	* veloBwf(2,ri, m, qi )
+					end do
+					!INTEGRATE
+					Velo(1,n,m,qi)	= nIntegrate(nR, nRx, nRy, dx, dy, fx)
+					Velo(2,n,m,qi)	= nIntegrate(nR, nRx, nRy, dx, dy, fy)
+					Velo(3,n,m,qi) 	= dcmplx(0.0_dp)
+				end do
+			end do
+		end do
+		!$OMP END PARALLEL DO
+		!	
+		!
+		return
+	end subroutine
 
 
 
 
 
+	subroutine calcCurv(En, Velo, Fcurv)
+	!Calculates the connection via Kubo formula on matrix elements of velocity operator
+	!see Wang/Vanderbilt PRB 74, 195118 (2006) eq.(5)
+	!
+	!	F_n,c(k) = \sum{a,b} leviCivi(a,b,c) F_n,{a,b}(k)
+	!
+	!
+		real(dp),		intent(in)		:: En(:,:)		!En(nK,nWfs)
+		complex(dp),	intent(in)		:: Velo(:,:,:,:) !Velo(3,nK,nWfs,nWfs)
+		real(dp),		intent(out)		:: Fcurv(:,:,:)  !Fcurv(3,nK,nWfs)
+		integer							:: n, qi, a,b,c, levi
+		!
+		Fcurv = dcmplx(0.0_dp)
+		
+		!$OMP PARALLEL DO COLLAPSE(3) SCHEDULE(STATIC) ,&
+		!$OMP& DEFAULT(SHARED), PRIVATE(qi, n, c, b, a, levi)
+		do qi = 1, nQ
+			do n = 1, nWfs
+				do c = 1,3
+					!
+					do b= 1,3
+						do a=1,3
+							levi	= myLeviCivita(a,b,c)
+							if( levi /= 0) then
+								Fcurv(c,n,qi) = Fcurv(c,n,qi) + levi * omega(n,a,b,qi,Velo, En)
+							end if
+						end do 
+					end do
+					!
+				end do
+			end do
+		end do
+		!$OMP END PARALLEL DO
+		!
+		!
+		return
+	end subroutine
 
-	subroutine calcWaveMat(unk, Hw, Hwa, Aw, Fw)
+
+
+		subroutine calcWaveMat(unk, Hw, Hwa, Aw, Fw)
+		!DEPRECATED
 		!calculates the matrices described in Wang/Vanderbilt PRB 74, 195118 (2006)
 		!	via integration k space
 		complex(dp),	intent(in)		:: unk(:,:,:)
@@ -165,201 +297,6 @@ module berry
 		!
 		return
 	end subroutine
-
-
-
-	subroutine calcConnOnCoarse(unk, A)
-		!finite difference on lattice periodic unk to calculate the Berry connection A
-		!	A_n(k) 	= <u_n(k)|i \nabla_k|u_n(k)>
-		!		 	= i  <u_n(k)| \sum_b{ w_b * b * [u_n(k+b)-u_n(k)]}
-		!			= i \sum_b{		w_b * b * [  <u_n(k)|u_n(k+b)> -  <u_n(k)|u_n(k)>]		}
-		!
-		! see Mazari, Vanderbilt PRB.56.12847 (1997), Appendix B
-		!
-		complex(dp),	intent(in)		:: unk(:,:,:)		!unk(	nR, nK/nKw, nWfs/nG	)
-		real(dp),		intent(out)		:: A(:,:,:,:)			!Aconn(	3,nK, nWfs)		)	
-		complex(dp)						:: Mxl, Mxr, Myl, Myr, one
-		integer							:: n, m, Z, qi, qx, qy, qxl, qxr, qyl, qyr, found, tot
-		real(dp)						:: wbx,wby, bxl(2), bxr(2), byl(2), byr(2),dmax, avg, val 
-		!
-		A 		= 0.0_dp
-		Z 		= 4	!amount of nearest neighbours( 2 for 2D cubic unit cell)
-		wbx 	= 3.0_dp / 		( real(Z,dp) * dqx**2 )
-		wby 	= 3.0_dp /		( real(Z,dp) * dqy**2 )
-		!b vector two nearest X neighbours:
-		bxl(1) 	= -dqx				
-		bxl(2)	= 0.0_dp
-		bxr(1) 	= +dqx
-		bxr(2)	= 0.0_dp
-		!b vector two nearest Y neighbours:
-		byl(1) 	= 0.0_dp
-		byl(2)	= -dqy
-		byr(1) 	= 0.0_dp
-		byr(2)	= +dqy
-		!
-		found	= 0
-		tot		= 0
-		dmax	= 0.0_dp
-		avg		= 0.0_dp
-		!
-		!
-		do m = 1, nWfs
-			do n = 1, nWfs
-				do qx = 1, nQx
-					qxl	= getLeft( qx,nQx)
-					qxr	= getRight(qx,nQx)
-					!
-					do qy = 1, nQy
-						qyl	= getLeft(  qy,nQy)
-						qyr = getRight( qy,nQy)
-						qi	= getKindex(qx,qy)
-						!
-						!OVERLAP TO NEAREST NEIGHBOURS
-						one = UNKoverlap(	n,		m, 		qi		, 		qi					, unk	)
-						Mxl	= UNKoverlap(	n,		m, 		qi		, getKindex( qxl, qy ) 		, unk	) 
-						Mxr	= UNKoverlap(	n,		m, 		qi		, getKindex( qxr, qy )		, unk	)
-						Myl	= UNKoverlap(	n,		m, 		qi		, getKindex( qx ,qyl )		, unk	)
-						Myr	= UNKoverlap(	n,		m, 		qi		, getKindex( qx ,qyr )		, unk	)
-
-						if(n==1 .and. m==1) then
-							!write(*,*)	"*"
-							!write(*,'(a,f16.12,a,f16.12,a,f16.12,a,f16.12,a)')"[calcConnOnCoarse]: qCe=(",qpts(1, qi					),	",",&	
-							!										qpts(2,	qi						),"). ",	"oLap=(",dreal(one),", ",dimag(one),")."
-							!!
-							!write(*,'(a,f16.12,a,f16.12,a,f16.12,a,f16.12,a)')"[calcConnOnCoarse]: qxl=(",qpts(1, getKindex( qxl, qy )	),	",",&	
-							!										qpts(2,	getKindex( qxl, qy )	),"). ",	"oLap=(",dreal(Mxl),", ",dimag(Mxl),")."
-							!!
-							!write(*,'(a,f16.12,a,f16.12,a,f16.12,a,f16.12,a)')"[calcConnOnCoarse]: qxr=(",qpts(1, getKindex( qxr, qy )	),	",",&	
-							!										qpts(2,	getKindex( qxr, qy )	),"). ",	"oLap=(",dreal(Mxr),", ",dimag(Mxr),")."
-							!!
-							!write(*,'(a,f16.12,a,f16.12,a,f16.12,a,f16.12,a)')"[calcConnOnCoarse]: qyl=(",qpts(1, getKindex( qx ,qyl )	),	",",&	
-							!										qpts(2,	getKindex( qx ,qyl )	),"). ",	"oLap=(",dreal(Myl),", ",dimag(Myl),")."
-							!!
-							!write(*,'(a,f16.12,a,f16.12,a,f16.12,a,f16.12,a)')"[calcConnOnCoarse]: qyr=(",qpts(1, getKindex( qx ,qyr )	),	",",&	
-							!										qpts(2,	getKindex( qx ,qyr )	),"). ",	"oLap=(",dreal(Myr),", ",dimag(Myr),")."
-							
-							!write(*,*)	"*"
-							!write(*,*)"[calcConnOnCoarse]: qCe=(",qpts(1, qi					),	",",&	
-							!										qpts(2,	qi						),"). ",	"oLap=(",dreal(one),", ",dimag(one),")."
-							!!
-							!write(*,*)"[calcConnOnCoarse]: qxl=(",qpts(1, getKindex( qxl, qy )	),	",",&	
-							!										qpts(2,	getKindex( qxl, qy )	),"). ",	"oLap=(",dreal(Mxl),", ",dimag(Mxl),")."
-							!!
-							!write(*,*)"[calcConnOnCoarse]: qxr=(",qpts(1, getKindex( qxr, qy )	),	",",&	
-							!										qpts(2,	getKindex( qxr, qy )	),"). ",	"oLap=(",dreal(Mxr),", ",dimag(Mxr),")."
-							!!
-							!write(*,*)"[calcConnOnCoarse]: qyl=(",qpts(1, getKindex( qx ,qyl )	),	",",&	
-							!										qpts(2,	getKindex( qx ,qyl )	),"). ",	"oLap=(",dreal(Myl),", ",dimag(Myl),")."
-							!!
-							!write(*,*)"[calcConnOnCoarse]: qyr=(",qpts(1, getKindex( qx ,qyr )	),	",",&	
-							!										qpts(2,	getKindex( qx ,qyr )	),"). ",	"oLap=(",dreal(Myr),", ",dimag(Myr),")."
-
-						end if
-						!
-						!write(*,'(a,f15.12,a,f15.12)')"[calcConn]: Mxl=",dreal(Mxl),"+i*",dimag(Mxl)
-						!FD SUM OVER NEAREST NEIGHBOURS
-						A(1:2,qi,n,m) = A(1:2,qi,n,m) + wbx * bxl(1:2) * dimag( Mxl - one )
-						A(1:2,qi,n,m) = A(1:2,qi,n,m) + wbx * bxr(1:2) * dimag( Mxr - one )
-						A(1:2,qi,n,m) = A(1:2,qi,n,m) + wby * byl(1:2) * dimag( Myl - one )
-						A(1:2,qi,n,m) = A(1:2,qi,n,m) + wby * byr(1:2) * dimag( Myr - one )
-						!DEBUG:
-						val	= abs( abs(one) - 1.0_dp )
-						if( (val > acc .and. n==m) .or. (abs(val-1.0_dp)>acc .and. n/=m)  ) then
-							!write(*,'(a,i2,a,i7,a,f16.8,a,f16.8)')	"[calcConn]: n=",n," unk normalization problem at ki=",ki,&
-							!							" one=",dreal(one),"+i*",dimag(one)
-							found 	= found + 1
-							avg		= avg + val
-							if( val > dmax) then
-								dmax = val
-							end if 
-						end if
-						tot = tot + 1
-					end do
-				end do
-			end do
-		end do
-		!
-		!DEBUG
-		avg	= avg / real(found,dp)
-		write(*,'(a,i6,a,i6,a,f16.12,a,f16.12)')	"[calcConnOnCoarse]: ",found," of ",tot,&
-										" checked unk functions had normalization issues;  max delta=",dmax,&
-										" avg diff=",avg
-		!
-		return
-	end subroutine
-
-
-	subroutine calcVeloMat(unk, veloBwf, Velo)
-		!calculates matrix elements of the velocity operator
-		!	velocity operator is analytically applied to the plane wave basis 
-		!	and then weighted by the basCoeff obtained from the solver and stored in veloBwf
-		!	
-		complex(dp),		intent(in)		:: unk(:,:,:), veloBwf(:,:,:)	!	unk(nR, nK, nWfs) , veloBwf(nR,nK ,2*nWfs)
-		complex(dp),		intent(out)		:: Velo(:,:,:,:)   !Velo(3,	nK,	nWfs	, nwFs)		
-		integer								:: qi, n,m, ri
-		complex(dp),		allocatable		:: fx(:), fy(:)
-		!
-		allocate(	fx(nR)	)
-		allocate(	fy(nR)	)
-		!
-		do m = 1, nWfs
-			do n = 1, nWfs
-				do qi = 1, nQ
-					!FILL INTEGRATION ARRAY
-					do ri = 1, nWfs
-						fx(ri)	= dconjg(	myExP( 	dot_product( qpts(:,qi), rpts(:,ri) )) * unk(ri,qi,n)	)	* veloBwf(ri, qi,m		)
-						fy(ri)	= dconjg(	myExP( 	dot_product( qpts(:,qi), rpts(:,ri) )) * unk(ri,qi,n)	)	* veloBwf(ri, qi,nWfs+m	)
-					end do
-					!INTEGRATE
-					Velo(1,qi,n,m)	= nIntegrate(nR, nRx, nRy, dx, dy, fx)
-					Velo(2,qi,n,m)	= nIntegrate(nR, nRx, nRy, dx, dy, fy)
-					Velo(3,qi,n,m) 	= dcmplx(0.0_dp)
-				end do
-			end do
-		end do
-		!	
-		!
-		return
-	end subroutine
-
-
-
-
-
-	subroutine calcCurv(En, Velo, Fcurv)
-	!Calculates the connection via Kubo formula on matrix elements of velocity operator
-	!see Wang/Vanderbilt PRB 74, 195118 (2006) eq.(5)
-	!
-	!	F_n,c(k) = \sum{a,b} leviCivi(a,b,c) F_n,{a,b}(k)
-	!
-	!
-		real(dp),		intent(in)		:: En(:,:)		!En(nK,nWfs)
-		complex(dp),	intent(in)		:: Velo(:,:,:,:) !Velo(3,nK,nWfs,nWfs)
-		real(dp),		intent(out)		:: Fcurv(:,:,:)  !Fcurv(3,nK,nWfs)
-		integer							:: n, qi, a,b,c
-		!
-		Fcurv = dcmplx(0.0_dp)
-		do n = 1, nWfs
-			do qi = 1, nQ
-				do c = 1,3
-					do b= 1,3
-						do a=1,3
-							if( myLeviCivita(a,b,c) /= 0) then
-								Fcurv(c,qi,n) = Fcurv(c,qi,n) + myLeviCivita(a,b,c) * omega(n,a,b,qi,Velo, En)
-							end if
-						end do 
-					end do
-				end do
-			end do
-		end do
-		!
-		!
-		return
-	end subroutine
-
-
-
-
 
 
 
@@ -437,7 +374,7 @@ module berry
 		omega	= 0.0_dp
 		do m = 1, nWfs
 			if(m /= n) then
-				omega = omega +		dimag(	Velo(a,qi,n,m) * Velo(b,qi,m,n)	) 	/ 	( En(qi,m) - En(qi,n) )**2
+				omega = omega +		dimag(	Velo(a,n,m,qi) * Velo(b,m,n,qi)	) 	/ 	( En(m,qi) - En(n,qi) )**2
 			end if 
 		end do		
 		omega	= -2.0_dp * omega
@@ -456,36 +393,14 @@ module berry
 		integer,		intent(in)		:: n, m, qi, knb
 		complex(dp),	intent(in)		:: unk(:,:,:)  !unk(	nR, nK, nWfs/nG	)
 		complex(dp),	allocatable		:: f(:)
-		integer							:: xi,yi,ri,rloc, nRx1, nRy1, nR1
-		!
-		!Set integration range to first unit cell
-		!nRx1 	= int(		real(nRx,dp) / real(nSCx,dp)		)
-		!nRy1 	= int(		real(nRy,dp) / real(nSCy,dp)		)
-		!nR1		= nRx1 * nRy1 
-		!allocate(	f(nR1)	)
-		!!
-		!!fill integration array
-		!f 		= dcmplx(0.0_dp)
-		!do yi = 1, nRy1
-		!	do xi = 1, nRx1
-		!		ri		= getRindex(xi,yi)			!overall index, to get correct position from unk
-		!		rloc 	= (yi-1) * nRx1 + xi		!for mapping to f array
-		!		f(rloc)	= dconjg( unk(ri,qi,n) ) * unk(ri,knb,m)
-		!		!write(*,'(a,f10.6,a,f10.6)')	"[overlap] f=",dreal(f(rloc)),"+i*",dimag(f(rloc))
-		!	end do
-		!end do
+		integer							:: ri
 		!
 		allocate( f(nR)	)
 		do ri = 1, nR
 			f(ri)	= dconjg( unk(ri,n,qi) ) * unk(ri,m,knb)
 		end do
-
-
-
 		!integrate
-		!UNKoverlap = nIntegrate(nR1, nRx1, nRy1, dx, dy, f	)
-		UNKoverlap = sum( f ) / real(nR,dp)
-		!write(*,'(a,f10.6,a,f10.6)')"[overlap]=",dreal(overlap),"+i*",dimag(overlap)
+		UNKoverlap = nIntegrate(nR, nRx, nRy, dx, dy, f)
 		!
 		!
 		return
@@ -629,6 +544,83 @@ module berry
 !
 !
 
+
+!	integer function isKperiodic(unk)
+!		!	DEPRECATED K+ BOUNDARY NOT STORED ANYMORE
+!		!	Test the condition u_nk = e^{iGr} u_nk+G
+!		!	see	King-Smith Vanderbilt PRB 48.7 4442 (1993)
+!		!
+!		!	the values at each x direction boundary (kx,1) is compared with (kx,nKy)
+!		!	analog for y direction
+!		!
+!		complex(dp),	intent(in)		:: unk(:,:,:)
+!		integer							:: n, qix, qiy, ri, totC, isX, isY
+!		real(dp)						:: Gx(2), Gy(2), val,dmax, avg
+!		complex(dp)						:: phase, u0, u1
+!		!
+!		Gx(1)		= 2.0_dp * PI_dp / aX
+!		Gx(2)		= 0.0_dp
+!		Gy(1)		= 0.0_dp
+!		Gy(2)		= 2.0_dp * PI_dp / aX
+!		isKperiodic = 0
+!		isX			= 0
+!		isY			= 0
+!		totC		= 0
+!		dmax		= 0.0_dp
+!		avg			= 0.0_dp
+!		!
+!		!
+!		do 	n = 1, nWfs 
+!			!CHECK IN X DIRECTION
+!			do  qix = 1, nQx 
+!				do ri = 1, nR
+!					phase 	= myExp( 	dot_product( Gx(:) , rpts(:,ri) )		)
+!					u0 		= unk( ri, n,	getKindex(qix,1  )	)
+!					u1		= unk( ri, n,	getKindex(qix,nQy)	)
+!					val 	= abs(u0-phase*u1)
+!					if(  val > acc	) then 
+!						isKperiodic = isKperiodic 	+ 1
+!						isX			= isX			+ 1
+!						avg			= avg + val
+!						if( val > dmax) then
+!							dmax = val
+!						end if 
+!					end if
+!					totC = totC + 1
+!				end do	
+!			end do
+!			!
+!			!CHECK IN Y DIRECTION
+!			do  qiy = 1, nQy
+!				do ri = 1, nR
+!					phase 	= myExp( 	dot_product( Gy(:) , rpts(:,ri) )		)
+!					u0 		= unk( ri,	n,	getKindex(1  ,qiy)	)
+!					u1		= unk( ri,	n,	getKindex(nQx,qiy)	)
+!					val		= abs(u0-phase*u1)
+!					if( val > acc	) then 
+!						isKperiodic = isKperiodic	+ 1
+!						isY			= isY			+ 1
+!						avg			= avg + val
+!						if(val > dmax) then
+!							dmax = val
+!						end if 
+!					end if
+!					totC = totC + 1
+!				end do
+!			end do
+!		end do
+!		!
+!		!
+!		avg	= avg/ real(isKperiodic,dp)
+!		if(isKperiodic /= 0) then
+!			write(*,'(a,i8,a,i8,a,f16.12,a,f16.12)')	"[isKperiodic]: ",isKperiodic," of ", totC,&
+!														" unk test didnt pass; max delta=",dmax, &
+!														" average diff=",avg
+!			write(*,'(a,i8,a,i8)')	"[isKperiodic]:  fails along x boundary =",isX, "; along y=", isY 
+!		end if
+!		!
+!		return
+!	end function
 
 
 

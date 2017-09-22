@@ -4,7 +4,7 @@ module potWellModel
 	use omp_lib
 	use mathematics,	only:	dp, PI_dp,i_dp, machineP, myExp, myLeviCivita, eigSolver, nIntegrate, isUnit, isHermitian
 	use sysPara
-	use blochWf,		only:	genBwfVelo, genUnk, testNormal									
+	use blochWf,		only:	genBwfVelo, genUnk							
 	use projection,		only:	projectBwf
 	use output,			only:	printMat
 	implicit none	
@@ -50,7 +50,9 @@ module potWellModel
 		smax		= 	0.0_dp
 		!
 		
-	
+		if(debugHam) then
+			write(*,*)	"[solveHam]: debugging ON. Will do additional tests of the results"
+		end if
 		
 		do qi = 1, nQ
 			write(*,*)"[solveHam]: qi=",qi
@@ -61,29 +63,29 @@ module potWellModel
 			write(*,*)	"[solveHam]: Ham matrix set up done"
 			call eigSolver(Hmat, EnT(:,qi))	!mkl
 			write(*,*)	"[solveHam]: solved electronic structure"
-			En(:,qi)	= EnT(1:nWfs,qi)
-			write(*,*)	"[solveHam]: copied eigenvalues"
-			!if(.not. isUnit(Hmat)	) then
-			!	write(*,*)"[solveHam]: base coefficients not unitary!"
-			!end if
+			
 			
 			!BLOCH WAVEFUNCTIONS
 			!call gaugeCoeff(kVal, Hmat)
-			call genBwfVelo(qi, Hmat, bWf, veloBwf)	!mkl
+			call genBwfVelo(qi, Hmat, bWf, veloBwf)	!omp
 			write(*,*)	"[solveHam]: generated Bloch wavefunctions"
 
 			!PROJECTION & WANNIER
-			call projectBwf(qi, bWf(:,:,qi), loBwf, U, failCount, smin, smax)	!todo mkl
+			call projectBwf(qi, bWf(:,:,qi), loBwf, U, failCount, smin, smax)	!mkl & omp
 			write(*,*)	"[solveHam]: projetion of bwf done"
-			!call genWannF(qi, lobWf, wnF) 	!omp
 			call genUnk(qi, lobWf, unk )	!omp
 			write(*,*)	"[solveHam]: generated unks"
 			!
 			!
 		end do
 
+		!$OMP PARALLEL DO SCHEDULE(STATIC) DEFAULT(SHARED)
+		do qi = 1, nQ
+			En(:,qi)	= EnT(1:nWfs,qi)
+		end do
+		!$OMP END PARALLEL DO
 
-
+		write(*,*)	"[solveHam]: copied eigenvalues"
 		!write(*,*)"[solveHam]: test normalization of generated Bloch wavefunctions"
 		!call testNormal(bwf)
 		!write(*,'(a,f16.13,a,f16.12)') "[solveHam]: projection matrix  smin=", smin, " smax=", smax
@@ -103,6 +105,7 @@ module potWellModel
 		bWfT	= dimag(bWf)
 		open(unit=211, file='rawData/bwxfI.dat'		, form='unformatted', access='stream', action='write')
 		write(211)	bwfT
+		write(*,*)	"[solveHam]: wrote eigenvalues and bwfs"
 		!
 		!
 		return
@@ -155,14 +158,12 @@ module potWellModel
 		!$OMP END PARALLEL DO
 
 		!
-		!DEBUGGING:
-		!if ( .not.	isHermitian(Hmat)	) then
-		!	write(*,*)"[populateH]: Hamiltonian matrix is not Hermitian :"
-		!	call printMat(nG, Hmat)
-		!else
-			!write(*,*)"[populateH]: Hmat is hermitian"
-		!end if
-		
+		if(debugHam) then
+			if ( .not.	isHermitian(Hmat)	) then
+				write(*,*)"[populateH]: Hamiltonian matrix is not Hermitian :"
+				call printMat(nG, Hmat)
+			end if
+		end if
 
 
 		return

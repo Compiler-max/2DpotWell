@@ -9,7 +9,8 @@ module sysPara
 				nG, nG0, Gcut, nQ, nQx, nQy, nKx, nKy, nK, nSC, nSCx, nSCy, nR, nRx, nRy, R0,  dx, dy, dqx, dqy, dkx, dky, &
 				gaugeSwitch, nWfs, connSwitch, gaugeBack, &
 				Gvec, atPos, atR, qpts, rpts, Rcell, kpts, trialOrbVAL, trialOrbSw, Zion, &
-				Bext
+				Bext, &
+				debugHam, debugWann, doBerry, doWanni, doNiu, doPei
 
 
 	!
@@ -20,6 +21,7 @@ module sysPara
 														dx, dy, dqx, dqy, dkx, dky, B0, Bext(3)											
 	real(dp),	allocatable,	dimension(:)		::	relXpos, relYpos, atRx, atRy, atPot, trialOrbVAL, Zion
 	real(dp),	allocatable,	dimension(:,:)		::	Gvec, atPos, atR, qpts, rpts, Rcell, kpts 
+	logical											::	debugHam, debugWann, doBerry, doWanni, doNiu, doPei
 
 
 
@@ -63,6 +65,14 @@ module sysPara
 		call CFG_add_get(my_cfg,	"numerics%nRx"     	,	nRx      	,	"amount of r points used"				)
 		call CFG_add_get(my_cfg,	"numerics%nRy"     	,	nRy      	,	"amount of r points used"				)
 		call CFG_add_get(my_cfg,	"numerics%thres"    ,	thres      	,	"threshold for overlap warnings"		)
+		![methods]
+		call CFG_add_get(my_cfg,	"methods%doBerry"	,	doBerry		,	"switch on/off 	berry( unk) method "	)
+		call CFG_add_get(my_cfg,	"methods%doWanni"	,	doWanni		,	"switch on/off 	wannier( wnf ) method"	)
+		call CFG_add_get(my_cfg,	"methods%doNiu"		,	doNiu		,	"switch for nius first order pol"		)
+		call CFG_add_get(my_cfg,	"methods%doPei"		,	doPei		,	"switch for  peierls first order pol"	)
+		![debug]
+		call CFG_add_get(my_cfg,	"debug%debugHam"	, 	debugHam	,	"switch for debuging tests in solveHam"	)
+		call CFG_add_get(my_cfg,	"debug%debugWann"	, 	debugWann	,	"switch for debuging in wannier"		)
 		![wannier]
 		call CFG_add_get(my_cfg,	"wann%gaugeSwitch"	,	gaugeSwitch ,	"switch gauge the basis coeff directly"	)
 		call CFG_add_get(my_cfg,	"wann%nWfs"			,	nWfs	 	,	"# wannier functions to generate"		)
@@ -76,7 +86,7 @@ module sysPara
 		call CFG_add_get(my_cfg,	"perturbation%B0"	,	B0			,	"scaling fact. of ext. magnetic field"	)
 		call CFG_add_get(my_cfg,	"perturbation%Bext"	,	Bext		,	"vector of ext. magnetic field"			)
 
-
+		
 		dim = 	2
 		nG	=	floor(	sqrt(real(nG,dp))	)**2 !makes sure that bove dimensions get equal basis vectors
 		vol	=	aX 		* 	aY

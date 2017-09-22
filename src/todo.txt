@@ -1,9 +1,9 @@
 today toDo:
 	
+	- OMP on calcConnOnCoarse
+	- switches for using berry wannier niu peierls
 	
-	- blas in mathematics/myMatInvSqrt in genWann (vTune analysis)
 	- berry.f90 needs no te adjusted to new indexing( of unks)
-	- debuging switch
 	
 	- omp do -> introduce runtime scheduling (and test it) 
 	

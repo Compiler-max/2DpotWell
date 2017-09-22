@@ -7,7 +7,7 @@ module blochWf
 	implicit none
 
 	private
-	public	::	genBwfVelo, genUnk, testNormal
+	public	::	genBwfVelo, genUnk
 
 
 	contains
@@ -93,64 +93,116 @@ module blochWf
 			end do
 		end do
 		!$OMP END PARALLEL DO
+
+		if(debugHam) then
+			if( .not. testNormal(unk)	) then
+				write(*,*)	"[genUnk]: unks have normalization issues"
+			end if
+		end if
 		!
 		return
 	end subroutine
 
 
-	subroutine testNormal(bwf)
-		! <Y_nk1|Y_mk2> = N * \delta_n,m * \delta_k1,k2
-		complex(dp),	intent(in)		:: bwf(:,:,:)
+	logical function testNormal(unk)
+		complex(dp),	intent(in)		:: unk(:,:,:)
+		integer							:: q1, q2, m, n, ri, fcount
 		complex(dp),	allocatable		:: f(:)
-		integer							:: ri, q1,q2, n,m, count, tot
 		complex(dp)						:: oLap
-		real(dp)						:: avg
+		logical							:: isNorm
 		!
-		allocate(	f(nR)	)
-		!
-		count	= 0
-		avg		= 0.0_dp
-		tot		= 0
-		!
-		do m = 1, nWfs
-			do n = 1, nWfs
-				do q1 = 1, nQ
-					!do q2 = 1, nQ
-						!FILL INTEGRATION ARRAY
+		allocate( f(nR) 	)
+		fcount	= 0
+		!$OMP PARALLEL DO COLLAPSE(4), &
+		!$OMP& SCHEDULE(STATIC)	DEFAULT(SHARED),	&
+		!$OMP& PRIVATE(q1, q2, m, n, ri, f, oLap) REDUCTION(.AND.:isNorm) REDUCTION(+:fcount)
+		do q2 = 1, nQ
+			do q1 = 1, nQ
+				do m = 1, nG
+					do n = 1, nG
+						!INTEGRATE
 						do ri = 1, nR
-							f(ri)	= dconjg(bwf(ri,q1,n)) * bwf(ri,q1,m)
+							f(ri)	= dconjg( unk(ri,m,q1)	)	* unk(ri,n,q2)
 						end do
 						oLap	= nIntegrate(nR, nRx,nRy, dx,dy, f)
-						!CHECK CONDITION
-						if( dimag(oLap) > acc ) then
-							count	= count + 1
-							avg		= avg	+ abs(dreal(oLap)-nSC)
-						else
-							if(n==m .and. q1==q2) then
-								if(abs(dreal(oLap)-nSC) > acc )then
-									count	= count + 1
-									avg		= avg	+ abs(dreal(oLap)-nSC)
-								end if
-							else
-								if(abs(dreal(oLap)) > acc )then
-									count	= count + 1
-									avg		= avg	+ abs(dreal(oLap)-nSC)
-								end if
-							end if
+						!ADJUST IF NONE ZERO
+						if( n==m .and. q1==q2	) then
+							oLap = oLap - dcmplx(nSC)
 						end if
-						!
-						!
-						tot	= tot + 1
-					!end do
+						!CHECK CONDITION
+						if( abs(oLap) > acc ) then
+							isNorm	= .false.
+							fcount	= fcount + 1
+						else
+							isNorm	= .true.
+						end if
+					end do
 				end do
 			end do
 		end do
-
-		avg	= avg / real(tot,dp)
-		write(*,*)"[testNormal]: found ",count," points of ",tot," not normalized bwfs, avg diff=",avg
-
+		!$OMP END PARALLEL DO
+		!
+		testNormal	= isNorm
+		if( .not. testNormal) then
+			write(*,'(a,i8,a,i8,a)')	"[testNormal]: ",fcount," of ",nQ**2+nG**2," tests of unk normalization failed"
+		end if
+		!
 		return
-	end subroutine
+	end function
+
+	!subroutine testNormal(bwf)
+	!	! <Y_nk1|Y_mk2> = N * \delta_n,m * \delta_k1,k2
+	!	complex(dp),	intent(in)		:: bwf(:,:,:)
+	!	complex(dp),	allocatable		:: f(:)
+	!	integer							:: ri, q1,q2, n,m, count, tot
+	!	complex(dp)						:: oLap
+	!	real(dp)						:: avg
+	!	!
+	!	allocate(	f(nR)	)
+	!	!
+	!	count	= 0
+	!	avg		= 0.0_dp
+	!	tot		= 0
+	!	!
+	!	do m = 1, nWfs
+	!		do n = 1, nWfs
+	!			do q1 = 1, nQ
+	!				!do q2 = 1, nQ
+	!					!FILL INTEGRATION ARRAY
+	!					do ri = 1, nR
+	!						f(ri)	= dconjg(bwf(ri,q1,n)) * bwf(ri,q1,m)
+	!					end do
+	!					oLap	= nIntegrate(nR, nRx,nRy, dx,dy, f)
+	!					!CHECK CONDITION
+	!					if( dimag(oLap) > acc ) then
+	!						count	= count + 1
+	!						avg		= avg	+ abs(dreal(oLap)-nSC)
+	!					else
+	!						if(n==m .and. q1==q2) then
+	!							if(abs(dreal(oLap)-nSC) > acc )then
+	!								count	= count + 1
+	!								avg		= avg	+ abs(dreal(oLap)-nSC)
+	!							end if
+	!						else
+	!							if(abs(dreal(oLap)) > acc )then
+	!								count	= count + 1
+	!								avg		= avg	+ abs(dreal(oLap)-nSC)
+	!							end if
+	!						end if
+	!					end if
+	!					!
+	!					!
+	!					tot	= tot + 1
+	!				!end do
+	!			end do
+	!		end do
+	!	end do
+!
+!	!	avg	= avg / real(tot,dp)
+!	!	write(*,*)"[testNormal]: found ",count," points of ",tot," not normalized bwfs, avg diff=",avg
+!
+!	!	return
+	!end subroutine
 
 
 
