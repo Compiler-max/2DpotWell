@@ -1,13 +1,14 @@
-module wannGen
+module projection
 	!module contains all the functions to generate the wannier functions
 	!	this includes the calculation of the orthonormalized projected bloch wavefunctions
 	!	and the FT of the bwfs to calculate the wannier functions
+	use omp_lib
 	use mathematics, only: dp, PI_dp, acc, myExp, nIntegrate, myMatInvSqrt, isUnit, isIdentity
 	use sysPara
 	implicit none	
 	
 	private
-	public ::	projectBwf, genWannF, genWannF2			
+	public ::	projectBwf		
 
 
 
@@ -78,57 +79,32 @@ module wannGen
 	end subroutine
 		
 
-	subroutine genWannF(qi, bWf, wnF)
-		! generates wannier functions from (projected) bloch wavefunctions
-		!	DEPRECATED
-		integer,		intent(in)		:: qi
-		complex(dp), 	intent(in)  	:: bWf(:,:) ! lobWf(nRpts,nWfs)	
-		complex(dp), 	intent(inout) 	:: wnF(:,:,:) ! wnF( 	nR, nSC, nWfs		)	
-		integer 						:: n, Ri, xi
-		complex(dp)						:: phase
-		!
-		!$OMP PARALLEL DO SCHEDULE(STATIC) COLLAPSE(3) DEFAULT(SHARED) PRIVATE(n, Ri, xi, phase) 
-		do n = 1, nWfs
-			do Ri = 1, nSC
-				do xi = 1, nR
-					phase		 = myExp(	-1.0_dp * dot_product(	qpts(:,qi) , Rcell(:,Ri)	) 	 )
-					wnF(xi,Ri,n) = wnF(xi,Ri,n) + bWf(xi,n) * phase / real(nQ,dp)
-				end do
-			end do
-		end do
-		!$OMP END PARALLEL DO
-		!
-		!
-		return
-	end subroutine
+	!subroutine genWannF(qi, bWf, wnF)
+	!	! generates wannier functions from (projected) bloch wavefunctions
+	!	!	DEPRECATED
+	!	integer,		intent(in)		:: qi
+	!	complex(dp), 	intent(in)  	:: bWf(:,:) ! lobWf(nRpts,nWfs)	
+	!	complex(dp), 	intent(inout) 	:: wnF(:,:,:) ! wnF( 	nR, nSC, nWfs		)	
+	!	integer 						:: n, Ri, xi
+	!	complex(dp)						:: phase
+	!	!
+	!	!$OMP PARALLEL DO SCHEDULE(STATIC) COLLAPSE(3) DEFAULT(SHARED) PRIVATE(n, Ri, xi, phase) 
+	!	do n = 1, nWfs
+	!		do Ri = 1, nSC
+	!			do xi = 1, nR
+	!				phase		 = myExp(	-1.0_dp * dot_product(	qpts(:,qi) , Rcell(:,Ri)	) 	 )
+	!				wnF(xi,Ri,n) = wnF(xi,Ri,n) + bWf(xi,n) * phase / real(nQ,dp)
+	!			end do
+	!		end do
+	!	end do
+	!	!$OMP END PARALLEL DO
+	!	!
+	!	!
+	!	return
+	!end subroutine
 
 
-	subroutine genWannF2(unk, wnF)
-		! generates wannier functions from (projected) bloch wavefunctions
-		!
-		complex(dp), 	intent(in)  	:: unk(:,:,:) ! lobWf(nRpts,nWfs)	
-		complex(dp), 	intent(inout) 	:: wnF(:,:,:) ! wnF( 	nR, nSC, nWfs		)	
-		integer 						:: n, Ri, xi, qi
-		complex(dp)						:: phase
-		!
-		wnF	= dcmplx(0.0_dp)
-		!$OMP PARALLEL DO SCHEDULE(STATIC) COLLAPSE(3) DEFAULT(SHARED) PRIVATE(n, Ri, xi, qi, phase) 
-		do n = 1, nWfs
-			do Ri = 1, nSC
-				do xi = 1, nR
-					do qi = 1 , nQ
-						phase			= myExp(	-1.0_dp * dot_product(	qpts(:,qi) , Rcell(:,Ri)	) 	 )
-						phase			= phase * myExp( dot_product( qpts(:,qi) , rpts(:,xi)))
-						wnF(xi,Ri,n) = wnF(xi,Ri,n) + unk(xi,n,qi) * phase / real(nQ,dp)
-					end do
-				end do
-			end do
-		end do
-		!$OMP END PARALLEL DO
-		!
-		!
-		return
-	end subroutine
+	
 
 
 
@@ -357,4 +333,4 @@ module wannGen
 		
 
 
-end module wannGen
+end module projection

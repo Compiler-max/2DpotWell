@@ -5,7 +5,7 @@ module potWellModel
 	use mathematics,	only:	dp, PI_dp,i_dp, machineP, myExp, myLeviCivita, eigSolver, nIntegrate, isUnit, isHermitian
 	use sysPara
 	use blochWf,		only:	genBwfVelo, genUnk, testNormal									
-	use wannGen,		only:	projectBwf, genWannF
+	use projection,		only:	projectBwf
 	use output,			only:	printMat
 	implicit none	
 	

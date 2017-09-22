@@ -1,5 +1,6 @@
 module blochWf
 	!generates bloch and lattice periodidc functions given a basCoeff matrix
+	use omp_lib
 	use mathematics,	only:	dp, PI_dp,i_dp, acc, myExp, myLeviCivita, eigSolver, nIntegrate
 	use sysPara
 

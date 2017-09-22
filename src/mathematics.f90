@@ -1,7 +1,7 @@
 module mathematics
 	!module contains some basic constants, especially dp for double precision convention
 	!additionally it contains the matrix operation wrappers to call intel mkl
-	!use sysPara,	only: debug
+	use omp_lib
 	implicit none
 	private
 

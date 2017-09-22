@@ -5,8 +5,9 @@ program main
 
 	use sysPara
 	use potWellModel, 	only: 		solveHam
-	use berry,			only:		isKperiodic, calcConnOnCoarse, calcVeloMat, calcCurv 
 	use wannier,	 	only: 		wannMethod, isNormal, isReal, calcCentSpread, genUnkW 	
+	use berry,			only:		isKperiodic, calcConnOnCoarse, calcVeloMat, calcCurv 
+	
 	use gaugeTrafo,		only:		calcConnCurv,  testIfReal
 	use polarization,	only:		calcPolWannCent, calcPolViaA, calcIonicPol
 	use semiclassics,	only:		calcFirstOrdP
