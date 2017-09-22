@@ -167,11 +167,11 @@ module berry
 		complex(dp),		allocatable		:: fx(:), fy(:)
 		complex(dp)							:: BWFphase
 		!
+		!$OMP PARALLEL DEFAULT(SHARED), PRIVATE(m, n, qi, ri, BWFphase, fx, fy)
 		allocate(	fx(nR)	)
 		allocate(	fy(nR)	)
 		!
-		!$OMP PARALLEL DO COLLAPSE(3) SCHEDULE(STATIC), &
-		!$OMP& DEFAULT(SHARED), PRIVATE(m, n, qi, ri, BWFphase, fx, fy)
+		!$OMP DO COLLAPSE(3) SCHEDULE(STATIC)
 		do m = 1, nWfs
 			do n = 1, nWfs
 				do qi = 1, nQ
@@ -188,8 +188,8 @@ module berry
 				end do
 			end do
 		end do
-		!$OMP END PARALLEL DO
-		!	
+		!$OMP END DO
+		!$OMP END PARALLEL	
 		!
 		return
 	end subroutine

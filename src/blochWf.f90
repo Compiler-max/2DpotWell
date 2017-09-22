@@ -31,9 +31,7 @@ module blochWf
 		character*1					:: transa, transb
 		complex(dp)					:: alpha, beta
 		!
-		allocate(	basVec(		nG)		)
-		allocate(	veloBasX(	nG)		)
-		allocate(	veloBasY(	nG)		)
+		
 		!allocate(	tmp(		nG)		)
 		!
 		transa	= 'n'
@@ -47,7 +45,12 @@ module blochWf
 		ldb		= size(basCoeff,2)
 		ldc		= size(tmp)
 		!
-		!$OMP PARALLEL DO SCHEDULE(STATIC) DEFAULT(SHARED) PRIVATE(xi, basVec, veloBasX, veloBasY)
+		!$OMP PARALLEL DEFAULT(SHARED) PRIVATE(xi, basVec, veloBasX, veloBasY)
+		allocate(	basVec(		nG)		)
+		allocate(	veloBasX(	nG)		)
+		allocate(	veloBasY(	nG)		)
+
+		!$OMP DO SCHEDULE(STATIC) 
 		do xi = 1, nR
 			!GET BASIS
 			call calcBasis(qi,xi, basVec, veloBasX, veloBasY)
@@ -61,7 +64,8 @@ module blochWf
 			velobWf(2,xi,:,qi)	= matmul(veloBasY,basCoeff) / dsqrt(vol)
 			
 		end do
-		!$OMP END PARALLEL DO
+		!$OMP END DO
+		!$OMP END PARALLEL
 		!
 		return 
 	end subroutine
@@ -103,11 +107,11 @@ module blochWf
 		complex(dp)						:: oLap
 		logical							:: isNorm
 		!
-		allocate( f(nR) 	)
 		fcount	= 0
-		!$OMP PARALLEL DO COLLAPSE(4), &
-		!$OMP& SCHEDULE(STATIC)	DEFAULT(SHARED),	&
-		!$OMP& PRIVATE(q1, q2, m, n, ri, f, oLap) REDUCTION(.AND.:isNorm) REDUCTION(+:fcount)
+
+		!$OMP PARALLEL DEFAULT(SHARED) PRIVATE(q1, q2, m, n, ri, f, oLap) REDUCTION(.AND.:isNorm) REDUCTION(+:fcount)
+		allocate( f(nR) 	)
+		!$OMP DO COLLAPSE(4), SCHEDULE(STATIC) 
 		do q2 = 1, nQ
 			do q1 = 1, nQ
 				do m = 1, nG
@@ -132,7 +136,9 @@ module blochWf
 				end do
 			end do
 		end do
-		!$OMP END PARALLEL DO
+		!$OMP END DO
+		!$OMP END PARALLEL
+
 		!
 		testNormal	= isNorm
 		if( .not. testNormal) then
@@ -242,7 +248,7 @@ module blochWf
 
 
 
-end module blochWf
+end module blochWf 
 
 
 

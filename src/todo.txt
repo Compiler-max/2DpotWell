@@ -1,6 +1,9 @@
 today toDo:
 	
-	- OMP on calcConnOnCoarse
+	- private dynamic arrays in omp parallel regions - deallocate them
+		they seem to cause the segfault at the end of the execution
+
+
 	- switches for using berry wannier niu peierls
 	
 	- berry.f90 needs no te adjusted to new indexing( of unks)
