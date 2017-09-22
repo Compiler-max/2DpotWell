@@ -68,12 +68,12 @@ module potWellModel
 			!end if
 			
 			!BLOCH WAVEFUNCTIONS
-			call gaugeCoeff(kVal, Hmat)
+			!call gaugeCoeff(kVal, Hmat)
 			call genBwfVelo(qi, Hmat, bWf, veloBwf)	!mkl
 			write(*,*)	"[solveHam]: generated Bloch wavefunctions"
 
 			!PROJECTION & WANNIER
-			!call projectBwf(qi, bWf(:,:,qi), loBwf, U, failCount, smin, smax)	!todo mkl
+			call projectBwf(qi, bWf(:,:,qi), loBwf, U, failCount, smin, smax)	!todo mkl
 			write(*,*)	"[solveHam]: projetion of bwf done"
 			!call genWannF(qi, lobWf, wnF) 	!omp
 			call genUnk(qi, lobWf, unk )	!omp

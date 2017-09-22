@@ -205,7 +205,9 @@ module mathematics
 		real(dp),		intent(out)		:: minS, maxS
 		complex(dp),	allocatable		:: U(:,:), Vt(:,:), TMP(:,:)
 		real(dp),		allocatable		:: s(:)
-		integer							:: i,j, m, n
+		integer							:: i,j, m, n, k, lda, ldb, ldc
+		complex(dp)						:: alpha, beta
+		character*1						:: transa, transb
 		
 		m 		= size(	Mat	,	1 )
 		n 		= size(	Mat	,	2 )	
@@ -218,25 +220,37 @@ module mathematics
 		allocate(	TMP(  size(s), size(Vt,2)  ))
 		!
 		call SVD(Mat, U,s,Vt)
-
+		!
 		!diagnostics both values should be positive and larger then zero
 		maxS	= maxval(s)
 		minS	= minval(s)
-		!write(*,'(a,G,a,f10.5)')"[myMatInvSqrt]: smin= ",minS ,",    smax= ",maxS
-
-		!scaling, i.e. perform inversion and sqrt
+		!
+		!scaling, i.e. perform inversion and sqrt of eignevalues s(:)
 		do i = 1, size(s)
 			s(i) = 1.0_dp / dsqrt( s(i) )
-			!write(*,*)"s_inv(i)=",s(i)
 		end do
-		
+		!
 		!after scaling do the rotations
 		do j = 1, size(Vt,2)
 			do i = 1, size(s)
 				TMP(i,j) = dcmplx( s(i) ) * Vt(i,j)
 			end do
 		end do
-		Mat = matmul(U, TMP)
+
+
+		!Mat = matmul(U, TMP)
+		transa	= 'n'
+		transb	= 'n'
+		m		= size(U,1)
+		n 		= size(TMP,2)
+		k		= size(U,2)
+		lda		= m
+		ldb		= k
+		ldc		= m
+		alpha	= dcmplx(1.0_dp)
+		beta	= dcmplx(0.0_dp)
+		call zgemm(transa, transb, m, n, k, alpha, U, lda, TMP, ldb, beta, Mat, ldc)
+		!
 		!
 		return
 	end subroutine
@@ -385,7 +399,6 @@ module mathematics
 		if( size(A,2) /= size(B,2)  .or. size(B,1) /= size(A,1)	) then
 			write(*,*)"[myCommutat]: Matrix ranks dont match. can not compute commutator"
 		else
-			!res		= matmul(M,N) - matmul(N,M)
 			transa	= 'n'
 			transb	= 'n'
 			m 		= size(B,1)
@@ -397,7 +410,7 @@ module mathematics
 			alpha	= dcmplx(1.0_dp)
 			beta	= dcmplx(0.0_dp)
 			call zgemm(transa, transb, m, n, k, alpha, B, lda, A, ldb, beta, RES, ldc)
-
+			!
 			beta	= dcmplx(-1.0_dp)
 			call zgemm(transa, transb, m, n, k, alpha, A, lda, B, ldb, beta, RES, ldc)
 		end if

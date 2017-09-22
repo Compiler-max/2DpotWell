@@ -41,8 +41,8 @@ program main
 	call readInp()
 	!electronic structure arrays
 	allocate(			unk(		nR 		,	nWfs	, nQ		)				)
-	allocate(			EnW(					nQ		, nWfs				)		)
-	allocate(			VeloBwf(	2		,	nR		, nQ		, nG	)		) 
+	allocate(			EnW(					nWfs	, nQ		)				)
+	allocate(			VeloBwf(2,	nR		, 	nG		, nQ		)				) 
 	!allocate(			wnF( 		nR		, 	nSC		, nWfs		)				)
 	!allocate(			wCent(		2		, 	nWfs				)				)
 	!allocate(			wSprd(		2		, 	nWfs				)				)
