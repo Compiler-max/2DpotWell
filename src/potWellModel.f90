@@ -103,7 +103,7 @@ module potWellModel
 		close(210)
 		!
 		bWfT	= dimag(bWf)
-		open(unit=211, file='rawData/bwxfI.dat'		, form='unformatted', access='stream', action='write')
+		open(unit=211, file='rawData/bwfI.dat'		, form='unformatted', access='stream', action='write')
 		write(211)	bwfT
 		write(*,*)	"[solveHam]: wrote eigenvalues and bwfs"
 		!
