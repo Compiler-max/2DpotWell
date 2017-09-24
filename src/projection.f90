@@ -45,7 +45,9 @@ module projection
 		!SET UP ROTATION MATRIX U
 		call genTrialOrb(gnr)
 		call calcAmat(bwf,gnr, A)
+		write(*,*)	"[projectBwf]: A matrix set up done"
 		call calcInvSmat(A, S, smin, smax)
+		write(*,*)	"[projectBwf]: S matrix calculation done"
 		!U = matmul(S, A)
 		transa	= 'n' 
 		transb	= 'n'
@@ -58,6 +60,8 @@ module projection
 		beta	= dcmplx(0.0_dp)
 		ldc		= size(U,1)
 		call zgemm(transa, transb, m, n, k, alpha, S, lda, A, ldb, beta, U, ldc)
+		write(*,*)	"[projectBwf]: U matrix set up done"
+		!
 		!
 		!ROTATE BLOCH STATES
 		!$OMP PARALLEL DO SCHEDULE(STATIC) DEFAULT(SHARED) PRIVATE(xi)
@@ -65,6 +69,8 @@ module projection
 			loBwf(xi,:) = matmul(	U , bWf(xi,1:nWfs)	)
 		end do
 		!$OMP END PARALLEL DO
+		write(*,*)	"[projectBwf]: projections done"
+		!
 		!
 		!DEBUGGING
 		if(debugHam) then
@@ -226,9 +232,7 @@ module projection
 		complex(dp)						:: alpha, beta
 		character*1						:: transa, transb
 		!
-		allocate(	Sold(n,n)	)
-		allocate(	Ssqr(n,n)	)
-		!
+		allocate(	Sold(nWfs,nWfs)	)
 		!CALCULATE S FROM A 
 		transa	= 'c'
 		transb	= 'n'
@@ -242,6 +246,7 @@ module projection
 		ldc		= size(A,1)
 		!call zgemm(transa, transb, m, n, k, alpha, a, lda, b, ldb, beta, c, ldc)
 		 call zgemm(transa, transb, m, n, k, alpha, A, lda, A, ldb, beta, S, ldc)
+		write(*,*)	"[calcInvSmat]: calculated S matrix"
 		!
 		!
 		!CALCULATE INVERSE SQRT OF S
@@ -254,9 +259,11 @@ module projection
 		if( ma > smax ) then
 			smax = ma
 		end if
+		write(*,*)	"[calcInvSmat]: calculated inv.sqrt. of S "
 		!
 		!DEBUG
 		if(debugHam) then
+			allocate(	Ssqr(nWfs,nWfs)	)
 			transa	= 'n'
 			transb	= 'n'
 			alpha	= dcmplx(1.0_dp)
@@ -266,6 +273,7 @@ module projection
 			if( .not. isUnit(Sold) ) then
 				write(*,*)"[calcInvSmat]: problem with mat inversion, seems to be not inverse square root"
 			end if
+			write(*,*)	"[calcInvSmat]: finished debuggin tests"
 		end if
 		!
 		!

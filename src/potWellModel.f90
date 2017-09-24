@@ -55,6 +55,8 @@ module potWellModel
 		end if
 		
 		do qi = 1, nQ
+			write(*,*)"**"
+			write(*,*)"**"
 			write(*,*)"[solveHam]: qi=",qi
 			kVal	=	qpts(:,qi)
 			

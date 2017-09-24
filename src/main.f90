@@ -43,16 +43,6 @@ program main
 	allocate(			unk(		nR 		,	nWfs	, nQ		)				)
 	allocate(			En(						nWfs	, nQ		)				)
 	allocate(			VeloBwf(2,	nR		, 	nG		, nQ		)				) 
-	!allocate(			wnF( 		nR		, 	nSC		, nWfs		)				)
-	!allocate(			wCent(		2		, 	nWfs				)				)
-	!allocate(			wSprd(		2		, 	nWfs				)				)
-	
-
-	!coarse mesh quanties
-	
-	!allocate(			Aw(			3		,	nQ		, nWfs,nWfs	)				)
-	!allocate(			vW(			3		,	nQ		, nWfs,nWfs	)				)
-	!allocate(			FW(			3		,	nQ		, nWfs		)				)
 
 	!wannier interpolation arrays
 	!allocate(			Ah(		3		,	nK		, nWfs, nWfs	)			)

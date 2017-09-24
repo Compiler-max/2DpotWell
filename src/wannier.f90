@@ -88,14 +88,18 @@ module wannier
 		logical							:: rLog, iLog
 		integer							:: n, m, ri, sc,sc1, sc2, tot, diffSC
 		!
-		allocate(	f(nR)	)
+		
+		
+		!
+		!$OMP PARALLEL DEFAULT(SHARED)	PRIVATE(n, m, ri, sc, sc1, sc2, rLog, iLog, oLap, f) &
+		!$OMP& REDUCTION(+:avg,tot, diffSC, isNormal) REDUCTION(max:dmax) 
 		isNormal 	= 0
 		sc			= 1
 		dmax		= 0.0_dp
 		avg			= 0.0_dp
 		diffSC		= 0
-		!
-		!
+		allocate(	f(nR)	)
+		!$OMP DO COLLAPSE(3) SCHEDULE(STATIC) 
 		do sc1 = 1, nSC
 			do sc2 = 1, nSC
 				do n = 1, nWfs
@@ -157,7 +161,9 @@ module wannier
 				end do
 			end do
 		end do
-		!
+		!$OMP END DO
+		deallocate(	f )
+		!$OMP END PARALLEL
 		avg	= avg / real(isNormal,dp)
 		write(*,'(a,i5,a,i8,a,f16.12,a,f16.12)')	"[isNormal]: ",isNormal," of ",tot, &
 													" are not properly normalized. dmax=",dmax," avg diff=",avg 
