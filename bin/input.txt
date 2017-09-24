@@ -1,0 +1,56 @@
+#Input for 2D pot well code
+
+[unitCell]
+    aX          = 11.45   
+    aY          = 11.45
+
+[atoms]
+    nAt         = 2       
+    relXpos     = 0.25000000 0.75000000     
+    relYpos     = 0.50000000 0.50000000 
+    atRx        = 1.17 1.17    
+    atRy        = 1.17 1.17
+    atPot       = -0.4 -0.6     
+    Zion        = 1.00 1.00
+
+[numerics]
+    nG          = 256
+    Gcut        = 3.7	     
+    nQx         = 4   
+    nQy         = 4
+    nSCx        = 4 
+    nSCy        = 4
+    nRx         = 48   
+    nRy         = 48
+    thres       = 0.1
+
+[methods]
+    doBerry     = t
+    doWanni     = t
+    doNiu       = t
+    doPei       = f
+
+[debug]
+    debugHam    = f
+    debugWann   = f
+
+
+[wann]
+    gaugeSwitch = 0     
+    nWfs        = 15 
+    trialOrbSw  = 0
+    trialOrbVAL = 1.0 1.0
+    R0          = 1
+    nKx         = 1
+    nKy         = 1
+    connSwitch  = 1
+    gaugeBack   = 0
+  
+
+
+[perturbation]
+    B0          = 1.0               #hbar/(e*a0**2)
+    Bext        = 0.0 0.0 1.0
+
+
+

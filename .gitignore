@@ -1,5 +1,14 @@
 **/lib
-**/bin
+**/bin/rawData
+bin/**
+!bin/input.txt
+!bin/myBWFplot.py
+!bin/myCONNplot.py
+!bin/myCURVplot.py
+!bin/myENERGYplot.py
+!bin/myUNKplot.py
+!bin/myWNFplot.py
+
 **/vTune
 *.o
 *.mod
