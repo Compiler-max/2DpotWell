@@ -54,6 +54,7 @@ module potWellModel
 			write(*,*)	"[solveHam]: debugging ON. Will do additional tests of the results"
 		end if
 		
+		!scatter : unk, EnT, bwf
 		do qi = 1, nQ
 			write(*,*)"**"
 			write(*,*)"**"
@@ -80,7 +81,7 @@ module potWellModel
 			!
 			!
 		end do
-
+		!gather: unk, EnT, bwf
 
 		do qi = 1, nQ
 			En(:,qi)	= EnT(1:nWfs,qi)

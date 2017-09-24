@@ -61,7 +61,7 @@ f7.close()
 	
 
 #RESHAPE RAW DATA
-rpts	= np.reshape(rpts,(nR,2))
+#rpts	= np.reshape(rpts,(nR,2))
 
 unkR	= np.reshape(rawDataR,(nK, nWfs , nR))  #	unk(		nR		, 	nK		, nWfs	)		
 unkI	= np.reshape(rawDataI,(nK, nWfs , nR))
