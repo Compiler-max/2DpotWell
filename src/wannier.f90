@@ -56,7 +56,8 @@ module wannier
 		write(*,*)	"[wannMethod]: wrote wannier files"
 
 		!DEBUG
-		if(debugWann) then 
+		if(debugWann) then
+			write(*,*)	"[wannMethod]: all done. start debugging.." 
 			normCount = isNormal(wnF)
 			if(normCount /= 0) then
 				write(*,*)	"[wannMethod]: generated wannier functions have normalization issues"
@@ -64,6 +65,7 @@ module wannier
 			!
 			!
 			call isReal(wnF)
+			write(*,*)	"[wannMethod]: debugging test done"
 		end if
 		!
 		!

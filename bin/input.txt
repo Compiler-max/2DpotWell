@@ -14,14 +14,14 @@
     Zion        = 1.00 1.00
 
 [numerics]
-    nG          = 128
+    nG          = 512
     Gcut        = 3.7	     
     nQx         = 8   
     nQy         = 8
     nSCx        = 8 
     nSCy        = 8
-    nRx         = 80   
-    nRy         = 80
+    nRx         = 40   
+    nRy         = 40
     thres       = 0.1
 
 [methods]
@@ -32,7 +32,7 @@
 
 [debug]
     debugHam    = F
-    debugWann   = T
+    debugWann   = F
 
 
 [wann]

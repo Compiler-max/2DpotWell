@@ -74,6 +74,7 @@ module projection
 		!
 		!DEBUGGING
 		if(debugHam) then
+			write(*,*)	"[projectBwf]: start debugging"
 			if( .not. isUnit(U) 			) then
 				write(*,'(a,i7,a)')"[projectBwf]: qi=",qi," U matrix is not a unitary matrix !"
 			end if
@@ -194,7 +195,6 @@ module projection
 		complex(dp),	allocatable	:: f(:)
 		integer						:: m,n, xi
 		!
-	
 		A = dcmplx(0.0_dp)
 		!
 		!$OMP PARALLEL DEFAULT(SHARED) PRIVATE(n, m, f, xi)
@@ -233,6 +233,8 @@ module projection
 		character*1						:: transa, transb
 		!
 		allocate(	Sold(nWfs,nWfs)	)
+		!
+		!
 		!CALCULATE S FROM A 
 		transa	= 'c'
 		transb	= 'n'
@@ -246,13 +248,12 @@ module projection
 		ldc		= size(A,1)
 		!call zgemm(transa, transb, m, n, k, alpha, a, lda, b, ldb, beta, c, ldc)
 		 call zgemm(transa, transb, m, n, k, alpha, A, lda, A, ldb, beta, S, ldc)
-		
 		!
 		!
 		!CALCULATE INVERSE SQRT OF S
 		Sold = S
 		call myMatInvSqrt(S, mi, ma)
-
+		!
 		if( mi < smin ) then
 			smin = mi
 		end if
@@ -260,9 +261,11 @@ module projection
 			smax = ma
 		end if
 		!
+		!
 		!DEBUG
 		if(debugHam) then
-			write(*,*)"[calcInvSmat]: all done, start debugging test( test if S * (S^-0.5)^2 == I"
+			! test if S * (S^-0.5)^2 == I
+			write(*,*)"[calcInvSmat]: all done, start debugging test"
 			allocate(	Ssqr(nWfs,nWfs)	)
 			transa	= 'n'
 			transb	= 'n'

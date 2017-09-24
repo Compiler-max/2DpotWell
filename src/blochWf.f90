@@ -91,6 +91,7 @@ module blochWf
 		!$OMP END PARALLEL DO
 
 		if(debugHam) then
+			write(*,*)"[genUnk]: start normalization test"
 			if( .not. testNormal(unk)	) then
 				write(*,*)	"[genUnk]: unks have normalization issues"
 			end if

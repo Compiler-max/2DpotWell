@@ -81,11 +81,11 @@ module potWellModel
 			!
 		end do
 
-		!$OMP PARALLEL DO SCHEDULE(STATIC) DEFAULT(SHARED)
+
 		do qi = 1, nQ
 			En(:,qi)	= EnT(1:nWfs,qi)
 		end do
-		!$OMP END PARALLEL DO
+
 
 		write(*,*)	"[solveHam]: copied eigenvalues"
 		!write(*,*)"[solveHam]: test normalization of generated Bloch wavefunctions"
@@ -163,7 +163,7 @@ module potWellModel
 		if(debugHam) then
 			if ( .not.	isHermitian(Hmat)	) then
 				write(*,*)"[populateH]: Hamiltonian matrix is not Hermitian :"
-				!call printMat(nG, Hmat)
+				call printMat(nG, Hmat)
 			end if
 		end if
 
