@@ -246,7 +246,7 @@ module projection
 		ldc		= size(A,1)
 		!call zgemm(transa, transb, m, n, k, alpha, a, lda, b, ldb, beta, c, ldc)
 		 call zgemm(transa, transb, m, n, k, alpha, A, lda, A, ldb, beta, S, ldc)
-		write(*,*)	"[calcInvSmat]: calculated S matrix"
+		
 		!
 		!
 		!CALCULATE INVERSE SQRT OF S
@@ -259,10 +259,10 @@ module projection
 		if( ma > smax ) then
 			smax = ma
 		end if
-		write(*,*)	"[calcInvSmat]: calculated inv.sqrt. of S "
 		!
 		!DEBUG
 		if(debugHam) then
+			write(*,*)"[calcInvSmat]: all done, start debugging test( test if S * (S^-0.5)^2 == I"
 			allocate(	Ssqr(nWfs,nWfs)	)
 			transa	= 'n'
 			transb	= 'n'
@@ -270,10 +270,9 @@ module projection
 			beta	= dcmplx(0.0_dp)
 			call zgemm(transa, transb, m, n, k, alpha, S   , lda, S   , ldb, beta, Ssqr, ldc)
 			call zgemm(transa, transb, m, n, k, alpha, Sold, lda, Ssqr, ldb, beta, Sold, ldc)
-			if( .not. isUnit(Sold) ) then
+			if( .not. isIdentity(Sold) ) then
 				write(*,*)"[calcInvSmat]: problem with mat inversion, seems to be not inverse square root"
 			end if
-			write(*,*)	"[calcInvSmat]: finished debuggin tests"
 		end if
 		!
 		!
