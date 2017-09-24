@@ -188,11 +188,12 @@ module projection
 		complex(dp),	allocatable	:: f(:)
 		integer						:: m,n, xi
 		!
-		allocate(	f(nR)	)
-		!
+	
 		A = dcmplx(0.0_dp)
 		!
-		!$OMP PARALLEL DO COLLAPSE(2) SCHEDULE(STATIC) DEFAULT(SHARED) PRIVATE(n, m, f, xi)
+		!$OMP PARALLEL DEFAULT(SHARED) PRIVATE(n, m, f, xi)
+		allocate(	f(nR)	)
+		!$OMP DO COLLAPSE(2) SCHEDULE(STATIC) 
 		do n = 1, nWfs
 			do m = 1, nWfs
 				f = dcmplx(0.0_dp)
@@ -202,17 +203,13 @@ module projection
 				A(m,n) = nIntegrate(nR, nRx, nRy, dx, dy, f)		
 			end do
 		end do
-		!$OMP END PARALLEL DO
+		!$OMP END DO
+		deallocate(	f )
+		!$OMP END PARALLEL
+		!
 		!
 		return
 	end subroutine
-
-
-
-
-	!
-	!	call zgemm(transa, transb, m, n, k, alpha, a, lda, b, ldb, beta, c, ldc)
-
 
 
 
@@ -258,16 +255,14 @@ module projection
 			smax = ma
 		end if
 		!
-		!
-		!DEBUG: Check if S is really the inverse sqrt
-		transa	= 'n'
-		transb	= 'n'
-		alpha	= dcmplx(1.0_dp)
-		beta	= dcmplx(0.0_dp)
-		call zgemm(transa, transb, m, n, k, alpha, S   , lda, S   , ldb, beta, Ssqr, ldc)
-		call zgemm(transa, transb, m, n, k, alpha, Sold, lda, Ssqr, ldb, beta, Sold, ldc)
-		!
+		!DEBUG
 		if(debugHam) then
+			transa	= 'n'
+			transb	= 'n'
+			alpha	= dcmplx(1.0_dp)
+			beta	= dcmplx(0.0_dp)
+			call zgemm(transa, transb, m, n, k, alpha, S   , lda, S   , ldb, beta, Ssqr, ldc)
+			call zgemm(transa, transb, m, n, k, alpha, Sold, lda, Ssqr, ldb, beta, Sold, ldc)
 			if( .not. isUnit(Sold) ) then
 				write(*,*)"[calcInvSmat]: problem with mat inversion, seems to be not inverse square root"
 			end if

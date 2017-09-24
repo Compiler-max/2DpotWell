@@ -49,12 +49,10 @@ module blochWf
 		allocate(	basVec(		nG)		)
 		allocate(	veloBasX(	nG)		)
 		allocate(	veloBasY(	nG)		)
-
 		!$OMP DO SCHEDULE(STATIC) 
 		do xi = 1, nR
 			!GET BASIS
 			call calcBasis(qi,xi, basVec, veloBasX, veloBasY)
-			!
 			!
 			!WAVE FUNCTIONS
 			bwf(xi,:,qi)	= matmul(basVec,basCoeff) / dsqrt(vol)
@@ -62,9 +60,11 @@ module blochWf
 			!!VELOCITIES
 			velobWf(1,xi,:,qi)	= matmul(veloBasX,basCoeff) / dsqrt(vol)
 			velobWf(2,xi,:,qi)	= matmul(veloBasY,basCoeff) / dsqrt(vol)
-			
 		end do
 		!$OMP END DO
+		deallocate(	basVec		)
+		deallocate(	veloBasX	)
+		deallocate(	veloBasY	)
 		!$OMP END PARALLEL
 		!
 		return 
@@ -114,8 +114,8 @@ module blochWf
 		!$OMP DO COLLAPSE(4), SCHEDULE(STATIC) 
 		do q2 = 1, nQ
 			do q1 = 1, nQ
-				do m = 1, nG
-					do n = 1, nG
+				do m = 1, nWfs
+					do n = 1, nWfs
 						!INTEGRATE
 						do ri = 1, nR
 							f(ri)	= dconjg( unk(ri,m,q1)	)	* unk(ri,n,q2)
@@ -137,6 +137,7 @@ module blochWf
 			end do
 		end do
 		!$OMP END DO
+		deallocate(	f	)
 		!$OMP END PARALLEL
 
 		!
