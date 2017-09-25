@@ -219,15 +219,19 @@ module mathematics
 		allocate(	s(  max(1,min(m,n))  )		)
 		allocate(	TMP(  size(s), size(Vt,2)  ))
 		!
+
 		call SVD(Mat, U,s,Vt)
-		!
+
 		!diagnostics both values should be positive and larger then zero
 		maxS	= maxval(s)
 		minS	= minval(s)
+		if( minS < 1e-15_dp) then
+			write(*,'(a,e16.9,a,e16.9)')	"[myMatInvSqrt]: warning, minimum eigenvalue close to zero, minS=",minS," maxS=",maxS
+		end if
 		!
 		!scaling, i.e. perform inversion and sqrt of eignevalues s(:)
 		do i = 1, size(s)
-			s(i) = 1.0_dp / dsqrt( s(i) )
+			s(i) = 1.0_dp /	( dsqrt( s(i) ) + 1e-15_dp )
 		end do
 		!
 		!after scaling do the rotations
@@ -236,7 +240,7 @@ module mathematics
 				TMP(i,j) = dcmplx( s(i) ) * Vt(i,j)
 			end do
 		end do
-
+		
 
 		!Mat = matmul(U, TMP)
 		transa	= 'n'
