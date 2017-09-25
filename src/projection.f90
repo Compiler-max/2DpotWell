@@ -3,7 +3,7 @@ module projection
 	!	this includes the calculation of the orthonormalized projected bloch wavefunctions
 	!	and the FT of the bwfs to calculate the wannier functions
 	use omp_lib
-	use mathematics, only: dp, PI_dp, acc, myExp, nIntegrate, myMatInvSqrt, isUnit, isIdentity
+	use mathematics, only: dp, PI_dp, acc, myExp, nIntegrate,  mySVD, myMatInvSqrt, isUnit, isIdentity
 	use sysPara
 	implicit none	
 	
@@ -25,49 +25,36 @@ module projection
 
 	contains
 !public:
-	subroutine projectBwf(qi, bWf, loBwf, U, failCount, smin, smax)	!projectBwf(qi, bWf, loBwf, U(:,:), failCount, smin, smax)
+	subroutine projectBwf(qi, bWf, loBwf, failCount, smin, smax)	!projectBwf(qi, bWf, loBwf, U(:,:), failCount, smin, smax)
 		!does the projection onto Loewdin-orthonormalized Bloch-like states
 		!see Marzari, Vanderbilt PRB 56, 12847 (1997) Sec.IV.G.1 for detailed description of the method 
 		integer		,	intent(in)		:: qi
 		complex(dp)	,	intent(in)		:: bWf(:,:)   ! bWf(nR,nG)
-		complex(dp)	,	intent(out)		:: loBwf(:,:), U(:,:)   !U(nWfs,nWfs)
+		complex(dp)	,	intent(out)		:: loBwf(:,:)
 		integer,		intent(inout)	:: failCount
 		real(dp),		intent(inout)	:: smin, smax
-		complex(dp)	,	allocatable		:: gnr(:,:), A(:,:), S(:,:), phi(:,:)
+		complex(dp)	,	allocatable		:: gnr(:,:), A(:,:), U(:,:)
 		complex(dp)						:: alpha, beta
 		integer							:: m, n, k, lda, ldb, ldc, xi
 		character*1						:: transa, transb
 		!
 		allocate(	gnr(nR,nWfs)		)
-		allocate( 	S(nWfs,nWfs)		)
-		allocate( 	A(nWfs,nWfs)		)
+		allocate( 	A(nBands,nWfs)		)
+		allocate(	U(nBands,nWfs)		)
 		!
 		!SET UP ROTATION MATRIX U
 		call genTrialOrb(gnr)
 		call calcAmat(bwf,gnr, A)
-
 		write(*,*)	"[projectBwf]: A matrix set up done"
-		call calcInvSmat(A, S, smin, smax)
-		write(*,*)	"[projectBwf]: S matrix calculation done"
-		!U = matmul(S, A)
-		transa	= 'n' 
-		transb	= 'n'
-		m		= size(S,1)
-		n		= size(A,2)
-		k		= size(S,2)
-		alpha	= dcmplx(1.0_dp)
-		lda		= size(S,1)
-		ldb		= size(A,1)
-		beta	= dcmplx(0.0_dp)
-		ldc		= size(U,1)
-		call zgemm(transa, transb, m, n, k, alpha, S, lda, A, ldb, beta, U, ldc)
-		write(*,*)	"[projectBwf]: U matrix set up done"
 		!
+		!USE SVD TO CALC U
+		call calcUmat(A, U)
+		write(*,*)	"[projectBwf]: U matrix calculation done"
 		!
 		!ROTATE BLOCH STATES
 		!$OMP PARALLEL DO SCHEDULE(STATIC) DEFAULT(SHARED) PRIVATE(xi)
 		do xi = 1, nR
-			loBwf(xi,:) = matmul(	U , bWf(xi,1:nWfs)	)
+			loBwf(xi,:) = matmul(	bWf(xi,1:nBands), U	)
 		end do
 		!$OMP END PARALLEL DO
 		write(*,*)	"[projectBwf]: projections done"
@@ -76,9 +63,9 @@ module projection
 		!DEBUGGING
 		if(debugHam) then
 			write(*,*)	"[projectBwf]: start debugging"
-			if( .not. isUnit(U) 			) then
-				write(*,'(a,i7,a)')"[projectBwf]: qi=",qi," U matrix is not a unitary matrix !"
-			end if
+			!if( .not. isUnit(U) 			) then			!!!!!!U IS NOT SQUARE MATRIX, THEREFORE UNIT TEST DOES NOT MAKE SENSE!!!!
+			!	write(*,'(a)')"[projectBwf]: U matrix is not a unitary matrix !"
+			!end if
 			if(	 .not. isOrthonorm(lobWf)	) then
 				write(*,'(a,f16.12)')"[projectBwf]: loBwf is NOT a orthonormal basis set, accuracy=",acc
 				failCount = failCount + 1
@@ -89,36 +76,6 @@ module projection
 		return
 	end subroutine
 		
-
-	!subroutine genWannF(qi, bWf, wnF)
-	!	! generates wannier functions from (projected) bloch wavefunctions
-	!	!	DEPRECATED
-	!	integer,		intent(in)		:: qi
-	!	complex(dp), 	intent(in)  	:: bWf(:,:) ! lobWf(nRpts,nWfs)	
-	!	complex(dp), 	intent(inout) 	:: wnF(:,:,:) ! wnF( 	nR, nSC, nWfs		)	
-	!	integer 						:: n, Ri, xi
-	!	complex(dp)						:: phase
-	!	!
-	!	!$OMP PARALLEL DO SCHEDULE(STATIC) COLLAPSE(3) DEFAULT(SHARED) PRIVATE(n, Ri, xi, phase) 
-	!	do n = 1, nWfs
-	!		do Ri = 1, nSC
-	!			do xi = 1, nR
-	!				phase		 = myExp(	-1.0_dp * dot_product(	qpts(:,qi) , Rcell(:,Ri)	) 	 )
-	!				wnF(xi,Ri,n) = wnF(xi,Ri,n) + bWf(xi,n) * phase / real(nQ,dp)
-	!			end do
-	!		end do
-	!	end do
-	!	!$OMP END PARALLEL DO
-	!	!
-	!	!
-	!	return
-	!end subroutine
-
-
-	
-
-
-
 
 
 
@@ -192,7 +149,7 @@ module projection
 	subroutine calcAmat(bWf,gnr, A)
 		!calculates the inner product matrix of bwfs and trial orbital gnr
 		complex(dp),	intent(in)	:: bWf(:,:), gnr(:,:) 
-		complex(dp),	intent(out)	:: A(:,:) !A(nWfs,nWfs)
+		complex(dp),	intent(out)	:: A(:,:) !A(nBands,nWfs)
 		complex(dp),	allocatable	:: f(:)
 		integer						:: m,n, xi
 		!
@@ -202,7 +159,7 @@ module projection
 		allocate(	f(nR)	)
 		!$OMP DO COLLAPSE(2) SCHEDULE(STATIC) 
 		do n = 1, nWfs
-			do m = 1, nWfs
+			do m = 1, nBands
 				f = dcmplx(0.0_dp)
 				do xi = 1, nR				
 					f(xi) = dconjg(	bWf(xi,m) ) * gnr(xi,n)
@@ -217,6 +174,89 @@ module projection
 		!
 		return
 	end subroutine
+
+
+	subroutine calcUmat(A, U)
+		!U = A S^-0.5 = Z I V
+		!	where A= Z d V (singular value decomposition) 
+		complex(dp),	intent(in)		:: A(:,:)	!A(nBands,nWfs)
+		complex(dp),	intent(out)		:: U(:,:)	!U(nBands,nWfs)
+		complex(dp),	allocatable		:: Z(:,:), I(:,:), V(:,:), TMP(:,:)
+		real(dp),		allocatable		:: d(:)
+		integer							:: m, n, k, lda, ldb, ldc
+		complex(dp)						:: alpha, beta
+		character*1						:: transa, transb
+		!
+		allocate(	Z(	nBands, 	nBands	)	)
+		allocate(	I(	nBands,		nWfs	)	)
+		allocate(	V(	nWfs,		nWfs	)	)
+		allocate(	TMP(nBands,		nWfs	)	)
+		allocate(	d(	nWfs				)	)
+		!
+		!SET UP IDENTITY MATRIX
+		I	= dcmplx(0.0_dp)
+		do m = 1, nBands
+			do n = 1, nWfs
+				if( n == m) then
+					I(m,n)	= dcmplx(1.0_dp)
+				end if
+			end do
+		end do
+		!
+		!CALC SVD OF A
+		call mySVD(A,Z,d,V)
+		!
+		!CALC U
+		!tmp=matmul(I,V)
+		transa	= 'n'
+		transb	= 'n'
+		alpha	= dcmplx(1.0_dp)
+		beta	= dcmplx(0.0_dp)
+		m		= size(I,1)
+		n		= size(V,2)
+		k		= size(I,2)
+		lda		= m
+		ldb		= k
+		ldc		= m
+		call zgemm(transa, transb, m, n, k, alpha, I, lda, V, ldb, beta, TMP, ldc)
+		!
+		!U=matmul(Z,tmp)
+		transa	= 'n'
+		transb	= 'n'
+		alpha	= dcmplx(1.0_dp)
+		beta	= dcmplx(0.0_dp)
+		m		= size(Z,1)
+		n		= size(TMP,2)
+		k		= size(Z,2)
+		lda		= m
+		ldb		= k
+		ldc		= m
+		call zgemm(transa, transb, m, n, k, alpha, Z, lda, TMP, ldb, beta, U, ldc)
+		!
+		!
+		return
+	end subroutine
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
