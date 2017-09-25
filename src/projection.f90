@@ -45,6 +45,7 @@ module projection
 		!SET UP ROTATION MATRIX U
 		call genTrialOrb(gnr)
 		call calcAmat(bwf,gnr, A)
+
 		write(*,*)	"[projectBwf]: A matrix set up done"
 		call calcInvSmat(A, S, smin, smax)
 		write(*,*)	"[projectBwf]: S matrix calculation done"
@@ -252,6 +253,7 @@ module projection
 		!
 		!CALCULATE INVERSE SQRT OF S
 		Sold = S
+
 		call myMatInvSqrt(S, mi, ma)
 		!
 		if( mi < smin ) then

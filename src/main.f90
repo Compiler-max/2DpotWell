@@ -11,7 +11,7 @@ program main
 	use polarization,	only:		calcPolWannCent, calcPolViaA, calcIonicPol
 	use semiclassics,	only:		calcFirstOrdP
 	use peierls,		only:		peierlsSub
-	use output,		 	only:		writeMeshInfo, writeMeshBin, writeWaveFunc, writeWannFiles,writePolFile,& 
+	use output,		 	only:		writeMeshInfo, writeMeshBin, writeUNKs, writeWannFiles,writePolFile,& 
 									printTiming	!printMat, printInp, printWannInfo,writeSysInfo  
 
 
@@ -188,6 +188,7 @@ program main
 	!call writeSysInfo() 
 	call writeMeshInfo() 
 	call writeMeshBin()
+	call writeUNKs(unk)
 	write(*,*)"[main]: ...wrote mesh info"
 	
 	

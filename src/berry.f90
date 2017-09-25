@@ -6,7 +6,7 @@ module berry
 	use sysPara
 	use polarization,	only:	calcPolViaA
 	use semiClassics,	only:	calcFirstOrdP
-	use output,			only:	writeWaveFunc
+	use output,			only:	writeConnCurv
 	implicit none
 
 	private
@@ -54,7 +54,7 @@ module berry
 
 
 		!OUTPUT
-		call writeWaveFunc(unk, Aw, Fw)
+		call writeConnCurv(Aw, Fw)
 		!
 		!
 		return

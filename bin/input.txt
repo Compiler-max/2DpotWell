@@ -14,19 +14,19 @@
     Zion        = 1.00 1.00
 
 [numerics]
-    nG          = 512
+    nG          = 128
     Gcut        = 3.7	     
-    nQx         = 8   
-    nQy         = 8
-    nSCx        = 8 
-    nSCy        = 8
+    nQx         = 4   
+    nQy         = 4
+    nSCx        = 4 
+    nSCy        = 4
     nRx         = 40   
     nRy         = 40
     thres       = 0.1
 
 [methods]
     doBerry     = t
-    doWanni     = t
+    doWanni     = f
     doNiu       = t
     doPei       = f
 

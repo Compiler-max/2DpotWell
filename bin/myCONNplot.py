@@ -52,8 +52,8 @@ aY			= cellI[1]
 #RESHAPE RAW DATA
 kpts	= np.reshape(kpts,(nK,2))
 
-Aconn	= np.reshape(rawDataConn,(nWfs,nK, 3))    	#	Aconn(		3	,	nK	, nWfs	)										
-Fcurv	= np.reshape(rawDataCurv,(nWfs,nK, 3)) 		#	Fcurv(		3	,	nK	, nWfs	)
+Aconn	= np.reshape(rawDataConn,(nK, nWfs, nWfs, 3))    		#	Aconn(3, 	nWfs,	nK	)										
+Fcurv	= np.reshape(rawDataCurv,(nK, nWfs, nWfs, 3)) 		#	Fcurv(3, 	nWfs,	nK	)
 
 
 

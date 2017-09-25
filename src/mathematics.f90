@@ -299,7 +299,7 @@ module mathematics
 	logical function isIdentity(I)
 		!test if I is Identity matrix
 		complex(dp),	intent(in)		:: I(:,:)
-		integer							:: n,m
+		integer							:: n,m, Isize
 		!
 		isIdentity 	= .true.
 		!
@@ -307,10 +307,11 @@ module mathematics
 			write(*,*)"[isIdentity]: ERROR - only implemented for square matrices"
 			isIdentity = .false.
 		else
+			Isize	= size(I,1)
 			m = 1
-			do while( m<= size(I,1) .and. isIdentity )
+			do while( m<= Isize .and. isIdentity )
 				n = 1
-				do while( n<= size(I,1) .and. isIdentity )
+				do while( n<= Isize .and. isIdentity )
 					if(n == m) then 
 						if(  abs(abs(dreal(I(n,n)))-1.0_dp) > acc  .or. abs(dimag(I(n,n))) > acc	) then
 							isIdentity = .false. !set to false and ...

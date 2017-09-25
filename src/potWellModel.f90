@@ -101,8 +101,8 @@ module potWellModel
 		close(200)
 		!
 		bWfT	= dreal(bWf) 
-		open(unit=210, file='rawData/bwfR.dat'		, form='unformatted', access='stream', action='write') 
-		write(210)	bWfT     
+		open(unit=210, file='rawData/bwfR.dat'		, form='unformatted', access='stream', action='write',status='replace') 
+		write(210)	bwfT
 		close(210)
 		!
 		bWfT	= dimag(bWf)

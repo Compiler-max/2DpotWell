@@ -7,7 +7,7 @@ module output
 	implicit none
 	private
 
-	public ::	writeMeshInfo, writeMeshBin, writeWaveFunc, writeWannFiles, writePolFile, &
+	public ::	writeMeshInfo, writeMeshBin, writeUNKs ,writeConnCurv, writeWannFiles, writePolFile, &
 				printMat, printTiming 
 
 
@@ -143,26 +143,23 @@ module output
 	end subroutine
 
 
-	subroutine writeWaveFunc(unk, Aconn, Fcurv)
+	subroutine writeUNKs(unk)
 		complex(dp),	intent(in)		:: unk(:,:,:)
-		real(dp),		intent(in)		:: Aconn(:,:,:,:), Fcurv(:,:,:)
-		real(dp),		allocatable		:: unkR(:,:,:), unkI(:,:,:)
-		!
-		allocate(	unkR(	size(unk,1)		, size(unk,2)	, size(unk,3)		)			)
-		allocate(	unkI(	size(unk,1)		, size(unk,2)	, size(unk,3)		)			)
-		!
-		unkR 	= dreal(unk)
-		unkI 	= dimag(unk)
-		!
 		!LATTICE PERIODIC FUNCTIONS
 		open(unit=400,file='rawData/unkR.dat',form='unformatted',access='stream',action='write')
-		write(400)	unkR
+		write(400)	dreal(unk)
 		close(400)
 		!
-		open(unit=405,file='rawData/unkI.dat',form='unformatted',access='stream',action='write')
-		write(405)	unkI
-		close(405)
 		!
+		open(unit=405,file='rawData/unkI.dat',form='unformatted',access='stream',action='write')
+		write(405)	dimag(unk)
+		close(405)
+		!!
+		return
+	end subroutine
+
+	subroutine writeConnCurv(Aconn, Fcurv)
+		real(dp),		intent(in)		:: Aconn(:,:,:,:), Fcurv(:,:,:)
 		!
 		!CONNECTION
 		open(unit=410,file='rawData/AconnR.dat',form='unformatted',access='stream',action='write')
