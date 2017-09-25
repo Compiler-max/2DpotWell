@@ -149,7 +149,7 @@ module potWellModel
 		!$OMP PARALLEL DO SCHEDULE(DYNAMIC) COLLAPSE(2) DEFAULT(SHARED) PRIVATE(j, i, kg, onSite)
 		do j = 1, nG
 			do i = 1, nG
-				if(i .and. j )	then
+				if(i == j )	then
 					kg(:) 	= q(:) + Gvec(:,i)
 					onSite	= 0.5_dp * 	( kg(1)**2 + kg(2)**2 )
 					Hmat(i,j)	=	V(i,j)	+	onSite
@@ -164,7 +164,7 @@ module potWellModel
 		if(debugHam) then
 			if ( .not.	isHermitian(Hmat)	) then
 				write(*,*)"[populateH]: Hamiltonian matrix is not Hermitian :"
-				call printMat(nG, Hmat)
+				!call printMat(nG, Hmat)
 			end if
 		end if
 
