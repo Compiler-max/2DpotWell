@@ -10,39 +10,42 @@
     relYpos     = 0.50000000 0.50000000 
     atRx        = 1.17 1.17    
     atRy        = 1.17 1.17
-    atPot       = -0.4 -0.6     
+    atPot       = -0.4 -0.8     
     Zion        = 1.00 1.00
 
 [numerics]
-    nG          = 128
+    nG          = 256
     Gcut        = 3.7	     
-    nQx         = 4   
-    nQy         = 4
-    nSCx        = 4 
-    nSCy        = 4
-    nRx         = 40   
-    nRy         = 40
+    nQx         = 8   
+    nQy         = 8
+    nSCx        = 8 
+    nSCy        = 8
+    nRx         = 80   
+    nRy         = 80
     thres       = 0.1
 
 [methods]
+    doProj      = t
     doBerry     = t
-    doWanni     = f
+    doWanni     = t
     doNiu       = t
     doPei       = f
 
 [debug]
-    debugHam    = F
-    debugWann   = F
+    debugProj   = t
+    debugHam    = t
+    debugWann   = t
 
 
 [wann]
-    gaugeSwitch = 0     
-    nWfs        = 15 
+    gaugeSwitch = 0
+    nBands      = 33    
+    nWfs        = 3 
     trialOrbSw  = 0
     trialOrbVAL = 1.0 1.0
     R0          = 1
-    nKx         = 1
-    nKy         = 1
+    nKx         = 8
+    nKy         = 8
     connSwitch  = 1
     gaugeBack   = 0
   

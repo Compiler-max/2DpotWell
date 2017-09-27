@@ -80,10 +80,6 @@ module polarization
 		!!HARVEST
 		!pElA	= val / (aX*aY)
 		!
-		!DEBUGGING
-		!if(		dimag( val(1) ) > machine 	.or. 	dimag( val(2) ) > machine		) then
-		!	write(*,*)"[calcPolViaA]: non zero imaginary part of polarization"
-		!end if
 		return
 	end subroutine
 

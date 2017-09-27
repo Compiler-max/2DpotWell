@@ -4,24 +4,24 @@ module sysPara
 	use m_config
 	implicit none
 	private
-	public :: 	readInp, insideAt, getRindex, getKindex, &
+	public :: 	readInp, insideAt, getRindex, getKindex, getGammaPoint, &
 				dim, aX, aY, vol, nAt, relXpos, relYpos, atRx, atRy, atPot,&
 				nG, nG0, Gcut, nQ, nQx, nQy, nKx, nKy, nK, nSC, nSCx, nSCy, nR, nRx, nRy, R0,  dx, dy, dqx, dqy, dkx, dky, &
-				gaugeSwitch, nWfs, connSwitch, gaugeBack, &
+				gaugeSwitch, nBands, nWfs, connSwitch, gaugeBack, &
 				Gvec, atPos, atR, qpts, rpts, Rcell, kpts, trialOrbVAL, trialOrbSw, Zion, &
 				Bext, &
-				debugHam, debugWann, doBerry, doWanni, doNiu, doPei
+				debugProj, debugHam, debugWann, doProj, doBerry, doWanni, doNiu, doPei
 
 
 	!
 	integer  										:: 	dim=2, nAt=0, nG=11, nG0,  nQx=1, nQy=1,nQ , nSCx=1, nSCy=1,& 
 														nKx=1, nKy=1, nK, connSwitch=0, gaugeBack, &
-														nRx=10, nRy=10, nR, R0=1, nWfs=1, nSC, gaugeSwitch, trialOrbSw
+														nRx=10, nRy=10, nR, R0=1, nBands=1,nWfs=1, nSC, gaugeSwitch, trialOrbSw
 	real(dp) 										::	aX=0.0_dp, aY=0.0_dp,vol=0.0_dp, Gcut=2*PI_dp, thres,& 
 														dx, dy, dqx, dqy, dkx, dky, B0, Bext(3)											
 	real(dp),	allocatable,	dimension(:)		::	relXpos, relYpos, atRx, atRy, atPot, trialOrbVAL, Zion
 	real(dp),	allocatable,	dimension(:,:)		::	Gvec, atPos, atR, qpts, rpts, Rcell, kpts 
-	logical											::	debugHam, debugWann, doBerry, doWanni, doNiu, doPei
+	logical											::	debugHam, debugWann, debugProj, doProj , doBerry, doWanni, doNiu, doPei
 
 
 
@@ -66,15 +66,18 @@ module sysPara
 		call CFG_add_get(my_cfg,	"numerics%nRy"     	,	nRy      	,	"amount of r points used"				)
 		call CFG_add_get(my_cfg,	"numerics%thres"    ,	thres      	,	"threshold for overlap warnings"		)
 		![methods]
+		call CFG_add_get(my_cfg,	"methods%doProj"	,	doProj		,	"switch on/off 	projections onto trial"	)
 		call CFG_add_get(my_cfg,	"methods%doBerry"	,	doBerry		,	"switch on/off 	berry( unk) method "	)
 		call CFG_add_get(my_cfg,	"methods%doWanni"	,	doWanni		,	"switch on/off 	wannier( wnf ) method"	)
 		call CFG_add_get(my_cfg,	"methods%doNiu"		,	doNiu		,	"switch for nius first order pol"		)
 		call CFG_add_get(my_cfg,	"methods%doPei"		,	doPei		,	"switch for  peierls first order pol"	)
 		![debug]
+		call CFG_add_get(my_cfg,	"debug%debugProj"	, 	debugProj	,	"switch for debuging tests in solveHam"	)
 		call CFG_add_get(my_cfg,	"debug%debugHam"	, 	debugHam	,	"switch for debuging tests in solveHam"	)
 		call CFG_add_get(my_cfg,	"debug%debugWann"	, 	debugWann	,	"switch for debuging in wannier"		)
 		![wannier]
 		call CFG_add_get(my_cfg,	"wann%gaugeSwitch"	,	gaugeSwitch ,	"switch gauge the basis coeff directly"	)
+		call CFG_add_get(my_cfg,	"wann%nBands"		,	nBands	 	,	"# of bands to project onto trial orbs"	)
 		call CFG_add_get(my_cfg,	"wann%nWfs"			,	nWfs	 	,	"# wannier functions to generate"		)
 		call CFG_add_get(my_cfg,	"wann%trialOrbSw"	,	trialOrbSw	,	"switch different trial orbitals"		)
 		call CFG_add_get(my_cfg,	"wann%R0"			,	R0			,	"home unit cell used for wann cent calc")
@@ -186,7 +189,10 @@ module sysPara
 	end function
 
 
-
+	integer function getGammaPoint()
+		getGammaPoint	= getKindex(1+nQx/2,1+nQy/2)
+		return
+	end function
 
 
 

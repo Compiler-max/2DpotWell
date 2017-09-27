@@ -7,7 +7,7 @@ module output
 	implicit none
 	private
 
-	public ::	writeMeshInfo, writeMeshBin, writeUNKs ,writeConnCurv, writeWannFiles, writePolFile, &
+	public ::	writeMeshInfo, writeMeshBin, writeEnAndUNK, writeUNKs ,writeConnCurv, writeWannFiles, writeInterpBands, writePolFile, &
 				printMat, printTiming 
 
 
@@ -143,20 +143,50 @@ module output
 	end subroutine
 
 
+	subroutine writeEnAndUNK(EnT, unk)
+		real(dp),		intent(in)		:: EnT(:,:)
+		complex(dp),	intent(in)		:: unk(:,:,:)
+		real(dp),		allocatable		:: buffer(:,:,:)
+		!
+		allocate(	buffer(	size(unk,1), size(unk,2), size(unk,3)	)		)
+		!
+		open(unit=200, file='rawData/bandStruct.dat', form='unformatted', access='stream', action='write')
+		write(200)	EnT
+		close(200)
+		!
+		buffer	= dreal(unk) 
+		open(unit=210, file='rawData/unkR.dat'		, form='unformatted', access='stream', action='write',status='replace') 
+		write(210)	buffer
+		close(210)
+		!
+		buffer	= dimag(unk)
+		open(unit=211, file='rawData/unkI.dat'		, form='unformatted', access='stream', action='write')
+		write(211)	buffer
+		write(*,*)	"[solveHam]: wrote eigenvalues and bwfs"
+
+		return
+	end subroutine
+
+
 	subroutine writeUNKs(unk)
 		complex(dp),	intent(in)		:: unk(:,:,:)
-		!LATTICE PERIODIC FUNCTIONS
-		open(unit=400,file='rawData/unkR.dat',form='unformatted',access='stream',action='write')
-		write(400)	dreal(unk)
+		real(dp),		allocatable		:: buffer(:,:,:)
+		!
+		allocate(	buffer(size(unk,1), size(unk,2), size(unk,3))	)
+		!REAL PART
+		buffer	= dreal(unk)
+		open(unit=400,file='rawData/ROTunkR.dat',form='unformatted',access='stream',action='write')
+		write(400)	buffer
 		close(400)
-		!
-		!
-		open(unit=405,file='rawData/unkI.dat',form='unformatted',access='stream',action='write')
-		write(405)	dimag(unk)
+		!IMAG PART
+		buffer	= dimag(unk)
+		open(unit=405,file='rawData/ROTunkI.dat',form='unformatted',access='stream',action='write')
+		write(405)	buffer
 		close(405)
 		!!
 		return
 	end subroutine
+
 
 	subroutine writeConnCurv(Aconn, Fcurv)
 		real(dp),		intent(in)		:: Aconn(:,:,:,:), Fcurv(:,:,:)
@@ -169,7 +199,7 @@ module output
 		!
 		!CURVATURE	
 		open(unit=420,file='rawData/FcurvR.dat',form='unformatted',access='stream',action='write')
-		write(420) Fcurv		!420!!!!!!open(unit=410,file='rawData/AconnR.dat',form='unformatted',access='stream',action='write')
+		write(420) Fcurv	
 		close(420)
 		!
 		!
@@ -214,6 +244,17 @@ module output
 	end subroutine
 
 
+	subroutine writeInterpBands(Ew)
+		real(dp),		intent(in)		:: Ew(:,:)
+		open(unit=520,file='rawData/Ewann.dat',form='unformatted',access='stream',action='write')
+		write(520)	Ew
+		close(520)
+		!
+		!
+		return
+	end subroutine
+
+
 	subroutine writeInterpolFiles(Aconn)
 		complex(dp),	intent(in)		::	Aconn(:,:,:)
 		real(dp),		allocatable		::	AconnR(:,:,:), AconnI(:,:,:)
@@ -235,8 +276,8 @@ module output
 	end subroutine
 
 
-	subroutine writePolFile(pEl, pIon, pTot, pElA, pInt, pNiu, pPei )
-		real(dp),		intent(in)		:: pEl(2), pIon(2), pTot(2), pElA(2), pInt(2), pNiu(3), pPei(3)
+	subroutine writePolFile(pWann, pIon, pTot, pBerry, pInt, pNiu, pPei )
+		real(dp),		intent(in)		:: pWann(2), pIon(2), pTot(2), pBerry(2), pInt(2), pNiu(3), pPei(3)
 		!	
 		!	
 		open(unit=600,file='polOutput.txt',action='write')
@@ -251,15 +292,15 @@ module output
 		write(600,*)"*"
 		!
 		write(600,*)"**************POL:"
-		write(600,'(a,f16.12,a,f16.12,a,f16.12,a)')	"pEl = ",norm2(pEl)	," * (", &	
-																pEl(1)/norm2(pEl) 	,	", ",	pEl(2)/norm2(pEl),		")"
-		write(600,'(a,f16.12,a,f16.12,a,f16.12,a)')	"pElA= ",norm2(pElA)," * (", &	
-																pElA(1)/norm2(pElA)	,	", ",	pElA(2)/norm2(pelA),	")"
-		write(600,'(a,f16.12,a,f16.12,a,f16.12,a)')	"pInt= ",norm2(pInt)," * (", &	
-																pInt(1)/norm2(pInt),	", ",	pInt(2)/norm2(pInt),	")"
-		write(600,'(a,f16.12,a,f16.12,a,f16.12,a)')	"pIon= ",norm2(pIon)," * (", &	
+		write(600,'(a,e16.9,a,f16.12,a,f16.12,a)')	"pWann = ",norm2(pWann)	," * (", &	
+																pWann(1)/norm2(pWann) 	,	", ",	pWann(2)/norm2(pWann),		")"
+		write(600,'(a,e16.9,a,f16.12,a,f16.12,a)')	"pBerry= ",norm2(pBerry)," * (", &	
+																pBerry(1)/norm2(pBerry)	,	", ",	pBerry(2)/norm2(pBerry),	")"
+		!write(600,'(a,e16.9,a,f16.12,a,f16.12,a)')	"pInt= ",norm2(pInt)," * (", &	
+		!														pInt(1)/norm2(pInt),	", ",	pInt(2)/norm2(pInt),	")"
+		write(600,'(a,e16.9,a,f16.12,a,f16.12,a)')	"pIon= ",norm2(pIon)," * (", &	
 																pIon(1)/norm2(pIon)	,	", ",	pIon(2)/norm2(pIon),	")"
-		write(600,'(a,f16.12,a,f16.12,a,f16.12,a)')	"pTot= ",norm2(pTot)," * (", &	
+		write(600,'(a,e16.9,a,f16.12,a,f16.12,a)')	"pTot= ",norm2(pTot)," * (", &	
 																pTot(1)/norm2(pTot),	", ",	pTot(2)/norm2(pTot),	")"
 		!
 		!
@@ -267,9 +308,9 @@ module output
 		write(600,'(a,f16.12,a,f16.12,a,f16.12,a,f16.12,a)')	"Bext= ",norm2(Bext) ," * (", &
 											Bext(1)/norm2(Bext),	", ",	Bext(2)/norm2(Bext),", ", Bext(3)/norm2(Bext),	")"
 		write(600,*)"*"
-		write(600,'(a,f16.12,a,f16.12,a,f16.12,a,f16.12,a)')	"pNiu= ",norm2(pNiu)," * (", &	
+		write(600,'(a,e16.9,a,f16.12,a,f16.12,a,f16.12,a)')	"pNiu= ",norm2(pNiu)," * (", &	
 											pNiu(1)/norm2(pNiu),	", ",	pNiu(2)/norm2(pNiu),", ", pNiu(3)/norm2(pNiu),	")"
-		write(600,'(a,f16.12,a,f16.12,a,f16.12,a,f16.12,a)')	"pPei= ",norm2(pPei)," * (", &	
+		write(600,'(a,e16.9,a,f16.12,a,f16.12,a,f16.12,a)')	"pPei= ",norm2(pPei)," * (", &	
 											pPei(1)/norm2(pPei),	", ",	pPei(2)/norm2(pPei),", ", pPei(3)/norm2(pPei),	")"
 		close(600)
 		!
@@ -280,25 +321,24 @@ module output
 
 
 
-	subroutine printTiming(aT,kT,wI,scT,peiT,wT,oT,mastT)
-		real,	intent(in)	:: aT, kT, wT, oT, wI, scT,peiT, mastT
+	subroutine printTiming(aT,kT,pT,wT,bT,oT,mastT)
+		real,	intent(in)	:: aT,kT,pT,wT,bT,oT,mastT
 		!
 		print '    ("r&alloc  time spend     = ",f15.7," seconds = ",f15.7,"% of overall time")',& 
 									aT 				, 100*aT		   	/mastT
 		print '    ("k-solver time spend     = ",f15.7," seconds = ",f15.7,"% of overall time")',& 
 									kT 				, 100*kT		   	/mastT
-		print '    ("0 order pol. time spend = ",f15.7," seconds = ",f15.7,"% of overall time")',& 
-									wT 				, 100*wT		   	/mastT
-		print '    ("wannier interpolation   = ",f15.7," seconds = ",f15.7,"% of overall time")',& 
-									wI 				, 100*wI		   	/mastT
-		print '    ("semiclassics            = ",f15.7," seconds = ",f15.7,"% of overall time")',& 
-									scT 			, 100*scT		   	/mastT							
-		print '    ("peierls substitution    = ",f15.7," seconds = ",f15.7,"% of overall time")',& 
-									peiT 			, 100*peiT		   	/mastT														
+		print '    ("project. time spend     = ",f15.7," seconds = ",f15.7,"% of overall time")',& 
+									pT 				, 100*pT		   	/mastT
+		print '    ("wannier method          = ",f15.7," seconds = ",f15.7,"% of overall time")',& 
+									wT				, 100*wT		   	/mastT
+		print '    ("berry method            = ",f15.7," seconds = ",f15.7,"% of overall time")',& 
+									bT				, 100*bT		   	/mastT							
+									
 		print '    ("writing  time spend     = ",f15.7," seconds = ",f15.7,"% of overall time")',& 
 									oT 				, 100*oT		   	/mastT
 		print '    ("other    time spend     = ",f15.7," seconds = ",f15.7,"% of overall time")',& 
-									(mastT-wT-kT-oT-wI-scT) 	, 100*(mastT-aT-wT-kT-oT-wI-scT)/mastT
+									(mastT-aT-kT-pT-wT-bT-oT) 	, 100*(mastT-aT-kT-pT-wT-bT-oT)/mastT
 		print '    ("overall  time spend     = ",f15.7," seconds.")', mastT
 		!
 		return

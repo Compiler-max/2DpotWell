@@ -8,7 +8,7 @@ from mpl_toolkits.mplot3d import Axes3D
 
 
 #READ IN RAW DATA
-f0     		= open("rawData/kpts.dat",'rb')
+f0     		= open("rawData/qpts.dat",'rb')
 kpts   		= np.fromfile(f0,dtype='float64',count=-1)
 f0.close()
 
@@ -49,7 +49,7 @@ aY			= cellI[1]
 #RESHAPE RAW DATA
 kpts	= np.reshape(kpts,(nK,2))
 
-Fcurv	= np.reshape(rawDataCurv,(nWfs,nK, 3)) 		#	Fcurv(		3	,	nK	, nWfs	)
+Fcurv	= np.reshape(rawDataCurv,(nK, nWfs, 3)) 		#	Fcurv(		3	,	nK	, nWfs	)
 print(Fcurv)
 
 #2D HEATMAP
@@ -59,9 +59,9 @@ k = 0				#k point index to plot
 for n in range(nWfs):
 	fig, ax = plt.subplots(1)#, sharex='col', sharey='row')
 	
-	Fx		=	np.reshape(Fcurv[n,:,0],(nKy, nKx))
-	Fy		=	np.reshape(Fcurv[n,:,1],(nKy, nKx))
-	Fz		=	np.reshape(Fcurv[n,:,2],(nKy, nKx))
+	Fx		=	np.reshape(Fcurv[:,n,0],(nKy, nKx))
+	Fy		=	np.reshape(Fcurv[:,n,1],(nKy, nKx))
+	Fz		=	np.reshape(Fcurv[:,n,2],(nKy, nKx))
 	
 	
 	xpts	= 	np.linspace(	-np.pi/aX	,	np.pi/aX	,	nKx		)

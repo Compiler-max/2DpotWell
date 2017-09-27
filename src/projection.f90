@@ -3,12 +3,13 @@ module projection
 	!	this includes the calculation of the orthonormalized projected bloch wavefunctions
 	!	and the FT of the bwfs to calculate the wannier functions
 	use omp_lib
-	use mathematics, only: dp, PI_dp, acc, myExp, nIntegrate,  mySVD, myMatInvSqrt, isUnit, isIdentity
+	use mathematics, 	only: 	dp, PI_dp, acc, myExp, nIntegrate,  mySVD, myMatInvSqrt, isUnit, isIdentity
+	use blochWf,		only:	genUnk, testNormUNK
 	use sysPara
 	implicit none	
 	
 	private
-	public ::	projectBwf		
+	public ::	projectUnk		
 
 
 
@@ -25,52 +26,62 @@ module projection
 
 	contains
 !public:
-	subroutine projectBwf(qi, bWf, loBwf, failCount, smin, smax)	!projectBwf(qi, bWf, loBwf, U(:,:), failCount, smin, smax)
+
+	subroutine projectUnk(unk, unkP)	!projectBwf(qi, bWf, loBwf, U(:,:), failCount, smin, smax)
 		!does the projection onto Loewdin-orthonormalized Bloch-like states
 		!see Marzari, Vanderbilt PRB 56, 12847 (1997) Sec.IV.G.1 for detailed description of the method 
-		integer		,	intent(in)		:: qi
-		complex(dp)	,	intent(in)		:: bWf(:,:)   ! bWf(nR,nG)
-		complex(dp)	,	intent(out)		:: loBwf(:,:)
-		integer,		intent(inout)	:: failCount
-		real(dp),		intent(inout)	:: smin, smax
-		complex(dp)	,	allocatable		:: gnr(:,:), A(:,:), U(:,:)
-		complex(dp)						:: alpha, beta
-		integer							:: m, n, k, lda, ldb, ldc, xi
-		character*1						:: transa, transb
+		complex(dp)	,	intent(in)		:: unk(:,:,:)   ! unk(nR,nG,nQ)
+		complex(dp)	,	intent(out)		:: unkP(:,:,:)	! unk(nR,nWfs,nQ)
+		complex(dp)	,	allocatable		:: loBwf(:,:), gnr(:,:), A(:,:), U(:,:)
+		complex(dp)						:: phase
+		integer							:: qi, xi
 		!
+		allocate(	loBwf(nR,nWfs)		)
 		allocate(	gnr(nR,nWfs)		)
 		allocate( 	A(nBands,nWfs)		)
 		allocate(	U(nBands,nWfs)		)
 		!
+		if( debugProj ) then
+			write(*,*)	"[projectUnk]: debug mode, will test unk normalization after debuging"
+		end if
+
+
 		!SET UP ROTATION MATRIX U
 		call genTrialOrb(gnr)
-		call calcAmat(bwf,gnr, A)
-		write(*,*)	"[projectBwf]: A matrix set up done"
-		!
-		!USE SVD TO CALC U
-		call calcUmat(A, U)
-		write(*,*)	"[projectBwf]: U matrix calculation done"
-		!
-		!ROTATE BLOCH STATES
-		!$OMP PARALLEL DO SCHEDULE(STATIC) DEFAULT(SHARED) PRIVATE(xi)
-		do xi = 1, nR
-			loBwf(xi,:) = matmul(	bWf(xi,1:nBands), U	)
+
+		do qi = 1, nQ
+			call calcAmat(qi,unk(:,:,qi),gnr, A)  !qi, unk,gnr, A
+			!write(*,*)	"[projectBwf]: A matrix set up done"
+			!
+			!USE SVD TO CALC U
+			call calcUmat(A, U)
+			!write(*,*)	"[projectBwf]: U matrix calculation done"
+			!
+			!ROTATE BLOCH STATES
+			!$OMP PARALLEL DO SCHEDULE(STATIC) DEFAULT(SHARED) PRIVATE(xi, phase)
+			do xi = 1, nR
+				phase		= myExp(	dot_product(qpts(:,qi),rpts(:,xi))		)
+				loBwf(xi,:) = phase * matmul(	unk(xi,1:nBands,qi), U	)
+			end do
+			!$OMP END PARALLEL DO
+			!write(*,*)	"[projectBwf]: rotated the states"
+			!
+			!OVERWRITE UNKS WITH PROJECTED UNKs
+			call genUnk(qi, lobWf, unkP(:,:,qi))
+			!write(*,*)	"[projectBwf]: generated unks"
 		end do
-		!$OMP END PARALLEL DO
-		write(*,*)	"[projectBwf]: projections done"
+		write(*,*)	"[projectUnk]: done with projections at each k point"	
 		!
-		!
-		!DEBUGGING
-		if(debugHam) then
-			write(*,*)	"[projectBwf]: start debugging"
-			!if( .not. isUnit(U) 			) then			!!!!!!U IS NOT SQUARE MATRIX, THEREFORE UNIT TEST DOES NOT MAKE SENSE!!!!
-			!	write(*,'(a)')"[projectBwf]: U matrix is not a unitary matrix !"
-			!end if
-			if(	 .not. isOrthonorm(lobWf)	) then
-				write(*,'(a,f16.12)')"[projectBwf]: loBwf is NOT a orthonormal basis set, accuracy=",acc
-				failCount = failCount + 1
+		!DEBUG
+		if( debugProj ) then
+			write(*,*)		"[projectUnk]: start test normalization of projected unks"
+			if(.not. testNormUNK(unk)	) then
+				write(*,*)	"[projectUnk]: found normalization issues for projected unks"
+			else
+				write(*,*)	"[projectUnk]: no issues detected"
 			end if
 		end if
+		write(*,*)			"[projectUnk]: finished debuging."
 		!
 		!
 		return
@@ -93,21 +104,39 @@ module projection
 		complex(dp)					:: A
 		integer						:: n, ri, at
 		!
+		if(nWfs > nBands) then
+			write(*,*)"[genTrialOrb]: warning, nWfs larger then nBands! No propper subspace..."
+		end if
+
 		gnr = dcmplx(0.0_dp)
-		do n = 1, nWfs
-			do ri = 1, nR
-				do at 	= 1, nAt
-					if(	insideAt( at , rpts(:,ri) )	) then
-						gnr(ri,n) = gVal(at, n, ri)
-						!write(*,'(a,i2,a,f6.3,a,f6.3,a,f6.3,a,f6.3,a,f6.3,a,f6.3)')	"[genTrialOrb]: gnr(at=",&
-						!			at," r=(",rpts(1,xi),",",rpts(2,xi),&
-						!		")= (",posX,",",posY,"))= ",dreal(gnr(xi,n)),"+i*",dimag(gnr(xi,n))
-					end if
-				end do
-				!
-			end do
-		end do
+		!do n = 1, nWfs
+		!	do ri = 1, nR
+		!		do at 	= 1, nAt
+		!			if(	insideAt( at , rpts(:,ri) )	) then
+		!				gnr(ri,n) = gVal(at, n, ri)
+		!		
+		!			end if
+		!		end do
+		!		!
+		!	end do
+		!end do
 		!
+		do ri = 1, nR
+			if( 	insideAt(1, rpts(:,ri))		)	then
+				gnr(ri,1)	= dcmplx(1.0_dp) 
+				gnr(ri,3)	= dcmplx(1.0_dp)
+			end if
+			!
+			if( 	insideAt(2, rpts(:,ri))		)	then
+				gnr(ri,2)	= dcmplx(1.0_dp)
+				gnr(ri,3)	= dcmplx(1.0_dp)
+			end if
+			if( .not. insideAt(1, rpts(:,ri))	 .and.  .not. insideAt(2, rpts(:,ri))	) then
+				!gnr(ri,4)	= dcmplx(1.0_dp)
+			end if
+		end do
+
+
 		return
 	end subroutine
 
@@ -146,11 +175,13 @@ module projection
 
 
 
-	subroutine calcAmat(bWf,gnr, A)
+	subroutine calcAmat(qi, unk,gnr, A)
 		!calculates the inner product matrix of bwfs and trial orbital gnr
-		complex(dp),	intent(in)	:: bWf(:,:), gnr(:,:) 
+		integer,		intent(in)	:: qi
+		complex(dp),	intent(in)	:: unk(:,:), gnr(:,:) 
 		complex(dp),	intent(out)	:: A(:,:) !A(nBands,nWfs)
 		complex(dp),	allocatable	:: f(:)
+		complex(dp)					:: phase
 		integer						:: m,n, xi
 		!
 		A = dcmplx(0.0_dp)
@@ -161,8 +192,9 @@ module projection
 		do n = 1, nWfs
 			do m = 1, nBands
 				f = dcmplx(0.0_dp)
-				do xi = 1, nR				
-					f(xi) = dconjg(	bWf(xi,m) ) * gnr(xi,n)
+				do xi = 1, nR
+					phase	= myExp( 	dot_product( qpts(:,qi), rpts(:,xi))		)				
+					f(xi)	= dconjg(	phase * unk(xi,m) ) * gnr(xi,n)
 				end do
 				A(m,n) = nIntegrate(nR, nRx, nRy, dx, dy, f)		
 			end do
@@ -325,63 +357,63 @@ module projection
 	end subroutine
 
 
-	logical function isOrthonorm(loBwf)
-		!cheks wether loBwf is orthonormal by calculating the overlap matrix elements
-		!	<psi_n,k|psi_n,k'> = nSC * \delta(n,m)
-		!	WARNING: DOES NOT CHECK ORTHONORMALIZATION BETWEEN K POINTS
-		complex(dp),	intent(in)		:: lobWf(:,:)   !lobWf(nR,nWfs)
-		complex(dp),	allocatable		:: f(:)
-		complex(dp)						:: oLap
-		
-		integer							:: n, m, ri
-		logical							:: realist, imaginist
-		allocate( f(nR)		)
-		!
-		isOrthonorm = .true.
-		n 			= 1
-		!
-		do  while(n <= nWfs .and. isOrthonorm) 
-			!DIAGONAL ELEMENTS
-			!
-			!
-			!PREPARE INTEGRATION ARRAY
-			do ri = 1, nR
-				f(ri) = dconjg( lobWf(ri,n) ) * lobWf(ri,n)
-			end do
-			oLap	= nIntegrate(nR, nRx, nRy, dx, dy, f)
-			oLap	= oLap / dcmplx( nSC	)
-			!CHECK CONDITIONS
-			realist 	= abs(			abs(dreal(oLap))		-		1.0_dp		) 	> acc
-			imaginist	= abs(			dimag(oLap)								)	> acc
-			if( realist .or. imaginist ) then
-				write(*,'(a,i2,a,f15.10,a,f15.10)')"[isOrthonorm]: overlap(n,n=",n,") = ",dreal(oLap),"+i*",dimag(oLap)
-				isOrthonorm = .false.
-			end if
-			!
-			!
-			!OFF DIAGONAL
-			m = 1
-			do while(m <= nWfs	.and. isOrthonorm)
-				if(n /= m) then
-					!PREPARE INTEGRATION ARRAY
-					do ri = 1, nR
-						f(ri) = dconjg( lobWf(ri,n) ) * lobWf(ri,m)
-					end do
-					oLap 	= nIntegrate(nR, nRx, nRy, dx, dy, f)
-					oLap	= oLap / dcmplx( nSC	)
-					!CHECK CONDITION
-					if(abs(oLap) > acc) then
-						write(*,'(a,i2,a,i2,a,f15.10,a,f15.10)')"[isOrthonorm]: overlap(",n,",",m,") = ",dreal(oLap),"+i*",dimag(oLap)
-						isOrthonorm = .false.
-					end if
-				end if
-				m = m +1
-			end do
-			n = n + 1
-		end do
-		!
-		return
-	end function
+	!logical function isOrthonorm(loBwf)
+	!	!cheks wether loBwf is orthonormal by calculating the overlap matrix elements
+	!	!	<psi_n,k|psi_n,k'> = nSC * \delta(n,m)
+	!	!	WARNING: DOES NOT CHECK ORTHONORMALIZATION BETWEEN K POINTS
+	!	complex(dp),	intent(in)		:: lobWf(:,:)   !lobWf(nR,nWfs)
+	!	complex(dp),	allocatable		:: f(:)
+	!	complex(dp)						:: oLap
+	!	
+	!	integer							:: n, m, ri
+	!	logical							:: realist, imaginist
+	!	allocate( f(nR)		)
+	!	!
+	!	isOrthonorm = .true.
+	!	n 			= 1
+	!	!
+	!	do  while(n <= nWfs .and. isOrthonorm) 
+	!		!DIAGONAL ELEMENTS
+	!		!
+	!		!
+	!		!PREPARE INTEGRATION ARRAY
+	!		do ri = 1, nR
+	!			f(ri) = dconjg( lobWf(ri,n) ) * lobWf(ri,n)
+	!		end do
+	!		oLap	= nIntegrate(nR, nRx, nRy, dx, dy, f)
+	!		oLap	= oLap / dcmplx( nSC	)
+	!		!CHECK CONDITIONS
+	!		realist 	= abs(			abs(dreal(oLap))		-		1.0_dp		) 	> acc
+	!		imaginist	= abs(			dimag(oLap)								)	> acc
+	!		if( realist .or. imaginist ) then
+	!			write(*,'(a,i2,a,f15.10,a,f15.10)')"[isOrthonorm]: overlap(n,n=",n,") = ",dreal(oLap),"+i*",dimag(oLap)
+	!			isOrthonorm = .false.
+	!		end if
+	!		!
+	!		!
+	!		!OFF DIAGONAL
+	!		m = 1
+	!		do while(m <= nWfs	.and. isOrthonorm)
+	!			if(n /= m) then
+	!				!PREPARE INTEGRATION ARRAY
+	!				do ri = 1, nR
+	!					f(ri) = dconjg( lobWf(ri,n) ) * lobWf(ri,m)
+	!				end do
+	!				oLap 	= nIntegrate(nR, nRx, nRy, dx, dy, f)
+	!				oLap	= oLap / dcmplx( nSC	)
+	!				!CHECK CONDITION
+	!				if(abs(oLap) > acc) then
+	!					write(*,'(a,i2,a,i2,a,f15.10,a,f15.10)')"[isOrthonorm]: overlap(",n,",",m,") = ",dreal(oLap),"+i*",dimag(oLap)
+	!					isOrthonorm = .false.
+	!				end if
+	!			end if
+	!			m = m +1
+	!		end do
+	!		n = n + 1
+	!	end do
+	!	!
+	!	return
+	!end function
 		
 
 

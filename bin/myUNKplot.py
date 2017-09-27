@@ -19,11 +19,11 @@ f1	 		= open("rawData/rpts.dat",'rb') #rb = Read Binary
 rpts 		= np.fromfile(f1,dtype='float64',count=-1)
 f1.close()
 
-f2			= open("rawData/unkR.dat",'rb') #rb = Read Binary
+f2			= open("rawData/ROTunkR.dat",'rb') #rb = Read Binary
 rawDataR	= np.fromfile(f2,dtype='float64',count=-1)
 f2.close()
 
-f3			= open("rawData/unkI.dat",'rb') #rb = Read Binary
+f3			= open("rawData/ROTunkI.dat",'rb') #rb = Read Binary
 rawDataI	= np.fromfile(f3,dtype='float64',count=-1)
 f3.close()
 
@@ -83,8 +83,8 @@ for n in range(nG):
 	xpts	= np.linspace(0.0,aX*nKx,nRx)
 	ypts	= np.linspace(0.0,aY*nKy,nRy)
 	#X, Y = numpy.meshgrid(x, y)  # `plot_surface` expects `x` and `y` data to be 2D
-	ax.contour(xpts, ypts,unkcont,cmap='coolwarm', linewidth=0.1)
-	
+	CS=ax.contour(xpts, ypts,unkcont,cmap='coolwarm', linewidth=0.1)
+	cbar = plt.colorbar(CS)
 	#ax.set_xlim(0, nKx*aX)
 	#ax.set_ylim(0, nKy*aY)
 	

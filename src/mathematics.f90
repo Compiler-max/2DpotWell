@@ -7,7 +7,7 @@ module mathematics
 
 
 	public :: dp, PI_dp, i_dp, acc, setAcc, machineP, myExp, Cangle, myLeviCivita, nIntegrate, crossP,& 
-				isUnit, isIdentity, isHermitian, SVD, eigSolver, myMatInvSqrt, rotMat, myCommutat
+				isUnit, isIdentity, isHermitian, mySVD, eigSolver, myMatInvSqrt, rotMat, myCommutat
 
 
 	interface nIntegrate
@@ -110,7 +110,7 @@ module mathematics
 	end function
 
 
-	subroutine SVD(Mat, U,s,Vt)
+	subroutine mySVD(Mat, U,s,Vt)
 		!single value decomposition performed with zgesvd:
 		!https://software.intel.com/en-us/node/469236
 		complex(dp),	intent(in)		:: Mat(:,:)
@@ -220,18 +220,20 @@ module mathematics
 		allocate(	TMP(  size(s), size(Vt,2)  ))
 		!
 
-		call SVD(Mat, U,s,Vt)
+		call mySVD(Mat, U,s,Vt)
 
 		!diagnostics both values should be positive and larger then zero
 		maxS	= maxval(s)
 		minS	= minval(s)
 		if( minS < 1e-15_dp) then
 			write(*,'(a,e16.9,a,e16.9)')	"[myMatInvSqrt]: warning, minimum eigenvalue close to zero, minS=",minS," maxS=",maxS
+		else
+			write(*,'(a,e16.9,a,e16.9)')	"[myMatInvSqrt]: minS=",minS," maxS=",maxS
 		end if
 		!
 		!scaling, i.e. perform inversion and sqrt of eignevalues s(:)
 		do i = 1, size(s)
-			s(i) = 1.0_dp /	( dsqrt( s(i) ) + 1e-15_dp )
+				s(i) = 1.0_dp /	( dsqrt( s(i) ) + machineP )
 		end do
 		!
 		!after scaling do the rotations
@@ -481,19 +483,21 @@ module mathematics
 		real(dp)						:: tmp
 		integer							:: yI, min, max
 		!
-		allocate(	fy(nRy)		)
-		fy = 0.0_dp
-		!
-		!X INTEGRATION (fill fy array)
-		do yI = 1, nRy
-			min = (yI-1) * nRx + 1
-			max = (yI-1) * nRx + nRx
-			call hiordqWrapper(dx, f(min:max), fy(yI))
-			!write(*,'(a,i4,a,f15.10)')"[nIntegrateREAL]: yI=",yI," int val=",fy(yI)
-		end do
-		!
-		!Y INTEGRATION
-		call hiordqWrapper(dy, fy, nIntegrateREAL)
+		!allocate(	fy(nRy)		)
+		!fy = 0.0_dp
+		!!
+		!!X INTEGRATION (fill fy array)
+		!do yI = 1, nRy
+		!	min = (yI-1) * nRx + 1
+		!	max = (yI-1) * nRx + nRx
+		!	call hiordqWrapper(dx, f(min:max), fy(yI))
+		!	!write(*,'(a,i4,a,f15.10)')"[nIntegrateREAL]: yI=",yI," int val=",fy(yI)
+		!end do
+		!!
+		!!Y INTEGRATION
+		!call hiordqWrapper(dy, fy, nIntegrateREAL)
+
+		nIntegrateREAL = sum(f) / size(f)
 		!
 		return
 	end function

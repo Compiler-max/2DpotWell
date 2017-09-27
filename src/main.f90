@@ -5,10 +5,11 @@ program main
 
 	use sysPara
 	use potWellModel, 	only: 		solveHam
+	use projection,		only:		projectUnk
 	use wannier,	 	only: 		wannMethod	
 	use berry,			only:		berryMethod
 
-	use polarization,	only:		calcPolWannCent, calcPolViaA, calcIonicPol
+	use polarization,	only:		calcIonicPol
 	use semiclassics,	only:		calcFirstOrdP
 	use peierls,		only:		peierlsSub
 	use output,		 	only:		writeMeshInfo, writeMeshBin, writeUNKs, writeWannFiles,writePolFile,& 
@@ -20,18 +21,16 @@ program main
 
 	
     real(dp), 		allocatable,	dimension(:,:)		:: 	wCent, wSprd
-    complex(dp),	allocatable,	dimension(:,:,:)	:: 	wnF, unk	!, ukn basCoeff,
+    complex(dp),	allocatable,	dimension(:,:,:)	:: 	wnF, unk, unkP	!, ukn basCoeff,
     complex(dp),	allocatable,	dimension(:,:,:,:)	::	vW,Velo	, veloBwf			!, Ah, Fh, Vh
     real(dp),		allocatable,	dimension(:,:)		:: 	En					!, EnH
     real(dp),		allocatable,	dimension(:,:,:)	::	Fw
     real(dp),		allocatable,	dimension(:,:,:,:)	::	Aw
     real(dp) 											:: 	pWann(2), pIon(2), pTot(2), pBerry(2), pInt(2), pNiu(3), pPei(3)
     real												:: 	mastT0,mastT1,mastT,aT0,aT1,aT,kT0,kT1,kT,wT0,wT1,wT, oT0, oT1, oT,&
-    														wI0, wI1, wI, scT0, scT1, scT, peiT, peiT0, peiT1
+    														bT0, bT1, bT, scT0, scT1, scT, peiT, peiT0, peiT1, pT0, pT1, pT
     integer 											::	xi,ki
     call cpu_time(mastT0)
-
-
 
 
 
@@ -40,9 +39,10 @@ program main
     call cpu_time(aT0)
 	call readInp()
 	!electronic structure arrays
-	allocate(			unk(		nR 		,	nWfs	, nQ		)				)
+	allocate(			unk(		nR 		,	nG		, nQ		)				)
+	allocate(			unkP(		nR 		,	nWfs	, nQ		)				)
 	allocate(			En(						nWfs	, nQ		)				)
-	allocate(			VeloBwf(2,	nR		, 	nG		, nQ		)				) 
+	allocate(			veloBwf(2,	nR		, 	nWfs	, nQ		)				) 
 
 	!wannier interpolation arrays
 	!allocate(			Ah(		3		,	nK		, nWfs, nWfs	)			)
@@ -54,7 +54,9 @@ program main
 	write(*,*)"[main]:**************************Infos about this run*************************"
 	write(*,*)"[main]: nK=",nK
 	write(*,*)"[main]: nQ=",nQ
-	
+
+    write(*,*)"[main]: nBands=", nBands
+	write(*,*)"[main]: nWfs  =", nWfs	
 	!
 	call cpu_time(aT1)
 	aT = aT1 - aT0
@@ -72,17 +74,30 @@ program main
 	!
 	!
 	call solveHam(unk, En, VeloBwf)
-	
-	!check boundary condition on unk files
-	!if( isKperiodic(unk)	 /= 0 ) then			!test is questionable since k mesh goes from kmin till -kmin-dk 
-	!	write(*,*)	"[main]: problem with unk gauge, wave functions are NOT periodic in k space"
-	!end if
 	!
 	call cpu_time(kT1)
 	write(*,*)"[main]: done solving Schroedinger eq."
 	kT = kT1-kT0
 	
 
+
+
+	!PROJECT THE STATES
+	write(*,*)"*"
+	write(*,*)"*"
+	write(*,*)"*"
+	write(*,*)"*"
+	write(*,*)"[main]:**************************PROJECT STATES *************************"
+	call cpu_time(pT0)
+	!
+	!
+	if( doProj ) then 
+		call projectUnk(unk, unkP)
+	end if
+	!
+	call cpu_time(pT1)
+	write(*,*)"[main]: done with projections."
+	pT = pT1-pT0
 
 
 	
@@ -94,7 +109,7 @@ program main
 	if( doWanni ) then
 		write(*,*)	"[main]:**************************WANNIER FUNCTION METHOD*************************"
 		!
-		call wannMethod(unk, pWann)
+		call wannMethod(unkP, pWann)
 		!
 		write(*,*)	"[main]: done with center polarization calc"
 	else
@@ -112,43 +127,21 @@ program main
 	write(*,*)"*"
 	write(*,*)"*"
 	write(*,*)"*"
-	call cpu_time(wI0)
+	call cpu_time(bT0)
 	if ( doBerry ) then
 		write(*,*)"[main]:**************************WAVEFUNCTION METHOD*************************"
-		call berryMethod(unk, En, veloBwf, pBerry, pNiu)
+		call berryMethod(unkP, En, veloBwf, pBerry, pNiu)
 		write(*,*)"[main]: done with wavefunction method "
 	else
 		write(*,*)"[main]: berry method disabled"
 	end if
-	call cpu_time(wI1)
-	wI	= wI1 - wI0
+	call cpu_time(bT1)
+	bT	= bT1 - bT0
 	
 
 
 
 
-
-
-
-
-
-
-
-	!write(*,*)"*"
-	!write(*,*)"*"
-	!write(*,*)"*"
-	!write(*,*)"*"
-	!write(*,*)"[main]:**************************WANNIER INTERPOLATION*************************"
-	!call cpu_time(wI0)
-	!call calcConnCurv(unk, wnF, Ah, Fh, Vh, EnH)
-	!write(*,*)"[main]: interpolation of connection & curvature done, test if they are real now and calc pol"
-	!call testIfReal(Ah, Fh)
-	!call calcPolViaA(dreal(Ah), pInt)		
-	!call cpu_time(wI1)
-	!write(*,*)"[main]: done with wannier interpolation"
-	!wI	= wI1 - wI0
-!
-!
 
 
 
@@ -188,7 +181,7 @@ program main
 	!call writeSysInfo() 
 	call writeMeshInfo() 
 	call writeMeshBin()
-	call writeUNKs(unk)
+	call writeUNKs(unkP)
 	write(*,*)"[main]: ...wrote mesh info"
 	
 	
@@ -215,7 +208,12 @@ program main
 	write(*,*)"*"
 	write(*,*)"*"
 	write(*,*) '**************TIMING INFORMATION************************'
-	call printTiming(aT, kT, wI, scT, peiT, wT, oT, mastT)
+	call printTiming(aT, kT, pT, wT, bT, oT, mastT)
+
+	deallocate(			unk			)
+	deallocate(			unkP		)
+	deallocate(			En			)
+	deallocate(			veloBwf		) 
 
 	stop
 end program

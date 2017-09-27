@@ -53,7 +53,7 @@ aY			= cellI[1]
 kpts	= np.reshape(kpts,(nK,2))
 
 Aconn	= np.reshape(rawDataConn,(nK, nWfs, nWfs, 3))    		#	Aconn(3, 	nWfs,	nK	)										
-Fcurv	= np.reshape(rawDataCurv,(nK, nWfs, nWfs, 3)) 		#	Fcurv(3, 	nWfs,	nK	)
+Fcurv	= np.reshape(rawDataCurv,(nK, nWfs, 3))			 		#	Fcurv(3, 	nWfs,	nK	)
 
 
 
@@ -75,8 +75,8 @@ k = 0				#k point index to plot
 for n in range(nWfs):
 	fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, sharex='col', sharey='row')
 	
-	Ax		=	np.reshape(Aconn[n,:,0],(nKy, nKx))
-	Ay		=	np.reshape(Aconn[n,:,1],(nKy, nKx))
+	Ax		=	np.reshape(Aconn[:,n,n,0],(nKy, nKx))
+	Ay		=	np.reshape(Aconn[:,n,n,1],(nKy, nKx))
 	
 	
 	xpts	= 	np.linspace(	-np.pi/aX	,	np.pi/aX	,	nKx		)
@@ -99,8 +99,12 @@ for n in range(nWfs):
 	#xtickLabel	= np.arange(int(0),int(nKx+1)  )
 	#yticks 		= np.arange(0,aY*(nKy+1),  aY	)		
 	#ytickLabel	= np.arange(int(0),int(nKy+1)  )
-	
-	
+	CS = ax2.contourf(xpts,ypts, Ax, cmap='coolwarm', linewidth=0.1)
+	cbar = plt.colorbar(CS)
+
+
+	CS = plt.contourf(xpts,ypts, Ay, cmap='coolwarm', linewidth=0.1)
+	cbar = plt.colorbar(CS)
 	#ax.set_xticks(xticks)	
 	#ax.set_xticklabels(xtickLabel,fontsize=12)
 	#ax.set_yticks(yticks)	

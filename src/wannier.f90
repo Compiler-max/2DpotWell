@@ -2,10 +2,10 @@ module wannier
 	!contains subroutines for working with existing wannier functions
 	!	center calculations, etc. 
 	use omp_lib
-	use mathematics,	only:	dp, PI_dp, i_dp, acc, myExp, nIntegrate
+	use mathematics,	only:	dp, PI_dp, i_dp, acc, myExp, nIntegrate, eigSolver
 	use sysPara
 	use polarization,	only:	calcPolWannCent
-	use output,			only:	writeWannFiles
+	use output,			only:	writeWannFiles, writeInterpBands
 
 	implicit none
 
@@ -50,6 +50,8 @@ module wannier
 		write(*,*)	"[wannMethod]: calculated centers and spreads"
 		call calcPolWannCent(wCent,pWann)
 		write(*,*)	"[wannMethod]: calculated polarization via centers"
+		call interpolateBands(wnF)
+		write(*,*)	"[wannMethod]: interpolated bands"
 		!
 		!write results
 		call writeWannFiles(wnF, wCent, wSprd)
@@ -219,11 +221,11 @@ module wannier
 		write(*,'(a,i2,a,f10.5,a,f10.5,a)')"[calcWcent]: using R(",R0,")= (",Rcell(1,R0),", ",Rcell(2,R0),") as home unit cell"
 		do n = 1, nWfs
 			call wXw(R0,R0,n,n,wnF, xc(:,n))
-			write(*,'(a,i2,a,f10.6,a,f10.6,a)')"[calcWcent]: n=",n," center= (",xc(1,n),",",xc(2,n),")"
-			!
 			call wXXw(R0,R0,n,n, wnF, tmp)
 			sprd(1,n) = abs( tmP(1) - xc(1,n)**2 )
 			sprd(2,n) = abs( tmP(2) - xc(2,n)**2 )
+			write(*,'(a,i2,a,f10.6,a,f10.6,a,e16.9)')"[calcWcent]: n=",n," center= (",xc(1,n),",",xc(2,n),"), norm2(sprd)=",norm2(sprd(:,n))
+			!
 		end do
 		!
 		return
@@ -235,6 +237,26 @@ module wannier
 
 
 	!TIGHT BINDING MODEL
+	subroutine interpolateBands(wnF)
+		complex(dp),	intent(in)		:: wnF(:,:,:)
+		complex(dp),	allocatable		:: Htb(:,:)
+		real(dp),		allocatable		:: Ew(:,:)
+		integer							:: ki
+		!
+		allocate(	Htb(nWfs,nWfs)	)
+		allocate(	Ew(nWfs, nK)	)
+		!
+		do ki = 1, nK
+			call genTBham(ki,wnF,Htb)
+			call eigSolver(Htb, Ew(:,ki))
+		end do
+		!
+		call writeInterpBands(Ew)
+		!
+		!
+		return
+	end subroutine
+
 	subroutine genTBham(ki, wnF, Htb)
 		!subroutine generates a tight binding Hamiltonian via
 		!
@@ -242,22 +264,25 @@ module wannier
 		!
 		integer,		intent(in)		:: ki
 		complex(dp),	intent(in)		:: wnF(:,:,:)	!wnF(nR	, nSC, nWfs	)
-		complex(dp),	intent(out)		:: Htb(:,:,:) 	!Htb(R, nWfs,nWfs)
+		complex(dp),	intent(out)		:: Htb(:,:) 	!Htb(nWfs,nWfs)
 		integer							:: n,m, R
-		complex(dp)						:: phaseR
+		complex(dp)						:: phaseR, Hexp
 		!
 		Htb	= dcmplx(0.0_dp)
 		!
-		!
+		!$OMP PARALLEL DO DEFAULT(SHARED) PRIVATE(m,n, R, phaseR, Hexp) ,&
+		!$OMP& COLLAPSE(2)	SCHEDULE(STATIC) 
 		do m = 1, nWfs
 			do n = 1, nWfs
 				!SUM OVER CELLS R
 				do R = 1, nSC
-					phaseR		= myExp( 	dot_product( kpts(:,ki) , Rcell(:,R) )			)	
-					Htb(R,n,m)	= Htb(R,n,m) + phaseR * Hwnf(n,m,ki,R, wnF)
+					phaseR		= myExp( 	dot_product( kpts(:,ki) , Rcell(:,R) )			)
+					call wHw(1,R,n,m, wnF, Hexp)	
+					Htb(n,m)	= Htb(n,m) + phaseR * Hexp
 				end do
 			end do
 		end do
+		!$OMP END PARALLEL DO
 		!
 		return
 	end subroutine

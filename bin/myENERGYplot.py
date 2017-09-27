@@ -12,7 +12,7 @@ from mpl_toolkits.mplot3d import Axes3D
 
 #READ IN RAW DATA
 f0     		= open("rawData/qpts.dat",'rb')
-kpts   		= np.fromfile(f0,dtype='float64',count=-1)
+qpts   		= np.fromfile(f0,dtype='float64',count=-1)
 f0.close()
 
 #f1	 		= open("rawData/rpts.dat",'rb') #rb = Read Binary
@@ -23,6 +23,10 @@ f2			= open("rawData/bandStruct.dat",'rb') #rb = Read Binary
 rawData	= np.fromfile(f2,dtype='float64',count=-1)
 f2.close()
 
+
+f3			= open("rawData/Ewann.dat",'rb') #rb = Read Binary
+rawWann	= np.fromfile(f3,dtype='float64',count=-1)
+f3.close()
 
 f4			= open("rawData/sysPara.dat",'rb')
 rawSysP 	= np.fromfile(f4,dtype='int32',count=-1)
@@ -67,8 +71,9 @@ if( nKx != nKy):
 	print("warning the k point spacing per dimension is differnent, this affects the path through k space")
 
 #RESHAPE RAW DATA
-kpts	= np.reshape(kpts,(nK,2))
-En		= np.reshape(rawData,(nK,nG))    #		
+qpts	= np.reshape(qpts,(nK,2))
+En		= np.reshape(rawData,(nK,nG))    #
+EnW		= np.reshape(rawWann(nK,nWFs))		
 
 #print(En)
 

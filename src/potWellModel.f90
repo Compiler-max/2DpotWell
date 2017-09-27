@@ -4,9 +4,8 @@ module potWellModel
 	use omp_lib
 	use mathematics,	only:	dp, PI_dp,i_dp, machineP, myExp, myLeviCivita, eigSolver, nIntegrate, isUnit, isHermitian
 	use sysPara
-	use blochWf,		only:	genBwfVelo, genUnk							
-	use projection,		only:	projectBwf
-	use output,			only:	printMat
+	use blochWf,		only:	genBwfVelo, testNormUNK							
+	use output,			only:	printMat, writeEnAndUNK
 	implicit none	
 	
 	private
@@ -29,86 +28,54 @@ module potWellModel
 																				!unkW(nR	,	nWfs,  nKpts	)
 																				!veloBwf(nR,nK,2*nG)
 		real(dp),		intent(out)		::	En(:,:)																	
-		complex(dp),	allocatable		::	Hmat(:,:), bWf(:,:,:), lobWf(:,:), U(:,:)
-		real(dp),		allocatable		::	EnT(:,:), bwfT(:,:,:) 
-		integer							:: 	qi, xi , n, Ri, failCount
-		real(dp)						::	kVal(2), smin, smax
-		complex(dp)						:: 	phase, wTemp
+		complex(dp),	allocatable		::	Hmat(:,:)
+		real(dp),		allocatable		::	EnT(:,:)
+		integer							:: 	qi , n, Ri
+		real(dp)						::	kVal(2)
 		!
 		allocate(	Hmat(	nG,	nG		)			)
-		allocate(	U(		nWfs, nWfs	)			)
 		allocate(	EnT(	nG	, nQ	)			)	
-		allocate(	bWf(	nR, nG, nQ	)			)
-		allocate(	bWfT(	nR, nG, nQ	)			)
-		allocate(	lobWf(	nR, nWfs	)			)
-		
-		bWf			=	dcmplx(0.0_dp)
+		!
 		unk			=	dcmplx(0.0_dp)
 		veloBwf		=	dcmplx(0.0_dp)
-		failCount	=	0
-		smin		=	1.0_dp
-		smax		= 	0.0_dp
 		!
-		
 		if(debugHam) then
 			write(*,*)	"[solveHam]: debugging ON. Will do additional tests of the results"
 		end if
-		
-		!scatter : unk, EnT, bwf
+		!
+		!
+		!MPI scatter : unk, EnT, bwf
 		do qi = 1, nQ
-			write(*,*)"**"
-			write(*,*)"**"
-			write(*,*)"[solveHam]: qi=",qi
 			kVal	=	qpts(:,qi)
-			
+			!
 			!ELECTRONIC STRUCTURE
 			call populateH(kVal, Hmat) 	!omp
-			write(*,*)	"[solveHam]: Ham matrix set up done"
 			call eigSolver(Hmat, EnT(:,qi))	!mkl
-			write(*,*)	"[solveHam]: solved electronic structure"
-			
-			
+			!
 			!BLOCH WAVEFUNCTIONS
 			!call gaugeCoeff(kVal, Hmat)
-			call genBwfVelo(qi, Hmat, bWf, veloBwf)	!omp
-			write(*,*)	"[solveHam]: generated Bloch wavefunctions"
-
-			!PROJECTION & WANNIER
-			call projectBwf(qi, bWf(:,:,qi), loBwf, U, failCount, smin, smax)	!mkl & omp
-			write(*,*)	"[solveHam]: projetion of bwf done"
-			call genUnk(qi, lobWf, unk )	!omp
-			write(*,*)	"[solveHam]: generated unks"
-			!
-			!
+			call genBwfVelo(qi, Hmat, unk, veloBwf)	!omp
 		end do
-		!gather: unk, EnT, bwf
-
-		do qi = 1, nQ
+		!
+		!
+		!COPY & WRITE ENERGIES/BWFs
+		do qi = 1, size(En,2)
 			En(:,qi)	= EnT(1:nWfs,qi)
 		end do
-
-
-		write(*,*)	"[solveHam]: copied eigenvalues"
-		!write(*,*)"[solveHam]: test normalization of generated Bloch wavefunctions"
-		!call testNormal(bwf)
-		!write(*,'(a,f16.13,a,f16.12)') "[solveHam]: projection matrix  smin=", smin, " smax=", smax
-		!write(*,'(a,i7,a)')"[solveHam]: ",failCount," of the projected bloch like functions are not orthonormal"
-
-
-		!WRITE ENERGIES & BWFs
-		open(unit=200, file='rawData/bandStruct.dat', form='unformatted', access='stream', action='write')
-		write(200)	EnT
-		close(200)
+		write(*,*)			"[solveHam]: copied eigenvalues"
+		write(*,*)			"[solveHam]: found ", countBandsSubZero(EnT)," bands at the gamma point beneath zero"
+		call writeEnAndUNK(EnT, unk)
 		!
-		bWfT	= dreal(bWf) 
-		open(unit=210, file='rawData/bwfR.dat'		, form='unformatted', access='stream', action='write',status='replace') 
-		write(210)	bwfT
-		close(210)
-		!
-		bWfT	= dimag(bWf)
-		open(unit=211, file='rawData/bwfI.dat'		, form='unformatted', access='stream', action='write')
-		write(211)	bwfT
-		write(*,*)	"[solveHam]: wrote eigenvalues and bwfs"
+		!DEBUG
+		if(debugHam) then
+			write(*,*)		"[solveHam]: start test normalization of unks"
+			if(.not. testNormUNK(unk)	) then
+				write(*,*)	"[solveHam]: found normalization issues for unks"
+			else
+				write(*,*)	"[solveHam]: no issues detected"
+			end if
+		end if
+		write(*,*)			"[solveHam]: finished debuging."
 		!
 		!
 		return
@@ -173,38 +140,6 @@ module potWellModel
 	end subroutine
 
 
-	!subroutine Hkin(q, Hmat)
-	!	!add kinetic energy to Hamiltonian
-	!	real(dp)   , intent(in)	   :: q(2)
-	!	complex(dp), intent(inout) :: Hmat(:,:)
-	!	integer 				   :: i
-	!	real(dp)				   :: fact, kg(2)
-	!	fact = 0.5_dp	!hbar*hbar/(2*me) in a.u.
-	!	do i = 1, nG
-	!		kg(:) = q(:) + Gvec(:,i)
-	!		Hmat(i,i) = Hmat(i,i) +  dcmplx(	fact * dot_product(kg,kg) , 0.0_dp	) 
-	!	end do
-	!	return
-	!end subroutine
-
-
-	!subroutine Hpot( Hmat)
-	!	!Add potential to Hamiltonian
-	!	complex(dp) , intent(inout) :: Hmat(:,:)
-	!	integer 					:: i,j
-	!	complex(dp)					:: tmp
-	!	do i = 1,nG
-	!		do j = 1,nG
-	!			tmp			= V(i,j)
-	!			!write(*,'(a,i2,a,i2,a,f15.10,a,f15.10)')	"[Hpot]: V(",i,",",j,") =",dreal(tmp),"+i*",dimag(tmp)
-	!			Hmat(i,j)	= Hmat(i,j) + tmp
-	!		end do
-	!	end do
-	!	!
-	!	return
-	!end subroutine
-
-
 	complex(dp) function V(i,j)
 		!calc potential matrix elements
 		!the integrals were solved analytical and are hard coded in this function
@@ -247,12 +182,6 @@ module potWellModel
 		!
 		return
 	end function
-
-
-
-
-
-
 
 	!GAUGING BASIS COEFFICIENTS
 	subroutine gaugeCoeff(k, basCoeff)
@@ -303,7 +232,6 @@ module potWellModel
 		return
 	end subroutine
 
-
 	!subroutine gaugeCoeff2(k, basCoeff)
 	!	!what does k < 0 mean here ?!, makes only sense in 1D
 	!	!for negative k gauge with Gmin, for positive with Gmax
@@ -325,6 +253,24 @@ module potWellModel
 	!	!
 	!	return
 	!end
+
+
+	integer function countBandsSubZero(EnT)
+		real(dp),		intent(in)		:: EnT(:,:)
+		integer							:: gammaP, cnt, n
+		!
+		cnt	= 0
+		gammaP	= getGammaPoint()
+		write(*,'(a,i8,a,f16.8,a,f16.8,a)')	"[countBandsSubZero]: counting sub zero bands at q(",gammaP,")= (",qpts(1,gammaP),", ",qpts(2,gammaP)," )."
+		do n = 1, nG
+			if( EnT(n,gammaP) < 0.0_dp )	then
+				cnt	= cnt + 1
+			end if
+		end do
+		countBandsSubZero	= cnt
+		!
+		return
+	end function
 
 
 
