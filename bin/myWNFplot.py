@@ -62,8 +62,15 @@ wnfI	= np.reshape(rawDataI,(nWfs,nK, nR))
 wnf		= wnfR**2 + wnfI**2
 
 
-print(wnfI)
 
+#for R in range(nK):
+#	print('n=0 R='+str(R))
+#	print('x='+str(np.sum(wnf[0,R,:]*rpts[:,0])))
+#	print('y='+str(np.sum(wnf[0,R,:]*rpts[:,1])))
+#	print('n=1 R='+str(R))
+#	print('x='+str(np.sum(wnf[1,R,:]*rpts[:,0])))
+#	print('y='+str(np.sum(wnf[1,R,:]*rpts[:,1])))
+#
 
 #2D HEATMAP
 R = 0				#unit cell
@@ -96,7 +103,7 @@ for n in range(nWfs):
 	ax.set_xlabel('a')
 	ax.set_ylabel('b')
 	
-	ax.set_title('Wannier function n='+str(n),fontsize =18)
+	ax.set_title('Wannier function n='+str(n)+' R='+str(R),fontsize =18)
 	
 	plt.show()
 

@@ -43,11 +43,11 @@ module blochWf
 			!
 			!WAVE FUNCTIONS
 			phase			= myExp( -1.0_dp * dot_product( qpts(:,qi), rpts(:,xi) )		)
-			unk(xi,:,qi)	= phase * matmul(basVec,basCoeff) / dsqrt(vol)
+			unk(xi,:,qi)	= phase * matmul(basVec,basCoeff) !/ dsqrt(vol)
 			!
 			!!VELOCITIES
-			velobWf(1,xi,:,qi)	= matmul(veloBasX,basCoeff(1:nWfs,1:nWfs)) / dsqrt(vol)
-			velobWf(2,xi,:,qi)	= matmul(veloBasY,basCoeff(1:nWfs,1:nWfs)) / dsqrt(vol)
+			velobWf(1,xi,:,qi)	= matmul(veloBasX,basCoeff(1:nWfs,1:nWfs)) !/ dsqrt(vol)
+			velobWf(2,xi,:,qi)	= matmul(veloBasY,basCoeff(1:nWfs,1:nWfs)) !/ dsqrt(vol)
 		end do
 		!$OMP END DO
 		deallocate(	basVec		)
@@ -92,15 +92,15 @@ module blochWf
 		fcount	= 0
 
 		!$OMP PARALLEL DEFAULT(SHARED) PRIVATE(q1, q2, m, n, ri, f, oLap, lphase, rphase) REDUCTION(.AND.:isNorm) REDUCTION(+:fcount, cnt)
-		allocate( f(nR) 	)
+		allocate( f(size(unk,1)) 	)
 		!$OMP DO COLLAPSE(4), SCHEDULE(STATIC) 
-		do q2 = 1, nQ
-			do q1 = 1, nQ
-				do m = 1, nWfs
-					do n = 1, nWfs
+		do q2 = 1, size(unk,3)
+			do q1 = 1, size(unk,3)
+				do m = 1, size(unk,2) 
+					do n = 1, size(unk,2)
 						!INTEGRATE
 						f	= dcmplx(0.0_dp)
-						do ri = 1, nR
+						do ri = 1, size(unk,1)
 							lphase	= myExp( dot_product( qpts(:,q1), rpts(:,ri))	)
 							rphase	= myExp( dot_product( qpts(:,q2), rpts(:,ri))	)
 							f(ri)	= dconjg( lphase * unk(ri,m,q1) 	)	* rphase * unk(ri,n,q2)
@@ -109,13 +109,14 @@ module blochWf
 						!write(*,'(a,i2,a,i2,a,i3,a,i3,a,e10.3,a,e10.3)')	"[testNormal]: n=",n,",m=",m,", q1=",q1,", q2=",q2," oLap =",dreal(oLap),"+i*",dimag(oLap)
 						!ADJUST IF NONE ZERO
 						if( n==m .and. q1==q2	) then
-							oLap = oLap - dcmplx(nSC)
+							!write(*,'(a,i3,a,i3,a,i3,a,i3,a,f10.6,a,e10.3)')	"[testNormal]: n=",n,",m=",m,", q1=",q1,", q2=",q2," oLap =",dreal(oLap),"+i*",dimag(oLap)
+							oLap = oLap - dcmplx(1.0_dp)
 						end if
 						!CHECK CONDITION
 						if( abs(oLap) > acc ) then
 							isNorm	= .false.
 							fcount	= fcount + 1
-							!write(*,'(a,i2,a,i2,a,i3,a,i3,a,e10.3,a,e10.3)')	"[testNormal]: n=",n,",m=",m,", q1=",q1,", q2=",q2," oLap =",dreal(oLap),"+i*",dimag(oLap)
+							write(*,'(a,i2,a,i2,a,i3,a,i3,a,e10.3,a,e10.3)')	"[testNormal]: n=",n,",m=",m,", q1=",q1,", q2=",q2," oLap =",dreal(oLap),"+i*",dimag(oLap)
 						else
 							isNorm	= .true.
 						end if
@@ -130,7 +131,7 @@ module blochWf
 
 		!
 		testNormUNK	= isNorm
-		write(*,'(a,i8,a,i8,a)')	"[testNormUNK]: ",fcount," of ",cnt," tests of unk normalization failed"
+		write(*,'(a,i8,a,i12,a)')	"[testNormUNK]: ",fcount," of ",cnt," tests of unk normalization failed"
 		!
 		return
 	end function
@@ -146,15 +147,15 @@ module blochWf
 		!	the cutoff enforces a symmetric base at each k point
 		integer,	 intent(in)		:: qi, ri
 		complex(dp), intent(out)	:: basVec(:), veloBasX(:), veloBasY(:)
-		real(dp)				 	:: tmp(2)
+		real(dp)				 	:: k(2)
 		complex(dp)				 	:: phase
 		integer 				 	::	i 
 		!
 		do i =1, nG
-			tmp(:) = qpts(:,qi) + Gvec(:,i)
+			k(:) = qpts(:,qi) + Gvec(:,i)
 			!
-			if( norm2(tmp) < Gcut ) then
-				phase			= myExp( dot_product( tmp, rpts(:,ri) )		)
+			if( norm2(k) < Gcut ) then
+				phase			= myExp( dot_product( k, rpts(:,ri) )		)
 				basVec(i) 		= phase
 				if( i <= nWfs) then
 					veloBasX(i) 	= phase * i_dp * (	qpts(1,qi) + Gvec(1,i)	)

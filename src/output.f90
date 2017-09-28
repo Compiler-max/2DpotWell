@@ -212,6 +212,7 @@ module output
 		complex(dp),	intent(in)		:: wnF(:,:,:)
 		real(dp),		intent(in)		:: wCent(:,:), wSprd(:,:)
 		real(dp),		allocatable		:: wnfR(:,:,:), wnfI(:,:,:)
+		integer							:: n
 		!
 		allocate(	wnfR(	size(wnF,1), size(wnF,2), size(wnF,3)		)				)
 		allocate(	wnfI(	size(wnF,1), size(wnF,2), size(wnF,3)		)				)
@@ -238,6 +239,20 @@ module output
 		open(unit=515,file='rawData/wSprd.dat',form='unformatted',access='stream',action='write')
 		write(515)	wCent
 		close(515)
+
+		!TEXT FILE
+		open(unit=516,file='wannier.txt',action='write')
+		write(516,*)	"****************atom positions****************************"
+		do n = 1, nAt
+			write(516,'(a,i3,a,f6.4,a,f6.4,a)')	"atom=,",n,	"centered at (",atPos(1,n),", ",atPos(2,n),")."
+		end do
+
+		write(516,*)	"****************Wannier functions****************************"
+		do n = 1, nWfs
+			write(516,'(a,i3,a,f10.5,a,f10.5,a,f10.8,a,f10.8,a,f10.8)')	"n=",n	,"wCent= (",wCent(1,n),", ",wCent(2,n), ").wSprd=(",wSprd(1,n),", ",wSprd(2,n),&
+																	"), norm2(wSprd)=",norm2(wSprd(:,n))
+		end do
+		close(516)
 		!
 		!
 		return
@@ -298,10 +313,10 @@ module output
 																pBerry(1)/norm2(pBerry)	,	", ",	pBerry(2)/norm2(pBerry),	")"
 		!write(600,'(a,e16.9,a,f16.12,a,f16.12,a)')	"pInt= ",norm2(pInt)," * (", &	
 		!														pInt(1)/norm2(pInt),	", ",	pInt(2)/norm2(pInt),	")"
-		write(600,'(a,e16.9,a,f16.12,a,f16.12,a)')	"pIon= ",norm2(pIon)," * (", &	
-																pIon(1)/norm2(pIon)	,	", ",	pIon(2)/norm2(pIon),	")"
-		write(600,'(a,e16.9,a,f16.12,a,f16.12,a)')	"pTot= ",norm2(pTot)," * (", &	
-																pTot(1)/norm2(pTot),	", ",	pTot(2)/norm2(pTot),	")"
+		!write(600,'(a,e16.9,a,f16.12,a,f16.12,a)')	"pIon= ",norm2(pIon)," * (", &	
+		!														pIon(1)/norm2(pIon)	,	", ",	pIon(2)/norm2(pIon),	")"
+		!write(600,'(a,e16.9,a,f16.12,a,f16.12,a)')	"pTot= ",norm2(pTot)," * (", &	
+		!														pTot(1)/norm2(pTot),	", ",	pTot(2)/norm2(pTot),	")"
 		!
 		!
 		write(600,*)"**************PERTURBATION:"

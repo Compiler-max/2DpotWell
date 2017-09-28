@@ -60,7 +60,7 @@ module potWellModel
 		!
 		!COPY & WRITE ENERGIES/BWFs
 		do qi = 1, size(En,2)
-			En(:,qi)	= EnT(1:nWfs,qi)
+			En(:,qi)	= EnT(1:nBands,qi)
 		end do
 		write(*,*)			"[solveHam]: copied eigenvalues"
 		write(*,*)			"[solveHam]: found ", countBandsSubZero(EnT)," bands at the gamma point beneath zero"

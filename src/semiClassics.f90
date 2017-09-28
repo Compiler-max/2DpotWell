@@ -45,6 +45,7 @@ module semiClassics
 			write(*,*)"[calcFirstOrdP]: WARNING Energy and connection live on different k meshes!"
 		end if
 		!
+
 		!
 		do n = 1, nSize
 			f 	= dcmplx(0.0_dp)
@@ -56,6 +57,8 @@ module semiClassics
 				f(:,ki)		= f(:,ki) + densCorr
 				!POSITIONAL SHIFT
 				call calcFmat(n,ki,Velo,En, Fmat)
+				!write(*,*)"ki=",ki
+				!write(*,*)	Fmat
 				f(:,ki)	= f(:,ki) + matmul(Fmat, Bext) 
 			end do
 			!INTEGRATE
@@ -130,6 +133,7 @@ module semiClassics
 									eDiff		= ( 	En(ki,n0) - En(ki,n)	 )**2 	* 	 ( 	En(ki,n0) - En(ki,m)	)
 									!MATRIX
 									Fmat(i,j) 	= Fmat(i,j) +  myLeviCivita(j,k,l) * dreal(		Vtmp / dcmplx(eDiff)	)
+									!write(*,*)"[addF2]: Vtmp=",Vtmp
 								end if
 							end do
 						end do
@@ -174,6 +178,7 @@ module semiClassics
 								eDiff		= ( 	En(ki,n0) - En(ki,n)	 )**3 	
 								!MATRIX
 								Fmat(i,j) 	= Fmat(i,j) -  myLeviCivita(j,k,l) * dreal(		Vtmp / dcmplx(eDiff)	)
+								write(*,*)"[addF3]: eDiff=",eDiff
 							end if
 						end do
 						!

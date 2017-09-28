@@ -497,7 +497,7 @@ module mathematics
 		!!Y INTEGRATION
 		!call hiordqWrapper(dy, fy, nIntegrateREAL)
 
-		nIntegrateREAL = sum(f) / size(f)
+		nIntegrateREAL = sum(f) / real(size(f),dp)
 		!
 		return
 	end function

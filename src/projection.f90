@@ -27,11 +27,13 @@ module projection
 	contains
 !public:
 
-	subroutine projectUnk(unk, unkP)	!projectBwf(qi, bWf, loBwf, U(:,:), failCount, smin, smax)
+	subroutine projectUnk(En, unk, EnP, unkP,tHopp)	!projectBwf(qi, bWf, loBwf, U(:,:), failCount, smin, smax)
 		!does the projection onto Loewdin-orthonormalized Bloch-like states
 		!see Marzari, Vanderbilt PRB 56, 12847 (1997) Sec.IV.G.1 for detailed description of the method 
+		real(dp),		intent(in)		:: En(:,:)		!	En(nBands,nQ)
 		complex(dp)	,	intent(in)		:: unk(:,:,:)   ! unk(nR,nG,nQ)
-		complex(dp)	,	intent(out)		:: unkP(:,:,:)	! unk(nR,nWfs,nQ)
+		real(dp),		intent(out)		:: EnP(:,:)		! EnP(nWfs,nQ)
+		complex(dp)	,	intent(out)		:: unkP(:,:,:), tHopp(:,:,:)	! unk(nR,nWfs,nQ) , tHopp(nWfs, nWfs nSC)
 		complex(dp)	,	allocatable		:: loBwf(:,:), gnr(:,:), A(:,:), U(:,:)
 		complex(dp)						:: phase
 		integer							:: qi, xi
@@ -45,37 +47,49 @@ module projection
 			write(*,*)	"[projectUnk]: debug mode, will test unk normalization after debuging"
 		end if
 
+		if ( doProj ) then
+			write(*,*)	"[projectUnk]: start with projections"
+			!SET UP ROTATION MATRIX U
+			call genTrialOrb(gnr)
+			!PROJECT
+			do qi = 1, nQ
+				call calcAmat(qi,unk(:,:,qi),gnr, A) 
+				!
+				!USE SVD TO CALC U
+				call calcUmat(A, U)
+		
+				!ROTATE BLOCH STATES
+				!$OMP PARALLEL DO SCHEDULE(STATIC) DEFAULT(SHARED) PRIVATE(xi, phase)
+				do xi = 1, nR
+					phase		= myExp(	dot_product(qpts(:,qi),rpts(:,xi))		)
+					loBwf(xi,:) = phase * matmul(	unk(xi,1:nBands,qi), U	)
+				end do
+				!$OMP END PARALLEL DO
+				!
+				!OVERWRITE UNKS WITH PROJECTED UNKs
+				call genUnk(qi, lobWf, unkP(:,:,qi))
 
-		!SET UP ROTATION MATRIX U
-		call genTrialOrb(gnr)
-
-		do qi = 1, nQ
-			call calcAmat(qi,unk(:,:,qi),gnr, A)  !qi, unk,gnr, A
-			!write(*,*)	"[projectBwf]: A matrix set up done"
-			!
-			!USE SVD TO CALC U
-			call calcUmat(A, U)
-			!write(*,*)	"[projectBwf]: U matrix calculation done"
-			!
-			!ROTATE BLOCH STATES
-			!$OMP PARALLEL DO SCHEDULE(STATIC) DEFAULT(SHARED) PRIVATE(xi, phase)
-			do xi = 1, nR
-				phase		= myExp(	dot_product(qpts(:,qi),rpts(:,xi))		)
-				loBwf(xi,:) = phase * matmul(	unk(xi,1:nBands,qi), U	)
+				!ADD CURRENT Q TO HOPPING MATRIX
+				call addThopp(qi, U,En, tHopp)
 			end do
-			!$OMP END PARALLEL DO
-			!write(*,*)	"[projectBwf]: rotated the states"
+
+
+			call calcEnergies(tHopp,EnP)
 			!
-			!OVERWRITE UNKS WITH PROJECTED UNKs
-			call genUnk(qi, lobWf, unkP(:,:,qi))
-			!write(*,*)	"[projectBwf]: generated unks"
-		end do
+
+
+		else
+			write(*,*)	"[projectUnk]: projections disabled, use initial unk files"
+			unkP(:,:,:)	= unk(:,1:nWfs,:)
+			EnP(:,:)	= En(1:nWfs,:)
+		end if
 		write(*,*)	"[projectUnk]: done with projections at each k point"	
+		!
 		!
 		!DEBUG
 		if( debugProj ) then
 			write(*,*)		"[projectUnk]: start test normalization of projected unks"
-			if(.not. testNormUNK(unk)	) then
+			if(.not. testNormUNK(unkP)	) then
 				write(*,*)	"[projectUnk]: found normalization issues for projected unks"
 			else
 				write(*,*)	"[projectUnk]: no issues detected"
@@ -90,7 +104,24 @@ module projection
 
 
 
+	subroutine addThopp(qi, U,En, tHopp)
+		integer,		intent(in)		:: qi
+		complex(dp),	intent(in)		:: U(:,:)	!	U(nBands,nWfs)
+		real(dp),		intent(in)		:: En(:,:)	!	En(nBands,nQ)
+		complex(dp),	intent(inout)	:: tHopp(:,:,:)	!tHopp(nWfs, nWfs nSC)
+		complex(dp)						:: phase
+		complex(dp),	allocatable		:: EU(:)
+		integer							:: R,
 
+		allocate(	EU(nWfs) )
+		do R = 1, nSC
+			phase			= myExp( - dot_product( qpts(:,qi), Rcell(:,R) ) 		)
+			EU				= matmul(dcmplx(En(:,qi)), U(:,:))
+
+			tHopp(:,:,R)	= tHopp(:,:,R) + phase * 
+		end do
+		return
+	end subroutine
 
 
 
@@ -109,30 +140,22 @@ module projection
 		end if
 
 		gnr = dcmplx(0.0_dp)
-		!do n = 1, nWfs
-		!	do ri = 1, nR
-		!		do at 	= 1, nAt
-		!			if(	insideAt( at , rpts(:,ri) )	) then
-		!				gnr(ri,n) = gVal(at, n, ri)
-		!		
-		!			end if
-		!		end do
-		!		!
-		!	end do
-		!end do
-		!
+		
 		do ri = 1, nR
-			if( 	insideAt(1, rpts(:,ri))		)	then
-				gnr(ri,1)	= dcmplx(1.0_dp) 
-				gnr(ri,3)	= dcmplx(1.0_dp)
-			end if
-			!
-			if( 	insideAt(2, rpts(:,ri))		)	then
-				gnr(ri,2)	= dcmplx(1.0_dp)
-				gnr(ri,3)	= dcmplx(1.0_dp)
-			end if
-			if( .not. insideAt(1, rpts(:,ri))	 .and.  .not. insideAt(2, rpts(:,ri))	) then
-				!gnr(ri,4)	= dcmplx(1.0_dp)
+			!ONLY IN HOME UNIT CELL
+			if(  rpts(1,ri) < aX .and. rpts(2,ri) < aY) then
+				if( 	insideAt(1, rpts(:,ri)))	then
+					gnr(ri,1)	= gVal(1,1,ri) 
+					!gnr(ri,3)	= dcmplx(1.0_dp)
+				end if
+				!
+				if( 	insideAt(2, rpts(:,ri))		)	then
+					gnr(ri,2)	= gVal(1,1,ri)
+					!gnr(ri,3)	= dcmplx(1.0_dp)
+				end if
+				!if( .not. insideAt(1, rpts(:,ri))	 .and.  .not. insideAt(2, rpts(:,ri))	) then
+				!	gnr(ri,3)	= dcmplx(1.0_dp)
+				!end if
 			end if
 		end do
 
@@ -149,7 +172,7 @@ module projection
 			case (1)
 				gVal = infPotWell(at, n, xi)
 			case default
-				gVal = dcmplx(	trialOrbVAL(at) /sum( trialOrbVAL )		)
+				gVal = dcmplx(1.0_dp)!dcmplx(	trialOrbVAL(at) /sum( trialOrbVAL )		)
 		end select
 		!
 		return

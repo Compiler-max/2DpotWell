@@ -1,8 +1,9 @@
 module gaugeTrafo
 	use mathematics,	only:	dp, PI_dp, i_dp, acc, myExp, myLeviCivita, nIntegrate, eigSolver, rotMat, myCommutat
 	use sysPara
-	use berry,			only:	calcWaveMat
-	use wannier,		only:	genUnkW, calcWannMat
+	use berry,			only:	
+	use wannier,		only:	genUnkW
+
 	!use 
 	implicit none
 
@@ -30,17 +31,17 @@ module gaugeTrafo
 
 		!GET DESIRED MATRICES VIA K SPACE (calcWaveMat) OR VIA R SPACE (calcWannMat)
 		call cpu_time(T0)
-		select case(connSwitch)
-			case(0)
-				write(*,*)"[calcConnCurv]: via K space"
-				call calcWaveMat(unk, Hw, Hwa, Aw, Fw)
-			case(1)
-				write(*,*)"[calcConnCurv]: via R space"
-				call calcWannMat(unk, Hw, Hwa, Aw, Fw)
-			case default
-				write(*,*)"[calcConnCurv]: via K space"
-				call calcWaveMat(unk, Hw, Hwa, Aw, Fw)
-		end select
+		!select case(connSwitch)
+		!	case(0)
+		!		write(*,*)"[calcConnCurv]: via K space"
+		!		call calcWaveMat(unk, Hw, Hwa, Aw, Fw)
+		!	case(1)
+		!		write(*,*)"[calcConnCurv]: via R space"
+		!		call calcWannMat(unk, Hw, Hwa, Aw, Fw)
+		!	case default
+		!		write(*,*)"[calcConnCurv]: via K space"
+		!		call calcWaveMat(unk, Hw, Hwa, Aw, Fw)
+		!end select
 		call cpu_time(T1) 
 		T	= T1 -T0
 		write(*,'(a,f12.8,a)')"[calcConnCurv]: the 4 matrices on coarse mesh where calculated in ",T," seconds"

@@ -21,9 +21,9 @@ program main
 
 	
     real(dp), 		allocatable,	dimension(:,:)		:: 	wCent, wSprd
-    complex(dp),	allocatable,	dimension(:,:,:)	:: 	wnF, unk, unkP	!, ukn basCoeff,
+    complex(dp),	allocatable,	dimension(:,:,:)	:: 	wnF, unk, unkP, tHopp	!, ukn basCoeff,
     complex(dp),	allocatable,	dimension(:,:,:,:)	::	vW,Velo	, veloBwf			!, Ah, Fh, Vh
-    real(dp),		allocatable,	dimension(:,:)		:: 	En					!, EnH
+    real(dp),		allocatable,	dimension(:,:)		:: 	En, EnP					!, EnH
     real(dp),		allocatable,	dimension(:,:,:)	::	Fw
     real(dp),		allocatable,	dimension(:,:,:,:)	::	Aw
     real(dp) 											:: 	pWann(2), pIon(2), pTot(2), pBerry(2), pInt(2), pNiu(3), pPei(3)
@@ -39,10 +39,12 @@ program main
     call cpu_time(aT0)
 	call readInp()
 	!electronic structure arrays
-	allocate(			unk(		nR 		,	nG		, nQ		)				)
-	allocate(			unkP(		nR 		,	nWfs	, nQ		)				)
-	allocate(			En(						nWfs	, nQ		)				)
-	allocate(			veloBwf(2,	nR		, 	nWfs	, nQ		)				) 
+	allocate(			unk(		nR 		,	nG		, 	nQ		)				)
+	allocate(			unkP(		nR 		,	nWfs	, 	nQ		)				)
+	allocate(			En(						nBands	, 	nQ		)				)
+	allocate(			EnP(					nWfs	,	nQ		)				)
+	allocate(			tHopp(		nWfs	, 	nWfs	,	nSc		)				)
+	allocate(			veloBwf(2,	nR		, 	nBands	, 	nQ		)				) 
 
 	!wannier interpolation arrays
 	!allocate(			Ah(		3		,	nK		, nWfs, nWfs	)			)
@@ -91,9 +93,7 @@ program main
 	call cpu_time(pT0)
 	!
 	!
-	if( doProj ) then 
-		call projectUnk(unk, unkP)
-	end if
+	call projectUnk(En, unk, EnP, unkP,tHopp)
 	!
 	call cpu_time(pT1)
 	write(*,*)"[main]: done with projections."
@@ -130,7 +130,7 @@ program main
 	call cpu_time(bT0)
 	if ( doBerry ) then
 		write(*,*)"[main]:**************************WAVEFUNCTION METHOD*************************"
-		call berryMethod(unkP, En, veloBwf, pBerry, pNiu)
+		call berryMethod(unkP, EnP, veloBwf, pBerry, pNiu)
 		write(*,*)"[main]: done with wavefunction method "
 	else
 		write(*,*)"[main]: berry method disabled"

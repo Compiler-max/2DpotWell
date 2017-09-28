@@ -10,7 +10,7 @@ module berry
 	implicit none
 
 	private
-	public	::	berryMethod, calcWaveMat, calcConnOnCoarse, calcVeloMat, calcCurv
+	public	::	berryMethod, calcConnOnCoarse, calcVeloMat, calcCurv
 	contains
 
 
@@ -36,9 +36,9 @@ module berry
 		complex(dp),	allocatable		:: velo(:,:,:,:)
 		real(dp),		allocatable		:: Aw(:,:,:,:), FW(:,:,:)
 		!
-		allocate(			Aw(			3		, nWfs,nWfs		,	nQ		)				)
-		allocate(			velo(		3		, nWfs,nWfs		,	nQ		)				)
-		allocate(			FW(			3		, nWfs			,	nQ		)				)
+		allocate(			Aw(			3		, nWfs,nWfs			,	nQ		)				)
+		allocate(			velo(		3		, nWfs,nWfs			,	nQ		)				)
+		allocate(			FW(			3		, nWfs				,	nQ		)				)
 
 		call calcConnOnCoarse(unk, Aw)
 		call calcPolViaA(Aw,pBerry)
@@ -238,66 +238,66 @@ module berry
 
 
 
-		subroutine calcWaveMat(unk, Hw, Hwa, Aw, Fw)
-		!DEPRECATED
-		!calculates the matrices described in Wang/Vanderbilt PRB 74, 195118 (2006)
-		!	via integration k space
-		complex(dp),	intent(in)		:: unk(:,:,:)
-		complex(dp),	intent(out)		:: Hw(:,:,:), Hwa(:,:,:,:), Aw(:,:,:,:), Fw(:,:,:,:,:)		!Hw(nKi, nWfs, nWfs)
-		complex(dp)						:: Hnmq, qphase, HwTmp, HwaTmp, AwTmp, FwTmp
-		real(dp),	allocatable		:: AwCoarse(:,:,:,:)
-		integer							:: m, n, ki, qi, R, a,b, myID, nThreads, chunk
-		!
-		allocate(	AwCoarse(3,nQ,nWfs, nWfs)	)
-		call calcConnOnCoarse(unk, AwCoarse)
-		!
-		Hw	= dcmplx(0.0_dp)
-		Hwa	= dcmplx(0.0_dp)
-		Aw	= dcmplx(0.0_dp)
-		Fw	= dcmplx(0.0_dp)
-		!
-
-		
-		!myID	= OMP_GET_THREAD_NUM()
-		!nThreads= OMP_GET_NUM_THREADS()
-		!write(*,'(a,i3,a,i3,a)')	"[calcWaveMat]: hello from omp thread ",myID,"of ",nThreads," threads"
-		
-		!
-
-		!$OMP PARALLEL DO SCHEDULE(STATIC) COLLAPSE(3) DEFAULT(SHARED) PRIVATE(m, n, ki, R, qi, Hnmq, qphase)
-		do m = 1, nWfs
-			do n =  1, nWfs
-				do ki = 1, nK	
-					!SUM OVER CELLS & COARSE K MESH (SEQUENTIAL)
-					do R = 1, nSC
-						do qi = 1, nQ
-							qphase			= myExp( 	dot_product(	kpts(:,ki) - qpts(:,qi)	, Rcell(:,R)	)		)	
-							!HAMILTONIAN QUANTITIES
-							Hnmq 			= unHum(n,m,qi, unk)
-							Hw(ki,n,m) 		= Hw(ki,n,m) 		+ 						qphase * Hnmq 				/ nQ
-							Hwa(:,ki,n,m)	= Hwa(:,ki,n,m) 	+ i_dp * Rcell(:,R)	*	qphase * Hnmq 				/ nQ
-							!POSITIONAL QUANTITIES
-							Aw(:,ki,n,m)	= Aw(:,ki,n,m)		+ 						qphase * AwCoarse(:,qi,n,m) / nQ
-							do b = 1, 3
-								do a = 1, 3
-									Fw(a,b,ki,n,m)	= Fw(a,b,ki,n,m)	+ i_dp * Rcell(a,R)	*	qphase * AwCoarse(b,qi,n,m)	/ nQ 
-									Fw(a,b,ki,n,m)	= Fw(a,b,ki,n,m)	- i_dp * Rcell(b,R)	*	qphase * AwCoarse(a,qi,n,m)	/ nQ
-								end do
-							end do
-						end do	
-					end do
-					!
-					myID	= OMP_GET_THREAD_NUM()
-					write(*,'(a,i3,a,i3,a,i3,a,i3)')		"[calcWaveMat,id=",myID,"]: I did m=",m," n=",n," ki=",ki
-				end do
-			end do
-		end do
-		!$OMP END PARALLEL DO
-		!
-		!
-		return
-	end subroutine
-
+		!subroutine calcWaveMat(unk, Hw, Hwa, Aw, Fw)
+		!!DEPRECATED
+		!!calculates the matrices described in Wang/Vanderbilt PRB 74, 195118 (2006)
+		!!	via integration k space
+		!complex(dp),	intent(in)		:: unk(:,:,:)
+		!complex(dp),	intent(out)		:: Hw(:,:,:), Hwa(:,:,:,:), Aw(:,:,:,:), Fw(:,:,:,:,:)		!Hw(nKi, nWfs, nWfs)
+		!complex(dp)						:: Hnmq, qphase, HwTmp, HwaTmp, AwTmp, FwTmp
+		!real(dp),	allocatable		:: AwCoarse(:,:,:,:)
+		!integer							:: m, n, ki, qi, R, a,b, myID, nThreads, chunk
+		!!
+		!allocate(	AwCoarse(3,nQ,nWfs, nWfs)	)
+		!call calcConnOnCoarse(unk, AwCoarse)
+		!!
+		!Hw	= dcmplx(0.0_dp)
+		!Hwa	= dcmplx(0.0_dp)
+		!Aw	= dcmplx(0.0_dp)
+		!Fw	= dcmplx(0.0_dp)
+		!!
+!
+!		!
+!		!!myID	= OMP_GET_THREAD_NUM()
+!		!!nThreads= OMP_GET_NUM_THREADS()
+!		!!write(*,'(a,i3,a,i3,a)')	"[calcWaveMat]: hello from omp thread ",myID,"of ",nThreads," threads"
+!		!
+!		!!
+!
+!		!!$OMP PARALLEL DO SCHEDULE(STATIC) COLLAPSE(3) DEFAULT(SHARED) PRIVATE(m, n, ki, R, qi, Hnmq, qphase)
+!		!do m = 1, nWfs
+!		!	do n =  1, nWfs
+!		!		do ki = 1, nK	
+!		!			!SUM OVER CELLS & COARSE K MESH (SEQUENTIAL)
+!		!			do R = 1, nSC
+!		!				do qi = 1, nQ
+!		!					qphase			= myExp( 	dot_product(	kpts(:,ki) - qpts(:,qi)	, Rcell(:,R)	)		)	
+!		!					!HAMILTONIAN QUANTITIES
+!		!					Hnmq 			= unHum(n,m,qi, unk)
+!		!					Hw(ki,n,m) 		= Hw(ki,n,m) 		+ 						qphase * Hnmq 				/ nQ
+!		!					Hwa(:,ki,n,m)	= Hwa(:,ki,n,m) 	+ i_dp * Rcell(:,R)	*	qphase * Hnmq 				/ nQ
+!		!					!POSITIONAL QUANTITIES
+!		!					Aw(:,ki,n,m)	= Aw(:,ki,n,m)		+ 						qphase * AwCoarse(:,qi,n,m) / nQ
+!		!					do b = 1, 3
+!		!						do a = 1, 3
+!		!							Fw(a,b,ki,n,m)	= Fw(a,b,ki,n,m)	+ i_dp * Rcell(a,R)	*	qphase * AwCoarse(b,qi,n,m)	/ nQ 
+!		!							Fw(a,b,ki,n,m)	= Fw(a,b,ki,n,m)	- i_dp * Rcell(b,R)	*	qphase * AwCoarse(a,qi,n,m)	/ nQ
+!		!						end do
+!		!					end do
+!		!				end do	
+!		!			end do
+!		!			!
+!		!			myID	= OMP_GET_THREAD_NUM()
+!		!			write(*,'(a,i3,a,i3,a,i3,a,i3)')		"[calcWaveMat,id=",myID,"]: I did m=",m," n=",n," ki=",ki
+!		!		end do
+!		!	end do
+!		!end do
+!		!!$OMP END PARALLEL DO
+!		!!
+!		!!
+!		!return
+!	end !subroutine
+!
 
 
 

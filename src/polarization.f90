@@ -22,30 +22,31 @@ module polarization
 		real(dp), intent(in)	:: wCent(:,:)
 		real(dp), intent(out)	:: pE(2)
 		integer 				:: n, at
-		real(dp) 				:: vol, cent(2)
+		real(dp) 				:: cent(2)
 		!
 		
-		vol 	= aX * aY !1D
 		pE	 	= 0.0_dp
 		!
 		!ELECTRONIC
 		do n = 1,size(wCent,2)
-			cent(1) = dmod(wCent(1,n),aX) !get current center by projection into first unit cell
-			cent(2)	= dmod(wCent(2,n),aY)
+			!cent(1) = dmod(wCent(1,n),aX) !get current center by projection into first unit cell
+			!cent(2)	= dmod(wCent(2,n),aY)
 			!!
 			!write(*,'(a,f8.5,a,f8.5,a,f8.6,a,f8.6,a)')"[calc0ElPol]: Wcent = (",wCent(1,n),", ",wCent(2,n),") modified cent = (", cent(1),", ",cent(2),")"
-			pE = pE + cent				
+			pE = pE + wCent(:,n)				
 		end do
+		pE = -1.0_dp * pE  / vol
 		!
 		!NORMALIZE
 		!pE = pE / vol
 		!pI = pI / vol
 		!
 		!SHIFT WITH RESPECT TO CENTER OF UNIT CELL
-		cent(1)	= aX * 0.5_dp
-		cent(2)	= aY * 0.5_dp
-		pE = (pE - cent ) / vol
+		!cent(1)	= aX * 0.5_dp
+		!cent(2)	= aY * 0.5_dp
+		!pE = (pE - cent ) / vol
 		!
+
 		return
 	end subroutine
 
@@ -77,9 +78,9 @@ module polarization
 		!NORMALIZE K INTEGRATION	
 		pElA(:)	= val(:) / real(size(A,4),dp)
 		!
-		!!HARVEST
-		!pElA	= val / (aX*aY)
-		!
+		!MOD QUANTUM e \vec{a} / V0
+		pElA(1)	= dmod(pElA(1),aX/vol) 
+		pElA(2)	= dmod(pElA(2),aY/vol)
 		return
 	end subroutine
 
