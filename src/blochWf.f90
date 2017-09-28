@@ -32,11 +32,11 @@ module blochWf
 		!
 
 		!
-		!$OMP PARALLEL DEFAULT(SHARED) PRIVATE(xi, basVec, veloBasX, veloBasY)
+		!$OMP PARALLEL DEFAULT(SHARED) PRIVATE(xi,phase, basVec, veloBasX, veloBasY)
 		allocate(	basVec(		nG)			)
 		allocate(	veloBasX(	nWfs)		)
 		allocate(	veloBasY(	nWfs)		)
-		!$OMP DO SCHEDULE(DYNAMIC,nRx/2) 
+		!$OMP DO SCHEDULE(DYNAMIC,nRx) 
 		do xi = 1, nR
 			!GET BASIS
 			call calcBasis(qi,xi, basVec, veloBasX, veloBasY)
@@ -99,21 +99,23 @@ module blochWf
 				do m = 1, nWfs
 					do n = 1, nWfs
 						!INTEGRATE
+						f	= dcmplx(0.0_dp)
 						do ri = 1, nR
 							lphase	= myExp( dot_product( qpts(:,q1), rpts(:,ri))	)
 							rphase	= myExp( dot_product( qpts(:,q2), rpts(:,ri))	)
 							f(ri)	= dconjg( lphase * unk(ri,m,q1) 	)	* rphase * unk(ri,n,q2)
 						end do
 						oLap	= nIntegrate(nR, nRx,nRy, dx,dy, f)
+						!write(*,'(a,i2,a,i2,a,i3,a,i3,a,e10.3,a,e10.3)')	"[testNormal]: n=",n,",m=",m,", q1=",q1,", q2=",q2," oLap =",dreal(oLap),"+i*",dimag(oLap)
 						!ADJUST IF NONE ZERO
-						!if( n==m .and. q1==q2	) then
-						!	oLap = oLap - dcmplx(nSC)
-						!end if
+						if( n==m .and. q1==q2	) then
+							oLap = oLap - dcmplx(nSC)
+						end if
 						!CHECK CONDITION
 						if( abs(oLap) > acc ) then
 							isNorm	= .false.
 							fcount	= fcount + 1
-							write(*,'(a,i2,a,i2,a,i3,a,i3,a,e10.3,a,e10.3)')	"[testNormal]: n=",n,",m=",m,", q1=",q1,", q2=",q2," oLap =",dreal(oLap),"+i*",dimag(oLap)
+							!write(*,'(a,i2,a,i2,a,i3,a,i3,a,e10.3,a,e10.3)')	"[testNormal]: n=",n,",m=",m,", q1=",q1,", q2=",q2," oLap =",dreal(oLap),"+i*",dimag(oLap)
 						else
 							isNorm	= .true.
 						end if
@@ -128,12 +130,62 @@ module blochWf
 
 		!
 		testNormUNK	= isNorm
-		if( .not. testNormUNK) then
-			write(*,'(a,i8,a,i8,a)')	"[testNormUNK]: ",fcount," of ",cnt," tests of unk normalization failed"
-		end if
+		write(*,'(a,i8,a,i8,a)')	"[testNormUNK]: ",fcount," of ",cnt," tests of unk normalization failed"
 		!
 		return
 	end function
+
+
+
+
+
+!privat
+	subroutine calcBasis(qi, ri, basVec, veloBasX, veloBasY)
+		!calculates the basis vectors e^i(k+G).r
+		!	if |k+G| is larger then the cutoff the basis vector is set to zero
+		!	the cutoff enforces a symmetric base at each k point
+		integer,	 intent(in)		:: qi, ri
+		complex(dp), intent(out)	:: basVec(:), veloBasX(:), veloBasY(:)
+		real(dp)				 	:: tmp(2)
+		complex(dp)				 	:: phase
+		integer 				 	::	i 
+		!
+		do i =1, nG
+			tmp(:) = qpts(:,qi) + Gvec(:,i)
+			!
+			if( norm2(tmp) < Gcut ) then
+				phase			= myExp( dot_product( tmp, rpts(:,ri) )		)
+				basVec(i) 		= phase
+				if( i <= nWfs) then
+					veloBasX(i) 	= phase * i_dp * (	qpts(1,qi) + Gvec(1,i)	)
+					veloBasY(i)		= phase * i_dp * (	qpts(2,qi) + Gvec(2,i)	)
+				end if
+			else
+				basVec(i) 		= dcmplx( 0.0_dp )
+				if( i <= nWfs) then
+					veloBasX(i)		= dcmplx( 0.0_dp )
+					veloBasY(i)		= dcmplx( 0.0_dp )
+				end if
+			end if
+		end do
+		!
+		!
+		return
+	end subroutine
+
+
+
+
+
+
+end module blochWf 
+
+
+
+
+
+
+
 
 
 
@@ -248,58 +300,6 @@ module blochWf
 !
 !	!	return
 	!end subroutine
-
-
-
-
-
-
-
-
-
-
-
-
-!privat
-	subroutine calcBasis(qi, ri, basVec, veloBasX, veloBasY)
-		!calculates the basis vectors e^i(k+G).r
-		!	if |k+G| is larger then the cutoff the basis vector is set to zero
-		!	the cutoff enforces a symmetric base at each k point
-		integer,	 intent(in)		:: qi, ri
-		complex(dp), intent(out)	:: basVec(:), veloBasX(:), veloBasY(:)
-		real(dp)				 	:: tmp(2)
-		complex(dp)				 	:: phase
-		integer 				 	::	i 
-		!
-		do i =1, nG
-			tmp(:) = qpts(:,qi) + Gvec(:,i)
-			!
-			if( norm2(tmp) < Gcut ) then
-				phase			= myExp( dot_product( tmp, rpts(:,ri) )		)
-				basVec(i) 		= phase
-				if( i <= nWfs) then
-					veloBasX(i) 	= phase * i_dp * (	qpts(1,qi) + Gvec(1,i)	)
-					veloBasY(i)		= phase * i_dp * (	qpts(2,qi) + Gvec(2,i)	)
-				end if
-			else
-				basVec(i) 		= dcmplx( 0.0_dp )
-				if( i <= nWfs) then
-					veloBasX(i)		= dcmplx( 0.0_dp )
-					veloBasY(i)		= dcmplx( 0.0_dp )
-				end if
-			end if
-		end do
-		!
-		!
-		return
-	end subroutine
-
-
-
-
-
-
-end module blochWf 
 
 
 
