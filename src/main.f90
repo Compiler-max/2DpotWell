@@ -12,7 +12,7 @@ program main
 	use polarization,	only:		calcIonicPol
 	use semiclassics,	only:		calcFirstOrdP
 	use peierls,		only:		peierlsSub
-	use output,		 	only:		writeMeshInfo, writeMeshBin, writeUNKs, writeWannFiles,writePolFile,& 
+	use output,		 	only:		writeMeshInfo, writeMeshBin, writeUNKs, writeInterpBands, writeWannFiles,writePolFile,& 
 									printTiming	!printMat, printInp, printWannInfo,writeSysInfo  
 
 
@@ -182,6 +182,7 @@ program main
 	call writeMeshInfo() 
 	call writeMeshBin()
 	call writeUNKs(unkP)
+	call writeInterpBands(EnP)
 	write(*,*)"[main]: ...wrote mesh info"
 	
 	
@@ -214,6 +215,8 @@ program main
 	deallocate(			unkP		)
 	deallocate(			En			)
 	deallocate(			veloBwf		) 
+	deallocate(			EnP			)
+	deallocate(			tHopp		)
 
 	stop
 end program

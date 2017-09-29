@@ -3,7 +3,7 @@ module projection
 	!	this includes the calculation of the orthonormalized projected bloch wavefunctions
 	!	and the FT of the bwfs to calculate the wannier functions
 	use omp_lib
-	use mathematics, 	only: 	dp, PI_dp, acc, myExp, nIntegrate,  mySVD, myMatInvSqrt, isUnit, isIdentity
+	use mathematics, 	only: 	dp, PI_dp, acc, myExp, nIntegrate, eigSolver,  mySVD, myMatInvSqrt, isUnit, isIdentity
 	use blochWf,		only:	genUnk, testNormUNK
 	use sysPara
 	implicit none	
@@ -75,7 +75,7 @@ module projection
 
 
 			call calcEnergies(tHopp,EnP)
-			!
+			!WRITE ENERGIES (REMOVE WRITTING OUT OF WANNIER METHOD)
 
 
 		else
@@ -105,25 +105,64 @@ module projection
 
 
 	subroutine addThopp(qi, U,En, tHopp)
+		!	<0|H|R> = \sum_q Vq^dagger Eq Vq
+		!	where Eq is diagonal matrix (energies in Hamiltonian gauge)
 		integer,		intent(in)		:: qi
 		complex(dp),	intent(in)		:: U(:,:)	!	U(nBands,nWfs)
 		real(dp),		intent(in)		:: En(:,:)	!	En(nBands,nQ)
 		complex(dp),	intent(inout)	:: tHopp(:,:,:)	!tHopp(nWfs, nWfs nSC)
 		complex(dp)						:: phase
-		complex(dp),	allocatable		:: EU(:)
-		integer							:: R,
-
-		allocate(	EU(nWfs) )
+		complex(dp),	allocatable		:: tmp(:,:),EV(:,:), Udag(:,:)
+		integer							:: R, m, n
+		!
+		allocate(	tmp(nBands,nWfs)	)
+		allocate(	EV(nWfs,nWfs) 		)
+		allocate(	Udag(nWfs,nBands)	)
 		do R = 1, nSC
 			phase			= myExp( - dot_product( qpts(:,qi), Rcell(:,R) ) 		)
-			EU				= matmul(dcmplx(En(:,qi)), U(:,:))
-
-			tHopp(:,:,R)	= tHopp(:,:,R) + phase * 
+			!tmp = Eq Vq
+			do m = 1, nWfs
+				do n = 1, nBands
+					tmp(n,m)	= dcmplx(En(n,qi)) * U(n,m)
+				end do 
+			end do
+			! EU = Vq^dagger tmp
+			Udag	= dconjg( transpose(U)	)
+			EV		= matmul(Udag, tmp)
+			!ADD results
+			tHopp(:,:,R)	= tHopp(:,:,R) + phase * EV(:,:)
 		end do
+		deallocate(	tmp	)
+		deallocate(	EV 	)
+		!
+		!
 		return
 	end subroutine
 
 
+	subroutine calcEnergies(tHopp, EnP)
+		complex(dp),	intent(in)		:: tHopp(:,:,:)		!tHopp(nWfs,nWfs,nSC)
+		real(dp),		intent(out)		:: EnP(:,:)			!EnP(nWfs,nQ)
+		complex(dp),	allocatable		:: Ham(:,:)
+		complex(dp)						:: phase
+		integer							:: qi, R
+		!
+		allocate(	Ham(nWfs, nWfs)	)
+		!
+		do qi = 1, nQ
+			!SET UP HAMILTONIAN MATRIX
+			Ham	= dcmplx(0.0_dp)
+			do R = 1, nSC
+				phase		= myExp( dot_product(qpts(:,qi), Rcell(:,R)	)	)
+				Ham(:,:)	= Ham(:,:)	+ phase * tHopp(:,:,R)
+			end do
+			!SOLVE HAMILTONIAN
+			call eigSolver(Ham, EnP(:,qi))
+		end do
+		!
+		!
+		return
+	end subroutine
 
 
 

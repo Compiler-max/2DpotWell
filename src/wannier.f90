@@ -50,8 +50,8 @@ module wannier
 		write(*,*)	"[wannMethod]: calculated centers and spreads"
 		call calcPolWannCent(wCent,pWann)
 		write(*,*)	"[wannMethod]: calculated polarization via centers"
-		call interpolateBands(wnF)
-		write(*,*)	"[wannMethod]: interpolated bands"
+		!call interpolateBands(wnF)
+		!write(*,*)	"[wannMethod]: interpolated bands"
 		!
 		!write results
 		call writeWannFiles(wnF, wCent, wSprd)
