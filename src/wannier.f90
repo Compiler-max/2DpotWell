@@ -10,7 +10,7 @@ module wannier
 	implicit none
 
 	private
-	public :: wannMethod, isNormal, isReal, calcCentSpread, genTBham, genUnkW, calcWannMat
+	public :: wannMethod, genKham, isNormal, isReal, calcCentSpread, genTBham, genUnkW, calcWannMat
 
 	contains
 
@@ -76,7 +76,22 @@ module wannier
 
 
 
-
+	subroutine genKham(qi, tHopp, Ham)
+		integer,		intent(in)		:: qi
+		complex(dp),	intent(in)		:: tHopp(:,:,:)		!tHopp(nWfs,nWfs,nSC)
+		complex(dp),	intent(out)		:: Ham(:,:)
+		complex(dp)						:: phase
+		integer							:: R
+		!
+		Ham	= dcmplx(0.0_dp)
+		do R = 1, nSC
+			phase		= myExp( dot_product(qpts(:,qi), Rcell(:,R)	)	)
+			Ham(:,:)	= Ham(:,:)	+ phase * tHopp(:,:,R)
+		end do
+		!
+		!
+		return
+	end subroutine
 
 
 

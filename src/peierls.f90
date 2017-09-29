@@ -1,7 +1,7 @@
 module peierls
 	use mathematics,	only:	dp, PI_dp, i_dp, myExp, crossP, nIntegrate, eigSolver
 	use sysPara
-	use wannier,		only:	genTBham, genUnkW
+	use wannier,		only:	genKham, genUnkW
 	use gaugeTrafo,		only:	calcConnCurv, testIfReal
 	use	polarization,	only:	calcPolViaA
 	use blochWf,		only:	 genUnk
@@ -21,26 +21,58 @@ module peierls
 
 
 !public:
-	subroutine peierlsSub(wnF, unk, Ah, Fh, Vh, EnH, pPei )
-		complex(dp),	intent(inout)	:: wnF(:,:,:)
-		complex(dp),	intent(out)		:: unk(:,:,:), Ah(:,:,:,:), Fh(:,:,:,:), Vh(:,:,:,:)
-		real(dp),		intent(out)		:: EnH(:,:), pPei(3)
+	subroutine	peierlsMethod(tHopp, pPei)
+		complex(dp),	intent(in)		:: tHopp(:,:,:)	! tHopp(nWfs,nWfs,nSC)
+		real(dp),		intent(out)		:: pPei(3)
+		complex(dp),	allocatable		:: Ham(:,:)
+		real(dp),		allocatable		:: EnPei(:,:)
+		integer							:: qi
 		!
-		!SHIFT WANNIER FUNCTIONS & GENERATE UNKs from shifted WANN
-		call shiftWannF(wnF)
-		call genUnkW(wnF, unk)
-		!
-		!CALC CONNECTION & CHECK IF REAL
-		call calcConnCurv(unk, wnF, Ah, Fh, Vh, EnH)
-		call testIfReal(Ah, Fh)
-		!
-		!INTEGRATE CONNECTION TO GET POL
-		call calcPolViaA(dreal(Ah), pPei)
+		allocate( 	Ham(nWfs,nWfs)		)
+		allocate(	EnPei(nWfs,nQ)		)
 		!
 		!
+		call peierlsSub(tHopp)
+
+		do qi = 1, nQ
+			call genKham(qi, tHopp, Ham)
+			call eigSolver(Ham, EnPei(:,qi))
+			!ToDo
+			!	calc bwfs, or unks
+			!	calc connection
+		end do
+		!call calcPolViaA()
+
+
 		return
 	end subroutine
 
+
+	subroutine peierlsSub(tHopp)
+
+		return
+	end subroutine
+
+	!subroutine peierlsSub(wnF, unk, Ah, Fh, Vh, EnH, pPei )
+	!	complex(dp),	intent(inout)	:: wnF(:,:,:)
+	!	complex(dp),	intent(out)		:: unk(:,:,:), Ah(:,:,:,:), Fh(:,:,:,:), Vh(:,:,:,:)
+	!	real(dp),		intent(out)		:: EnH(:,:), pPei(3)
+	!	!
+	!	!SHIFT WANNIER FUNCTIONS & GENERATE UNKs from shifted WANN
+	!	call shiftWannF(wnF)
+	!	call genUnkW(wnF, unk)
+	!	!
+	!	!CALC CONNECTION & CHECK IF REAL
+	!	call calcConnCurv(unk, wnF, Ah, Fh, Vh, EnH)
+	!	call testIfReal(Ah, Fh)
+	!	!
+	!	!INTEGRATE CONNECTION TO GET POL
+	!	call calcPolViaA(dreal(Ah), pPei)
+	!	!
+	!	!
+	!	return
+	!end subroutine
+!
 
 	subroutine 	shiftWannF(wnF)
 		!>shifts the wannier functions as following

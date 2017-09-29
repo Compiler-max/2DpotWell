@@ -7,7 +7,7 @@ module blochWf
 	implicit none
 
 	private
-	public	::	genBwfVelo, genUnk, testNormUNK
+	public	::	genBwfVelo, genUnk, testNormUNK, FDvelocities
 
 
 	contains
@@ -137,6 +137,68 @@ module blochWf
 	end function
 
 
+
+	subroutine FDvelocities(unk, velo)
+		complex(dp),	intent(in)		:: unk(:,:,:)		!unk(nR,nStates, nQ)
+		complex(dp),	intent(out)		:: velo(:,:,:,:)	!velo(3,nStates,nStates,nQ)
+		complex(dp),	allocatable		:: f(:)
+		integer							:: qi, n, m, xi, yi, ri, rNN
+		!
+		allocate(	f(nR)	)
+		velo = dcmplx(0.0_dp)
+		!
+		do qi = 1, size(unk,3)
+			do n = 1, size(velo,2)
+				do m = 1, size(velo,3)
+
+					!X DERIVATIVE
+					do xi = 1, nRx
+						do yi = 1, nRy
+							ri 	= getRindex(xi,yi)
+							if(xi /= nRx) then
+								rNN	= getRindex(xi+1,yi) 
+							else
+								rNN	= getRindex(1,yi)
+							end if
+							!write(*,'(a,f6.3,a,f6.3,a,f6.3,a,f6.3,a)')		"[FDvelocities]: ri= (",rpts(1,ri),",",rpts(2,ri),&
+							!						") ,rNN= (",rpts(1,rNN),",",rpts(2,rNN),")."
+							f(ri)	= dconjg(unk(ri,n,qi)) * ( qpts(1,qi) * unk(ri,m,qi) - i_dp * FD(qi,m,ri,rNN, unk) )
+						end do
+					end do
+					velo(1,n,m,qi) = nIntegrate(nR, nRx, nRy, dx, dy, f)
+					!
+					!
+					!Y DERIVATIVE
+					do xi = 1, nRx
+						do yi = 1, nRy
+							ri 	= getRindex(xi,yi)
+							if(yi /= nRy) then
+								rNN	= getRindex(xi,yi+1) 
+							else
+								rNN	= getRindex(xi,1)
+							end if
+							f(ri)	= dconjg(unk(ri,n,qi)) * ( qpts(2,qi) * unk(ri,m,qi) - i_dp * FD(qi,m,ri,rNN, unk) )
+						end do
+					end do
+					velo(2,n,m,qi) = nIntegrate(nR, nRx, nRy, dx, dy, f)
+				end do 
+			end do				
+		end do
+
+		return
+	end subroutine
+
+	complex(dp) function FD(qi, m, ri, rNN, unk)
+		!finite difference between ri and rNN
+		integer,		intent(in)		:: qi, m, ri, rNN
+		complex(dp),	intent(in)		:: unk(:,:,:)
+		real(dp)						:: h
+		!
+		h	= norm2( rpts(:,ri) - rpts(:,rNN)	)
+		FD	= unk(rNN,m,qi) - unk(ri,m,qi) / dcmplx(h)
+		!
+		return
+	end function
 
 
 

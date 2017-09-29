@@ -5,6 +5,7 @@ module projection
 	use omp_lib
 	use mathematics, 	only: 	dp, PI_dp, acc, myExp, nIntegrate, eigSolver,  mySVD, myMatInvSqrt, isUnit, isIdentity
 	use blochWf,		only:	genUnk, testNormUNK
+	use wannier,		only:	genKham
 	use sysPara
 	implicit none	
 	
@@ -34,7 +35,7 @@ module projection
 		complex(dp)	,	intent(in)		:: unk(:,:,:)   ! unk(nR,nG,nQ)
 		real(dp),		intent(out)		:: EnP(:,:)		! EnP(nWfs,nQ)
 		complex(dp)	,	intent(out)		:: unkP(:,:,:), tHopp(:,:,:)	! unk(nR,nWfs,nQ) , tHopp(nWfs, nWfs nSC)
-		complex(dp)	,	allocatable		:: loBwf(:,:), gnr(:,:), A(:,:), U(:,:)
+		complex(dp)	,	allocatable		:: loBwf(:,:), gnr(:,:), A(:,:), U(:,:), Ham(:,:)
 		complex(dp)						:: phase
 		integer							:: qi, xi
 		!
@@ -42,6 +43,7 @@ module projection
 		allocate(	gnr(nR,nWfs)		)
 		allocate( 	A(nBands,nWfs)		)
 		allocate(	U(nBands,nWfs)		)
+		allocate(	Ham(nWfs,nWfs)	)
 		!
 		if( debugProj ) then
 			write(*,*)	"[projectUnk]: debug mode, will test unk normalization after debuging"
@@ -73,10 +75,14 @@ module projection
 				call addThopp(qi, U,En, tHopp)
 			end do
 
-
-			call calcEnergies(tHopp,EnP)
-			!WRITE ENERGIES (REMOVE WRITTING OUT OF WANNIER METHOD)
-
+			!CALC ENERGIES OF INTERPOLATED BANDS
+			write(*,*)"[projectUnk]: hopping elements:"
+			write(*,*) tHopp(:,:,1)
+			
+			do qi = 1, nQ
+				call genKham(qi, tHopp, Ham)
+				call eigSolver(Ham(:,:), EnP(:,qi))
+			end do
 
 		else
 			write(*,*)	"[projectUnk]: projections disabled, use initial unk files"
@@ -140,29 +146,7 @@ module projection
 	end subroutine
 
 
-	subroutine calcEnergies(tHopp, EnP)
-		complex(dp),	intent(in)		:: tHopp(:,:,:)		!tHopp(nWfs,nWfs,nSC)
-		real(dp),		intent(out)		:: EnP(:,:)			!EnP(nWfs,nQ)
-		complex(dp),	allocatable		:: Ham(:,:)
-		complex(dp)						:: phase
-		integer							:: qi, R
-		!
-		allocate(	Ham(nWfs, nWfs)	)
-		!
-		do qi = 1, nQ
-			!SET UP HAMILTONIAN MATRIX
-			Ham	= dcmplx(0.0_dp)
-			do R = 1, nSC
-				phase		= myExp( dot_product(qpts(:,qi), Rcell(:,R)	)	)
-				Ham(:,:)	= Ham(:,:)	+ phase * tHopp(:,:,R)
-			end do
-			!SOLVE HAMILTONIAN
-			call eigSolver(Ham, EnP(:,qi))
-		end do
-		!
-		!
-		return
-	end subroutine
+	
 
 
 

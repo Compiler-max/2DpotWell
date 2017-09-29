@@ -4,6 +4,7 @@ module berry
 	use omp_lib
 	use mathematics,	only:	dp, PI_dp, i_dp, acc, myExp, myLeviCivita, nIntegrate
 	use sysPara
+	use blochWf,		only:	FDvelocities
 	use polarization,	only:	calcPolViaA
 	use semiClassics,	only:	calcFirstOrdP
 	use output,			only:	writeConnCurv
@@ -29,16 +30,16 @@ module berry
 
 
 !public
-	subroutine berryMethod(unk, En, veloBwf, pBerry, pNiu)
-		complex(dp),	intent(in)		:: unk(:,:,:), veloBwf(:,:,:,:)
+	subroutine berryMethod(unk, En, pBerry, pNiu)
+		complex(dp),	intent(in)		:: unk(:,:,:)
 		real(dp),		intent(in)		:: En(:,:)
 		real(dp),		intent(out)		:: pBerry(2), pNiu(3)
 		complex(dp),	allocatable		:: velo(:,:,:,:)
 		real(dp),		allocatable		:: Aw(:,:,:,:), FW(:,:,:)
 		!
-		allocate(			Aw(			3		, nWfs,nWfs			,	nQ		)				)
-		allocate(			velo(		3		, nWfs,nWfs			,	nQ		)				)
-		allocate(			FW(			3		, nWfs				,	nQ		)				)
+		allocate(			Aw(			3		, nWfs,nWfs			,	nQ		)			)
+		allocate(			velo(		3		, nWfs,nWfs			,	nQ		)			)
+		allocate(			FW(			3		, nWfs				,	nQ		)			)
 
 		call calcConnOnCoarse(unk, Aw)
 		call calcPolViaA(Aw,pBerry)
@@ -46,7 +47,8 @@ module berry
 		!ToDo: SWITCH FOR USING NIU
 		if(doNiu) then
 			!Get zero order velocities and curvatures
-			call calcVeloMat(unk, VeloBwf, velo)
+			!call calcVeloMat(unk, VeloBwf, velo)
+			call FDvelocities(unk, velo)
 			call calcCurv(En, velo, Fw)
 			!use them for calc of first order pol 
 			call calcFirstOrdP(Fw, Aw, velo, En, pNiu)

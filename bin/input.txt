@@ -41,7 +41,7 @@
     gaugeSwitch = 0
     nBands      = 33  
     nWfs        = 2 
-    trialOrbSw  = 0
+    trialOrbSw  = 1
     trialOrbVAL = 1.0 1.0
     R0          = 1
     nKx         = 8

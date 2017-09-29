@@ -75,7 +75,7 @@ qpts	= np.reshape(qpts,(nK,2))
 En		= np.reshape(rawData,(nK,nG))    #
 EW		= np.reshape(rawWann,(nK,nWfs))		
 
-print(EW)
+#print(EW)
 
 #PATH THROUGH K SPACE
 nPath 	= 4
@@ -92,34 +92,35 @@ xtickLabel = np.array([r'$X$',r'$\Gamma$',r'$M$',r'$Y$',r'$\Gamma$']) #symmetry 
 fig, ax = plt.subplots(1,1)
 
 n 		= 0
-##for each n go along k point path once
-#for n in range(0,nG):
-#	#X to G
-#	offs	= 0
-#	for i in range(0,nKx):	
-#		ibar			= Kind(nKx-1-i,0)
-#		EnPlot[offs+i]	= En[ibar,n]
-#	#G to M
-#	offs	= nKx		
-#	for i in range(0,nKx):
-#		ibar			= Kind(i,i)
-#		EnPlot[offs+i]	= En[ibar,n]
-#	#M to Y
-#	offs	= 2 * nKx
-#	for i in range(0,nKy):
-#		ibar			= Kind(nKx-1-i,nKy-1)
-#		EnPlot[offs+i]	= En[ibar,n]
-#
-#	#Y to G
-#	offs	= 3 * nKx
-#	for i in range(0,nKy):
-#		ibar			= Kind(0,nKy-1-i)
-#		EnPlot[offs+i]	= En[ibar,n]
-#
-#	ax.plot(kPlot,EnPlot,color='b',linewidth=0.4)
-#
+#BLOCH STATES
+#for each n go along k point path once
+for n in range(0,nG):
+	#X to G
+	offs	= 0
+	for i in range(0,nKx):	
+		ibar			= Kind(nKx-1-i,0)
+		EnPlot[offs+i]	= En[ibar,n]
+	#G to M
+	offs	= nKx		
+	for i in range(0,nKx):
+		ibar			= Kind(i,i)
+		EnPlot[offs+i]	= En[ibar,n]
+	#M to Y
+	offs	= 2 * nKx
+	for i in range(0,nKy):
+		ibar			= Kind(nKx-1-i,nKy-1)
+		EnPlot[offs+i]	= En[ibar,n]
+
+	#Y to G
+	offs	= 3 * nKx
+	for i in range(0,nKy):
+		ibar			= Kind(0,nKy-1-i)
+		EnPlot[offs+i]	= En[ibar,n]
+
+	ax.plot(kPlot,EnPlot,color='b',linewidth=0.4)
 
 
+#PROJECTED STATES
 for n in range(0,nWfs):
 	#X to G
 	offs	= 0

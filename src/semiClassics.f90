@@ -178,7 +178,7 @@ module semiClassics
 								eDiff		= ( 	En(ki,n0) - En(ki,n)	 )**3 	
 								!MATRIX
 								Fmat(i,j) 	= Fmat(i,j) -  myLeviCivita(j,k,l) * dreal(		Vtmp / dcmplx(eDiff)	)
-								write(*,*)"[addF3]: eDiff=",eDiff
+								!write(*,*)"[addF3]: eDiff=",eDiff
 							end if
 						end do
 						!

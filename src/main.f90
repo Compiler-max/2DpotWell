@@ -22,7 +22,7 @@ program main
 	
     real(dp), 		allocatable,	dimension(:,:)		:: 	wCent, wSprd
     complex(dp),	allocatable,	dimension(:,:,:)	:: 	wnF, unk, unkP, tHopp	!, ukn basCoeff,
-    complex(dp),	allocatable,	dimension(:,:,:,:)	::	vW,Velo	, veloBwf			!, Ah, Fh, Vh
+    complex(dp),	allocatable,	dimension(:,:,:,:)	::	veloBwf, veloP			!, Ah, Fh, Vh
     real(dp),		allocatable,	dimension(:,:)		:: 	En, EnP					!, EnH
     real(dp),		allocatable,	dimension(:,:,:)	::	Fw
     real(dp),		allocatable,	dimension(:,:,:,:)	::	Aw
@@ -44,6 +44,8 @@ program main
 	allocate(			En(						nBands	, 	nQ		)				)
 	allocate(			EnP(					nWfs	,	nQ		)				)
 	allocate(			tHopp(		nWfs	, 	nWfs	,	nSc		)				)
+	allocate(			veloP(	3,	nWfs	,	nWfs	,	nQ		)				)
+
 	allocate(			veloBwf(2,	nR		, 	nBands	, 	nQ		)				) 
 
 	!wannier interpolation arrays
@@ -122,7 +124,7 @@ program main
 
 
 
-
+	!TODO REWRITE WITH EnP, veloP
 	write(*,*)"*"
 	write(*,*)"*"
 	write(*,*)"*"
@@ -130,7 +132,7 @@ program main
 	call cpu_time(bT0)
 	if ( doBerry ) then
 		write(*,*)"[main]:**************************WAVEFUNCTION METHOD*************************"
-		call berryMethod(unkP, EnP, veloBwf, pBerry, pNiu)
+		call berryMethod(unkP, EnP, pBerry, pNiu)
 		write(*,*)"[main]: done with wavefunction method "
 	else
 		write(*,*)"[main]: berry method disabled"
