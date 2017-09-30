@@ -11,8 +11,8 @@ from mpl_toolkits.mplot3d import Axes3D
 
 
 #READ IN RAW DATA
-f0     		= open("rawData/kpts.dat",'rb')
-kpts   		= np.fromfile(f0,dtype='float64',count=-1)
+f0     		= open("rawData/qpts.dat",'rb')
+qpts   		= np.fromfile(f0,dtype='float64',count=-1)
 f0.close()
 
 f1	 		= open("rawData/rpts.dat",'rb') #rb = Read Binary
@@ -62,50 +62,50 @@ f7.close()
 
 #RESHAPE RAW DATA
 #rpts	= np.reshape(rpts,(nR,2))
-
+qpts	= np.reshape(qpts,(nK,2))
 unkR	= np.reshape(rawDataR,(nK, nWfs , nR))  #	unk(		nR		, 	nK		, nWfs	)		
 unkI	= np.reshape(rawDataI,(nK, nWfs , nR))
 unk		= unkR**2 + unkI**2
 
-for q in range(nK):
-	for n in range(nWfs):
-		print('q='+str(q)+', n=,'+str(n)+', oLap='+str(np.sum(unk[q,n,0:nR-2])/float(nR)))
-
+#for q in range(nK):
+#	for n in range(nWfs):
+#		print('q='+str(q)+', n=,'+str(n)+', oLap='+str(np.sum(unk[q,n,0:nR-2])/float(nR)))
+#
 
 #2D HEATMAP
 n = 0				#which state to plot
-k = 1				#k point index to plot				
+k = 36				#k point index to plot				
 
-#for n in range(nG):
-#	fig = plt.figure()
-#	ax = fig.add_subplot(111)
-#	
-#	unkcont	=	np.reshape(unk[k,n,:],(nRy, nRx))
-#	xpts	= np.linspace(0.0,aX*nKx,nRx)
-#	ypts	= np.linspace(0.0,aY*nKy,nRy)
-#	#X, Y = numpy.meshgrid(x, y)  # `plot_surface` expects `x` and `y` data to be 2D
-#	CS=ax.contour(xpts, ypts,unkcont,cmap='coolwarm', linewidth=0.1)
-#	cbar = plt.colorbar(CS)
-#	#ax.set_xlim(0, nKx*aX)
-#	#ax.set_ylim(0, nKy*aY)
-#	
-#	xticks 		= np.arange(0,aX*(nKx+1),  aX	)		
-#	xtickLabel	= np.arange(int(0),int(nKx+1)  )
-#	yticks 		= np.arange(0,aY*(nKy+1),  aY	)		
-#	ytickLabel	= np.arange(int(0),int(nKy+1)  )
-#	
-#	
-#	ax.set_xticks(xticks)	
-#	ax.set_xticklabels(xtickLabel,fontsize=12)
-#	ax.set_yticks(yticks)	
-#	ax.set_yticklabels(ytickLabel,fontsize=12)
-#	ax.grid(b=None, axis='both',color='black',alpha=0.2)
-#	ax.set_xlabel('a')
-#	ax.set_ylabel('b')
-#	
-#	ax.set_title('lattice periodic functions u_n='+str(n),fontsize =18)
-#	
-#	plt.show()
+for n in range(nWfs):
+	fig = plt.figure()
+	ax = fig.add_subplot(111)
+	
+	unkcont	=	np.reshape(unk[k,n,:],(nRy, nRx))
+	xpts	= np.linspace(0.0,aX*nKx,nRx)
+	ypts	= np.linspace(0.0,aY*nKy,nRy)
+	#X, Y = numpy.meshgrid(x, y)  # `plot_surface` expects `x` and `y` data to be 2D
+	CS=ax.contourf(xpts, ypts,unkcont,cmap='magma', linewidth=0.1)
+	cbar = plt.colorbar(CS)
+	#ax.set_xlim(0, nKx*aX)
+	#ax.set_ylim(0, nKy*aY)
+	
+	xticks 		= np.arange(0,aX*(nKx+1),  aX	)		
+	xtickLabel	= np.arange(int(0),int(nKx+1)  )
+	yticks 		= np.arange(0,aY*(nKy+1),  aY	)		
+	ytickLabel	= np.arange(int(0),int(nKy+1)  )
+	
+	
+	ax.set_xticks(xticks)	
+	ax.set_xticklabels(xtickLabel,fontsize=12)
+	ax.set_yticks(yticks)	
+	ax.set_yticklabels(ytickLabel,fontsize=12)
+	ax.grid(b=None, axis='both',color='black',alpha=0.2)
+	ax.set_xlabel('a')
+	ax.set_ylabel('b')
+	
+	ax.set_title('u_n='+str(n)+'. q=('+str(qpts[k,0])+','+str(qpts[k,1])+').',fontsize =18)
+	
+	plt.show()
 
 
 

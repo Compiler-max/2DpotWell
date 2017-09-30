@@ -142,7 +142,7 @@ for n in range(0,nWfs):
 	for i in range(0,nKy):
 		ibar			= Kind(0,nKy-1-i)
 		EWPlot[offs+i]	= EW[ibar,n]
-	ax.plot(kPlot,EWPlot,color='r',linewidth=0.4)
+	ax.plot(kPlot,EWPlot,marker='+',color='r',linewidth=0.4)
 
 
 ax.set_xlim([0,nKplot])

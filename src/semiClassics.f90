@@ -132,8 +132,8 @@ module semiClassics
 									!ENERGIES
 									eDiff		= ( 	En(ki,n0) - En(ki,n)	 )**2 	* 	 ( 	En(ki,n0) - En(ki,m)	)
 									!MATRIX
-									Fmat(i,j) 	= Fmat(i,j) +  myLeviCivita(j,k,l) * dreal(		Vtmp / dcmplx(eDiff)	)
-									!write(*,*)"[addF2]: Vtmp=",Vtmp
+									Fmat(i,j) 	= Fmat(i,j) +  myLeviCivita(j,k,l) * dreal(	Vtmp ) / eDiff	
+									!write(*,'(a,e10.3,a,e10.3)')"[addF2]: |Vtmp|=",abs(Vtmp), "eDiff=",eDiff
 								end if
 							end do
 						end do

@@ -116,7 +116,7 @@ module blochWf
 						if( abs(oLap) > acc ) then
 							isNorm	= .false.
 							fcount	= fcount + 1
-							write(*,'(a,i2,a,i2,a,i3,a,i3,a,e10.3,a,e10.3)')	"[testNormal]: n=",n,",m=",m,", q1=",q1,", q2=",q2," oLap =",dreal(oLap),"+i*",dimag(oLap)
+							!write(*,'(a,i2,a,i2,a,i3,a,i3,a,e10.3,a,e10.3)')	"[testNormal]: n=",n,",m=",m,", q1=",q1,", q2=",q2," oLap =",dreal(oLap),"+i*",dimag(oLap)
 						else
 							isNorm	= .true.
 						end if
@@ -144,13 +144,15 @@ module blochWf
 		complex(dp),	allocatable		:: f(:)
 		integer							:: qi, n, m, xi, yi, ri, rNN
 		!
-		allocate(	f(nR)	)
 		velo = dcmplx(0.0_dp)
-		!
+		
+		!$OMP PARALLEL DEFAULT(SHARED) PRIVATE(f, qi, n, m , xi, yi, ri, rNN)
+		allocate(	f(nR)	)
+		!$OMP DO COLLAPSE(3) SCHEDULE(STATIC)
 		do qi = 1, size(unk,3)
 			do n = 1, size(velo,2)
 				do m = 1, size(velo,3)
-
+					!
 					!X DERIVATIVE
 					do xi = 1, nRx
 						do yi = 1, nRy
@@ -181,10 +183,15 @@ module blochWf
 						end do
 					end do
 					velo(2,n,m,qi) = nIntegrate(nR, nRx, nRy, dx, dy, f)
+					!
 				end do 
 			end do				
 		end do
-
+		!$OMP END DO
+		deallocate(	f	)
+		!$OMP END PARALLEL
+		!
+		!
 		return
 	end subroutine
 

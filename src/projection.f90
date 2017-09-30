@@ -3,7 +3,7 @@ module projection
 	!	this includes the calculation of the orthonormalized projected bloch wavefunctions
 	!	and the FT of the bwfs to calculate the wannier functions
 	use omp_lib
-	use mathematics, 	only: 	dp, PI_dp, acc, myExp, nIntegrate, eigSolver,  mySVD, myMatInvSqrt, isUnit, isIdentity
+	use mathematics, 	only: 	dp, PI_dp, acc, myExp, nIntegrate, eigSolver,  mySVD, myMatInvSqrt, isUnit, isIdentity, isHermitian
 	use blochWf,		only:	genUnk, testNormUNK
 	use wannier,		only:	genKham
 	use sysPara
@@ -37,69 +37,85 @@ module projection
 		complex(dp)	,	intent(out)		:: unkP(:,:,:), tHopp(:,:,:)	! unk(nR,nWfs,nQ) , tHopp(nWfs, nWfs nSC)
 		complex(dp)	,	allocatable		:: loBwf(:,:), gnr(:,:), A(:,:), U(:,:), Ham(:,:)
 		complex(dp)						:: phase
-		integer							:: qi, xi
+		integer							:: qi, xi, n, m
 		!
 		allocate(	loBwf(nR,nWfs)		)
 		allocate(	gnr(nR,nWfs)		)
 		allocate( 	A(nBands,nWfs)		)
 		allocate(	U(nBands,nWfs)		)
-		allocate(	Ham(nWfs,nWfs)	)
+		allocate(	Ham(nWfs,nWfs)		)
 		!
 		if( debugProj ) then
 			write(*,*)	"[projectUnk]: debug mode, will test unk normalization after debuging"
 		end if
-
-		if ( doProj ) then
-			write(*,*)	"[projectUnk]: start with projections"
-			!SET UP ROTATION MATRIX U
-			call genTrialOrb(gnr)
-			!PROJECT
-			do qi = 1, nQ
+		!
+		!
+		call genTrialOrb(unk, gnr)
+		!
+		!PROJECT
+		do qi = 1, nQ
+			if( doProj ) then 
 				call calcAmat(qi,unk(:,:,qi),gnr, A) 
-				!
-				!USE SVD TO CALC U
 				call calcUmat(A, U)
-		
-				!ROTATE BLOCH STATES
-				!$OMP PARALLEL DO SCHEDULE(STATIC) DEFAULT(SHARED) PRIVATE(xi, phase)
-				do xi = 1, nR
-					phase		= myExp(	dot_product(qpts(:,qi),rpts(:,xi))		)
-					loBwf(xi,:) = phase * matmul(	unk(xi,1:nBands,qi), U	)
+			else
+				write(*,*)	"[projectUNK]: projection disabled, U= Identity"
+				U = dcmplx(0.0_dp)
+				do n = 1, size(U,1)
+					do m = 1, size(U,2)
+						if(n==m) then
+							U(n,m)	= dcmplx(1.0_dp)
+						end if
+					end do
 				end do
-				!$OMP END PARALLEL DO
-				!
-				!OVERWRITE UNKS WITH PROJECTED UNKs
-				call genUnk(qi, lobWf, unkP(:,:,qi))
-
-				!ADD CURRENT Q TO HOPPING MATRIX
-				call addThopp(qi, U,En, tHopp)
+			end if
+			!
+			!ROTATE BLOCH STATES
+			!$OMP PARALLEL DO SCHEDULE(STATIC) DEFAULT(SHARED) PRIVATE(xi, phase)
+			do xi = 1, nR
+				phase		= myExp(	dot_product(qpts(:,qi),rpts(:,xi))		)
+				loBwf(xi,:) = matmul(	phase * unk(xi,1:nBands,qi), U	)
 			end do
+			!$OMP END PARALLEL DO
+			!
+			!OVERWRITE UNKS WITH PROJECTED UNKs
+			call genUnk(qi, lobWf, unkP(:,:,qi))
+			!ADD CURRENT Q TO HOPPING MATRIX
+			call addThopp(qi, U,En, tHopp)
+		end do
+		!
+		!CALC ENERGIES OF INTERPOLATED BANDS
+		do qi = 1, nQ
+			call genKham(qi, tHopp, Ham)
+			if( debugProj) then
+				if( .not. isHermitian(Ham) ) then
+					write(*,*)	"[projectUnk]: energy interpolation, Hamiltonian not hermitian at qi=",qi
+				end if
+			end if
+			call eigSolver(Ham(:,:), EnP(:,qi))
+		end do
 
-			!CALC ENERGIES OF INTERPOLATED BANDS
-			write(*,*)"[projectUnk]: hopping elements:"
-			write(*,*) tHopp(:,:,1)
-			
-			do qi = 1, nQ
-				call genKham(qi, tHopp, Ham)
-				call eigSolver(Ham(:,:), EnP(:,qi))
-			end do
 
-		else
-			write(*,*)	"[projectUnk]: projections disabled, use initial unk files"
-			unkP(:,:,:)	= unk(:,1:nWfs,:)
-			EnP(:,:)	= En(1:nWfs,:)
-		end if
+		!
+		!
+		!
+		!
 		write(*,*)	"[projectUnk]: done with projections at each k point"	
 		!
 		!
 		!DEBUG
 		if( debugProj ) then
 			write(*,*)		"[projectUnk]: start test normalization of projected unks"
-			if(.not. testNormUNK(unkP)	) then
-				write(*,*)	"[projectUnk]: found normalization issues for projected unks"
-			else
-				write(*,*)	"[projectUnk]: no issues detected"
-			end if
+			!if(.not. testNormUNK(unkP)	) then
+			!	write(*,*)	"[projectUnk]: found normalization issues for projected unks"
+			!else
+			!	write(*,*)	"[projectUnk]: no issues detected"
+			!end if
+			!
+			!
+			if( .not. doProj ) then 
+				write(*,*)		"[projectUnk]: start unk comparisson"
+				call compareUNKs(unk,unkP)
+			end if 
 		end if
 		write(*,*)			"[projectUnk]: finished debuging."
 		!
@@ -111,7 +127,7 @@ module projection
 
 
 	subroutine addThopp(qi, U,En, tHopp)
-		!	<0|H|R> = \sum_q Vq^dagger Eq Vq
+		!	<0|H|R> = (1/sqrt(N)) \sum_q Vq^dagger Eq Vq
 		!	where Eq is diagonal matrix (energies in Hamiltonian gauge)
 		integer,		intent(in)		:: qi
 		complex(dp),	intent(in)		:: U(:,:)	!	U(nBands,nWfs)
@@ -124,8 +140,9 @@ module projection
 		allocate(	tmp(nBands,nWfs)	)
 		allocate(	EV(nWfs,nWfs) 		)
 		allocate(	Udag(nWfs,nBands)	)
+		!		
+		!
 		do R = 1, nSC
-			phase			= myExp( - dot_product( qpts(:,qi), Rcell(:,R) ) 		)
 			!tmp = Eq Vq
 			do m = 1, nWfs
 				do n = 1, nBands
@@ -136,12 +153,16 @@ module projection
 			Udag	= dconjg( transpose(U)	)
 			EV		= matmul(Udag, tmp)
 			!ADD results
-			tHopp(:,:,R)	= tHopp(:,:,R) + phase * EV(:,:)
+			phase			= myExp( - dot_product( qpts(:,qi), Rcell(:,R) ) 		)
+			tHopp(:,:,R)	= tHopp(:,:,R) + phase * EV(:,:) /  dcmplx(real(nSC,dp))
 		end do
+		!
+		!tHopp	= tHopp    
+		!
+		!
 		deallocate(	tmp	)
 		deallocate(	EV 	)
-		!
-		!
+		deallocate( Udag)
 		return
 	end subroutine
 
@@ -152,35 +173,60 @@ module projection
 
 
 !privat:
-	subroutine genTrialOrb(gnr)
+	subroutine genTrialOrb(unk, gnr)
+		complex(dp),	intent(in)	:: unk(:,:,:)       !gnr( nR, nWfs)	
 		complex(dp),	intent(out)	:: gnr(:,:)       !gnr( nR, nWfs)	
 		real(dp)					:: posX, posY, xc, k, L
 		complex(dp)					:: A
-		integer						:: n, ri, at
+		integer						:: n, ri, at, gammaP
 		!
 		if(nWfs > nBands) then
 			write(*,*)"[genTrialOrb]: warning, nWfs larger then nBands! No propper subspace..."
 		end if
 
-		gnr = dcmplx(0.0_dp)
+		gammaP	= getGammaPoint()
+		gnr 	= dcmplx(0.0_dp)
 		
-		do ri = 1, nR
-			!ONLY IN HOME UNIT CELL
-			if(  rpts(1,ri) < aX .and. rpts(2,ri) < aY) then
-				if( 	insideAt(1, rpts(:,ri)))	then
-					gnr(ri,1)	= gVal(1,1,ri) 
-					!gnr(ri,3)	= dcmplx(1.0_dp)
+
+		!ONTO UNKs
+		!do n = 1, nWfs
+		!	do ri = 1, nR
+		!		gnr(ri,n)	= 	unk(ri,n,gammaP)
+		!	end do
+		!end do
+
+
+
+
+		!ATOM LIKE (LOCALIZED)
+		do n = 1, nWfs-1, 2
+			do ri = 1, nR
+				if(  rpts(1,ri) < aX .and. rpts(2,ri) < aY) then
+					if( 	insideAt(1, rpts(:,ri)))	then
+						gnr(ri,n)	= gVal(1,n,ri) 
+					end if
+					!
+					if( 	insideAt(2, rpts(:,ri))		)	then
+						gnr(ri,n+1)	= gVal(2,n+1,ri)
+					end if
 				end if
-				!
-				if( 	insideAt(2, rpts(:,ri))		)	then
-					gnr(ri,2)	= gVal(1,1,ri)
-					!gnr(ri,3)	= dcmplx(1.0_dp)
-				end if
-				!if( .not. insideAt(1, rpts(:,ri))	 .and.  .not. insideAt(2, rpts(:,ri))	) then
-				!	gnr(ri,3)	= dcmplx(1.0_dp)
-				!end if
-			end if
+			end do
 		end do
+
+		!HYBRID STATES
+		!do n = 1, nWfs
+		!	do ri = 1, nR
+		!		!ONLY IN HOME UNIT CELL
+		!		if(  rpts(1,ri) < aX .and. rpts(2,ri) < aY) then
+		!			do at = 1, nAt 
+		!				if( insideAt(at,rpts(:,ri))) then
+		!					gnr(ri,n)	= gVal(at,n,ri)
+		!				end if 
+		!			end do
+		!		end if
+		!	end do
+		!end do
+
 
 
 		return
@@ -320,7 +366,34 @@ module projection
 
 
 
+	subroutine compareUNKs(unk,unkP)
+		complex(dp),	intent(in)		:: unk(:,:,:), unkP(:,:,:)
+		integer							:: ri, n, qi, fCount, tCount
+		real(dp)						:: avg
+		!
+		avg		= 0.0_dp
+		fCount 	= 0
+		tCount	= 0
+		!
+		do qi = 1, size(unkP,3)
+			do n = 1, size(unkP,2)
+				do ri = 1, size(unkP,1)
+					if( abs( unkP(ri,n,qi)-unk(ri,n,qi)) > acc 	) then
+						fCount 	= fCount + 1
+						avg 	= avg + abs( unkP(ri,n,qi)-unk(ri,n,qi) )
+					end if
+					tCount = tCount +1
+				end do
+			end do
+		end do
+		!
+		avg = avg / real(fCount,dp)
+		write(*,*)"[compareUNKs]: comparisson of unks before and after unks where projected with Identity mat"
+		write(*,'(a,i8,a,i12,a,f10.8)')"[compareUNKs]: ", fCount, " of ", tCount, " tests failed, average difference =",avg
 
+
+		return
+	end subroutine
 
 
 

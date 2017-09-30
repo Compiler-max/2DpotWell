@@ -32,7 +32,7 @@ module peierls
 		allocate(	EnPei(nWfs,nQ)		)
 		!
 		!
-		call peierlsSub(tHopp)
+		!call peierlsSub(tHopp)
 
 		do qi = 1, nQ
 			call genKham(qi, tHopp, Ham)
@@ -49,7 +49,7 @@ module peierls
 
 
 	subroutine peierlsSub(tHopp)
-
+		complex(dp),	intent(inout)		:: tHopp(:,:,:)
 		return
 	end subroutine
 

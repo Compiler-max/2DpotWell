@@ -15,7 +15,7 @@
 
 [numerics]
     nG          = 256
-    Gcut        = 4.6	     
+    Gcut        = 1.3	     
     nQx         = 8   
     nQy         = 8
     nSCx        = 8 
@@ -27,20 +27,20 @@
 [methods]
     doProj      = t
     doBerry     = t
-    doWanni     = t
+    doWanni     = t#
     doNiu       = t
     doPei       = f
 
 [debug]
-    debugProj   = f
     debugHam    = f
-    debugWann   = t
+    debugProj   = t
+    debugWann   = f
 
 
 [wann]
     gaugeSwitch = 0
     nBands      = 33  
-    nWfs        = 2 
+    nWfs        = 33
     trialOrbSw  = 1
     trialOrbVAL = 1.0 1.0
     R0          = 1

@@ -35,13 +35,14 @@ module wannier
 	subroutine wannMethod(unk, pWann)
 		complex(dp),	intent(in)		:: unk(:,:,:)		!	unk(	nR 	,	nWfs	, nQ	)
 		real(dp),		intent(out)		:: pWann(2)
-		complex(dp),	allocatable		:: wnF(:,:,:)		
+		complex(dp),	allocatable		:: wnF(:,:,:)
 		real(dp),		allocatable		:: wCent(:,:), wSprd(:,:)
 		integer							:: normCount
 		!
 		allocate(			wnF( 		nR		, 	nSC		, nWfs		)				)
 		allocate(			wCent(		2		, 	nWfs				)				)
 		allocate(			wSprd(		2		, 	nWfs				)				)
+
 		!
 		!Generate Wannier functions and calc polarization from wannier centers
 		call genWannF2(unk, wnF)
@@ -56,6 +57,12 @@ module wannier
 		!write results
 		call writeWannFiles(wnF, wCent, wSprd)
 		write(*,*)	"[wannMethod]: wrote wannier files"
+
+		
+
+		!call interpolateBands(wnf)
+
+
 
 		!DEBUG
 		if(debugWann) then
@@ -77,6 +84,7 @@ module wannier
 
 
 	subroutine genKham(qi, tHopp, Ham)
+		! H(k)	= sum_R e^(ikR)  <0n|H|Rm>
 		integer,		intent(in)		:: qi
 		complex(dp),	intent(in)		:: tHopp(:,:,:)		!tHopp(nWfs,nWfs,nSC)
 		complex(dp),	intent(out)		:: Ham(:,:)
@@ -256,14 +264,14 @@ module wannier
 		complex(dp),	intent(in)		:: wnF(:,:,:)
 		complex(dp),	allocatable		:: Htb(:,:)
 		real(dp),		allocatable		:: Ew(:,:)
-		integer							:: ki
+		integer							:: qi
 		!
 		allocate(	Htb(nWfs,nWfs)	)
-		allocate(	Ew(nWfs, nK)	)
+		allocate(	Ew(nWfs, nQ)	)
 		!
-		do ki = 1, nK
-			call genTBham(ki,wnF,Htb)
-			call eigSolver(Htb, Ew(:,ki))
+		do qi = 1, nQ
+			call genTBham(qi,wnF,Htb)
+			call eigSolver(Htb, Ew(:,qi))
 		end do
 		!
 		call writeInterpBands(Ew)
@@ -272,12 +280,12 @@ module wannier
 		return
 	end subroutine
 
-	subroutine genTBham(ki, wnF, Htb)
+	subroutine genTBham(qi, wnF, Htb)
 		!subroutine generates a tight binding Hamiltonian via
 		!
 		!	H_n,m = \sum{R} exp{i k.R} <0n|H(k)|Rm>
 		!
-		integer,		intent(in)		:: ki
+		integer,		intent(in)		:: qi
 		complex(dp),	intent(in)		:: wnF(:,:,:)	!wnF(nR	, nSC, nWfs	)
 		complex(dp),	intent(out)		:: Htb(:,:) 	!Htb(nWfs,nWfs)
 		integer							:: n,m, R
@@ -291,7 +299,7 @@ module wannier
 			do n = 1, nWfs
 				!SUM OVER CELLS R
 				do R = 1, nSC
-					phaseR		= myExp( 	dot_product( kpts(:,ki) , Rcell(:,R) )			)
+					phaseR		= myExp( 	dot_product( qpts(:,qi) , Rcell(:,R) )			)
 					call wHw(1,R,n,m, wnF, Hexp)	
 					Htb(n,m)	= Htb(n,m) + phaseR * Hexp
 				end do
