@@ -189,17 +189,22 @@ module output
 
 
 	subroutine writeConnCurv(Aconn, Fcurv)
-		real(dp),		intent(in)		:: Aconn(:,:,:,:), Fcurv(:,:,:,:)
+		complex(dp),		intent(in)		:: Aconn(:,:,:,:), Fcurv(:,:,:,:)
+		real(dp),			allocatable		:: buffer(:,:,:,:)
+		!
+		allocate(	buffer( size(Aconn,1),size(Aconn,2),size(Aconn,3),size(Aconn,4) )		)
 		!
 		!CONNECTION
+		buffer	= dreal(Aconn)
 		open(unit=410,file='rawData/AconnR.dat',form='unformatted',access='stream',action='write')
-		write(410)	Aconn
+		write(410)	buffer
 		close(410)
 		!
 		!
-		!CURVATURE	
+		!CURVATURE
+		buffer	= dreal(Fcurv)	
 		open(unit=420,file='rawData/FcurvR.dat',form='unformatted',access='stream',action='write')
-		write(420) Fcurv	
+		write(420) buffer	
 		close(420)
 		!
 		!

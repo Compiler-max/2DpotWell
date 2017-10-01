@@ -39,8 +39,15 @@ module gaugeTrafo
 			write(*,'(a,i4,a)')	"[DoGaugeTrafo]: ki=",ki," gauge Trafo done"
 		end do	
 		write(*,*)	"[DoGaugeTrafo]: by by"
-
-
+		!
+		!
+		deallocate(	rHopp	)
+		deallocate(	U		)
+		deallocate(	HW		)
+		deallocate(	HaW		)
+		deallocate(	AW		)
+		deallocate(	Fw		)
+		!
 		return
 	end subroutine
 

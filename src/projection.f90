@@ -6,7 +6,6 @@ module projection
 	use mathematics, 	only: 	dp, PI_dp, acc, myExp, nIntegrate, eigSolver,  mySVD, myMatInvSqrt, isUnit, isIdentity, isHermitian
 	use sysPara
 	use blochWf,		only:	genUnk, testNormUNK
-	use wannier,		only:	genKham
 	use output,			only:	writeInterpBands
 	implicit none	
 	
@@ -38,7 +37,7 @@ module projection
 		complex(dp)	,	allocatable		:: loBwf(:,:), gnr(:,:), A(:,:), U(:,:), Ham(:,:)
 		real(dp),		allocatable		:: EnP(:,:)	
 		complex(dp)						:: phase
-		integer							:: qi, xi, n, m
+		integer							:: qi, xi, n, m, R
 		!
 		allocate(	loBwf(nR,nWfs)		)
 		allocate(	gnr(nR,nWfs)		)
@@ -87,12 +86,21 @@ module projection
 		!
 		!CALC ENERGIES OF INTERPOLATED BANDS
 		do qi = 1, nQ
-			call genKham(qi, tHopp, Ham)
+			!FOURIER TRAFO ON tHOPP
+			Ham	= dcmplx(0.0_dp)
+			do R = 1, nSC
+				phase		= myExp( dot_product(qpts(:,qi), Rcell(:,R)	)	)
+				Ham(:,:)	= Ham(:,:)	+ phase * tHopp(:,:,R)
+			end do
+			!
+			!TEST IF HERMITIAN
 			if( debugProj) then
 				if( .not. isHermitian(Ham) ) then
 					write(*,*)	"[projectUnk]: energy interpolation, Hamiltonian not hermitian at qi=",qi
 				end if
 			end if
+			!
+			!SOLVE HAM
 			call eigSolver(Ham(:,:), EnP(:,qi))
 		end do
 

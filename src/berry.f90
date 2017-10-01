@@ -48,7 +48,7 @@ module berry
 
 
 		!OUTPUT
-		call writeConnCurv(dreal(AconnH), dreal(FcurvH))
+		call writeConnCurv(AconnH, FcurvH)
 		!
 		!
 		return
