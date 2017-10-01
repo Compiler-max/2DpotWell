@@ -42,11 +42,9 @@ program main
 	allocate(			unk(		nR 		,	nG		, 	nQ		)				)
 	allocate(			unkP(		nR 		,	nWfs	, 	nQ		)				)
 	allocate(			En(						nBands	, 	nQ		)				)
-	allocate(			EnP(					nWfs	,	nQ		)				)
 	allocate(			tHopp(		nWfs	, 	nWfs	,	nSc		)				)
-	allocate(			veloP(	3,	nWfs	,	nWfs	,	nQ		)				)
+	
 
-	allocate(			veloBwf(2,	nR		, 	nBands	, 	nQ		)				) 
 
 	!wannier interpolation arrays
 	!allocate(			Ah(		3		,	nK		, nWfs, nWfs	)			)
@@ -77,7 +75,7 @@ program main
 	call cpu_time(kT0)
 	!
 	!
-	call solveHam(unk, En, VeloBwf)
+	call solveHam(unk, En)
 	!
 	call cpu_time(kT1)
 	write(*,*)"[main]: done solving Schroedinger eq."
@@ -95,7 +93,7 @@ program main
 	call cpu_time(pT0)
 	!
 	!
-	call projectUnk(En, unk, EnP, unkP,tHopp)
+	call projectUnk(En, unk, unkP,tHopp)
 	!
 	call cpu_time(pT1)
 	write(*,*)"[main]: done with projections."
@@ -132,7 +130,7 @@ program main
 	call cpu_time(bT0)
 	if ( doBerry ) then
 		write(*,*)"[main]:**************************WAVEFUNCTION METHOD*************************"
-		call berryMethod(unkP, EnP, pBerry, pNiu)
+		call berryMethod(unkP, tHopp, pBerry, pNiu)
 		write(*,*)"[main]: done with wavefunction method "
 	else
 		write(*,*)"[main]: berry method disabled"
@@ -186,7 +184,6 @@ program main
 	call writeMeshInfo() 
 	call writeMeshBin()
 	call writeUNKs(unkP)
-	call writeInterpBands(EnP)
 	write(*,*)"[main]: ...wrote mesh info"
 	
 	
@@ -213,7 +210,7 @@ program main
 	write(*,*)"*"
 	write(*,*)"*"
 	write(*,*) '**************TIMING INFORMATION************************'
-	call printTiming(aT, kT, pT, wT, bT, oT, mastT)
+	call printTiming(aT, kT, pT, wT, bT,peiT, oT, mastT)
 
 	deallocate(			unk			)
 	deallocate(			unkP		)

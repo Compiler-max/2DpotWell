@@ -2,7 +2,7 @@ module semiClassics
 	!this module uses a semiclassic approach to calculate the first ordrer correction
 	!	to the polariztion induced by a perturbive magnetic field
 	! 	see Niu PRL 112, 166601 (2014)
-	use mathematics,	only:	dp, PI_dp, i_dp, myExp, myLeviCivita
+	use mathematics,	only:	dp, PI_dp, i_dp,acc, myExp, myLeviCivita
 	use sysPara,		only:	Bext
 
 	implicit none
@@ -27,14 +27,14 @@ module semiClassics
 	subroutine	calcFirstOrdP(Fcurv, Aconn, Velo, En, p1)
 		!calculates the first order polarization p1 according to
 		!	P'= -int_dk [0.5 (Curv.Velo)*B_ext + a']
-		real(dp),		intent(in)		::	Fcurv(:,:,:,:), Aconn(:,:,:,:)	!Fcurv(3,nWfs, nQ)
+		complex(dp),		intent(in)	::	Fcurv(:,:,:,:), Aconn(:,:,:,:)	!Fcurv(3,nWfs, nQ)
 		complex(dp),	intent(in)		:: 	Velo(:,:,:,:)		!	 Velo(3, nWfs,nWfs, nQ)	
 		real(dp),		intent(in)		::	En(:,:)				!	En(			nWfs, nQ)						
 		real(dp),		intent(out)		:: 	p1(3)
 		complex(dp), 	allocatable		::	f(:,:)
 		real(dp)						::	pn(3)
 		real(dp)						:: 	Fmat(3,3)
-		complex(dp)						:: 	densCorr(3)
+		real(dp)						:: 	densCorr(3)
 		integer							:: 	n, ki, nSize, kSize
 		!
 		nSize	= size(Velo,3)
@@ -53,8 +53,11 @@ module semiClassics
 			!FILL INTEGRATION ARRAY
 			do ki = 1, kSize
 				!PHASE SPACE DENSITY CORRECTION
-				densCorr	= 0.5_dp * dot_product(		Fcurv(:,n,n,ki), Aconn(:,n,n,ki) 	)		* Bext
+				densCorr	= 0.5_dp * dot_product(		dreal(Fcurv(:,n,n,ki)), dreal(Aconn(:,n,n,ki) )	)		* Bext
 				f(:,ki)		= f(:,ki) + densCorr
+				if( norm2(densCorr) > acc ) then
+					write(*,*)	"[calcFirstOrdP]: warning the densCorr is none zero, norm2(densCorr)",norm2(densCorr)
+				end if
 				!POSITIONAL SHIFT
 				call calcFmat(n,ki,Velo,En, Fmat)
 				!write(*,*)"ki=",ki

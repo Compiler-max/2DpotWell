@@ -336,8 +336,8 @@ module output
 
 
 
-	subroutine printTiming(aT,kT,pT,wT,bT,oT,mastT)
-		real,	intent(in)	:: aT,kT,pT,wT,bT,oT,mastT
+	subroutine printTiming(aT,kT,pT,wT,bT,peiT,oT,mastT)
+		real,	intent(in)	:: aT,kT,pT,wT,bT,peiT,oT,mastT
 		!
 		print '    ("r&alloc  time spend     = ",f15.7," seconds = ",f15.7,"% of overall time")',& 
 									aT 				, 100*aT		   	/mastT
@@ -349,7 +349,8 @@ module output
 									wT				, 100*wT		   	/mastT
 		print '    ("berry method            = ",f15.7," seconds = ",f15.7,"% of overall time")',& 
 									bT				, 100*bT		   	/mastT							
-									
+		print '    ("peierls method          = ",f15.7," seconds = ",f15.7,"% of overall time")',& 
+									peiT			, 100*peiT		   	/mastT													
 		print '    ("writing  time spend     = ",f15.7," seconds = ",f15.7,"% of overall time")',& 
 									oT 				, 100*oT		   	/mastT
 		print '    ("other    time spend     = ",f15.7," seconds = ",f15.7,"% of overall time")',& 

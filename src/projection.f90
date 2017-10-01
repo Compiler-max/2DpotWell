@@ -4,9 +4,10 @@ module projection
 	!	and the FT of the bwfs to calculate the wannier functions
 	use omp_lib
 	use mathematics, 	only: 	dp, PI_dp, acc, myExp, nIntegrate, eigSolver,  mySVD, myMatInvSqrt, isUnit, isIdentity, isHermitian
+	use sysPara
 	use blochWf,		only:	genUnk, testNormUNK
 	use wannier,		only:	genKham
-	use sysPara
+	use output,			only:	writeInterpBands
 	implicit none	
 	
 	private
@@ -28,14 +29,14 @@ module projection
 	contains
 !public:
 
-	subroutine projectUnk(En, unk, EnP, unkP,tHopp)	!projectBwf(qi, bWf, loBwf, U(:,:), failCount, smin, smax)
+	subroutine projectUnk(En, unk, unkP,tHopp)	!projectBwf(qi, bWf, loBwf, U(:,:), failCount, smin, smax)
 		!does the projection onto Loewdin-orthonormalized Bloch-like states
 		!see Marzari, Vanderbilt PRB 56, 12847 (1997) Sec.IV.G.1 for detailed description of the method 
 		real(dp),		intent(in)		:: En(:,:)		!	En(nBands,nQ)
 		complex(dp)	,	intent(in)		:: unk(:,:,:)   ! unk(nR,nG,nQ)
-		real(dp),		intent(out)		:: EnP(:,:)		! EnP(nWfs,nQ)
 		complex(dp)	,	intent(out)		:: unkP(:,:,:), tHopp(:,:,:)	! unk(nR,nWfs,nQ) , tHopp(nWfs, nWfs nSC)
 		complex(dp)	,	allocatable		:: loBwf(:,:), gnr(:,:), A(:,:), U(:,:), Ham(:,:)
+		real(dp),		allocatable		:: EnP(:,:)	
 		complex(dp)						:: phase
 		integer							:: qi, xi, n, m
 		!
@@ -44,6 +45,7 @@ module projection
 		allocate( 	A(nBands,nWfs)		)
 		allocate(	U(nBands,nWfs)		)
 		allocate(	Ham(nWfs,nWfs)		)
+		allocate(	EnP(nWfs,nQ)		)
 		!
 		if( debugProj ) then
 			write(*,*)	"[projectUnk]: debug mode, will test unk normalization after debuging"
@@ -98,7 +100,7 @@ module projection
 		!
 		!
 		!
-		!
+		call writeInterpBands(EnP)
 		write(*,*)	"[projectUnk]: done with projections at each k point"	
 		!
 		!

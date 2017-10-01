@@ -19,40 +19,34 @@ module blochWf
 
 
 !public
-	subroutine genBwfVelo(qi,basCoeff, unk, velobWf)
+	subroutine genBwfVelo(qi,basCoeff, unk)
 		!generates the bloch wavefunctions, with  the basCoeff from eigSolver, using
 		!	call zgemm(transa, transb, m, n, k, alpha, a	  , lda, b		, ldb, beta, c , ldc)
 		!			c = alpha * op(a) *op(b) + beta * c
 		integer		, intent(in)	:: qi
 		complex(dp)	, intent(in)	:: basCoeff(:,:)
-		complex(dp)	, intent(out)	:: unk(:,:,:), velobWf(:,:,:,:)	
-		complex(dp)	, allocatable	:: basVec(:), veloBasX(:), veloBasY(:), tmp(:)
+		complex(dp)	, intent(out)	:: unk(:,:,:)
+		complex(dp)	, allocatable	:: basVec(:)
 		integer 				 	:: xi
 		complex(dp)					:: phase
 		!
 
 		!
-		!$OMP PARALLEL DEFAULT(SHARED) PRIVATE(xi,phase, basVec, veloBasX, veloBasY)
+		!$OMP PARALLEL DEFAULT(SHARED) PRIVATE(xi,phase, basVec)
 		allocate(	basVec(		nG)			)
-		allocate(	veloBasX(	nWfs)		)
-		allocate(	veloBasY(	nWfs)		)
 		!$OMP DO SCHEDULE(DYNAMIC,nRx) 
 		do xi = 1, nR
 			!GET BASIS
-			call calcBasis(qi,xi, basVec, veloBasX, veloBasY)
+			call calcBasis(qi,xi, basVec)
 			!
 			!WAVE FUNCTIONS
 			phase			= myExp( -1.0_dp * dot_product( qpts(:,qi), rpts(:,xi) )		)
 			unk(xi,:,qi)	= phase * matmul(basVec,basCoeff) !/ dsqrt(vol)
 			!
-			!!VELOCITIES
-			velobWf(1,xi,:,qi)	= matmul(veloBasX,basCoeff(1:nWfs,1:nWfs)) !/ dsqrt(vol)
-			velobWf(2,xi,:,qi)	= matmul(veloBasY,basCoeff(1:nWfs,1:nWfs)) !/ dsqrt(vol)
+			
 		end do
 		!$OMP END DO
 		deallocate(	basVec		)
-		deallocate(	veloBasX	)
-		deallocate(	veloBasY	)
 		!$OMP END PARALLEL
 		!
 		return 
@@ -210,32 +204,22 @@ module blochWf
 
 
 !privat
-	subroutine calcBasis(qi, ri, basVec, veloBasX, veloBasY)
+	subroutine calcBasis(qi, ri, basVec)
 		!calculates the basis vectors e^i(k+G).r
 		!	if |k+G| is larger then the cutoff the basis vector is set to zero
 		!	the cutoff enforces a symmetric base at each k point
 		integer,	 intent(in)		:: qi, ri
-		complex(dp), intent(out)	:: basVec(:), veloBasX(:), veloBasY(:)
+		complex(dp), intent(out)	:: basVec(:)
 		real(dp)				 	:: k(2)
-		complex(dp)				 	:: phase
 		integer 				 	::	i 
 		!
 		do i =1, nG
 			k(:) = qpts(:,qi) + Gvec(:,i)
 			!
 			if( norm2(k) < Gcut ) then
-				phase			= myExp( dot_product( k, rpts(:,ri) )		)
-				basVec(i) 		= phase
-				if( i <= nWfs) then
-					veloBasX(i) 	= phase * i_dp * (	qpts(1,qi) + Gvec(1,i)	)
-					veloBasY(i)		= phase * i_dp * (	qpts(2,qi) + Gvec(2,i)	)
-				end if
+				basVec(i) 		= myExp( dot_product( k, rpts(:,ri) )		)
 			else
 				basVec(i) 		= dcmplx( 0.0_dp )
-				if( i <= nWfs) then
-					veloBasX(i)		= dcmplx( 0.0_dp )
-					veloBasY(i)		= dcmplx( 0.0_dp )
-				end if
 			end if
 		end do
 		!

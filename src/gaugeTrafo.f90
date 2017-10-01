@@ -1,7 +1,7 @@
 module gaugeTrafo
 	use mathematics,	only:	dp, PI_dp, i_dp, acc, machineP, myExp, myLeviCivita, nIntegrate, eigSolver, rotMat, myCommutat
 	use sysPara
-	use berry,			only:	
+	!use berry,			only:	
 	use wannier,		only:	genUnkW
 
 	!use 
@@ -21,23 +21,25 @@ module gaugeTrafo
 		complex(dp),	allocatable		:: rHopp(:,:,:,:), U(:,:), HW(:,:), HaW(:,:,:), AW(:,:,:), FW(:,:,:,:)
 		integer							:: ki
 		!
-		
+		write(*,*)	"[DoGaugeTrafo]: hello"
 		allocate(	rHopp(	2	,	nWfs, 	nWfs, 	nSC		)		)
 		allocate(	U(		nWfs, 	nWfs					)		)
 		allocate(	HW(		nWfs, 	nWfs					)		)
 		allocate(	HaW(	2	,	nWfs, 	nWfs			)		)
 		allocate(	AW(		2	,	nWfs, 	nWfs			)		)
-		allocate(	AW(		2	,	nWfs, 	nWfs			)		)
-		allocate(	Fw(		2	,	2	,	nWfs,	nWfs	)	)
+		allocate(	Fw(		2	,	2	,	nWfs,	nWfs	)		)
 
+		write(*,*)	"[DoGaugeTrafo]: allocated"
 		call calcRhopp(unkW, rHopp)
-
+		write(*,*)	"[DoGaugeTrafo]: calculated the rHopping matrix elements"
 
 		do ki = 1, nK
 			call interpolateMat(tHopp, rHopp, HW, HaW, AW, FW)
+			write(*,'(a,i4,a)')	"[DoGaugeTrafo]: ki=",ki," interpolation done"
 			call gaugeBack(Hw, HaW, AW, FW, EnH(:,ki), U, AconnH(:,:,:,ki), FcurvH(:,:,:,ki), veloH(:,:,:,ki))	
+			write(*,'(a,i4,a)')	"[DoGaugeTrafo]: ki=",ki," gauge Trafo done"
 		end do	
-
+		write(*,*)	"[DoGaugeTrafo]: by by"
 
 
 		return
@@ -216,9 +218,12 @@ module gaugeTrafo
 		integer							:: qi, R
 		complex(dp)						:: phase
 		!
+		write(*,*)	"[calcRhopp]: hello"
 		allocate(	AWcoarse(2,nR,nWfs,nQ)	)
+		write(*,*)	"[calcRhopp]: allocated awcoarse"
 		!
 		call calcConnOnCoarse(unkW, AWcoarse)
+		write(*,*)	"[calcRhopp]: calculated the connection"
 		do R = 1, nSC
 			do qi = 1, nQ
 				phase			= myExp( -1.0_dp * dot_product(qpts(:,qi),Rcell(:,R))		)

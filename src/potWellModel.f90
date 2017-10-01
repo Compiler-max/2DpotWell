@@ -20,10 +20,10 @@ module potWellModel
 
 	contains
 !public:
-	subroutine solveHam(unk, En, veloBwf)   !call solveHam(wnF, unk, EnW, VeloBwf)
+	subroutine solveHam(unk, En)   !call solveHam(wnF, unk, EnW, VeloBwf)
 		!solves Hamiltonian at each k point
 		!also generates the Wannier functions on the fly (sum over all k)
-		complex(dp),	intent(out)		::	unk(:,:,:), veloBwf(:,:,:,:)		
+		complex(dp),	intent(out)		::	unk(:,:,:)	
 																				!wnF( nR	, nSupC,	nWfs	)	
 																				!unkW(nR	,	nWfs,  nKpts	)
 																				!veloBwf(nR,nK,2*nG)
@@ -37,7 +37,6 @@ module potWellModel
 		allocate(	EnT(	nG	, nQ	)			)	
 		!
 		unk			=	dcmplx(0.0_dp)
-		veloBwf		=	dcmplx(0.0_dp)
 		!
 		if(debugHam) then
 			write(*,*)	"[solveHam]: debugging ON. Will do additional tests of the results"
@@ -54,7 +53,7 @@ module potWellModel
 			!
 			!BLOCH WAVEFUNCTIONS
 			!call gaugeCoeff(kVal, Hmat)
-			call genBwfVelo(qi, Hmat, unk, veloBwf)	!omp
+			call genBwfVelo(qi, Hmat, unk)	!omp
 		end do
 		!
 		!

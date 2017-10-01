@@ -41,16 +41,20 @@ module berry
 		allocate(			FcurvH(		3		, nWfs, nWfs		,	nK		)			)
 		allocate(			veloH(		3		, nWfs,nWfs			,	nK		)			)
 		!
+		write(*,*)	"[berrryMethod]: hello from Berry"
 		!GET CONNECTION, CURVATURE & VELOCITY
 		call DoGaugeTrafo(unkW, tHopp, EnH, AconnH, FcurvH, veloH)
 
+		write(*,*)	"[berrryMethod]: interpolation done"
 		!INTEGRATE CONNECTION
-		!call calcPolViaA(AconnH,pBerry)
+		call calcPolViaA(AconnH,pBerry)
+		write(*,*)	"[berrryMethod]: calculated zero order pol"
 		
 		!ToDo: SWITCH FOR USING NIU
 		if(doNiu) then
-
-			!call calcFirstOrdP(Fw, Aw, velo, En, pNiu)
+			write(*,*)	"[berrryMethod]: now calc first order pol"
+			call calcFirstOrdP(FcurvH, AconnH, veloH, EnH, pNiu)
+			write(*,*)	"[berrryMethod]: all done"
 		end if
 
 
