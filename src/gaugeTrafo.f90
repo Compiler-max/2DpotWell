@@ -99,6 +99,11 @@ module gaugeTrafo
 		integer							:: ki, R, a, b
 		complex(dp)						:: phase
 		!
+		HW	= dcmplx(0.0_dp)
+		HaW	= dcmplx(0.0_dp)
+		AW  = dcmplx(0.0_dp)
+		FW	= dcmplx(0.0_dp)
+		!
 		do R = 1, nSC
 			phase			= myExp(	dot_product(kpts(:,ki),Rcell(:,R))	)
 			!HAM
