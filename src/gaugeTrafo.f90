@@ -1,8 +1,7 @@
 module gaugeTrafo
 	use mathematics,	only:	dp, PI_dp, i_dp, acc, machineP, myExp, myLeviCivita, nIntegrate, eigSolver, rotMat, myCommutat
 	use sysPara
-	!use berry,			only:	
-	use wannier,		only:	genUnkW
+
 
 	!use 
 	implicit none
@@ -47,6 +46,80 @@ module gaugeTrafo
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+!privat
+	subroutine calcRhopp(unkW, rHopp)
+		complex(dp),	intent(in)		:: unkW(:,:,:)
+		complex(dp),	intent(out)		:: rHopp(:,:,:,:)
+		real(dp),		allocatable		:: AWCoarse(:,:,:,:)
+		integer							:: qi, R
+		complex(dp)						:: phase
+		!
+		write(*,*)	"[calcRhopp]: hello"
+		allocate(	AWcoarse(2,nWfs,nWfs,nQ)	)
+		write(*,*)	"[calcRhopp]: allocated awcoarse"
+		!
+		call calcConnOnCoarse(unkW, AWcoarse)
+		write(*,*)	"[calcRhopp]: calculated the connection"
+		do R = 1, nSC
+			do qi = 1, nQ
+				phase			= myExp( -1.0_dp * dot_product(qpts(:,qi),Rcell(:,R))		)
+				rHopp(1,:,:,R)	= rHopp(1,:,:,R) + phase * AWcoarse(1,:,:,qi) / nQ
+				rHopp(2,:,:,R)	= rHopp(2,:,:,R) + phase * AWcoarse(2,:,:,qi) / nQ
+			end do
+		end do
+		!
+		deallocate(	AWcoarse	)
+		return
+	end subroutine
+
+
+	subroutine interpolateMat(tHopp, rHopp, HW, HaW, AW, FW)
+		complex(dp),	intent(in)		:: tHopp(:,:,:), rHopp(:,:,:,:)
+		complex(dp),	intent(out)		:: HW(:,:), HaW(:,:,:), AW(:,:,:), FW(:,:,:,:)
+		integer							:: ki, R, a, b
+		complex(dp)						:: phase
+		!
+		do R = 1, nSC
+			phase			= myExp(	dot_product(kpts(:,ki),Rcell(:,R))	)
+			!HAM
+			HW(:,:)		= HW(:,:) 		+ phase		 					* tHopp(:,:,R)
+			!HAM DERIVATIVE
+			HaW(1,:,:)	= HaW(1,:,:)	+ phase * i_dp *  Rcell(1,R) 	* tHopp(:,:,R)
+			HaW(2,:,:)	= HaW(2,:,:)	+ phase * i_dp *  Rcell(2,R) 	* tHopp(:,:,R)
+			!CONNECTION
+			AW(1,:,:)	= AW(1,:,:) 	+ phase 						* rHopp(1,:,:,R)
+			AW(2,:,:)	= AW(2,:,:) 	+ phase 						* rHopp(2,:,:,R)
+			!CURVATURE
+			do a = 1, 2
+				do b = 1, 2
+					FW(a,b,:,:) = FW(a,b,:,:) + phase * i_dp * Rcell(a,R) * rHopp(b,:,:,R)
+					FW(a,b,:,:) = FW(a,b,:,:) - phase * i_dp * Rcell(b,R) * rHopp(a,:,:,R)
+				end do
+			end do
+		end do
+		!
+		!
+		return
+	end subroutine
+
+
+
 	subroutine gaugeBack(Hw, HaW, AW, FW, EnH, U, AconnH, FcurvH, veloH)
 		complex(dp),	intent(in)		:: Hw(:,:)
 		complex(dp),	intent(inout)	:: HaW(:,:,:), AW(:,:,:), FW(:,:,:,:)
@@ -78,93 +151,6 @@ module gaugeTrafo
 	end subroutine
 
 
-!gaugeBack HELPERS	
-	subroutine calcCurv(FW, DH, AW, FcurvH)
-		complex(dp),	intent(in)		:: FW(:,:,:,:), DH(:,:,:), AW(:,:,:)
-		complex(dp),	intent(out)		:: FcurvH(:,:,:)
-		complex(dp),	allocatable		:: FH(:,:,:,:)
-		!
-		!ToDO
-		FcurvH	= dcmplx(0.0_dp)
-
-		return
-	end subroutine
-
-
-	subroutine calcBarMat(U, HaW, AW, FW)
-		!Helper for gaugeBack
-		!	 for any quantity O: \bar(O) = U^dag O U
-		complex(dp),	intent(in)		:: U(:,:)
-		complex(dp),	intent(inout)	:: HaW(:,:,:), Aw(:,:,:), FW(:,:,:,:)
-		complex(dp),	allocatable		:: Uc(:,:)
-		integer							:: a,b
-		!
-		allocate(	Uc( size(U,2), size(U,1) )		)
-		!	
-		Uc	= dconjg( transpose(U)	)
-		!
-		do a = 1, 2
-			HaW(a,:,:) 	= matmul(	HaW(a,:,:)	, 	U				)
-			HaW(a,:,:)	= matmul(	Uc			, 	HaW(a,:,:)		)
-			!
-			AW(a,:,:) 	= matmul(	AW(a,:,:) 	,	U				)
-			AW(a,:,:) 	= matmul(	Uc			,	AW(a,:,:)		)
-			!
-			do b = 1, 2
-				FW(a,b,:,:) 	= matmul(	FW(a,b,:,:) 	,	U				)
-				FW(a,b,:,:) 	= matmul(	Uc				,	FW(a,b,:,:)		)
-			end do
-		end do
-		!
-		!
-		deallocate( Uc	)
-		return
-	end subroutine
-
-
-	subroutine calcA(EnH, AW, HaW, AconnH, DH)
-		! Helper for gaugeBack
-		!	A^(H) = \bar{A}^(H) + i D^(H)
-		real(dp),		intent(in)		:: EnH(:)
-		complex(dp),	intent(in)		:: Aw(:,:,:), HaW(:,:,:)
-		complex(dp),	intent(out)		:: AconnH(:,:,:), DH(:,:,:)
-		integer							:: m, n 
-		!
-		!SET UP D MATRIX
-		do m = 1, nWfs
-			do n = 1, nWfs
-				if( n /= m) then
-					DH(:,n,m)	= HaW(:,n,m) / ( EnH(m) - EnH(n) + machineP	)
-				else
-					DH(:,n,m)	= dcmplx(0.0_dp)
-				end if
-			end do
-		end do
-		!
-		!CALC CONNECTION
-		AconnH(:,:,:) = AW(:,:,:) + i_dp * DH(:,:,:)
-		!
-		!
-		return
-	end subroutine
-
-
-	subroutine calcVelo(EnH, AW, HaW, veloH)
-		!Helper for gaugeBack
-		!	v_nm	= \bar{Ha}_nm - i_dp * (Em-En) * \bar{A}_nm
-		real(dp),		intent(in)		:: EnH(:)
-		complex(dp),	intent(in)		:: AW(:,:,:), HaW(:,:,:)
-		complex(dp),	intent(out)		:: veloH(:,:,:)
-		integer							:: n, m
-		!
-		do m = 1, nWfs
-			do n = 1, nWfs
-				veloH(:,n,m)	= HaW(:,n,m) - i_dp * dcmplx(	EnH(m) - EnH(n)		) * AW(:,n,m)
-			end do
-		end do
-		!
-		return
-	end subroutine
 
 
 
@@ -180,61 +166,9 @@ module gaugeTrafo
 
 
 
-!privat
-	subroutine interpolateMat(tHopp, rHopp, HW, HaW, AW, FW)
-		complex(dp),	intent(in)		:: tHopp(:,:,:), rHopp(:,:,:,:)
-		complex(dp),	intent(out)		:: HW(:,:), HaW(:,:,:), AW(:,:,:), FW(:,:,:,:)
-		integer							:: ki, R, a, b
-		complex(dp)						:: phase
-		!
-		do R = 1, nSC
-			phase			= myExp(	dot_product(kpts(:,ki),Rcell(:,R))	)
-			!HAM
-			HW(:,:)		= HW(:,:) 		+ phase		 					* tHopp(:,:,R)
-			!HAM DERIVATIVE
-			HaW(1,:,:)	= HaW(1,:,:)	+ phase * i_dp *  Rcell(1,R) 	* tHopp(:,:,R)
-			HaW(2,:,:)	= HaW(2,:,:)	+ phase * i_dp *  Rcell(2,R) 	* tHopp(:,:,R)
-			!CONNECTION
-			AW(1,:,:)	= AW(1,:,:) 	+ phase 						* rHopp(1,:,:,R)
-			AW(2,:,:)	= AW(2,:,:) 	+ phase 						* rHopp(2,:,:,R)
-			!CURVATURE
-			do a = 1, 2
-				do b = 1, 2
-					FW(a,b,:,:) = FW(a,b,:,:) + phase * i_dp * Rcell(a,R) * rHopp(b,:,:,R)
-					FW(a,b,:,:) = FW(a,b,:,:) - phase * i_dp * Rcell(b,R) * rHopp(a,:,:,R)
-				end do
-			end do
-		end do
-		!
-		!
-		return
-	end subroutine
 
-!interpolateMat Helpers:
-	subroutine calcRhopp(unkW, rHopp)
-		complex(dp),	intent(in)		:: unkW(:,:,:)
-		complex(dp),	intent(out)		:: rHopp(:,:,:,:)
-		real(dp),		allocatable		:: AWCoarse(:,:,:,:)
-		integer							:: qi, R
-		complex(dp)						:: phase
-		!
-		write(*,*)	"[calcRhopp]: hello"
-		allocate(	AWcoarse(2,nR,nWfs,nQ)	)
-		write(*,*)	"[calcRhopp]: allocated awcoarse"
-		!
-		call calcConnOnCoarse(unkW, AWcoarse)
-		write(*,*)	"[calcRhopp]: calculated the connection"
-		do R = 1, nSC
-			do qi = 1, nQ
-				phase			= myExp( -1.0_dp * dot_product(qpts(:,qi),Rcell(:,R))		)
-				rHopp(1,:,:,R)	= rHopp(1,:,:,R) + phase * AWcoarse(1,:,:,qi) / nQ
-				rHopp(2,:,:,R)	= rHopp(2,:,:,R) + phase * AWcoarse(2,:,:,qi) / nQ
-			end do
-		end do
-		!
-		deallocate(	AWcoarse	)
-		return
-	end subroutine
+!calcRmat Helpers:
+
 
 
 
@@ -246,8 +180,8 @@ module gaugeTrafo
 		!
 		! see Mazari, Vanderbilt PRB.56.12847 (1997), Appendix B
 		!
-		complex(dp),	intent(in)		:: unk(:,:,:)		!unk(	nR, nK/nKw, nWfs/nG	)
-		real(dp),		intent(out)		:: A(:,:,:,:)			!Aconn(	3,nK, nWfs)		)	
+		complex(dp),	intent(in)		:: unk(:,:,:)		
+		real(dp),		intent(out)		:: A(:,:,:,:)			
 		complex(dp)						:: Mxl, Mxr, Myl, Myr, one
 		integer							:: n, m, Z, qi, qx, qy, qxl, qxr, qyl, qyr, found, tot
 		real(dp)						:: wbx,wby, bxl(2), bxr(2), byl(2), byr(2),dmax, avg, val 
@@ -378,6 +312,100 @@ integer function getRight(i,N)
 	return
 end function
 
+
+
+!gaugeBack HELPERS	
+	subroutine calcCurv(FW, DH, AW, FcurvH)
+		complex(dp),	intent(in)		:: FW(:,:,:,:), DH(:,:,:), AW(:,:,:)
+		complex(dp),	intent(out)		:: FcurvH(:,:,:)
+		complex(dp),	allocatable		:: FH(:,:,:,:)
+		!
+		!ToDO
+		FcurvH	= dcmplx(0.0_dp)
+
+		return
+	end subroutine
+
+
+	subroutine calcBarMat(U, HaW, AW, FW)
+		!Helper for gaugeBack
+		!	 for any quantity O: \bar(O) = U^dag O U
+		complex(dp),	intent(in)		:: U(:,:)
+		complex(dp),	intent(inout)	:: HaW(:,:,:), Aw(:,:,:), FW(:,:,:,:)
+		complex(dp),	allocatable		:: Uc(:,:)
+		integer							:: a,b
+		!
+		allocate(	Uc( size(U,2), size(U,1) )		)
+		!	
+		Uc	= dconjg( transpose(U)	)
+		!
+		do a = 1, 2
+			HaW(a,:,:) 	= matmul(	HaW(a,:,:)	, 	U				)
+			HaW(a,:,:)	= matmul(	Uc			, 	HaW(a,:,:)		)
+			!
+			AW(a,:,:) 	= matmul(	AW(a,:,:) 	,	U				)
+			AW(a,:,:) 	= matmul(	Uc			,	AW(a,:,:)		)
+			!
+			do b = 1, 2
+				FW(a,b,:,:) 	= matmul(	FW(a,b,:,:) 	,	U				)
+				FW(a,b,:,:) 	= matmul(	Uc				,	FW(a,b,:,:)		)
+			end do
+		end do
+		!
+		!
+		deallocate( Uc	)
+		return
+	end subroutine
+
+
+	subroutine calcA(EnH, AW, HaW, AconnH, DH)
+		! Helper for gaugeBack
+		!	A^(H) = \bar{A}^(H) + i D^(H)
+		real(dp),		intent(in)		:: EnH(:)
+		complex(dp),	intent(in)		:: Aw(:,:,:), HaW(:,:,:)
+		complex(dp),	intent(out)		:: AconnH(:,:,:), DH(:,:,:)
+		integer							:: m, n 
+		!
+		!SET UP D MATRIX
+		do m = 1, nWfs
+			do n = 1, nWfs
+				if( n /= m) then
+					DH(:,n,m)	= HaW(:,n,m) / ( EnH(m) - EnH(n) + machineP	)
+				else
+					DH(:,n,m)	= dcmplx(0.0_dp)
+				end if
+			end do
+		end do
+		!
+		!CALC CONNECTION
+		AconnH(:,:,:) = AW(:,:,:) + i_dp * DH(:,:,:)
+		!
+		!
+		return
+	end subroutine
+
+
+	subroutine calcVelo(EnH, AW, HaW, veloH)
+		!Helper for gaugeBack
+		!	v_nm	= \bar{Ha}_nm - i_dp * (Em-En) * \bar{A}_nm
+		real(dp),		intent(in)		:: EnH(:)
+		complex(dp),	intent(in)		:: AW(:,:,:), HaW(:,:,:)
+		complex(dp),	intent(out)		:: veloH(:,:,:)
+		integer							:: n, m
+		!
+		do m = 1, nWfs
+			do n = 1, nWfs
+				veloH(:,n,m)	= HaW(:,n,m) - i_dp * dcmplx(	EnH(m) - EnH(n)		) * AW(:,n,m)
+			end do
+		end do
+		!
+		return
+	end subroutine
+
+
+
+
+
 !!CONVERT OMEGA TENSOR TO VECTOR
 !		do m = 1, nWfs
 !			do n = 1, nWfs
@@ -398,12 +426,6 @@ end function
 !		end do
 !
 	
-
-
-
-
-
-
 
 
 
