@@ -20,15 +20,11 @@ program main
 	implicit none
 
 	
-    real(dp), 		allocatable,	dimension(:,:)		:: 	wCent, wSprd
-    complex(dp),	allocatable,	dimension(:,:,:)	:: 	wnF, unk, unkP, tHopp	!, ukn basCoeff,
-    complex(dp),	allocatable,	dimension(:,:,:,:)	::	veloBwf, veloP			!, Ah, Fh, Vh
-    real(dp),		allocatable,	dimension(:,:)		:: 	En, EnP					!, EnH
-    real(dp),		allocatable,	dimension(:,:,:)	::	Fw
-    real(dp),		allocatable,	dimension(:,:,:,:)	::	Aw
+    complex(dp),	allocatable,	dimension(:,:,:)	:: 	unk, unkW, tHopp	!, ukn basCoeff,
+    real(dp),		allocatable,	dimension(:,:)		:: 	En
     real(dp) 											:: 	pWann(2), pIon(2), pTot(2), pBerry(2), pInt(2), pNiu(3), pPei(3)
-    real												:: 	mastT0,mastT1,mastT,aT0,aT1,aT,kT0,kT1,kT,wT0,wT1,wT, oT0, oT1, oT,&
-    														bT0, bT1, bT, scT0, scT1, scT, peiT, peiT0, peiT1, pT0, pT1, pT
+    real												:: 	mastT0, mastT1, mastT, T0, T1, &
+    															aT,kT,wT, oT, bT,scT, peiT, pT
     integer 											::	xi,ki
     call cpu_time(mastT0)
 
@@ -36,11 +32,11 @@ program main
 
 
     !INPUT & ALLOCATION SECTION
-    call cpu_time(aT0)
+    call cpu_time(T0)
 	call readInp()
 	!electronic structure arrays
 	allocate(			unk(		nR 		,	nG		, 	nQ		)				)
-	allocate(			unkP(		nR 		,	nWfs	, 	nQ		)				)
+	allocate(			unkW(		nR 		,	nWfs	, 	nQ		)				)
 	allocate(			En(						nBands	, 	nQ		)				)
 	allocate(			tHopp(		nWfs	, 	nWfs	,	nSc		)				)
 	
@@ -60,8 +56,8 @@ program main
     write(*,*)"[main]: nBands=", nBands
 	write(*,*)"[main]: nWfs  =", nWfs	
 	!
-	call cpu_time(aT1)
-	aT = aT1 - aT0
+	call cpu_time(T1)
+	aT = T1 - T0
 
 
 
@@ -72,14 +68,14 @@ program main
 	write(*,*)"*"
 	write(*,*)"*"
 	write(*,*)"[main]:**************************ELECTRONIC STRUCTURE PART*************************"
-	call cpu_time(kT0)
+	call cpu_time(T0)
 	!
 	!
 	call solveHam(unk, En)
 	!
-	call cpu_time(kT1)
+	call cpu_time(T1)
 	write(*,*)"[main]: done solving Schroedinger eq."
-	kT = kT1-kT0
+	kT = T1-T0
 	
 
 
@@ -90,14 +86,14 @@ program main
 	write(*,*)"*"
 	write(*,*)"*"
 	write(*,*)"[main]:**************************PROJECT STATES *************************"
-	call cpu_time(pT0)
+	call cpu_time(T0)
 	!
 	!
-	call projectUnk(En, unk, unkP,tHopp)
+	call projectUnk(En, unk, unkW,tHopp)
 	!
-	call cpu_time(pT1)
+	call cpu_time(T1)
 	write(*,*)"[main]: done with projections."
-	pT = pT1-pT0
+	pT = T1-T0
 
 
 	
@@ -105,20 +101,20 @@ program main
 	write(*,*)"*"
 	write(*,*)"*"
 	write(*,*)"*"
-	call cpu_time(wT0)
+	call cpu_time(T0)
 	if( doWanni ) then
 		write(*,*)	"[main]:**************************WANNIER FUNCTION METHOD*************************"
 		!
-		call wannMethod(unkP, pWann)
+		call wannMethod(unkW, pWann)
 		!
 		write(*,*)	"[main]: done with center polarization calc"
 	else
 		write(*,*)	"[main]: wannier method disabled"
 	end if	
 	
-	call cpu_time(wT1)
+	call cpu_time(T1)
 	
-	wT 	= wT1 - wT0
+	wT 	= T1 - T0
 
 
 
@@ -127,16 +123,16 @@ program main
 	write(*,*)"*"
 	write(*,*)"*"
 	write(*,*)"*"
-	call cpu_time(bT0)
+	call cpu_time(T0)
 	if ( doBerry ) then
 		write(*,*)"[main]:**************************WAVEFUNCTION METHOD*************************"
-		call berryMethod(unkP, tHopp, pBerry, pNiu)
+		call berryMethod(unkW, tHopp, pBerry, pNiu)
 		write(*,*)"[main]: done with wavefunction method "
 	else
 		write(*,*)"[main]: berry method disabled"
 	end if
-	call cpu_time(bT1)
-	bT	= bT1 - bT0
+	call cpu_time(T1)
+	bT	= T1 - T0
 	
 
 
@@ -158,15 +154,15 @@ program main
 	write(*,*)"*"
 	write(*,*)"*"
 	write(*,*)"[main]:**************************PEIERLS SUB*************************"
-	call cpu_time(peiT0)
+	call cpu_time(T0)
 	!
 	if(doPei)  then
 		call peierlsMethod(tHopp, pPei)
 	end if
 	!
-	call cpu_time(peiT1)
+	call cpu_time(T1)
 	write(*,*)"[main]: done with peierls substitution"
-	peiT = peiT1 - peiT0
+	peiT = T1 - T0
 
 
 
@@ -179,22 +175,19 @@ program main
 	write(*,*)"*"
 	write(*,*)"*"
 	write(*,*)"[main]:**************************WRITE OUTPUT*************************"
-	call cpu_time(oT0)
+	call cpu_time(T0)
 	!call writeSysInfo() 
 	call writeMeshInfo() 
 	call writeMeshBin()
-	call writeUNKs(unkP)
+	call writeUNKs(unkW)
 	write(*,*)"[main]: ...wrote mesh info"
-	
-	
 	call calcIonicPol(pIon)
 	pTot	= pIon + pWann
 	call writePolFile(pWann, pIon, pTot, pBerry, pInt, pNiu, pPei )
 	write(*,*)"[main]: ...wrote polarization txt file"
 	!
-	
-	call cpu_time(oT1)
-	oT = oT1 - oT0
+	call cpu_time(T1)
+	oT = T1 - T0
 	
 
 
@@ -211,14 +204,12 @@ program main
 	write(*,*)"*"
 	write(*,*) '**************TIMING INFORMATION************************'
 	call printTiming(aT, kT, pT, wT, bT,peiT, oT, mastT)
-
+	!
 	deallocate(			unk			)
-	deallocate(			unkP		)
+	deallocate(			unkW		)
 	deallocate(			En			)
-	deallocate(			veloBwf		) 
-	deallocate(			EnP			)
 	deallocate(			tHopp		)
-
+	!
 	stop
 end program
 
