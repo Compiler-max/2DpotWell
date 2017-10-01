@@ -27,7 +27,7 @@ module semiClassics
 	subroutine	calcFirstOrdP(Fcurv, Aconn, Velo, En, p1)
 		!calculates the first order polarization p1 according to
 		!	P'= -int_dk [0.5 (Curv.Velo)*B_ext + a']
-		real(dp),		intent(in)		::	Fcurv(:,:,:), Aconn(:,:,:,:)	!Fcurv(3,nWfs, nQ)
+		real(dp),		intent(in)		::	Fcurv(:,:,:,:), Aconn(:,:,:,:)	!Fcurv(3,nWfs, nQ)
 		complex(dp),	intent(in)		:: 	Velo(:,:,:,:)		!	 Velo(3, nWfs,nWfs, nQ)	
 		real(dp),		intent(in)		::	En(:,:)				!	En(			nWfs, nQ)						
 		real(dp),		intent(out)		:: 	p1(3)
@@ -53,7 +53,7 @@ module semiClassics
 			!FILL INTEGRATION ARRAY
 			do ki = 1, kSize
 				!PHASE SPACE DENSITY CORRECTION
-				densCorr	= 0.5_dp * dot_product(		Fcurv(:,ki,n), Aconn(:,ki,n,n) 	)		* Bext
+				densCorr	= 0.5_dp * dot_product(		Fcurv(:,n,n,ki), Aconn(:,n,n,ki) 	)		* Bext
 				f(:,ki)		= f(:,ki) + densCorr
 				!POSITIONAL SHIFT
 				call calcFmat(n,ki,Velo,En, Fmat)
@@ -128,9 +128,9 @@ module semiClassics
 							do m = 1, nSize
 								if( n/=n0 .and. m/=n0) then
 									!VELOCITIES
-									Vtmp		= Velo(k,ki,n,m) * Velo(l,ki,m,n0) * Velo(i,ki,n0,n) 
+									Vtmp		= Velo(k,n,m,ki) * Velo(l,m,n0,ki) * Velo(i,n0,n,ki) 
 									!ENERGIES
-									eDiff		= ( 	En(ki,n0) - En(ki,n)	 )**2 	* 	 ( 	En(ki,n0) - En(ki,m)	)
+									eDiff		= ( 	En(n0,ki) - En(n,ki)	 )**2 	* 	 ( 	En(n0,ki) - En(m,ki)	)
 									!MATRIX
 									Fmat(i,j) 	= Fmat(i,j) +  myLeviCivita(j,k,l) * dreal(	Vtmp ) / eDiff	
 									!write(*,'(a,e10.3,a,e10.3)')"[addF2]: |Vtmp|=",abs(Vtmp), "eDiff=",eDiff
@@ -173,9 +173,9 @@ module semiClassics
 						do n = 1, nSize
 							if( n/=n0 ) then
 								!VELOCITIES
-								Vtmp		= Velo(k,ki,n0,n0) * Velo(l,ki,n,n0) * Velo(i,ki,n0,n) 
+								Vtmp		= Velo(k,n0,n0,ki) * Velo(l,n,n0,ki) * Velo(i,n0,n,ki) 
 								!ENERGIES
-								eDiff		= ( 	En(ki,n0) - En(ki,n)	 )**3 	
+								eDiff		= ( 	En(n0,ki) - En(n,ki)	 )**3 	
 								!MATRIX
 								Fmat(i,j) 	= Fmat(i,j) -  myLeviCivita(j,k,l) * dreal(		Vtmp / dcmplx(eDiff)	)
 								!write(*,*)"[addF3]: eDiff=",eDiff
