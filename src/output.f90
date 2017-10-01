@@ -283,28 +283,30 @@ module output
 		allocate(	buffer4( size(AconnP,1)	,	size(AconnP,2)	,	size(AconnP,3),size(AconnP,4) 	)			)
 		!real(UNK)
 		buffer3	= dreal(unkP)
-		open(unit=700,file='rawData/unkP_R.dat',form='unformatted',access='stream',action='write')
-		write(700,*)	buffer3
+		open(unit=700,file='rawData/unkPeiR.dat',form='unformatted',access='stream',action='write')
+		write(700)	buffer3
 		close(700)
 		!imag(UNK)
 		buffer3	= dimag(unkP)
-		open(unit=705,file='rawData/unkP_I.dat',form='unformatted',access='stream',action='write')
-		write(705,*)	buffer3
+		open(unit=705,file='rawData/unkPeiI.dat',form='unformatted',access='stream',action='write')
+		write(705)	buffer3
 		close(705)
 		!
 		!Conn
 		buffer4	= dreal(AconnP)
 		open(unit=710,file='rawData/AconnPei.dat',form='unformatted',access='stream',action='write')
-		write(710,*)	buffer4
+		write(710)	buffer4
 		close(710)
 		!
 		!Conn
 		buffer4	= dreal(FcurvP)
 		open(unit=720,file='rawData/FcurvPei.dat',form='unformatted',access='stream',action='write')
-		write(720,*)	buffer4
+		write(720)	buffer4
 		close(720)
 		!
 		!
+		deallocate(	buffer3		)
+		deallocate(	buffer4		)
 		return
 	end subroutine
 
