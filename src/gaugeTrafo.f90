@@ -20,25 +20,21 @@ module gaugeTrafo
 		complex(dp),	allocatable		:: rHopp(:,:,:,:), U(:,:), HW(:,:), HaW(:,:,:), AW(:,:,:), FW(:,:,:,:)
 		integer							:: ki
 		!
-		write(*,*)	"[DoGaugeTrafo]: hello"
 		allocate(	rHopp(	2	,	nWfs, 	nWfs, 	nSC		)		)
 		allocate(	U(		nWfs, 	nWfs					)		)
 		allocate(	HW(		nWfs, 	nWfs					)		)
 		allocate(	HaW(	2	,	nWfs, 	nWfs			)		)
 		allocate(	AW(		2	,	nWfs, 	nWfs			)		)
 		allocate(	Fw(		2	,	2	,	nWfs,	nWfs	)		)
-
-		write(*,*)	"[DoGaugeTrafo]: allocated"
+		!
 		call calcRhopp(unkW, rHopp)
 		write(*,*)	"[DoGaugeTrafo]: calculated the rHopping matrix elements"
 
 		do ki = 1, nK
 			call interpolateMat(tHopp, rHopp, HW, HaW, AW, FW)
-			write(*,'(a,i4,a)')	"[DoGaugeTrafo]: ki=",ki," interpolation done"
 			call gaugeBack(Hw, HaW, AW, FW, EnH(:,ki), U, AconnH(:,:,:,ki), FcurvH(:,:,:,ki), veloH(:,:,:,ki))	
-			write(*,'(a,i4,a)')	"[DoGaugeTrafo]: ki=",ki," gauge Trafo done"
 		end do	
-		write(*,*)	"[DoGaugeTrafo]: by by"
+		write(*,*)	"[DoGaugeTrafo]: calculated Hamiltonian gauge energy, connection, curvature, velocity"
 		!
 		!
 		deallocate(	rHopp	)
