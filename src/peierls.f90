@@ -63,53 +63,16 @@ module peierls
 		!
 		call writePeierls(unkP, AconnP, FcurvP)
 		write(*,*)	"[peierlsMethod]: writing done, by.."
+		deallocate( Ham		)
+		deallocate(	EnP		)
+		deallocate(	unkP	)
+		deallocate(	AconnP	)
+		deallocate(	FcurvP	)
+		deallocate(	veloP	)
 		!
 		!
 		return
 	end subroutine
-
-
-
-
-
-	subroutine genUnk(ki, Ham, unkP)
-		integer,		intent(in)		:: ki
-		complex(dp),	intent(in)		:: Ham(:,:)
-		complex(dp),	intent(out)		:: unkP(:,:)
-		complex(dp),	allocatable		:: basVec(:)
-		real(dp)						:: kVec(2)
-		complex(dp)						:: phase
-		integer							:: i, xi
-		!
-		allocate(basVec(nWfs))
-		unkP	= dcmplx(0.0_dp)
-		!
-		do xi = 1, nR
-			!CALC BASIS VECTOR
-			basVec	= dcmplx(0.0_dp)
-			do i =1, nWfs
-				kVec(:) = kpts(:,ki) + Gvec(:,i)
-				if( norm2(kVec) < Gcut ) then
-					basVec(i) 		=  myExp( dot_product( kVec, rpts(:,xi) )		)
-				else
-					basVec(i) 		= dcmplx( 0.0_dp )
-				end if
-			end do
-			!
-			!GENERATE UNKs
-			phase			= myExp( -1.0_dp * dot_product( kpts(:,ki), rpts(:,xi) )		)
-			unkP(xi,:)		= phase * matmul(basVec,Ham) 
-		end do
-		!
-		!
-		return
-	end subroutine
-
-
-
-
-
-
 
 
 
@@ -144,7 +107,38 @@ module peierls
 
 	
 
-
+	subroutine genUnk(ki, Ham, unkP)
+		integer,		intent(in)		:: ki
+		complex(dp),	intent(in)		:: Ham(:,:)
+		complex(dp),	intent(out)		:: unkP(:,:)
+		complex(dp),	allocatable		:: basVec(:)
+		real(dp)						:: kVec(2)
+		complex(dp)						:: phase
+		integer							:: i, xi
+		!
+		allocate(basVec(nWfs))
+		unkP	= dcmplx(0.0_dp)
+		!
+		do xi = 1, nR
+			!CALC BASIS VECTOR
+			basVec	= dcmplx(0.0_dp)
+			do i =1, nWfs
+				kVec(:) = kpts(:,ki) + Gvec(:,i)
+				if( norm2(kVec) < Gcut ) then
+					basVec(i) 		=  myExp( dot_product( kVec, rpts(:,xi) )		)
+				else
+					basVec(i) 		= dcmplx( 0.0_dp )
+				end if
+			end do
+			!
+			!GENERATE UNKs
+			phase			= myExp( -1.0_dp * dot_product( kpts(:,ki), rpts(:,xi) )		)
+			unkP(xi,:)		= phase * matmul(basVec,Ham) 
+		end do
+		!
+		!
+		return
+	end subroutine
 
 
 

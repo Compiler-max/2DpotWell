@@ -34,8 +34,9 @@ module projection
 		real(dp),		intent(in)		:: En(:,:)		!	En(nBands,nQ)
 		complex(dp)	,	intent(in)		:: unk(:,:,:)   ! unk(nR,nG,nQ)
 		complex(dp)	,	intent(out)		:: unkP(:,:,:), tHopp(:,:,:)	! unk(nR,nWfs,nQ) , tHopp(nWfs, nWfs nSC)
-		complex(dp)	,	allocatable		:: loBwf(:,:), gnr(:,:), A(:,:), U(:,:), Ham(:,:)
 		real(dp),		allocatable		:: EnP(:,:)	
+		complex(dp)	,	allocatable		:: loBwf(:,:), gnr(:,:), A(:,:), U(:,:), Ham(:,:)
+		
 		complex(dp)						:: phase
 		integer							:: qi, xi, n, m, R
 		!

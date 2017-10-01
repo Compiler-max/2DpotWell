@@ -1,7 +1,7 @@
 module gaugeTrafo
 	use mathematics,	only:	dp, PI_dp, i_dp, acc, machineP, myExp, myLeviCivita, nIntegrate, eigSolver, rotMat, myCommutat
 	use sysPara
-
+	use output,			only: 	writeEnH
 
 	!use 
 	implicit none
@@ -36,6 +36,7 @@ module gaugeTrafo
 		end do	
 		write(*,*)	"[DoGaugeTrafo]: calculated Hamiltonian gauge energy, connection, curvature, velocity"
 		!
+		call writeEnH(EnH)
 		!
 		deallocate(	rHopp	)
 		deallocate(	U		)

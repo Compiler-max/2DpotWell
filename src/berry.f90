@@ -38,12 +38,16 @@ module berry
 		call calcPolViaA(AconnH,pBerry)
 		write(*,*)	"[berrryMethod]: calculated zero order pol"
 		
-		!ToDo: SWITCH FOR USING NIU
+
+
+
+
 		if(doNiu) then
 			write(*,*)	"[berrryMethod]: now calc first order pol"
 			call calcFirstOrdP(FcurvH, AconnH, veloH, EnH, pNiu)
 			write(*,*)	"[berrryMethod]: all done"
 		end if
+
 
 
 		!OUTPUT

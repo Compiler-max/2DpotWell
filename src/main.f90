@@ -21,7 +21,7 @@ program main
 
 	
     complex(dp),	allocatable,	dimension(:,:,:)	:: 	unk, unkW, tHopp	!, ukn basCoeff,
-    real(dp),		allocatable,	dimension(:,:)		:: 	En
+    real(dp),		allocatable,	dimension(:,:)		:: 	En, EnW
     real(dp) 											:: 	pWann(2), pIon(2), pTot(2), pBerry(2), pInt(2), pNiu(3), pPei(3)
     real												:: 	mastT0, mastT1, mastT, T0, T1, &
     															aT,kT,wT, oT, bT,scT, peiT, pT
@@ -204,11 +204,12 @@ program main
 	write(*,*)"*"
 	write(*,*) '**************TIMING INFORMATION************************'
 	call printTiming(aT, kT, pT, wT, bT,peiT, oT, mastT)
+	write(*,*)	"[main]: all done, deallocate and exit"
 	!
-	deallocate(			unk			)
-	deallocate(			unkW		)
-	deallocate(			En			)
-	deallocate(			tHopp		)
+	!deallocate(			unk			)
+	!deallocate(			unkW		)
+	!deallocate(			En			)
+	!deallocate(			tHopp		)
 	!
 	stop
 end program

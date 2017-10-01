@@ -8,7 +8,7 @@ module output
 	private
 
 	public ::	writeMeshInfo, writeMeshBin, writeEnAndUNK, writeUNKs ,writeConnCurv, writeWannFiles, writePolFile, &
-				printMat, printTiming , writePeierls,  writeInterpBands
+				printMat, printTiming , writePeierls,  writeInterpBands, writeEnH
 
 
 	interface printMat
@@ -307,6 +307,17 @@ module output
 		!
 		deallocate(	buffer3		)
 		deallocate(	buffer4		)
+		return
+	end subroutine
+
+
+	subroutine writeEnH(EnH)
+		real(dp),		intent(in)		:: EnH(:,:)
+		!
+		open(unit=800,file='rawData/EnInterP.dat',form='unformatted',access='stream',action='write')
+		write(800)	EnH
+		close(800)
+		!
 		return
 	end subroutine
 
