@@ -209,9 +209,9 @@ module gaugeTrafo
 		dmax	= 0.0_dp
 		avg		= 0.0_dp
 		!
-		!$OMP PARALLEL DO COLLAPSE(3) SCHEDULE(STATIC),  &
-		!$OMP& DEFAULT(SHARED), PRIVATE(m, n, qx, qxl, qxr, qy, qyl, qyr, qi, one, Mxl, Mxr, Myl, Myr, val),&
-		!$OMP& REDUCTION(+:found,avg,tot), REDUCTION(max:dmax)
+		!!!!!$OMP PARALLEL DO COLLAPSE(3) SCHEDULE(STATIC),  &
+		!!!!!$OMP& DEFAULT(SHARED), PRIVATE(m, n, qx, qxl, qxr, qy, qyl, qyr, qi, one, Mxl, Mxr, Myl, Myr, val),&
+		!!!!!$OMP& REDUCTION(+:found,avg,tot), REDUCTION(max:dmax)
 		do m = 1, nWfs
 			do n = 1, nWfs
 				do qx = 1, nQx
@@ -252,7 +252,7 @@ module gaugeTrafo
 				end do
 			end do
 		end do
-		!$OMP END PARALLEL DO
+		!!!!!$OMP END PARALLEL DO
 		!
 		!DEBUG
 		avg	= avg / real(found,dp)

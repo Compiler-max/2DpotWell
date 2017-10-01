@@ -4,7 +4,6 @@ module berry
 	use omp_lib
 	use mathematics,	only:	dp, PI_dp, i_dp, acc, myExp, myLeviCivita, nIntegrate
 	use sysPara
-	use blochWf,		only:	FDvelocities
 	use gaugeTrafo,		only:	DoGaugeTrafo
 	use polarization,	only:	calcPolViaA
 	use semiClassics,	only:	calcFirstOrdP

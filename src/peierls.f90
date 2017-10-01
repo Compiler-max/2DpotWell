@@ -61,7 +61,7 @@ module peierls
 		call calcPolViaA(AconnP, pPei(1:2))
 		write(*,*)	"[peierlsMethod]: calculated pol"
 		!
-		call writePeierls(unkP, dreal(AconnP), dimag(FcurvP))
+		call writePeierls(unkP, AconnP, FcurvP)
 		write(*,*)	"[peierlsMethod]: writing done, by.."
 		!
 		!

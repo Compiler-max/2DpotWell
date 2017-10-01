@@ -276,31 +276,33 @@ module output
 
 
 	subroutine writePeierls(unkP, AconnP, FcurvP)
-		complex(dp),	intent(in)		:: unkP(:,:,:)
-		real(dp),		intent(in)		:: AconnP(:,:,:,:), FcurvP(:,:,:,:)
-		real(dp),		allocatable		:: buffer(:,:,:)
+		complex(dp),	intent(in)		:: unkP(:,:,:), AconnP(:,:,:,:), FcurvP(:,:,:,:)
+		real(dp),		allocatable		:: buffer3(:,:,:),  buffer4(:,:,:,:) 
 		!
-		allocate(	buffer( size(unkP,1),size(unkP,2),size(unkP,3) )			)
+		allocate(	buffer3( size(unkP,1)	,	size(unkP,2)	,	size(unkP,3) 					)			)
+		allocate(	buffer4( size(AconnP,1)	,	size(AconnP,2)	,	size(AconnP,3),size(AconnP,4) 	)			)
 		!real(UNK)
-		buffer	= dreal(unkP)
+		buffer3	= dreal(unkP)
 		open(unit=700,file='rawData/unkP_R.dat',form='unformatted',access='stream',action='write')
-		write(700,*)	buffer
+		write(700,*)	buffer3
 		close(700)
 		!imag(UNK)
-		buffer	= dimag(unkP)
+		buffer3	= dimag(unkP)
 		open(unit=705,file='rawData/unkP_I.dat',form='unformatted',access='stream',action='write')
-		write(705,*)	buffer
+		write(705,*)	buffer3
 		close(705)
 		!
 		!Conn
-		open(unit=710,file='rawData/unkP_I.dat',form='unformatted',access='stream',action='write')
-		write(710,*)	AconnP
+		buffer4	= dreal(AconnP)
+		open(unit=710,file='rawData/AconnPei.dat',form='unformatted',access='stream',action='write')
+		write(710,*)	buffer4
 		close(710)
 		!
 		!Conn
-		open(unit=710,file='rawData/unkP_I.dat',form='unformatted',access='stream',action='write')
-		write(710,*)	FcurvP
-		close(710)
+		buffer4	= dreal(FcurvP)
+		open(unit=720,file='rawData/FcurvPei.dat',form='unformatted',access='stream',action='write')
+		write(720,*)	buffer4
+		close(720)
 		!
 		!
 		return
