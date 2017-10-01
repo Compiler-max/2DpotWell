@@ -3,6 +3,7 @@ module peierls
 	use sysPara
 	use gaugeTrafo,		only:	DoGaugeTrafo
 	use	polarization,	only:	calcPolViaA
+	use output,			only:	writePeierls
 	implicit none
 	
 
@@ -28,18 +29,20 @@ module peierls
 		complex(dp)						:: phase
 		!
 		allocate( 	Ham(nWfs,nWfs)			)
-		
 		allocate(	EnP(nWfs,nK)			)
 		allocate(	unkP(nR, nWfs, nK)		)
 		allocate(	AconnP(2,nWfs,nWfs,nK)	)
 		allocate(	FcurvP(2,nWfs,nWfs,nK)	)
 		allocate(	veloP(2,nWfs,nWfs,nK)	)
 		!
+		write(*,*)	"[peierlsMethod]: start with peierls sub"
+
+		!
 		!DO PEIERLS SUBSTITUTION
 		do R = 1, nSC
 			tHopp(:,:,R)	= tHopp(:,:,R) * shift(R0,R)
 		end do
-
+		write(*,*)	"[peierlsMethod]: done with sub, solve Ham now"
 		!SET UP K SPACE HAMILTONIAN & SOLVE
 		do ki = 1, nK
 			Ham				= dcmplx(0.0_dp)
@@ -51,11 +54,15 @@ module peierls
 			call eigSolver(	Ham, EnP(:,ki)	) 
 			call genUnk(ki, Ham, unkP(:,:,ki))
 		end do
-
-
+		!
+		write(*,*)	"[peierlsMethod]: solved Ham, calc connection, etc."
 		!CALC CONNECTION & POL
 		call DoGaugeTrafo(unkP, tHopp, EnP, AconnP, FcurvP, veloP)
 		call calcPolViaA(AconnP, pPei(1:2))
+		write(*,*)	"[peierlsMethod]: calculated pol"
+		!
+		call writePeierls(unkP, dreal(AconnP), dimag(FcurvP))
+		write(*,*)	"[peierlsMethod]: writing done, by.."
 		!
 		!
 		return

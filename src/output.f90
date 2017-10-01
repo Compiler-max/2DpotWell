@@ -7,8 +7,8 @@ module output
 	implicit none
 	private
 
-	public ::	writeMeshInfo, writeMeshBin, writeEnAndUNK, writeUNKs ,writeConnCurv, writeWannFiles, writeInterpBands, writePolFile, &
-				printMat, printTiming 
+	public ::	writeMeshInfo, writeMeshBin, writeEnAndUNK, writeUNKs ,writeConnCurv, writeWannFiles, writePolFile, &
+				printMat, printTiming , writePeierls,  writeInterpBands
 
 
 	interface printMat
@@ -270,22 +270,33 @@ module output
 	end subroutine
 
 
-	subroutine writeInterpolFiles(Aconn)
-		complex(dp),	intent(in)		::	Aconn(:,:,:)
-		real(dp),		allocatable		::	AconnR(:,:,:), AconnI(:,:,:)
-		allocate(	AconnR(	size(Aconn,1)	, size(Aconn,2)	, size(Aconn,3)		)			)	
-		allocate(	AconnI(	size(Aconn,1)	, size(Aconn,2)	, size(Aconn,3)		)			)
+	subroutine writePeierls(unkP, AconnP, FcurvP)
+		complex(dp),	intent(in)		:: unkP(:,:,:)
+		real(dp),		intent(in)		:: AconnP(:,:,:,:), FcurvP(:,:,:,:)
+		real(dp),		allocatable		:: buffer(:,:,:)
 		!
-		AconnR	= dreal(Aconn)
-		AconnI	= dimag(Aconn)
+		allocate(	buffer( size(unkP,1),size(unkP,2),size(unkP,3) )			)
+		!real(UNK)
+		buffer	= dreal(unkP)
+		open(unit=700,file='rawData/unkP_R.dat',form='unformatted',access='stream',action='write')
+		write(700,*)	buffer
+		close(700)
+		!imag(UNK)
+		buffer	= dimag(unkP)
+		open(unit=705,file='rawData/unkP_I.dat',form='unformatted',access='stream',action='write')
+		write(705,*)	buffer
+		close(705)
 		!
-		open(unit=550,file='rawData/AintR.dat',form='unformatted',access='stream',action='write')
-		write(550)	AconnR
-		close(550)
+		!Conn
+		open(unit=710,file='rawData/unkP_I.dat',form='unformatted',access='stream',action='write')
+		write(710,*)	AconnP
+		close(710)
 		!
-		open(unit=555,file='rawData/AintI.dat',form='unformatted',access='stream',action='write')
-		write(555)	AconnI
-		close(555)
+		!Conn
+		open(unit=710,file='rawData/unkP_I.dat',form='unformatted',access='stream',action='write')
+		write(710,*)	FcurvP
+		close(710)
+		!
 		!
 		return
 	end subroutine

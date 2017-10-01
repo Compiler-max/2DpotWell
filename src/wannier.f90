@@ -5,7 +5,7 @@ module wannier
 	use mathematics,	only:	dp, PI_dp, i_dp, acc, myExp, nIntegrate, eigSolver
 	use sysPara
 	use polarization,	only:	calcPolWannCent
-	use output,			only:	writeWannFiles, writeInterpBands
+	use output,			only:	writeWannFiles
 
 	implicit none
 
@@ -268,7 +268,7 @@ module wannier
 			call eigSolver(Htb, Ew(:,qi))
 		end do
 		!
-		call writeInterpBands(Ew)
+		!call writeInterpBands(Ew)
 		!
 		!
 		return
