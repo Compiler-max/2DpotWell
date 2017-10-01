@@ -35,7 +35,11 @@ module polarization
 			!write(*,'(a,f8.5,a,f8.5,a,f8.6,a,f8.6,a)')"[calc0ElPol]: Wcent = (",wCent(1,n),", ",wCent(2,n),") modified cent = (", cent(1),", ",cent(2),")"
 			pE = pE + wCent(:,n)				
 		end do
-		pE = -1.0_dp * pE  / vol
+		
+		pE(1) = dmod(pE(1),aX)
+		pE(2) = dmod(pE(2),aX)
+		pE = -1.0_dp * pE  !/ vol
+
 		!
 		!NORMALIZE
 		!pE = pE / vol
@@ -57,26 +61,29 @@ module polarization
 		! r_n 	= <0n|r|0n> 
 		!		=V/(2pi)**2 \integrate_BZ <unk|i \nabla_k|unk>
 		!		=V/(2pi)**2 \integrate_BZ A(k)
-		real(dp),		intent(in)		:: A(:,:,:,:)			!A(2,	 nWfs, nWfs, nQ	)	
-		real(dp),		intent(out)		:: pElA(:)
-		real(dp)	,	allocatable		:: val(:)
-		real(dp)						:: machine
-		integer							:: n, qi
+		complex(dp),		intent(in)		:: A(:,:,:,:)			!A(2,	 nWfs, nWfs, nQ	)	
+		real(dp),			intent(out)		:: pElA(:)
+		complex(dp)	,		allocatable		:: val(:)
+		real(dp)							:: machine
+		integer								:: n, qi
 		!
 		allocate(	val( size(A,1) )	)
-		val		= 0.0_dp
+		val		= dcmplx(0.0_dp)
 		pElA	= 0.0_dp
 		machine	= 1e-15_dp
 		!
 		!SUM OVER K SPACE AND OVER STATES
 		do n 	= 1, size(A,2)
 			do qi = 1, size(A,4)
-				val(:)	= val(:) + A(:,n,n,qi)
+				val(:)	= val(:) + A(1:2,n,n,qi)
 			end do
 		end do
 		!
+		if( dimag(val(1)) > acc .or. dimag(val(2)) > acc ) then
+			write(*,*)	"[calcPolViaA]: warning, connection has imaginary part none zeroDoGaugeTrafo(unkW, tHopp, EnH, AconnH, FcurvH, veloH)"
+		end if 
 		!NORMALIZE K INTEGRATION	
-		pElA(:)	= val(:) / real(size(A,4),dp)
+		pElA(:)	= dreal(val(:)) / real(size(A,4),dp)
 		!
 		!MOD QUANTUM e \vec{a} / V0
 		pElA(1)	= dmod(pElA(1),aX/vol) 

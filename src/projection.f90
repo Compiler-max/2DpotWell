@@ -191,7 +191,9 @@ module projection
 		!ONTO UNKs
 		!do n = 1, nWfs
 		!	do ri = 1, nR
-		!		gnr(ri,n)	= 	unk(ri,n,gammaP)
+		!		if(  rpts(1,ri) < aX .and. rpts(2,ri) < aY) then
+		!			gnr(ri,n)	= 	unk(ri,n,gammaP)
+		!		end if
 		!	end do
 		!end do
 
@@ -199,33 +201,33 @@ module projection
 
 
 		!ATOM LIKE (LOCALIZED)
-		do n = 1, nWfs-1, 2
-			do ri = 1, nR
-				if(  rpts(1,ri) < aX .and. rpts(2,ri) < aY) then
-					if( 	insideAt(1, rpts(:,ri)))	then
-						gnr(ri,n)	= gVal(1,n,ri) 
-					end if
-					!
-					if( 	insideAt(2, rpts(:,ri))		)	then
-						gnr(ri,n+1)	= gVal(2,n+1,ri)
-					end if
-				end if
-			end do
-		end do
-
-		!HYBRID STATES
-		!do n = 1, nWfs
+		!do n = 1, nWfs-1, 2
 		!	do ri = 1, nR
-		!		!ONLY IN HOME UNIT CELL
 		!		if(  rpts(1,ri) < aX .and. rpts(2,ri) < aY) then
-		!			do at = 1, nAt 
-		!				if( insideAt(at,rpts(:,ri))) then
-		!					gnr(ri,n)	= gVal(at,n,ri)
-		!				end if 
-		!			end do
+		!			if( 	insideAt(1, rpts(:,ri)))	then
+		!				gnr(ri,n)	= gVal(1,n,ri) 
+		!			end if
+		!			!
+		!			if( 	insideAt(2, rpts(:,ri))		)	then
+		!				gnr(ri,n+1)	= gVal(2,n,ri)
+		!			end if
 		!		end if
 		!	end do
 		!end do
+
+		!HYBRID STATES
+		do n = 1, nWfs
+			do ri = 1, nR
+				!ONLY IN HOME UNIT CELL
+				if(  rpts(1,ri) < aX .and. rpts(2,ri) < aY) then
+					do at = 1, nAt 
+						if( insideAt(at,rpts(:,ri))) then
+							gnr(ri,n)	= gVal(at,n,ri)
+						end if 
+					end do
+				end if
+			end do
+		end do
 
 
 

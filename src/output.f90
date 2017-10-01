@@ -189,7 +189,7 @@ module output
 
 
 	subroutine writeConnCurv(Aconn, Fcurv)
-		real(dp),		intent(in)		:: Aconn(:,:,:,:), Fcurv(:,:,:)
+		real(dp),		intent(in)		:: Aconn(:,:,:,:), Fcurv(:,:,:,:)
 		!
 		!CONNECTION
 		open(unit=410,file='rawData/AconnR.dat',form='unformatted',access='stream',action='write')

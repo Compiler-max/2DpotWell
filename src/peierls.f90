@@ -2,14 +2,14 @@ module peierls
 	use mathematics,	only:	dp, PI_dp, i_dp, myExp, crossP, nIntegrate, eigSolver
 	use sysPara
 	use wannier,		only:	genKham, genUnkW
-	use gaugeTrafo,		only:	calcConnCurv, testIfReal
+	!use gaugeTrafo,		only:	calcConnCurv, testIfReal
 	use	polarization,	only:	calcPolViaA
 	use blochWf,		only:	 genUnk
 	implicit none
 	
 
 	private
-	public ::	peierlsSub
+	public ::	peierlsMethod
 
 
 	contains
@@ -25,14 +25,17 @@ module peierls
 		complex(dp),	intent(in)		:: tHopp(:,:,:)	! tHopp(nWfs,nWfs,nSC)
 		real(dp),		intent(out)		:: pPei(3)
 		complex(dp),	allocatable		:: Ham(:,:)
-		real(dp),		allocatable		:: EnPei(:,:)
+		real(dp),		allocatable		:: EnPei(:,:), Aconn(:,:,:,:)
 		integer							:: qi
 		!
-		allocate( 	Ham(nWfs,nWfs)		)
-		allocate(	EnPei(nWfs,nQ)		)
+		allocate( 	Ham(nWfs,nWfs)			)
+		allocate(	EnPei(nWfs,nQ)			)
+		allocate(	Aconn(2,nWfs,nWfs,nQ)	)
 		!
+		Aconn 	= 0.0_dp
 		!
-		!call peierlsSub(tHopp)
+		!ToDo call peierlsSub(tHopp)
+
 
 		do qi = 1, nQ
 			call genKham(qi, tHopp, Ham)
@@ -41,7 +44,7 @@ module peierls
 			!	calc bwfs, or unks
 			!	calc connection
 		end do
-		!call calcPolViaA()
+		call calcPolViaA(Aconn, pPei(1:2))
 
 
 		return
@@ -49,6 +52,7 @@ module peierls
 
 
 	subroutine peierlsSub(tHopp)
+		!shift the Hopping parameters
 		complex(dp),	intent(inout)		:: tHopp(:,:,:)
 		return
 	end subroutine

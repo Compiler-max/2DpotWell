@@ -58,12 +58,6 @@ module wannier
 		call writeWannFiles(wnF, wCent, wSprd)
 		write(*,*)	"[wannMethod]: wrote wannier files"
 
-		
-
-		!call interpolateBands(wnf)
-
-
-
 		!DEBUG
 		if(debugWann) then
 			write(*,*)	"[wannMethod]: all done. start debugging.." 

@@ -5,6 +5,7 @@ module berry
 	use mathematics,	only:	dp, PI_dp, i_dp, acc, myExp, myLeviCivita, nIntegrate
 	use sysPara
 	use blochWf,		only:	FDvelocities
+	use gaugeTrafo,		only:	DoGaugeTrafo
 	use polarization,	only:	calcPolViaA
 	use semiClassics,	only:	calcFirstOrdP
 	use output,			only:	writeConnCurv
@@ -28,39 +29,75 @@ module berry
 
 
 
-
 !public
-	subroutine berryMethod(unk, En, pBerry, pNiu)
-		complex(dp),	intent(in)		:: unk(:,:,:)
-		real(dp),		intent(in)		:: En(:,:)
+	subroutine berryMethod(unkW, tHopp, pBerry, pNiu)
+		complex(dp),	intent(in)		:: unkW(:,:,:), tHopp(:,:,:)
 		real(dp),		intent(out)		:: pBerry(2), pNiu(3)
-		complex(dp),	allocatable		:: velo(:,:,:,:)
-		real(dp),		allocatable		:: Aw(:,:,:,:), FW(:,:,:)
+		real(dp),		allocatable		:: EnH(:,:)
+		complex(dp),	allocatable		:: AconnH(:,:,:,:), FcurvH(:,:,:,:), veloH(:,:,:,:)
 		!
-		allocate(			Aw(			3		, nWfs,nWfs			,	nQ		)			)
-		allocate(			velo(		3		, nWfs,nWfs			,	nQ		)			)
-		allocate(			FW(			3		, nWfs				,	nQ		)			)
+		allocate(			EnH(		nWfs	, nK							)			)
+		allocate(			AconnH(		3		, nWfs,nWfs			,	nK		)			)
+		allocate(			FcurvH(		3		, nWfs, nWfs		,	nK		)			)
+		allocate(			veloH(		3		, nWfs,nWfs			,	nK		)			)
+		!
+		!GET CONNECTION, CURVATURE & VELOCITY
+		call DoGaugeTrafo(unkW, tHopp, EnH, AconnH, FcurvH, veloH)
 
-		call calcConnOnCoarse(unk, Aw)
-		call calcPolViaA(Aw,pBerry)
+		!INTEGRATE CONNECTION
+		!call calcPolViaA(AconnH,pBerry)
 		
 		!ToDo: SWITCH FOR USING NIU
 		if(doNiu) then
-			!Get zero order velocities and curvatures
-			!call calcVeloMat(unk, VeloBwf, velo)
-			call FDvelocities(unk, velo)
-			call calcCurv(En, velo, Fw)
-			!use them for calc of first order pol 
-			call calcFirstOrdP(Fw, Aw, velo, En, pNiu)
+
+			!call calcFirstOrdP(Fw, Aw, velo, En, pNiu)
 		end if
 
 
 		!OUTPUT
-		call writeConnCurv(Aw, Fw)
+		!call writeConnCurv(dreal(AconnH), dreal(FcurvH))
 		!
 		!
 		return
 	end subroutine
+
+
+
+
+
+
+
+	!subroutine berryMethod(unk, En, pBerry, pNiu)
+	!	complex(dp),	intent(in)		:: unk(:,:,:)
+	!	real(dp),		intent(in)		:: En(:,:)
+	!	real(dp),		intent(out)		:: pBerry(2), pNiu(3)
+	!	complex(dp),	allocatable		:: velo(:,:,:,:)
+	!	real(dp),		allocatable		:: Aw(:,:,:,:), FW(:,:,:)
+	!	!
+	!	allocate(			Aw(			3		, nWfs,nWfs			,	nQ		)			)
+	!	allocate(			velo(		3		, nWfs,nWfs			,	nQ		)			)
+	!	allocate(			FW(			3		, nWfs				,	nQ		)			)
+!
+!	!	call calcConnOnCoarse(unk, Aw)
+!	!	call calcPolViaA(Aw,pBerry)
+!	!	
+!	!	!ToDo: SWITCH FOR USING NIU
+!	!	if(doNiu) then
+!	!		!Get zero order velocities and curvatures
+!	!		!call calcVeloMat(unk, VeloBwf, velo)
+!	!		call FDvelocities(unk, velo)
+!	!		call calcCurv(En, velo, Fw)
+!	!		!use them for calc of first order pol 
+!	!		call calcFirstOrdP(Fw, Aw, velo, En, pNiu)
+!	!	end if
+!
+!
+!	!	!OUTPUT
+!	!	call writeConnCurv(Aw, Fw)
+!	!	!
+!	!	!
+!	!	return
+	!end subroutine
 
 
 

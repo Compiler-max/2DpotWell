@@ -11,7 +11,7 @@ program main
 
 	use polarization,	only:		calcIonicPol
 	use semiclassics,	only:		calcFirstOrdP
-	use peierls,		only:		peierlsSub
+	use peierls,		only:		peierlsMethod
 	use output,		 	only:		writeMeshInfo, writeMeshBin, writeUNKs, writeInterpBands, writeWannFiles,writePolFile,& 
 									printTiming	!printMat, printInp, printWannInfo,writeSysInfo  
 
@@ -155,18 +155,20 @@ program main
 
 
 
-	!write(*,*)"*"
-	!write(*,*)"*"
-	!write(*,*)"*"
-	!write(*,*)"*"
-	!write(*,*)"[main]:**************************PEIERLS SUB*************************"
-	!call cpu_time(peiT0)
-	!!
-	!call peierlsSub(wnF, 	unk, Ah, Fh, Vh, EnH, pPei )
-	!!
-	!call cpu_time(peiT1)
-	!write(*,*)"[main]: done with peierls substitution"
-	!peiT = peiT1 - peiT0
+	write(*,*)"*"
+	write(*,*)"*"
+	write(*,*)"*"
+	write(*,*)"*"
+	write(*,*)"[main]:**************************PEIERLS SUB*************************"
+	call cpu_time(peiT0)
+	!
+	if(doPei)  then
+		call peierlsMethod(tHopp, pPei)
+	end if
+	!
+	call cpu_time(peiT1)
+	write(*,*)"[main]: done with peierls substitution"
+	peiT = peiT1 - peiT0
 
 
 

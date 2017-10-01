@@ -7,7 +7,7 @@ module sysPara
 	public :: 	readInp, insideAt, getRindex, getKindex, getGammaPoint, &
 				dim, aX, aY, vol, nAt, relXpos, relYpos, atRx, atRy, atPot,&
 				nG, nG0, Gcut, nQ, nQx, nQy, nKx, nKy, nK, nSC, nSCx, nSCy, nR, nRx, nRy, R0,  dx, dy, dqx, dqy, dkx, dky, &
-				gaugeSwitch, nBands, nWfs, connSwitch, gaugeBack, &
+				gaugeSwitch, nBands, nWfs, connSwitch, doGaugBack, &
 				Gvec, atPos, atR, qpts, rpts, Rcell, kpts, trialOrbVAL, trialOrbSw, Zion, &
 				Bext, &
 				debugProj, debugHam, debugWann, doProj, doBerry, doWanni, doNiu, doPei
@@ -15,13 +15,13 @@ module sysPara
 
 	!
 	integer  										:: 	dim=2, nAt=0, nG=11, nG0,  nQx=1, nQy=1,nQ , nSCx=1, nSCy=1,& 
-														nKx=1, nKy=1, nK, connSwitch=0, gaugeBack, &
+														nKx=1, nKy=1, nK, connSwitch=0, &
 														nRx=10, nRy=10, nR, R0=1, nBands=1,nWfs=1, nSC, gaugeSwitch, trialOrbSw
 	real(dp) 										::	aX=0.0_dp, aY=0.0_dp,vol=0.0_dp, Gcut=2*PI_dp, thres,& 
 														dx, dy, dqx, dqy, dkx, dky, B0, Bext(3)											
 	real(dp),	allocatable,	dimension(:)		::	relXpos, relYpos, atRx, atRy, atPot, trialOrbVAL, Zion
 	real(dp),	allocatable,	dimension(:,:)		::	Gvec, atPos, atR, qpts, rpts, Rcell, kpts 
-	logical											::	debugHam, debugWann, debugProj, doProj , doBerry, doWanni, doNiu, doPei
+	logical											::	debugHam, debugWann, debugProj, doProj , doBerry, doWanni, doNiu, doPei, doGaugBack
 
 
 
@@ -71,6 +71,7 @@ module sysPara
 		call CFG_add_get(my_cfg,	"methods%doWanni"	,	doWanni		,	"switch on/off 	wannier( wnf ) method"	)
 		call CFG_add_get(my_cfg,	"methods%doNiu"		,	doNiu		,	"switch for nius first order pol"		)
 		call CFG_add_get(my_cfg,	"methods%doPei"		,	doPei		,	"switch for  peierls first order pol"	)
+		call CFG_add_get(my_cfg,	"methods%doGaugBack",	doGaugBack	,	"switch for trafo: Wann to Ham gauge"	)
 		![debug]
 		call CFG_add_get(my_cfg,	"debug%debugProj"	, 	debugProj	,	"switch for debuging tests in solveHam"	)
 		call CFG_add_get(my_cfg,	"debug%debugHam"	, 	debugHam	,	"switch for debuging tests in solveHam"	)
@@ -84,7 +85,7 @@ module sysPara
 		call CFG_add_get(my_cfg,	"wann%nKx"			,	nKx			,	"# k x points of interpolation mesh"	)
 		call CFG_add_get(my_cfg,	"wann%nKy"			,	nKy			,	"# k x points of interpolation mesh"	)
 		call CFG_add_get(my_cfg,	"wann%connSwitch"	,	connSwitch	,	"connection via K or via R space"		)
-		call CFG_add_get(my_cfg,	"wann%gaugeBack"	,	gaugeBack	,	"switch for trafo: Wann to Ham gauge"	)
+		
 		![perturbation]
 		call CFG_add_get(my_cfg,	"perturbation%B0"	,	B0			,	"scaling fact. of ext. magnetic field"	)
 		call CFG_add_get(my_cfg,	"perturbation%Bext"	,	Bext		,	"vector of ext. magnetic field"			)
