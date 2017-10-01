@@ -144,6 +144,7 @@ module gaugeTrafo
 		U	= HW
 		!GET U MAT & ENERGIES
 		call eigSolver(U, EnH)
+		U = dconjg( transpose(U))
 		!ROTATE WITH u
 		call calcBarMat(U, HaW, AW, FW)
 		!CONNECTION
@@ -243,8 +244,13 @@ module gaugeTrafo
 						A(1:2,n,m, qi) = A(1:2,n,m, qi) + wby * byl(1:2) * dimag( Myl - one )
 						A(1:2,n,m, qi) = A(1:2,n,m, qi) + wby * byr(1:2) * dimag( Myr - one )
 						!DEBUG:
-						val	= abs( abs(one) - 1.0_dp )
-						if( (val > acc .and. n==m) .or. (abs(val-1.0_dp)>acc .and. n/=m)  ) then
+						if(n == m) then
+							val	= abs( abs(one) - 1.0_dp )
+						else
+							val = abs(one)
+						end if
+						
+						if( (val > acc ) then
 							!write(*,'(a,i2,a,i7,a,f16.8,a,f16.8)')	"[calcConn]: n=",n," unk normalization problem at ki=",ki,&
 							!							" one=",dreal(one),"+i*",dimag(one)
 							found 	= found + 1
@@ -379,7 +385,7 @@ end function
 		do m = 1, nWfs
 			do n = 1, nWfs
 				if( n /= m) then
-					DH(:,n,m)	= HaW(:,n,m) / ( EnH(m) - EnH(n) + machineP	)
+					DH(1:2,n,m)	= HaW(1:2,n,m) / ( EnH(m) - EnH(n) + machineP	)
 				else
 					DH(:,n,m)	= dcmplx(0.0_dp)
 				end if
@@ -387,7 +393,7 @@ end function
 		end do
 		!
 		!CALC CONNECTION
-		AconnH(:,:,:) = AW(:,:,:) + i_dp * DH(:,:,:)
+		AconnH(1:2,:,:) = AW(1:2,:,:) + i_dp * DH(1:2,:,:)
 		!
 		!
 		return
@@ -404,7 +410,7 @@ end function
 		!
 		do m = 1, nWfs
 			do n = 1, nWfs
-				veloH(:,n,m)	= HaW(:,n,m) - i_dp * dcmplx(	EnH(m) - EnH(n)		) * AW(:,n,m)
+				veloH(1:2,n,m)	= HaW(1:2,n,m) - i_dp * dcmplx(	EnH(m) - EnH(n)		) * AW(1:2,n,m)
 			end do
 		end do
 		!
