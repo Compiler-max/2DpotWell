@@ -32,7 +32,16 @@ module gaugeTrafo
 
 		do ki = 1, nK
 			call interpolateMat(tHopp, rHopp, HW, HaW, AW, FW)
-			call gaugeBack(Hw, HaW, AW, FW, EnH(:,ki), U, AconnH(:,:,:,ki), FcurvH(:,:,:,ki), veloH(:,:,:,ki))	
+			if( doGaugBack ) then
+				write(*,*)	"[DoGaugeTrafo]: start gauging back"
+				call gaugeBack(Hw, HaW, AW, FW, EnH(:,ki), U, AconnH(:,:,:,ki), FcurvH(:,:,:,ki), veloH(:,:,:,ki))	
+			else
+				write(*,*)	"[DoGaugeTrafo]: Gauge trafo DISABLED	"
+				AconnH(1:2,:,:,ki)	= AW(1:2,:,:)
+				call eigSolver(HW,EnH(:,ki))
+				call calcVelo(EnH(:,ki), AW, HaW, veloH(:,:,:,ki))
+				!call calcCurv(FW, DH, AW, FcurvH)
+			end if
 		end do	
 		write(*,*)	"[DoGaugeTrafo]: calculated Hamiltonian gauge energy, connection, curvature, velocity"
 		!
@@ -250,7 +259,7 @@ module gaugeTrafo
 							val = abs(one)
 						end if
 						
-						if( (val > acc ) then
+						if( val > acc ) then
 							!write(*,'(a,i2,a,i7,a,f16.8,a,f16.8)')	"[calcConn]: n=",n," unk normalization problem at ki=",ki,&
 							!							" one=",dreal(one),"+i*",dimag(one)
 							found 	= found + 1
@@ -329,19 +338,7 @@ end function
 
 
 
-!gaugeBack HELPERS	
-	subroutine calcCurv(FW, DH, AW, FcurvH)
-		complex(dp),	intent(in)		:: FW(:,:,:,:), DH(:,:,:), AW(:,:,:)
-		complex(dp),	intent(out)		:: FcurvH(:,:,:)
-		complex(dp),	allocatable		:: FH(:,:,:,:)
-		!
-		!ToDO
-		FcurvH	= dcmplx(0.0_dp)
-
-		return
-	end subroutine
-
-
+!gaugeBack HELPERS
 	subroutine calcBarMat(U, HaW, AW, FW)
 		!Helper for gaugeBack
 		!	 for any quantity O: \bar(O) = U^dag O U
@@ -381,6 +378,8 @@ end function
 		complex(dp),	intent(out)		:: AconnH(:,:,:), DH(:,:,:)
 		integer							:: m, n 
 		!
+		AconnH	= dcmplx(0.0_dp)
+		DH		= dcmplx(0.0_dp)
 		!SET UP D MATRIX
 		do m = 1, nWfs
 			do n = 1, nWfs
@@ -408,6 +407,8 @@ end function
 		complex(dp),	intent(out)		:: veloH(:,:,:)
 		integer							:: n, m
 		!
+		veloH	= dcmplx(0.0_dp)
+		!
 		do m = 1, nWfs
 			do n = 1, nWfs
 				veloH(1:2,n,m)	= HaW(1:2,n,m) - i_dp * dcmplx(	EnH(m) - EnH(n)		) * AW(1:2,n,m)
@@ -418,7 +419,16 @@ end function
 	end subroutine
 
 
+	subroutine calcCurv(FW, DH, AW, FcurvH)
+		complex(dp),	intent(in)		:: FW(:,:,:,:), DH(:,:,:), AW(:,:,:)
+		complex(dp),	intent(out)		:: FcurvH(:,:,:)
+		complex(dp),	allocatable		:: FH(:,:,:,:)
+		!
+		!ToDO
+		FcurvH	= dcmplx(0.0_dp)
 
+		return
+	end subroutine
 
 
 !!CONVERT OMEGA TENSOR TO VECTOR

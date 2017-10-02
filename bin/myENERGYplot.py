@@ -20,13 +20,18 @@ f0.close()
 #f1.close()
 
 f2			= open("rawData/bandStruct.dat",'rb') #rb = Read Binary
-rawData	= np.fromfile(f2,dtype='float64',count=-1)
+rawData		= np.fromfile(f2,dtype='float64',count=-1)
 f2.close()
 
 
 f3			= open("rawData/Ewann.dat",'rb') #rb = Read Binary
-rawWann	= np.fromfile(f3,dtype='float64',count=-1)
+rawWann		= np.fromfile(f3,dtype='float64',count=-1)
 f3.close()
+
+
+f5			= open("rawData/EnInterP.dat",'rb') #rb = Read Binary
+rawInterP	= np.fromfile(f5,dtype='float64',count=-1)
+f5.close()
 
 f4			= open("rawData/sysPara.dat",'rb')
 rawSysP 	= np.fromfile(f4,dtype='int32',count=-1)
@@ -71,9 +76,10 @@ if( nKx != nKy):
 	print("warning the k point spacing per dimension is differnent, this affects the path through k space")
 
 #RESHAPE RAW DATA
-qpts	= np.reshape(qpts,(nK,2))
-En		= np.reshape(rawData,(nK,nG))    #
-EW		= np.reshape(rawWann,(nK,nWfs))		
+qpts	= np.reshape(	qpts		,	(nK,2)		)
+En		= np.reshape(	rawData		,	(nK,nG)		)    
+EW		= np.reshape(	rawWann		,	(nK,nWfs)	)		
+EI 		= np.reshape(	rawInterP	,	(nK,nWfs)	)
 
 #print(EW)
 
@@ -83,6 +89,7 @@ nKplot	= nPath * nKx #+ nKy + nKy
 kPlot	= np.linspace(0,nKplot,nKplot)
 EnPlot	= np.empty(nKplot)
 EWPlot	= np.empty(nKplot)
+EIPlot	= np.empty(nKplot)
 
 xticks = np.arange(0,nKplot+nKx,nKx)				 #steps in kspace
 xtickLabel = np.array([r'$X$',r'$\Gamma$',r'$M$',r'$Y$',r'$\Gamma$']) #symmetry points visited
@@ -117,7 +124,7 @@ for n in range(0,nG):
 		ibar			= Kind(0,nKy-1-i)
 		EnPlot[offs+i]	= En[ibar,n]
 
-	ax.plot(kPlot,EnPlot,color='b',linewidth=0.4)
+	ax.plot(kPlot,EnPlot,color='k',linewidth=0.4)
 
 
 #PROJECTED STATES
@@ -127,22 +134,28 @@ for n in range(0,nWfs):
 	for i in range(0,nKx):	
 		ibar			= Kind(nKx-1-i,0)
 		EWPlot[offs+i]	= EW[ibar,n]
+		EIPlot[offs+i]	= EI[ibar,n]
 	#G to M
 	offs	= nKx		
 	for i in range(0,nKx):
 		ibar			= Kind(i,i)
 		EWPlot[offs+i]	= EW[ibar,n]
+		EIPlot[offs+i]	= EI[ibar,n]
 	#M to Y
 	offs	= 2 * nKx
 	for i in range(0,nKy):
 		ibar			= Kind(nKx-1-i,nKy-1)
 		EWPlot[offs+i]	= EW[ibar,n]
+		EIPlot[offs+i]	= EI[ibar,n]
 	#Y to G
 	offs	= 3 * nKx
 	for i in range(0,nKy):
 		ibar			= Kind(0,nKy-1-i)
 		EWPlot[offs+i]	= EW[ibar,n]
+		EIPlot[offs+i]	= EI[ibar,n]
 	ax.plot(kPlot,EWPlot,marker='+',color='r',linewidth=0.4)
+	ax.plot(kPlot,EIPlot,marker='*',color='g',linewidth=0.4)
+
 
 
 ax.set_xlim([0,nKplot])

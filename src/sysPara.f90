@@ -7,10 +7,10 @@ module sysPara
 	public :: 	readInp, insideAt, getRindex, getKindex, getGammaPoint, &
 				dim, aX, aY, vol, nAt, relXpos, relYpos, atRx, atRy, atPot,&
 				nG, nG0, Gcut, nQ, nQx, nQy, nKx, nKy, nK, nSC, nSCx, nSCy, nR, nRx, nRy, R0,  dx, dy, dqx, dqy, dkx, dky, &
-				gaugeSwitch, nBands, nWfs, connSwitch, doGaugBack, &
+				gaugeSwitch, nBands, nWfs, connSwitch,  &
 				Gvec, atPos, atR, qpts, rpts, Rcell, kpts, trialOrbVAL, trialOrbSw, Zion, &
 				Bext, &
-				debugProj, debugHam, debugWann, doProj, doBerry, doWanni, doNiu, doPei
+				debugProj, debugHam, debugWann, doProj, doBerry, doWanni, doNiu, doPei, doGaugBack
 
 
 	!

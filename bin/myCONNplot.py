@@ -53,7 +53,7 @@ aY			= cellI[1]
 kpts	= np.reshape(kpts,(nK,2))
 
 Aconn	= np.reshape(rawDataConn,(nK, nWfs, nWfs, 3))    		#	Aconn(3, 	nWfs,	nK	)										
-Fcurv	= np.reshape(rawDataCurv,(nK, nWfs, 3))			 		#	Fcurv(3, 	nWfs,	nK	)
+Fcurv	= np.reshape(rawDataCurv,(nK, nWfs, nWfs, 3))			 		#	Fcurv(3, 	nWfs,	nK	)
 
 
 

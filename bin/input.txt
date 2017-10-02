@@ -25,11 +25,13 @@
     thres       = 0.1
 
 [methods]
-    doProj      = t
+    doProj      = f
+    doGaugBack  = t
     doBerry     = t
     doWanni     = t
     doNiu       = t
     doPei       = t
+
 
 [debug]
     debugHam    = f
@@ -44,8 +46,8 @@
     trialOrbSw  = 0
     trialOrbVAL = 1.0 1.0
     R0          = 1
-    nKx         = 8
-    nKy         = 8
+    nKx         = 32
+    nKy         = 32
     connSwitch  = 1
     gaugeBack   = 0
   
