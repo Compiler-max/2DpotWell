@@ -227,19 +227,32 @@ module projection
 		!end do
 
 		!HYBRID STATES
-		do n = 1, nWfs
-			do ri = 1, nR
-				!ONLY IN HOME UNIT CELL
-				if(  rpts(1,ri) < aX .and. rpts(2,ri) < aY) then
-					do at = 1, nAt 
-						if( insideAt(at,rpts(:,ri))) then
-							gnr(ri,n)	= gVal(at,n,ri)
-						end if 
-					end do
-				end if
-			end do
-		end do
+		!do n = 1, nWfs
+		!	do ri = 1, nR
+		!		!ONLY IN HOME UNIT CELL
+		!		if(  rpts(1,ri) < aX .and. rpts(2,ri) < aY) then
+		!			do at = 1, nAt 
+		!				if( insideAt(at,rpts(:,ri))) then
+		!					gnr(ri,n)	= gVal(at,n,ri)
+		!				end if 
+		!			end do
+		!		end if
+		!	end do
+		!end do
 
+		!3 BAND MODEL
+		do ri = 1, nR
+			!ONLY IN HOME UNIT CELL
+			if(  rpts(1,ri) < aX .and. rpts(2,ri) < aY) then
+				if( insideAt(1,rpts(:,ri))) then
+					gnr(ri,1)	= gVal(1,1,ri)
+					gnr(ri,3)	= gVal(1,1,ri)
+				else if(insideAt(2,rpts(:,ri))) then
+					gnr(ri,2)	= gVal(2,1,ri)
+					gnr(ri,3)	= gVal(2,1,ri)
+				end if
+			end if
+		end do
 
 
 		return
