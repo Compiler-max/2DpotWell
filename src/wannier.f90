@@ -109,9 +109,8 @@ module wannier
 			do Ri = 1, nSC
 				do xi = 1, nR
 					do qi = 1 , nQ
-						phase			= myExp(	-1.0_dp * dot_product(	qpts(:,qi) , Rcell(:,Ri)	) 	 )
-						phase			= phase * myExp( dot_product( qpts(:,qi) , rpts(:,xi)))
-						wnF(xi,Ri,n) = wnF(xi,Ri,n) + unk(xi,n,qi) * phase / dsqrt(nQreal)
+						phase			= myExp( 	dot_product( qpts(:,qi) , rpts(:,xi) - Rcell(:,Ri) )			)
+						wnF(xi,Ri,n)	= wnF(xi,Ri,n) + unk(xi,n,qi) * phase / dsqrt(nQreal)
 					end do
 				end do
 			end do
@@ -137,8 +136,7 @@ module wannier
 		do n = 1, nWfs
 			call wXw(R0,R0,n,n,wnF, xc(:,n))
 			call wXXw(R0,R0,n,n, wnF, tmp)
-			sprd(1,n) = abs( tmP(1) - xc(1,n)**2 )
-			sprd(2,n) = abs( tmP(2) - xc(2,n)**2 )
+			sprd(:,n) = abs( tmp(:) - xc(:,n)**2 )
 			write(*,'(a,i2,a,f10.6,a,f10.6,a,e16.9)')"[calcWcent]: n=",n," center= (",xc(1,n),",",xc(2,n),"), norm2(sprd)=",norm2(sprd(:,n))
 			!
 		end do
@@ -213,92 +211,56 @@ module wannier
 		!	<Rn|R'm> = \delta(R,R') \delta(n,m)
 		!	CURRENTLY ONLY CHECKING <1n|1m> = \delta(n,m)
 		complex(dp),	intent(in)		:: wnF(:,:,:) !wnF( 	nR, nSC, nWfs		)	
-		complex(dp),	allocatable		:: f(:)
-		complex(dp)						:: oLap
-		real(dp)						:: avg, dmax
+		real(dp),	allocatable			:: f(:)
+		real(dp)						:: oLap,  avg, dmax
 		logical							:: rLog, iLog
-		integer							:: n, m, ri, sc,sc1, sc2, tot, diffSC
+		integer							:: n, m, ri, sc,sc1, sc2, tot
 		!
 		
 		
 		!
-		!$OMP PARALLEL DEFAULT(SHARED)	PRIVATE(n, m, ri, sc, sc1, sc2, rLog, iLog, oLap, f) &
-		!$OMP& REDUCTION(+:avg,tot, diffSC, isNormal) REDUCTION(max:dmax) 
+		!!!!$OMP PARALLEL DEFAULT(SHARED)	PRIVATE(n, m, ri, sc, sc1, sc2, rLog, iLog, oLap, f) &
+		!!!!$OMP& REDUCTION(+:avg,tot, diffSC, isNormal) REDUCTION(max:dmax) 
 		isNormal 	= 0
 		sc			= 1
 		dmax		= 0.0_dp
 		avg			= 0.0_dp
-		diffSC		= 0
+		tot			= 0
 		allocate(	f(nR)	)
 		!$OMP DO COLLAPSE(3) SCHEDULE(STATIC) 
 		do sc1 = 1, nSC
 			do sc2 = 1, nSC
 				do n = 1, nWfs
-					!INTEGRATE OVERLAPS
-					do ri = 1, nR
-						f(ri) 	= dconjg( wnF(ri,sc1,n) ) * wnF(ri,sc2,n)
-					end do
-					oLap 	= nIntegrate(nR, nRx, nRy, dx, dy, f)
-					!CHECK CONDITIONS
-					if( sc1 == sc2) then
-						rLog 	=	abs(	abs(dreal(oLap))	-		1.0_dp	) 	> acc
-						iLog	=	abs(	dimag(oLap)							)	> acc
-					else
-						rLog 	=	abs(	abs(dreal(oLap))					) 	> acc
-						iLog	=	abs(	dimag(oLap)							)	> acc
-						if( rLog .or. iLog) then
-							diffSC = diffSC + 1
-						end if 
-					end if
-					if( rLog .or. iLog) then
-						!write(*,'(a,i2,a,i2,a,i2,a,i2,a,f6.3,a,f6.3)')"[isNormal]: < R=",sc,", n=",n, &
-						!												" |R=",sc,", m=",n," > = ", dreal(oLap),"+i*",dimag(oLap)
-						isNormal	= isNormal + 1
-						avg			= avg + abs(oLap) -1.0_dp
-						if( abs(oLap)-1.0_dp > dmax) then
-							dmax	= abs(oLap)
-						end if
-					end if
-					!write(*,'(a,i2,a,i2,a,i2,a,i2,a,f6.3,a,f6.3)')"[isNormal]: < R=",sc,", n=",n, &
-					!									" |R=",sc,", m=",n," > = ", dreal(oLap),"+i*",dimag(oLap)
-					!
-					!
-					if(sc1 /= sc2) then
-						do m = 1, nWfs
-							if(m /= n) then
-								!INTEGRATE OVERLAPS
-								do ri = 1, nR
-									f(ri) 	= dconjg( wnF(ri,sc1,n) ) * wnF(ri,sc2,m)
-								end do
-								oLap 	= nIntegrate(nR, nRx, nRy, dx, dy, f)
-								!CHECK CONDITIONS
-								if( abs(oLap) > acc ) then
-									!write(*,'(a,i2,a,i2,a,i2,a,i2,a,f6.3,a,f6.3)')"[isNormal]: < R=",sc,", n=",n, &
-									!										" |R=",sc,", m=",m," > = ", dreal(oLap),"+i*",dimag(oLap)	
-									isNormal	= isNormal + 1
-									avg			= avg + abs(oLap)
-									if( abs(oLap) > dmax) then
-										dmax	= abs(oLap)
-									end if		
-								end if
-								!write(*,'(a,i2,a,i2,a,i2,a,i2,a,f6.3,a,f6.3)')"[isNormal]: < R=",sc,", n=",n, &
-								!										" |R=",sc,", m=",m," > = ", dreal(oLap),"+i*",dimag(oLap)	!
-							end if
-							tot = tot + 1
+					do m = 1, nWfs
+						!INTEGRATE OVERLAPS
+						do ri = 1, nR
+							f(ri) 	= abs( dconjg(wnF(ri,sc1,n)) * wnF(ri,sc2,n) )
 						end do
-					end if
-					!
-					tot = tot + 1
+						oLap 	= nIntegrate(nR, nRx, nRy, dx, dy, f)
+						!APPLY CONDITION
+						if( sc1 == sc2 .and. n==m ) then
+							oLap = oLap - 1.0_dp
+						end if
+						!TEST CONDITION
+						if(  oLap > acc) then
+							isNormal	= isNormal + 1
+							avg	= avg + oLap
+							if( oLap > dmax) then
+								dmax = oLap
+							end if 
+						end if
+						tot = tot +1
+					end do
 				end do
 			end do
 		end do
-		!$OMP END DO
+		!!!!$OMP END DO
 		deallocate(	f )
-		!$OMP END PARALLEL
+		!!!!$OMP END PARALLEL
 		avg	= avg / real(isNormal,dp)
 		write(*,'(a,i5,a,i8,a,f16.12,a,f16.12)')	"[isNormal]: ",isNormal," of ",tot, &
 													" are not properly normalized. dmax=",dmax," avg diff=",avg 
-		write(*,'(a,i8)')	"[isNormal]: found ",diffSC, "issues between different unit cells "
+		!											
 		!
 		return
 	end function
