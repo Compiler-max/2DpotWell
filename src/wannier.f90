@@ -110,7 +110,7 @@ module wannier
 				do xi = 1, nR
 					do qi = 1 , nQ
 						phase			= myExp( 	dot_product( qpts(:,qi) , rpts(:,xi) - Rcell(:,Ri) )			)
-						wnF(xi,Ri,n)	= wnF(xi,Ri,n) + unk(xi,n,qi) * phase / dsqrt(nQreal)
+						wnF(xi,Ri,n)	= wnF(xi,Ri,n) + unk(xi,n,qi) * phase / nQreal!dsqrt(nQreal)
 					end do
 				end do
 			end do
@@ -203,6 +203,60 @@ module wannier
 	end subroutine
 
 
+	subroutine wHw(R1,R2,n,m wnF, res)
+		integer,		intent(in)		:: R1, R2, n, m
+		complex(dp),	intent(in)		:: wnF(:,:,:)
+		real(dp),		intent(out)		:: res
+		real(dp),						:: resV, resX, resY
+		real(dp),		allocatable 	:: f(:)
+		integer							:: ri, xi, yi, cnt, left, right 
+		!
+		allocate(	f(nR)	)
+		!POTENTIAL TERM
+		do ri = 1, nR
+			f(ri)	= dconjg(wnf(ri,n,R1)) * getPot(ri) * wnf(ri,m,R2)
+		end do 	
+		resV = nIntegrate(nR, nRx, nRy, dx, dy, f)
+		!
+		!
+		!X DERIVATIVE
+		cnt = 1
+		do xi = 1, nRx
+			do yi = 1, nRy
+				ri		= getRindex(xi,yi)
+				left	= getRleftX(xi,yi)
+				right	= getRrightX(xi,yi)
+				!
+				f(cnt) 	= dconjg(wnf(ri,n,R1)) * ( wnf(right,m,R2) - 2.0_dp * wnf(ri,m,R2) + wnf(left,m,R2) ) / dx**2 
+				cnt 	= cnt + 1
+			end do
+		end do
+		resX = nIntegrate(nR, nRx, nRy, dx, dy, fx)
+		!
+		!
+		!Y DERIVATIVE
+		cnt = 1
+		do xi = 1, nRx
+			do yi = 1, nRy
+				ri		= getRindex(xi,yi)
+				left	= getRleftY(xi,yi)
+				right	= getRrightY(xi,yi)
+				!
+				f(cnt) 	= dconjg(wnf(ri,n,R1)) * ( wnf(right,m,R2) - 2.0_dp * wnf(ri,m,R2) + wnf(left,m,R2) ) / dy**2 
+				cnt 	= cnt + 1
+			end do
+		end do
+		resY = nIntegrate(nR, nRx, nRy, dx, dy, fy)
+		!
+		!
+		!SUM RESULTS
+		res = resV - 0.5_dp * (resX + resY )
+		!
+		!
+		return
+	end subroutine
+
+
 
 
 	!DEBUGGING:
@@ -239,10 +293,11 @@ module wannier
 						oLap 	= nIntegrate(nR, nRx, nRy, dx, dy, f)
 						!APPLY CONDITION
 						if( sc1 == sc2 .and. n==m ) then
-							oLap = oLap - 1.0_dp
+							oLap = abs(oLap - 1.0_dp)
 						end if
 						!TEST CONDITION
-						if(  oLap > acc) then
+						if(  abs(oLap) > acc) then
+							write(*,'(a,i2,a,i2,a,i2,a,i2,a,f6.4)')	"[isNormal]: sc1=",sc1,", sc2=",sc2,", n=",n,", m=",m,": oLap=",oLap
 							isNormal	= isNormal + 1
 							avg	= avg + oLap
 							if( oLap > dmax) then
