@@ -25,8 +25,8 @@ module blochWf
 		!			c = alpha * op(a) *op(b) + beta * c
 		integer		, intent(in)	:: qi
 		complex(dp)	, intent(in)	:: basCoeff(:,:)
-		complex(dp)	, intent(out)	:: unk(:,:,:)
-		complex(dp)	, allocatable	:: basVec(:)
+		complex(dp)	, intent(out)	:: unk(:,:)
+		complex(dp)	, allocatable	:: basVec(:) 
 		integer 				 	:: xi
 		complex(dp)					:: phase
 		!
@@ -41,12 +41,11 @@ module blochWf
 			!
 			!WAVE FUNCTIONS
 			phase			= myExp( -1.0_dp * dot_product( qpts(:,qi), rpts(:,xi) )		)
-			unk(xi,:,qi)	= phase * matmul(basVec,basCoeff) !/ dsqrt(vol)
+			unk(xi,:)	= phase * dsqrt(real(nSc,dp))   * matmul(basVec,basCoeff) 
+			!unk(xi,:)	= matmul(basVec,basCoeff) 
 			!
-			
 		end do
 		!$OMP END DO
-		deallocate(	basVec		)
 		!$OMP END PARALLEL
 		!
 		return 
@@ -67,7 +66,7 @@ module blochWf
 		do n = 1, nWfs
 			do xi = 1, nR
 				phase		 = myExp( -1.0_dp 	*	 dot_product( qpts(:,qi) , rpts(:,xi)	) 			)
-				unk(xi,n) = phase * bWf(xi,n)
+				unk(xi,n) = phase * dsqrt(real(nSC,dp))* bWf(xi,n)
 			end do
 		end do
 		!$OMP END PARALLEL DO
@@ -85,24 +84,24 @@ module blochWf
 		!
 		fcount	= 0
 
-		!$OMP PARALLEL DEFAULT(SHARED) PRIVATE(q1, q2, m, n, ri, f, oLap, lphase, rphase) REDUCTION(.AND.:isNorm) REDUCTION(+:fcount, cnt)
+		!!!!$OMP PARALLEL DEFAULT(SHARED) PRIVATE(q1, q2, m, n, ri, f, oLap, lphase, rphase) REDUCTION(.AND.:isNorm) REDUCTION(+:fcount, cnt)
 		allocate( f(size(unk,1)) 	)
-		!$OMP DO COLLAPSE(4), SCHEDULE(STATIC) 
+		!!!!$OMP DO COLLAPSE(3), SCHEDULE(DYNAMIC,nG/2) 
 		do q2 = 1, size(unk,3)
-			do q1 = 1, size(unk,3)
+			!do q1 = 1, size(unk,3)
 				do m = 1, size(unk,2) 
 					do n = 1, size(unk,2)
 						!INTEGRATE
 						f	= dcmplx(0.0_dp)
 						do ri = 1, size(unk,1)
-							lphase	= myExp( dot_product( qpts(:,q1), rpts(:,ri))	)
+							lphase	= myExp( dot_product( qpts(:,q2), rpts(:,ri))	)
 							rphase	= myExp( dot_product( qpts(:,q2), rpts(:,ri))	)
-							f(ri)	= dconjg( lphase * unk(ri,m,q1) 	)	* rphase * unk(ri,n,q2)
+							f(ri)	= dconjg( lphase * unk(ri,m,q2) 	)	* rphase * unk(ri,n,q2)
 						end do
 						oLap	= nIntegrate(nR, nRx,nRy, dx,dy, f)
 						!write(*,'(a,i2,a,i2,a,i3,a,i3,a,e10.3,a,e10.3)')	"[testNormal]: n=",n,",m=",m,", q1=",q1,", q2=",q2," oLap =",dreal(oLap),"+i*",dimag(oLap)
 						!ADJUST IF NONE ZERO
-						if( n==m .and. q1==q2	) then
+						if( n==m 	) then
 							!write(*,'(a,i3,a,i3,a,i3,a,i3,a,f10.6,a,e10.3)')	"[testNormal]: n=",n,",m=",m,", q1=",q1,", q2=",q2," oLap =",dreal(oLap),"+i*",dimag(oLap)
 							oLap = oLap - dcmplx(1.0_dp)
 						end if
@@ -110,18 +109,18 @@ module blochWf
 						if( abs(oLap) > acc ) then
 							isNorm	= .false.
 							fcount	= fcount + 1
-							!write(*,'(a,i2,a,i2,a,i3,a,i3,a,e10.3,a,e10.3)')	"[testNormal]: n=",n,",m=",m,", q1=",q1,", q2=",q2," oLap =",dreal(oLap),"+i*",dimag(oLap)
+							write(*,'(a,i2,a,i2,a,i3,a,i3,a,e10.3,a,e10.3)')	"[testNormal]: n=",n,",m=",m,", q1=",q1,", q2=",q2," oLap =",dreal(oLap),"+i*",dimag(oLap)
 						else
 							isNorm	= .true.
 						end if
 						cnt = cnt + 1
 					end do
 				end do
-			end do
+			!end do
 		end do
-		!$OMP END DO
+		!!!$OMP END DO
 		deallocate(	f	)
-		!$OMP END PARALLEL
+		!!!!$OMP END PARALLEL
 
 		!
 		testNormUNK	= isNorm
@@ -147,8 +146,9 @@ module blochWf
 			k(:) = qpts(:,qi) + Gvec(:,i)
 			!
 			if( norm2(k) < Gcut ) then
-				basVec(i) 		= myExp( dot_product( k, rpts(:,ri) )		)
+				basVec(i) 		= myExp( dot_product( k(:), rpts(:,ri) )		) 
 			else
+				!write(*,*)	"[calcBasis]: set i=",i,"to zero"
 				basVec(i) 		= dcmplx( 0.0_dp )
 			end if
 		end do
@@ -159,8 +159,34 @@ module blochWf
 
 
 
+	subroutine testNormalBwf(qi, bwf)
+		integer,		intent(in)		:: qi
+		complex(dp),	intent(in)		:: bwf(:,:)
+		complex(dp),	allocatable		:: f(:)
+		integer							:: n,m, xi,yi,ri, cnt, tot
+		complex(dp)						:: oLap
+		!
+		allocate(	f(100)	)
+		write(*,*)"[testNormalBwf]: qi=",qi
+		do n = 1, nG
+			!INTEGRATE
+			cnt = 1
+			do xi = 1, 10
+				do yi = 1, 10
+					ri		= getRindex(xi,yi)
+					f(cnt)	= dconjg( bwf(ri,n) ) * bwf(ri,n)
+					cnt		= cnt + 1
+				end do
+			end do
+			oLap	= nIntegrate(100, 10, 10, 0.1_dp, 0.1_dp, f)
+			!CONDITION
+			!
+			write(*,'(a,i3,a,f6.4a,f6.4,a)')"[testNormalBwf]: n=",n,", oLap=(",dreal(oLap),"+i*",dimag(oLap),")."		
+			!write(*,'(a,i3,a,f6.4a,f6.4,a)')"[testNormalBwf]: n=",n,", nSC*oLap=(",nSC*dreal(oLap),"+i*",nSC*dimag(oLap),")."			
+		end do
 
-
+		return
+	end subroutine
 
 end module blochWf 
 

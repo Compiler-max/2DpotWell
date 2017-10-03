@@ -153,8 +153,8 @@ for n in range(0,nWfs):
 		ibar			= Kind(0,nKy-1-i)
 		EWPlot[offs+i]	= EW[ibar,n]
 		EIPlot[offs+i]	= EI[ibar,n]
-	ax.plot(kPlot,EWPlot,marker='+',color='r',linewidth=0.4)
-	ax.plot(kPlot,EIPlot,marker='*',color='g',linewidth=0.4)
+	#ax.plot(kPlot,EWPlot,marker='+',color='r',linewidth=0.4)
+	ax.plot(kPlot,EIPlot,marker='+',color='r',linewidth=0.4)
 
 
 

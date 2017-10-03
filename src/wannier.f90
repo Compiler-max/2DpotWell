@@ -10,7 +10,7 @@ module wannier
 	implicit none
 
 	private
-	public :: wannMethod
+	public :: wannMethod, calcHopping
 
 	contains
 
@@ -32,14 +32,13 @@ module wannier
 
 
 !public:
-	subroutine wannMethod(unk, pWann)
+	subroutine wannMethod(unk,  wnf, pWann)
 		complex(dp),	intent(in)		:: unk(:,:,:)		!	unk(	nR 	,	nWfs	, nQ	)
+		complex(dp),	intent(out)		:: wnf(:,:,:)	
 		real(dp),		intent(out)		:: pWann(2)
-		complex(dp),	allocatable		:: wnF(:,:,:)
 		real(dp),		allocatable		:: wCent(:,:), wSprd(:,:)
 		integer							:: normCount
 		!
-		allocate(			wnF( 		nR		, 	nSC		, nWfs		)				)
 		allocate(			wCent(		2		, 	nWfs				)				)
 		allocate(			wSprd(		2		, 	nWfs				)				)
 
@@ -80,8 +79,29 @@ module wannier
 
 
 
-
-
+	subroutine calcHopping(wnf, tHopp, rHopp)
+		complex(dp),	intent(in)		:: wnf(:,:,:)
+		complex(dp),	intent(out)		:: tHopp(:,:,:), rHopp(:,:,:,:) !tHopp(nWfs,nWfs,nSC)
+		integer							:: n,m, R
+		real(dp)						:: wRw(2)
+		!
+		write(*,*)"[calcHopping]: hello"
+		do R = 1, nSC
+			do m = 1, nWfs
+				do n = 1, nWfs
+					tHopp(n,m,R)		= wHw(R0,R,n,m, wnF)
+					write(*,'(a,i3,a,i3,a,i3,a,f10.5)')"[calcHopping]: calculated R=",R,", n=",n,", m=",m,": wHw=",dreal(tHopp(n,m,R))
+					!
+					call wXw(R0,R,n,m, wnF, wRw)
+					rHopp(1:2,n,m,R)	= wRw(1:2)
+					write(*,*)"[calcHopping]: calculated wXw"
+				end do
+			end do
+		end do
+		write(*,*)"[calcHopping]: by by"
+		!
+		return
+	end subroutine
 
 
 
@@ -203,58 +223,59 @@ module wannier
 	end subroutine
 
 
-	subroutine wHw(R1,R2,n,m wnF, res)
+	real(dp) function wHw(R1,R2,n,m, wnF)
 		integer,		intent(in)		:: R1, R2, n, m
 		complex(dp),	intent(in)		:: wnF(:,:,:)
-		real(dp),		intent(out)		:: res
-		real(dp),						:: resV, resX, resY
+		real(dp)						:: resV, resX, resY
 		real(dp),		allocatable 	:: f(:)
 		integer							:: ri, xi, yi, cnt, left, right 
 		!
 		allocate(	f(nR)	)
 		!POTENTIAL TERM
 		do ri = 1, nR
-			f(ri)	= dconjg(wnf(ri,n,R1)) * getPot(ri) * wnf(ri,m,R2)
+			f(ri)	=  dreal(	dconjg(wnf(ri,n,R1)) * getPot(ri) * wnf(ri,m,R2) )
 		end do 	
 		resV = nIntegrate(nR, nRx, nRy, dx, dy, f)
 		!
 		!
 		!X DERIVATIVE
 		cnt = 1
+		f	= 0.0_dp
 		do xi = 1, nRx
 			do yi = 1, nRy
 				ri		= getRindex(xi,yi)
 				left	= getRleftX(xi,yi)
 				right	= getRrightX(xi,yi)
 				!
-				f(cnt) 	= dconjg(wnf(ri,n,R1)) * ( wnf(right,m,R2) - 2.0_dp * wnf(ri,m,R2) + wnf(left,m,R2) ) / dx**2 
+				f(cnt) 	= dreal( 	dconjg(wnf(ri,n,R1)) * ( wnf(right,m,R2) - 2.0_dp * wnf(ri,m,R2) + wnf(left,m,R2) )   ) / dx**2
 				cnt 	= cnt + 1
 			end do
 		end do
-		resX = nIntegrate(nR, nRx, nRy, dx, dy, fx)
+		resX = nIntegrate(nR, nRx, nRy, dx, dy, f)
 		!
 		!
 		!Y DERIVATIVE
 		cnt = 1
+		f	= 0.0_dp
 		do xi = 1, nRx
 			do yi = 1, nRy
 				ri		= getRindex(xi,yi)
 				left	= getRleftY(xi,yi)
 				right	= getRrightY(xi,yi)
 				!
-				f(cnt) 	= dconjg(wnf(ri,n,R1)) * ( wnf(right,m,R2) - 2.0_dp * wnf(ri,m,R2) + wnf(left,m,R2) ) / dy**2 
+				f(cnt) 	=  dreal(	dconjg(wnf(ri,n,R1)) * ( wnf(right,m,R2) - 2.0_dp * wnf(ri,m,R2) + wnf(left,m,R2) )		) / dy**2 
 				cnt 	= cnt + 1
 			end do
 		end do
-		resY = nIntegrate(nR, nRx, nRy, dx, dy, fy)
+		resY = nIntegrate(nR, nRx, nRy, dx, dy, f)
 		!
 		!
 		!SUM RESULTS
-		res = resV - 0.5_dp * (resX + resY )
+		wHw= resV - 0.5_dp * (resX + resY )
 		!
 		!
 		return
-	end subroutine
+	end function
 
 
 

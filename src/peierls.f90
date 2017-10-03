@@ -55,13 +55,13 @@ module peierls
 			call genUnk(ki, Ham, unkP(:,:,ki))
 		end do
 		!
-		write(*,*)	"[peierlsMethod]: solved Ham, calc connection, etc."
-		!CALC CONNECTION & POL
-		call DoGaugeTrafo(unkP, tHopp, EnP, AconnP, FcurvP, veloP)
-		call calcPolViaA(AconnP, pPei(1:2))
-		write(*,*)	"[peierlsMethod]: calculated pol"
-		!
-		call writePeierls(unkP, AconnP, FcurvP)
+		!write(*,*)	"[peierlsMethod]: solved Ham, calc connection, etc."
+		!!CALC CONNECTION & POL
+		!call DoGaugeTrafo(unkP, tHopp, EnP, AconnP, FcurvP, veloP)
+		!call calcPolViaA(AconnP, pPei(1:2))
+		!write(*,*)	"[peierlsMethod]: calculated pol"
+		!!
+		!call writePeierls(unkP, AconnP, FcurvP)
 		write(*,*)	"[peierlsMethod]: writing done, by.."
 		deallocate( Ham		)
 		deallocate(	EnP		)
@@ -133,7 +133,7 @@ module peierls
 			!
 			!GENERATE UNKs
 			phase			= myExp( -1.0_dp * dot_product( kpts(:,ki), rpts(:,xi) )		)
-			unkP(xi,:)		= phase * matmul(basVec,Ham) 
+			unkP(xi,:)		= phase * dsqrt(real(nSC,dp)) * matmul(basVec,Ham) 
 		end do
 		!
 		!

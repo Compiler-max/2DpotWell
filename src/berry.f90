@@ -18,20 +18,21 @@ module berry
 
 
 !public
-	subroutine berryMethod(unkW, tHopp, pBerry, pNiu)
-		complex(dp),	intent(in)		:: unkW(:,:,:), tHopp(:,:,:)
+	subroutine berryMethod(unkW, wnf, pBerry, pNiu)
+		complex(dp),	intent(in)		:: unkW(:,:,:), wnf(:,:,:)
 		real(dp),		intent(out)		:: pBerry(2), pNiu(3)
 		real(dp),		allocatable		:: EnH(:,:)
-		complex(dp),	allocatable		:: AconnH(:,:,:,:), FcurvH(:,:,:,:), veloH(:,:,:,:)
+		complex(dp),	allocatable		:: AconnH(:,:,:,:), FcurvH(:,:,:,:), veloH(:,:,:,:),  tHopp(:,:,:) 
 		!
 		allocate(			EnH(		nWfs	, nK							)			)
 		allocate(			AconnH(		3		, nWfs,nWfs			,	nK		)			)
 		allocate(			FcurvH(		3		, nWfs, nWfs		,	nK		)			)
 		allocate(			veloH(		3		, nWfs,nWfs			,	nK		)			)
+		allocate(			tHopp(		nWfs	, 	nWfs	,	nSc		)				)
 		!
 		write(*,*)	"[berrryMethod]: hello from Berry"
 		!GET CONNECTION, CURVATURE & VELOCITY
-		call DoGaugeTrafo(unkW, tHopp, EnH, AconnH, FcurvH, veloH)
+		call DoGaugeTrafo(unkW,wnf, tHopp, EnH, AconnH, FcurvH, veloH)
 
 		write(*,*)	"[berrryMethod]: interpolation done"
 		!INTEGRATE CONNECTION
@@ -45,13 +46,17 @@ module berry
 		if(doNiu) then
 			write(*,*)	"[berrryMethod]: now calc first order pol"
 			call calcFirstOrdP(FcurvH, AconnH, veloH, EnH, pNiu)
-			write(*,*)	"[berrryMethod]: all done"
+
 		end if
 
+		if(doPei) then
 
+		end if
+
+		write(*,*)	"[berrryMethod]: all done"
 
 		!OUTPUT
-		call writeConnCurv(AconnH, FcurvH)
+		!call writeConnCurv(AconnH, FcurvH)
 		!
 		!
 		return

@@ -31,6 +31,7 @@ module potWellModel
 		complex(dp),	allocatable		::	Hmat(:,:)
 		real(dp),		allocatable		::	EnT(:,:)
 		integer							:: 	qi , n, Ri
+		complex(dp)						:: 	phase
 		real(dp)						::	kVal(2)
 		!
 		allocate(	Hmat(	nG,	nG		)			)
@@ -51,9 +52,11 @@ module potWellModel
 			call populateH(kVal, Hmat) 	!omp
 			call eigSolver(Hmat, EnT(:,qi))	!mkl
 			!
+			!Hmat = dconjg( transpose(Hmat))
 			!BLOCH WAVEFUNCTIONS
 			!call gaugeCoeff(kVal, Hmat)
-			call genBwfVelo(qi, Hmat, unk)	!omp
+			call genBwfVelo(qi, Hmat, unk(:,:,qi))	!omp
+			!
 		end do
 		!
 		!
@@ -66,15 +69,15 @@ module potWellModel
 		call writeEnAndUNK(EnT, unk)
 		!
 		!DEBUG
-		if(debugHam) then
-			write(*,*)		"[solveHam]: start test normalization of unks"
-			if(.not. testNormUNK(unk)	) then
-				write(*,*)	"[solveHam]: found normalization issues for unks"
-			else
-				write(*,*)	"[solveHam]: no issues detected"
-			end if
-		end if
-		write(*,*)			"[solveHam]: finished debuging."
+		!if(debugHam) then
+		!	write(*,*)		"[solveHam]: start test normalization of unks"
+		!	if(.not. testNormUNK(unk)	) then
+		!		write(*,*)	"[solveHam]: found normalization issues for unks"
+		!	else
+		!		write(*,*)	"[solveHam]: no issues detected"
+		!	end if
+		!end if
+		!write(*,*)			"[solveHam]: finished debuging."
 		!
 		!
 		return
@@ -158,23 +161,33 @@ module potWellModel
 			yL	=	atPos(2,at) - atR(2,at)
 			yR	=	atPos(2,at) + atR(2,at) 
 			!
-			if( abs(dGx) < machineP ) then
-				!write(*,*)"zero x difference i=",i," j=",j
-				Vx	= ( xR - xL )
-			else
-				Vx	= -i_dp	*	(	myExp(dGx*xR) - myExp(dGx*xL)	)	/ dcmplx( dGx )
-			end if
-			
+			!if( abs(dGx) < machineP ) then
+			!	!write(*,*)"zero x difference i=",i," j=",j
+			!	Vx	= ( xR - xL )
+			!else
+			!	Vx	= -i_dp	*	(	myExp(dGx*xR) - myExp(dGx*xL)	)	/ dcmplx( dGx )
+			!end if
+			!if( abs(dGy) < machineP ) then
+			!	!write(*,*)"zero y difference i=",i," j=",j
+			!	Vy	= ( yR - yL )
+			!else
+			!	Vy	= -i_dp *	(	myExp(dGy*yR) - myExp(dGy*yL)	)	/ dcmplx( dGy )
+			!end if
+			!V	= V +	Vpot*Vx*Vy / vol
+			if( i == j) then		
+				V	= V + Vpot 			*				 ( xR - xL ) 			* 			( yR - yL )						 / vol
+			else if( abs(dGx) < machineP ) then
+				
+				V	= V + Vpot  * i_dp 	* 				( xR - xL ) 			*( myExp(-dGy*yR) - myExp(-dGy*yL) )	 	/ ( vol * dGy )
+			else if( abs(dGy) < machineP ) then
 
-			if( abs(dGy) < machineP ) then
-				!write(*,*)"zero y difference i=",i," j=",j
-				Vy	= ( yR - yL )
+				V	= V + Vpot * i_dp	 * ( myExp(dGx*xR) - myExp(dGx*xL) ) 	* 			( yL - yR) 						/ (vol * dGx )
 			else
-				Vy	= -i_dp *	(	myExp(dGy*yR) - myExp(dGy*yL)	)	/ dcmplx( dGy )
+
+				V	= V + Vpot 	 * ( myExp(dGx*xL) - myExp(dGx*xR) ) * ( myExp(dGy*yR) - myExp(dGy*yL) ) / (vol * dGx * dGy )
 			end if
-			!
-			!
-			V	= V +	Vpot*Vx*Vy
+
+
 			!write(*,'(a,i2,a,i2,a,f15.10)')	"i=",i," j=",j,": atPot=",Vpot
 			!write(*,'(a,i2,a,i2,a,f15.10,a,f15.10)')	"i=",i," j=",j,": V=",dreal(V),"+i*",dimag(V)
 		end do

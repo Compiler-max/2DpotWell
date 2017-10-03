@@ -256,6 +256,8 @@ module output
 		do n = 1, nWfs
 			write(516,'(a,i3,a,f10.5,a,f10.5,a,f10.8,a,f10.8,a,f10.8)')	"n=",n	,"wCent= (",wCent(1,n),", ",wCent(2,n), ").wSprd=(",wSprd(1,n),", ",wSprd(2,n),&
 																	"), norm2(wSprd)=",norm2(wSprd(:,n))
+			write(516,'(a,i3,a,f10.5,a,f10.5,a,f10.8,a,f10.8,a,f10.8)')	"n=",n	,"wCent= (",dmod(wCent(1,n),aX),", ",dmod(wCent(2,n),aY), ").wSprd=(",wSprd(1,n),", ",wSprd(2,n),&
+																	"), norm2(wSprd)=",norm2(wSprd(:,n))
 		end do
 		close(516)
 		!

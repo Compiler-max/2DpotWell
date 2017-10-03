@@ -20,7 +20,7 @@ program main
 	implicit none
 
 	
-    complex(dp),	allocatable,	dimension(:,:,:)	:: 	unk, unkW, tHopp	!, ukn basCoeff,
+    complex(dp),	allocatable,	dimension(:,:,:)	:: 	unk, unkW, wnf!, ukn basCoeff,
     real(dp),		allocatable,	dimension(:,:)		:: 	En, EnW
     real(dp) 											:: 	pWann(2), pIon(2), pTot(2), pBerry(2), pInt(2), pNiu(3), pPei(3)
     real												:: 	mastT0, mastT1, mastT, T0, T1, &
@@ -37,8 +37,9 @@ program main
 	!electronic structure arrays
 	allocate(			unk(		nR 		,	nG		, 	nQ		)				)
 	allocate(			unkW(		nR 		,	nWfs	, 	nQ		)				)
+	allocate(			wnF( 		nR		, 	nSC		, nWfs		)				)
 	allocate(			En(						nBands	, 	nQ		)				)
-	allocate(			tHopp(		nWfs	, 	nWfs	,	nSc		)				)
+	
 	
 
 
@@ -52,6 +53,7 @@ program main
 	write(*,*)"[main]:**************************Infos about this run*************************"
 	write(*,*)"[main]: nK=",nK
 	write(*,*)"[main]: nQ=",nQ
+	write(*,*)"[main]: nG=",nG
 
     write(*,*)"[main]: nBands=", nBands
 	write(*,*)"[main]: nWfs  =", nWfs	
@@ -89,7 +91,7 @@ program main
 	call cpu_time(T0)
 	!
 	!
-	call projectUnk(En, unk, unkW,tHopp)
+	call projectUnk(En, unk, unkW)
 	!
 	call cpu_time(T1)
 	write(*,*)"[main]: done with projections."
@@ -105,7 +107,7 @@ program main
 	if( doWanni ) then
 		write(*,*)	"[main]:**************************WANNIER FUNCTION METHOD*************************"
 		!
-		call wannMethod(unkW, pWann)
+		call wannMethod(unkW, wnf,pWann)
 		!
 		write(*,*)	"[main]: done with center polarization calc"
 	else
@@ -126,7 +128,7 @@ program main
 	call cpu_time(T0)
 	if ( doBerry ) then
 		write(*,*)"[main]:**************************WAVEFUNCTION METHOD*************************"
-		call berryMethod(unkW, tHopp, pBerry, pNiu)
+		call berryMethod(unkW, wnf, pBerry, pNiu)
 		write(*,*)"[main]: done with wavefunction method "
 	else
 		write(*,*)"[main]: berry method disabled"
@@ -149,20 +151,20 @@ program main
 
 
 
-	write(*,*)"*"
-	write(*,*)"*"
-	write(*,*)"*"
-	write(*,*)"*"
-	write(*,*)"[main]:**************************PEIERLS SUB*************************"
-	call cpu_time(T0)
-	!
-	if(doPei)  then
-		call peierlsMethod(tHopp, pPei)
-	end if
-	!
-	call cpu_time(T1)
-	write(*,*)"[main]: done with peierls substitution"
-	peiT = T1 - T0
+	!write(*,*)"*"
+	!write(*,*)"*"
+	!write(*,*)"*"
+	!write(*,*)"*"
+	!write(*,*)"[main]:**************************PEIERLS SUB*************************"
+	!call cpu_time(T0)
+	!!
+	!if(doPei)  then
+	!	call peierlsMethod(tHopp, pPei)
+	!end if
+	!!
+	!call cpu_time(T1)
+	!write(*,*)"[main]: done with peierls substitution"
+	!peiT = T1 - T0
 
 
 
@@ -206,10 +208,6 @@ program main
 	call printTiming(aT, kT, pT, wT, bT,peiT, oT, mastT)
 	write(*,*)	"[main]: all done, deallocate and exit"
 	!
-	!deallocate(			unk			)
-	!deallocate(			unkW		)
-	!deallocate(			En			)
-	!deallocate(			tHopp		)
 	!
 	stop
 end program

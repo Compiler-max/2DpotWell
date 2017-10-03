@@ -19,11 +19,11 @@ f1	 		= open("rawData/rpts.dat",'rb') #rb = Read Binary
 rpts 		= np.fromfile(f1,dtype='float64',count=-1)
 f1.close()
 
-f2			= open("rawData/ROTunkR.dat",'rb') #rb = Read Binary
+f2			= open("rawData/unkR.dat",'rb') #rb = Read Binary
 rawDataR	= np.fromfile(f2,dtype='float64',count=-1)
 f2.close()
 
-f3			= open("rawData/ROTunkI.dat",'rb') #rb = Read Binary
+f3			= open("rawData/unkI.dat",'rb') #rb = Read Binary
 rawDataI	= np.fromfile(f3,dtype='float64',count=-1)
 f3.close()
 
@@ -63,9 +63,15 @@ f7.close()
 #RESHAPE RAW DATA
 #rpts	= np.reshape(rpts,(nR,2))
 qpts	= np.reshape(qpts,(nK,2))
-unkR	= np.reshape(rawDataR,(nK, nWfs , nR))  #	unk(		nR		, 	nK		, nWfs	)		
-unkI	= np.reshape(rawDataI,(nK, nWfs , nR))
+unkR	= np.reshape(rawDataR,(nK, nG , nR))  #	unk(		nR		, 	nK		, nWfs	)		
+unkI	= np.reshape(rawDataI,(nK, nG , nR))
 unk		= unkR**2 + unkI**2
+
+
+
+k=32
+for n in range(nG):
+	print("k="+str(k)+" n="+str(n)+" oLap="  +str( np.sum(unk[k,n,:]) / float(nR) ))
 
 #for q in range(nK):
 #	for n in range(nWfs):
@@ -74,7 +80,7 @@ unk		= unkR**2 + unkI**2
 
 #2D HEATMAP
 n = 0				#which state to plot
-k = 36				#k point index to plot				
+k = 26				#k point index to plot				
 
 for n in range(nWfs):
 	fig = plt.figure()
@@ -106,7 +112,6 @@ for n in range(nWfs):
 	ax.set_title('u_n='+str(n)+'. q=('+str(qpts[k,0])+','+str(qpts[k,1])+').',fontsize =18)
 	
 	plt.show()
-
 
 
 

@@ -1,6 +1,7 @@
 module gaugeTrafo
 	use mathematics,	only:	dp, PI_dp, i_dp, acc, machineP, myExp, myLeviCivita, nIntegrate, eigSolver, rotMat, myCommutat
 	use sysPara
+	use	wannier,		only:	calcHopping
 	use output,			only: 	writeEnH
 
 	!use 
@@ -12,12 +13,14 @@ module gaugeTrafo
 	contains
 
 !public
-	subroutine DoGaugeTrafo(unkW, tHopp, EnH, AconnH, FcurvH, veloH)
-		complex(dp),	intent(in)		:: unkW(:,:,:), tHopp(:,:,:)
+	subroutine DoGaugeTrafo(unkW, wnf, tHopp, EnH, AconnH, FcurvH, veloH)
+		complex(dp),	intent(in)		:: unkW(:,:,:), wnf(:,:,:)
+		complex(dp),	intent(inout)	:: tHopp(:,:,:)
 		real(dp),		intent(out)		:: EnH(:,:)
 		complex(dp),	intent(out)		:: AconnH(:,:,:,:), FcurvH(:,:,:,:)
 		complex(dp),	intent(out)		:: veloH(:,:,:,:)
 		complex(dp),	allocatable		:: rHopp(:,:,:,:), U(:,:), HW(:,:), HaW(:,:,:), AW(:,:,:), FW(:,:,:,:)
+		real(dp),		allocatable		:: Abuff(:,:,:,:)
 		integer							:: ki
 		!
 		allocate(	rHopp(	2	,	nWfs, 	nWfs, 	nSC		)		)
@@ -26,10 +29,16 @@ module gaugeTrafo
 		allocate(	HaW(	2	,	nWfs, 	nWfs			)		)
 		allocate(	AW(		2	,	nWfs, 	nWfs			)		)
 		allocate(	Fw(		2	,	2	,	nWfs,	nWfs	)		)
+		allocate(	Abuff(	2	,	nWfs,	nWfs,	nQ		)		)
 		!
-		call calcRhopp(unkW, rHopp)
-		write(*,*)	"[DoGaugeTrafo]: calculated the rHopping matrix elements"
+		!call calcRhopp(unkW, rHopp)
+		!if ( .not. doGaugBack ) then
+		!	call calcConnOnCoarse(unkW,Abuff)
+		!end if
 
+		call calcHopping(wnf, tHopp, rHopp)
+
+		
 		do ki = 1, nK
 			call interpolateMat(tHopp, rHopp, HW, HaW, AW, FW)
 			if( doGaugBack ) then
@@ -37,13 +46,16 @@ module gaugeTrafo
 				call gaugeBack(Hw, HaW, AW, FW, EnH(:,ki), U, AconnH(:,:,:,ki), FcurvH(:,:,:,ki), veloH(:,:,:,ki))	
 			else
 				write(*,*)	"[DoGaugeTrafo]: Gauge trafo DISABLED	"
-				AconnH(1:2,:,:,ki)	= AW(1:2,:,:)
+				!AconnH(1:2,:,:,ki)	= AW(1:2,:,:)
 				call eigSolver(HW,EnH(:,ki))
-				call calcVelo(EnH(:,ki), AW, HaW, veloH(:,:,:,ki))
+				AconnH(1:2,:,:,ki) 	= AW(1:2,:,:)
+				veloH(1:2,:,:,ki) 	= HaW(1:2,:,:)
+				FcurvH				= dcmplx(0.0_dp)
 				!call calcCurv(FW, DH, AW, FcurvH)
 			end if
 		end do	
-		write(*,*)	"[DoGaugeTrafo]: calculated Hamiltonian gauge energy, connection, curvature, velocity"
+
+		write(*,*)	"[DoGaugeTrafo]: calculated (H) gauge energy, connection, curvature, velocity"
 		!
 		call writeEnH(EnH)
 		!
@@ -83,12 +95,10 @@ module gaugeTrafo
 		integer							:: qi, R
 		complex(dp)						:: phase
 		!
-		write(*,*)	"[calcRhopp]: hello"
 		allocate(	AWcoarse(2,nWfs,nWfs,nQ)	)
-		write(*,*)	"[calcRhopp]: allocated awcoarse"
 		!
 		call calcConnOnCoarse(unkW, AWcoarse)
-		write(*,*)	"[calcRhopp]: calculated the connection"
+		write(*,*)	"[calcRhopp]: calculated the connection on coarse q mesh"
 		do R = 1, nSC
 			do qi = 1, nQ
 				phase			= myExp( -1.0_dp * dot_product(qpts(:,qi),Rcell(:,R))		)
@@ -207,8 +217,8 @@ module gaugeTrafo
 		!
 		A 		= 0.0_dp
 		Z 		= 4	!amount of nearest neighbours( 2 for 2D cubic unit cell)
-		wbx 	= 3.0_dp / 		( real(Z,dp) * dqx**2 )
-		wby 	= 3.0_dp /		( real(Z,dp) * dqy**2 )
+		wbx 	= 1.0_dp / 		( real(Z,dp) * dqx**2 )
+		wby 	= 1.0_dp /		( real(Z,dp) * dqy**2 )
 		!b vector two nearest X neighbours:
 		bxl(1) 	= -dqx				
 		bxl(2)	= 0.0_dp
@@ -240,18 +250,28 @@ module gaugeTrafo
 						qi	= getKindex(qx,qy)
 						!
 						!OVERLAP TO NEAREST NEIGHBOURS
-						one = UNKoverlap(	n,		m, 		qi		, 		qi					, unk	)
+						!one = UNKoverlap(	n,		m, 		qi		, 		qi					, unk	)
 						Mxl	= UNKoverlap(	n,		m, 		qi		, getKindex( qxl, qy ) 		, unk	) 
 						Mxr	= UNKoverlap(	n,		m, 		qi		, getKindex( qxr, qy )		, unk	)
 						Myl	= UNKoverlap(	n,		m, 		qi		, getKindex( qx ,qyl )		, unk	)
 						Myr	= UNKoverlap(	n,		m, 		qi		, getKindex( qx ,qyr )		, unk	)
 
-						
+						if(n == m) then
+							one	= dcmplx(1.0_dp)
+						else
+							one = dcmplx(0.0_dp)
+						end if
 						!FD SUM OVER NEAREST NEIGHBOURS
 						A(1:2,n,m, qi) = A(1:2,n,m, qi) + wbx * bxl(1:2) * dimag( Mxl - one )
 						A(1:2,n,m, qi) = A(1:2,n,m, qi) + wbx * bxr(1:2) * dimag( Mxr - one )
 						A(1:2,n,m, qi) = A(1:2,n,m, qi) + wby * byl(1:2) * dimag( Myl - one )
 						A(1:2,n,m, qi) = A(1:2,n,m, qi) + wby * byr(1:2) * dimag( Myr - one )
+
+
+						!A(1:2,n,m, qi) = A(1:2,n,m, qi) - wbx * bxl(1:2) * dimag( zlog( Mxl ) )
+						!A(1:2,n,m, qi) = A(1:2,n,m, qi) - wbx * bxr(1:2) * dimag( zlog( Mxr ) )
+						!A(1:2,n,m, qi) = A(1:2,n,m, qi) - wby * byl(1:2) * dimag( zlog( Myl ) )
+						!A(1:2,n,m, qi) = A(1:2,n,m, qi) - wby * byr(1:2) * dimag( zlog( Myr ) )
 						!DEBUG:
 						if(n == m) then
 							val	= abs( abs(one) - 1.0_dp )
@@ -299,8 +319,11 @@ complex(dp) function UNKoverlap(n, m, qi, knb, unk)
 	do ri = 1, nR
 		f(ri)	= dconjg( unk(ri,n,qi) ) * unk(ri,m,knb)
 	end do
-	!integrate
-	UNKoverlap = nIntegrate(nR, nRx, nRy, dx, dy, f)
+	!integrate, normalize for integration over only one unit cell
+	UNKoverlap = nIntegrate(nR, nRx, nRy, dx, dy, f) / real(nSC,dp)
+	if( dimag(UNKoverlap) > acc ) then
+		write(*,*)"[UNKoverlap]: none zero imaginary part:,",dimag(UNKoverlap)
+	end if
 	!
 	!
 	return

@@ -28,12 +28,12 @@ module projection
 	contains
 !public:
 
-	subroutine projectUnk(En, unk, unkP,tHopp)	!projectBwf(qi, bWf, loBwf, U(:,:), failCount, smin, smax)
+	subroutine projectUnk(En, unk, unkP)	!projectBwf(qi, bWf, loBwf, U(:,:), failCount, smin, smax)
 		!does the projection onto Loewdin-orthonormalized Bloch-like states
 		!see Marzari, Vanderbilt PRB 56, 12847 (1997) Sec.IV.G.1 for detailed description of the method 
 		real(dp),		intent(in)		:: En(:,:)		!	En(nBands,nQ)
 		complex(dp)	,	intent(in)		:: unk(:,:,:)   ! unk(nR,nG,nQ)
-		complex(dp)	,	intent(out)		:: unkP(:,:,:), tHopp(:,:,:)	! unk(nR,nWfs,nQ) , tHopp(nWfs, nWfs nSC)
+		complex(dp)	,	intent(out)		:: unkP(:,:,:)	! unk(nR,nWfs,nQ) , tHopp(nWfs, nWfs nSC)
 		real(dp),		allocatable		:: EnP(:,:)	
 		complex(dp)	,	allocatable		:: loBwf(:,:), gnr(:,:), A(:,:), U(:,:), Ham(:,:)
 		
@@ -75,41 +75,41 @@ module projection
 			!$OMP PARALLEL DO SCHEDULE(STATIC) DEFAULT(SHARED) PRIVATE(xi, phase)
 			do xi = 1, nR
 				phase		= myExp(	dot_product(qpts(:,qi),rpts(:,xi))		)
-				loBwf(xi,:) = matmul(	phase * unk(xi,1:nBands,qi), U	)
+				loBwf(xi,:) = matmul(	phase * unk(xi,1:nBands,qi) / dsqrt(real(nSC,dp)), U	)
 			end do
 			!$OMP END PARALLEL DO
 			!
 			!OVERWRITE UNKS WITH PROJECTED UNKs
 			call genUnk(qi, lobWf, unkP(:,:,qi))
 			!ADD CURRENT Q TO HOPPING MATRIX
-			call addThopp(qi, U,En, tHopp)
+			!call addThopp(qi, U,En, tHopp)
 		end do
 		!
-		!CALC ENERGIES OF INTERPOLATED BANDS
-		do qi = 1, nQ
-			!FOURIER TRAFO ON tHOPP
-			Ham	= dcmplx(0.0_dp)
-			do R = 1, nSC
-				phase		= myExp( dot_product(qpts(:,qi), Rcell(:,R)	)	)
-				Ham(:,:)	= Ham(:,:)	+ phase * tHopp(:,:,R)
-			end do
-			!
-			!TEST IF HERMITIAN
-			if( debugProj) then
-				if( .not. isHermitian(Ham) ) then
-					write(*,*)	"[projectUnk]: energy interpolation, Hamiltonian not hermitian at qi=",qi
-				end if
-			end if
-			!
-			!SOLVE HAM
-			call eigSolver(Ham(:,:), EnP(:,qi))
-		end do
+		!!CALC ENERGIES OF INTERPOLATED BANDS
+		!do qi = 1, nQ
+		!	!FOURIER TRAFO ON tHOPP
+		!	Ham	= dcmplx(0.0_dp)
+		!	do R = 1, nSC
+		!		phase		= myExp( dot_product(qpts(:,qi), Rcell(:,R)	)	)
+		!		Ham(:,:)	= Ham(:,:)	+ phase * tHopp(:,:,R)
+		!	end do
+		!	!
+		!	!TEST IF HERMITIAN
+		!	if( debugProj) then
+		!		if( .not. isHermitian(Ham) ) then
+		!			write(*,*)	"[projectUnk]: energy interpolation, Hamiltonian not hermitian at qi=",qi
+		!		end if
+		!	end if
+		!	!
+		!	!SOLVE HAM
+		!	call eigSolver(Ham(:,:), EnP(:,qi))
+		!end do
 
 
 		!
 		!
 		!
-		call writeInterpBands(EnP)
+		!call writeInterpBands(EnP)
 		write(*,*)	"[projectUnk]: done with projections at each k point"	
 		!
 		!
@@ -187,7 +187,7 @@ module projection
 	subroutine genTrialOrb(unk, gnr)
 		complex(dp),	intent(in)	:: unk(:,:,:)       !gnr( nR, nWfs)	
 		complex(dp),	intent(out)	:: gnr(:,:)       !gnr( nR, nWfs)	
-		real(dp)					:: posX, posY, xc, k, L
+		real(dp)					:: posX, posY, xc, k, L, yMin, yMax
 		complex(dp)					:: A
 		integer						:: n, ri, at, gammaP
 		!
@@ -209,7 +209,25 @@ module projection
 		!end do
 
 
-
+		!TWO BAND model
+		!yMin = atPos(2,1) - atR(2,1)
+		!yMax = atPos(2,1) + atR(2,1)
+		!do ri = 1, nR
+		!	!ONLY 1. UNIT CELL
+		!	if(  rpts(1,ri) < aX .and. rpts(2,ri) < aY) then
+		!		!Y LIMITS
+		!		if( yMin <= rpts(2,ri) .and. rpts(2,ri) <= yMax ) then
+		!			!BONDING
+		!			if( insideBond( rpts(1,ri) )		) then
+		!				gnr(ri,1)	= dcmplx(1.0_dp)
+		!			end if
+		!			!ANTI BONDING
+		!			if( insideABond( rpts(1,ri) )	) then
+		!				gnr(ri,2)	= dcmplx(1.0_dp)
+		!			end if
+		!		end if
+		!	end if
+		!end do
 
 		!ATOM LIKE (LOCALIZED)
 		!do n = 1, nWfs-1, 2
@@ -227,36 +245,60 @@ module projection
 		!end do
 
 		!HYBRID STATES
-		!do n = 1, nWfs
-		!	do ri = 1, nR
-		!		!ONLY IN HOME UNIT CELL
-		!		if(  rpts(1,ri) < aX .and. rpts(2,ri) < aY) then
-		!			do at = 1, nAt 
-		!				if( insideAt(at,rpts(:,ri))) then
-		!					gnr(ri,n)	= gVal(at,n,ri)
-		!				end if 
-		!			end do
-		!		end if
-		!	end do
-		!end do
+		do n = 1, nWfs
+			do ri = 1, nR
+				!ONLY IN HOME UNIT CELL
+				if(  rpts(1,ri) < aX .and. rpts(2,ri) < aY) then
+					do at = 1, nAt 
+						if( insideAt(at,rpts(:,ri))) then
+							gnr(ri,n)	= gVal(at,n,ri)
+						end if 
+					end do
+				end if
+			end do
+		end do
 
 		!3 BAND MODEL
-		do ri = 1, nR
-			!ONLY IN HOME UNIT CELL
-			if(  rpts(1,ri) < aX .and. rpts(2,ri) < aY) then
-				if( insideAt(1,rpts(:,ri))) then
-					gnr(ri,1)	= gVal(1,1,ri)
-					gnr(ri,3)	= gVal(1,1,ri)
-				else if(insideAt(2,rpts(:,ri))) then
-					gnr(ri,2)	= gVal(2,1,ri)
-					gnr(ri,3)	= gVal(2,1,ri)
-				end if
-			end if
-		end do
+		!do ri = 1, nR
+		!	!ONLY IN HOME UNIT CELL
+		!	if(  rpts(1,ri) < aX .and. rpts(2,ri) < aY) then
+		!		if( insideAt(1,rpts(:,ri))) then
+		!			gnr(ri,1)	= gVal(1,1,ri)
+		!			gnr(ri,3)	= gVal(1,1,ri)
+		!		else if(insideAt(2,rpts(:,ri))) then
+		!			gnr(ri,2)	= gVal(2,1,ri)
+		!			gnr(ri,3)	= gVal(2,1,ri)
+		!		end if
+		!	end if
+		!end do
 
 
 		return
 	end subroutine
+
+
+	logical function insideBond( xpt )
+		real(dp),		intent(in)		:: xpt
+		!
+		insideBond =  (atPos(1,1) <= xpt) .and. (xpt <= atPos(1,2) )
+		!
+		return
+	end function
+
+	logical function insideABond( xpt ) 
+		real(dp),		intent(in)		:: xpt
+		logical							:: left, right
+		!
+		left	= (  (atPos(1,1) - atR(1,1) ) <=  xpt)	 .and. ( xpt <= 		atPos(1,1)					)
+		right	= ( 		 atPos(1,2) 		<= 	xpt) .and. ( xpt <= ( atPos(1,2) + atR(1,2) )			)	
+
+		!
+		
+		insideABond = left .or. right
+		!
+		return
+	end function 
+
 
 
 	complex(dp) function gVal(at, n, xi)
@@ -312,7 +354,7 @@ module projection
 				f = dcmplx(0.0_dp)
 				do xi = 1, nR
 					phase	= myExp( 	dot_product( qpts(:,qi), rpts(:,xi))		)				
-					f(xi)	= dconjg(	phase * unk(xi,m) ) * gnr(xi,n)
+					f(xi)	= dconjg(	phase * unk(xi,m) / dsqrt(real(nSC,dp))  ) * gnr(xi,n)
 				end do
 				A(m,n) = nIntegrate(nR, nRx, nRy, dx, dy, f)		
 			end do
@@ -437,70 +479,70 @@ module projection
 
 
 
-	subroutine calcInvSmat(A, S, smin, smax)
-		!calculates the sqrt inv. of the overlap matrix S
-		!
-		!	S	= A^dagger A
-		complex(dp),	intent(in)		:: A(:,:)
-		complex(dp),	intent(out)		:: S(:,:)
-		real(dp),		intent(inout)	:: smin, smax
-		complex(dp),	allocatable		:: Sold(:,:), Ssqr(:,:)
-		integer							:: m,n,k,lda,ldb,ldc, i,j
-		real(dp)						:: mi, ma
-		complex(dp)						:: alpha, beta
-		character*1						:: transa, transb
-		!
-		allocate(	Sold(nWfs,nWfs)	)
-		!
-		!
-		!CALCULATE S FROM A 
-		transa	= 'c'
-		transb	= 'n'
-		m		= size(A,1)
-		n		= size(A,2)
-		k		= size(A,2)
-		alpha	= dcmplx(1.0_dp)
-		beta	= dcmplx(0.0_dp)
-		lda		= size(A,1)
-		ldb		= size(A,1)
-		ldc		= size(A,1)
-		!call zgemm(transa, transb, m, n, k, alpha, a, lda, b, ldb, beta, c, ldc)
-		 call zgemm(transa, transb, m, n, k, alpha, A, lda, A, ldb, beta, S, ldc)
-		!
-		!
-		!CALCULATE INVERSE SQRT OF S
-		Sold = S
-
-		call myMatInvSqrt(S, mi, ma)
-		!
-		if( mi < smin ) then
-			smin = mi
-		end if
-		if( ma > smax ) then
-			smax = ma
-		end if
-		!
-		!
-		!DEBUG
-		if(debugHam) then
-			! test if S * (S^-0.5)^2 == I
-			write(*,*)"[calcInvSmat]: all done, start debugging test"
-			allocate(	Ssqr(nWfs,nWfs)	)
-			transa	= 'n'
-			transb	= 'n'
-			alpha	= dcmplx(1.0_dp)
-			beta	= dcmplx(0.0_dp)
-			call zgemm(transa, transb, m, n, k, alpha, S   , lda, S   , ldb, beta, Ssqr, ldc)
-			call zgemm(transa, transb, m, n, k, alpha, Sold, lda, Ssqr, ldb, beta, Sold, ldc)
-			if( .not. isIdentity(Sold) ) then
-				write(*,*)"[calcInvSmat]: problem with mat inversion, seems to be not inverse square root"
-			end if
-		end if
-		!
-		!
-		return
-	end subroutine
-
+	!subroutine calcInvSmat(A, S, smin, smax)
+	!	!calculates the sqrt inv. of the overlap matrix S
+	!	!
+	!	!	S	= A^dagger A
+	!	complex(dp),	intent(in)		:: A(:,:)
+	!	complex(dp),	intent(out)		:: S(:,:)
+	!	real(dp),		intent(inout)	:: smin, smax
+	!	complex(dp),	allocatable		:: Sold(:,:), Ssqr(:,:)
+	!	integer							:: m,n,k,lda,ldb,ldc, i,j
+	!	real(dp)						:: mi, ma
+	!	complex(dp)						:: alpha, beta
+	!	character*1						:: transa, transb
+	!	!
+	!	allocate(	Sold(nWfs,nWfs)	)
+	!	!
+	!	!
+	!	!CALCULATE S FROM A 
+	!	transa	= 'c'
+	!	transb	= 'n'
+	!	m		= size(A,1)
+	!	n		= size(A,2)
+	!	k		= size(A,2)
+	!	alpha	= dcmplx(1.0_dp)
+	!	beta	= dcmplx(0.0_dp)
+	!	lda		= size(A,1)
+	!	ldb		= size(A,1)
+	!	ldc		= size(A,1)
+	!	!call zgemm(transa, transb, m, n, k, alpha, a, lda, b, ldb, beta, c, ldc)
+	!	 call zgemm(transa, transb, m, n, k, alpha, A, lda, A, ldb, beta, S, ldc)
+	!	!
+	!	!
+	!	!CALCULATE INVERSE SQRT OF S
+	!	Sold = S
+!
+!	!	call myMatInvSqrt(S, mi, ma)
+!	!	!
+!	!	if( mi < smin ) then
+!	!		smin = mi
+!	!	end if
+!	!	if( ma > smax ) then
+!	!		smax = ma
+!	!	end if
+!	!	!
+!	!	!
+!	!	!DEBUG
+!	!	if(debugHam) then
+!	!		! test if S * (S^-0.5)^2 == I
+!	!		write(*,*)"[calcInvSmat]: all done, start debugging test"
+!	!		allocate(	Ssqr(nWfs,nWfs)	)
+!	!		transa	= 'n'
+!	!		transb	= 'n'
+!	!		alpha	= dcmplx(1.0_dp)
+!	!		beta	= dcmplx(0.0_dp)
+!	!		call zgemm(transa, transb, m, n, k, alpha, S   , lda, S   , ldb, beta, Ssqr, ldc)
+!	!		call zgemm(transa, transb, m, n, k, alpha, Sold, lda, Ssqr, ldb, beta, Sold, ldc)
+!	!		if( .not. isIdentity(Sold) ) then
+!	!			write(*,*)"[calcInvSmat]: problem with mat inversion, seems to be not inverse square root"
+!	!		end if
+!	!	end if
+!	!	!
+!	!	!
+!	!	return
+!	!end subroutine
+!
 
 	!logical function isOrthonorm(loBwf)
 	!	!cheks wether loBwf is orthonormal by calculating the overlap matrix elements

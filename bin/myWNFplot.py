@@ -31,6 +31,17 @@ f4			= open("rawData/sysPara.dat",'rb')
 rawSysP 	= np.fromfile(f4,dtype='int32',count=-1)
 f4.close()
 
+
+
+f5			= open("rawData/atPos.dat",'rb')
+atPos 	= np.fromfile(f5,dtype='float64',count=-1)
+f5.close()
+
+
+f6 		= open("rawData/wSprd.dat",'rb')
+wSprd	= np.fromfile(f6,dtype='float64',count=-1)
+
+
 nAt			= rawSysP[0]
 nG			= rawSysP[1]
 nK			= rawSysP[2]
@@ -56,11 +67,20 @@ aY			= cellI[1]
 
 #RESHAPE RAW DATA
 rpts	= np.reshape(rpts,(nR,2))
+atPos	= np.reshape(atPos,(nAt,2))
+
 
 wnfR	= np.reshape(rawDataR,(nWfs,nK, nR))   #wnF( 	nR, nSC, nWfs		)	
 wnfI	= np.reshape(rawDataI,(nWfs,nK, nR))
 wnf		= wnfR**2 + wnfI**2
 
+wSprd	= np.reshape(wSprd,(nWfs,2))
+
+for R in range(nK):
+	for R2 in range(nK):
+		for n in range(nWfs):
+			for m in range(nWfs):
+				print("R="+str(R)+", R2="+str(R2) +" n="+str(n)+", m="+str(m)+": oLap="  +str( np.sum(wnfR[n,R,:]* wnfR[m,R2,:] ) / float(nR) ))
 
 
 #for R in range(nK):
@@ -76,6 +96,10 @@ wnf		= wnfR**2 + wnfI**2
 R = 0				#unit cell
 n = 0				#state			
 
+colorMap 	= 'magma'
+atColor		= 'white'
+
+
 for n in range(nWfs):
 	fig = plt.figure()
 	ax = fig.add_subplot(111)
@@ -84,10 +108,19 @@ for n in range(nWfs):
 	xpts	= np.linspace(0.0,aX*nKx,nRx)
 	ypts	= np.linspace(0.0,aY*nKy,nRy)
 	#X, Y = numpy.meshgrid(x, y)  # `plot_surface` expects `x` and `y` data to be 2D
-	CS = ax.contourf(xpts, ypts,bWfcont,cmap='magma', linewidth=0.1)
+	CS = ax.contourf(xpts, ypts,bWfcont,cmap=colorMap,linewidth=0.1) #, levels=[0,1,10,100,200,300,400,500,600]
 	cbar = plt.colorbar(CS)
 	#ax.set_xlim(0, nKx*aX)
 	#ax.set_ylim(0, nKy*aY)
+
+
+	#plot atoms
+	for at in range(nAt):
+		ax.plot(atPos[at,0],atPos[at,1],marker='+',color='white')
+		ax.plot([atPos[at,0]-1,atPos[at,0]-1]	, [atPos[at,1]-1,atPos[at,1]+1],color=atColor,linewidth=0.2)
+		ax.plot([atPos[at,0]+1,atPos[at,0]+1]	, [atPos[at,1]-1,atPos[at,1]+1],color=atColor,linewidth=0.2)
+		ax.plot([atPos[at,0]-1,atPos[at,0]+1]	, [atPos[at,1]-1,atPos[at,1]-1],color=atColor,linewidth=0.2)
+		ax.plot([atPos[at,0]-1,atPos[at,0]+1]	, [atPos[at,1]+1,atPos[at,1]+1],color=atColor,linewidth=0.2)
 	
 	xticks 		= np.arange(0,aX*(nKx+1),  aX	)		
 	xtickLabel	= np.arange(int(0),int(nKx+1)  )
@@ -103,7 +136,7 @@ for n in range(nWfs):
 	ax.set_xlabel('a')
 	ax.set_ylabel('b')
 	
-	ax.set_title('Wannier function n='+str(n)+' R='+str(R),fontsize =18)
+	ax.set_title('Wannier function n='+str(n)+' sprd='+str(np.linalg.norm(wSprd[n,:])),fontsize =18)
 	
 	plt.show()
 
