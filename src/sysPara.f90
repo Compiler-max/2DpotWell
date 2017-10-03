@@ -5,7 +5,7 @@ module sysPara
 	implicit none
 	private
 	public :: 	readInp, insideAt, getRindex, getRleftX, getRrightX, getRleftY, getRrightY,& 
-				getKindex, getGammaPoint, getPot &
+				getKindex, getGammaPoint, getPot, &
 				dim, aX, aY, vol, nAt, relXpos, relYpos, atRx, atRy, atPot,&
 				nG, nG0, Gcut, nQ, nQx, nQy, nKx, nKy, nK, nSC, nSCx, nSCy, nR, nRx, nRy, R0,  dx, dy, dqx, dqy, dkx, dky, &
 				gaugeSwitch, nBands, nWfs, connSwitch,  &
@@ -194,7 +194,7 @@ module sysPara
 		end if	 
 		!
 		return
-	end subroutine
+	end function
 
 
 	integer function getRrightX(xi,yi)
@@ -207,7 +207,7 @@ module sysPara
 		end if	 
 		!
 		return
-	end subroutine
+	end function
 
 
 
@@ -221,7 +221,7 @@ module sysPara
 		end if	 
 		!
 		return
-	end subroutine
+	end function
 
 
 	integer function getRrightY(xi,yi)
@@ -234,7 +234,7 @@ module sysPara
 		end if	 
 		!
 		return
-	end subroutine
+	end function
 
 
 
@@ -264,11 +264,11 @@ module sysPara
 		integer					:: at
 		logical					:: found
 		found		= .false.
-		potential 	= 0.0_dp
+		getPot 	= 0.0_dp
 		at			= 1
 		do while(at <= nAt .and. .not. found )
 			if( insideAt(at,rpts(:,ri)) ) then
-				potential	= atPot(at)
+				getPot	= atPot(at)
 				found		= .true.
 			end if
 			at = at +1 
