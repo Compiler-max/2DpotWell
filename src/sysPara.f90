@@ -4,7 +4,8 @@ module sysPara
 	use m_config
 	implicit none
 	private
-	public :: 	readInp, insideAt, getRindex, getKindex, getGammaPoint, &
+	public :: 	readInp, insideAt, getRindex, getRleftX, getRrightX, getRleftY, getRrightY,& 
+				getKindex, getGammaPoint, getPot &
 				dim, aX, aY, vol, nAt, relXpos, relYpos, atRx, atRy, atPot,&
 				nG, nG0, Gcut, nQ, nQx, nQy, nKx, nKy, nK, nSC, nSCx, nSCy, nR, nRx, nRy, R0,  dx, dy, dqx, dqy, dkx, dky, &
 				gaugeSwitch, nBands, nWfs, connSwitch,  &
@@ -182,6 +183,68 @@ module sysPara
 	end function
 
 
+
+	integer function getRleftX(xi,yi)
+		integer,		intent(in)		:: xi, yi
+		!
+		if( xi == 1) then
+			getRleftX = getRindex(nRx,yi)
+		else
+			getRleftX = getRindex(xi-1,yi)
+		end if	 
+		!
+		return
+	end subroutine
+
+
+	integer function getRrightX(xi,yi)
+		integer,		intent(in)		:: xi, yi
+		!
+		if( xi == nRx) then
+			getRrightX = getRindex(1,yi)
+		else
+			getRrightX = getRindex(xi+1,yi)
+		end if	 
+		!
+		return
+	end subroutine
+
+
+
+	integer function getRleftY(xi,yi)
+		integer,		intent(in)		:: xi, yi
+		!
+		if( yi == 1) then
+			getRleftY = getRindex(xi,nRy)
+		else
+			getRleftY= getRindex(xi,yi-1)
+		end if	 
+		!
+		return
+	end subroutine
+
+
+	integer function getRrightY(xi,yi)
+		integer,		intent(in)		:: xi, yi
+		!
+		if( yi == nRy) then
+			getRrightY = getRindex(xi,1)
+		else
+			getRrightY = getRindex(xi,yi+1)
+		end if	 
+		!
+		return
+	end subroutine
+
+
+
+
+
+
+
+
+
+
 	integer function getKindex(qx,qy)
 		integer,	intent(in)		:: qx, qy
 		!
@@ -196,7 +259,24 @@ module sysPara
 	end function
 
 
-
+	real(dp) function getPot(ri)
+		integer,	intent(in)	:: ri
+		integer					:: at
+		logical					:: found
+		found		= .false.
+		potential 	= 0.0_dp
+		at			= 1
+		do while(at <= nAt .and. .not. found )
+			if( insideAt(at,rpts(:,ri)) ) then
+				potential	= atPot(at)
+				found		= .true.
+			end if
+			at = at +1 
+		end do
+		!
+		!
+		return
+	end function
 
 
 
