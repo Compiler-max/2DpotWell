@@ -52,7 +52,7 @@ module polarization
 		!NORMALIZE
 		!pE(1) = dmod(pE(1),aX)
 		!pE(2) = dmod(pE(2),aY)
-		pE = -1.0_dp * pE  / vol
+		pE = 1.0_dp * pE  / vol
 
 		!
 		!NORMALIZE

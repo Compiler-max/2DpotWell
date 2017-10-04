@@ -344,6 +344,10 @@ module output
 																pWann(1)/norm2(pWann) 	,	", ",	pWann(2)/norm2(pWann),		")"
 		write(600,'(a,e16.9,a,f16.12,a,f16.12,a)')	"pBerry= ",norm2(pBerry)," * (", &	
 																pBerry(1)/norm2(pBerry)	,	", ",	pBerry(2)/norm2(pBerry),	")"
+
+	
+		write(600,'(a,f16.12,a,f16.12,a)')	"pWann =  (",  pWann(1)	,	", ",	pWann(2),		")"
+		write(600,'(a,f16.12,a,f16.12,a)')	"pBerry=  (",		pBerry(1)	,	", ",	pBerry(2),	")"
 		!write(600,'(a,e16.9,a,f16.12,a,f16.12,a)')	"pInt= ",norm2(pInt)," * (", &	
 		!														pInt(1)/norm2(pInt),	", ",	pInt(2)/norm2(pInt),	")"
 		!write(600,'(a,e16.9,a,f16.12,a,f16.12,a)')	"pIon= ",norm2(pIon)," * (", &	
@@ -358,6 +362,10 @@ module output
 		write(600,*)"*"
 		write(600,'(a,e16.9,a,f16.12,a,f16.12,a,f16.12,a)')	"pNiu= ",norm2(pNiu)," * (", &	
 											pNiu(1)/norm2(pNiu),	", ",	pNiu(2)/norm2(pNiu),", ", pNiu(3)/norm2(pNiu),	")"
+
+		write(600,'(a,f16.8,a,f16.8,a,f16.8,a)')	"pNiu= (", 	pNiu(1),	", ",	pNiu(2),", ", pNiu(3),	")"
+
+
 		write(600,'(a,e16.9,a,f16.12,a,f16.12,a,f16.12,a)')	"pPei= ",norm2(pPei)," * (", &	
 											pPei(1)/norm2(pPei),	", ",	pPei(2)/norm2(pPei),", ", pPei(3)/norm2(pPei),	")"
 		close(600)

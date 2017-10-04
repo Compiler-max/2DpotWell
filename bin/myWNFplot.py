@@ -109,7 +109,7 @@ for n in range(nWfs):
 	ypts	= np.linspace(0.0,aY*nKy,nRy)
 	#X, Y = numpy.meshgrid(x, y)  # `plot_surface` expects `x` and `y` data to be 2D
 	CS = ax.contourf(xpts, ypts,bWfcont,cmap=colorMap,linewidth=0.1) #, levels=[0,1,10,100,200,300,400,500,600]
-	cbar = plt.colorbar(CS)
+	#cbar = plt.colorbar(CS)
 	#ax.set_xlim(0, nKx*aX)
 	#ax.set_ylim(0, nKy*aY)
 
@@ -136,7 +136,7 @@ for n in range(nWfs):
 	ax.set_xlabel('a')
 	ax.set_ylabel('b')
 	
-	ax.set_title('Wannier function n='+str(n)+' sprd='+str(np.linalg.norm(wSprd[n,:])),fontsize =18)
+	ax.set_title('sprd='+str(np.linalg.norm(wSprd[n,:])),fontsize =18)
 	
 	plt.show()
 

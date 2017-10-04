@@ -1,7 +1,8 @@
 module peierls
 	use mathematics,	only:	dp, PI_dp, i_dp, myExp, crossP, nIntegrate, eigSolver
 	use sysPara
-	use gaugeTrafo,		only:	DoGaugeTrafo
+	use	wannier,		only:	calcHopping
+	use gaugeTrafo,		only:	DoWannInterpol
 	use	polarization,	only:	calcPolViaA
 	use output,			only:	writePeierls
 	implicit none
@@ -20,52 +21,46 @@ module peierls
 
 
 !public:
-	subroutine	peierlsMethod(tHopp, pPei)
-		complex(dp),	intent(inout)	:: tHopp(:,:,:)	! tHopp(nWfs,nWfs,nSC)
+	subroutine	peierlsMethod(wnf, pPei)
+		complex(dp),	intent(in)		:: wnf(:,:,:)	! tHopp(nWfs,nWfs,nSC)
 		real(dp),		intent(out)		:: pPei(3)
-		complex(dp),	allocatable		:: Ham(:,:), unkP(:,:,:), AconnP(:,:,:,:), FcurvP(:,:,:,:), veloP(:,:,:,:)
+		complex(dp),	allocatable		:: tHopp(:,:,:), rHopp(:,:,:,:), AconnP(:,:,:,:), FcurvP(:,:,:,:), veloP(:,:,:,:)
 		real(dp),		allocatable		:: EnP(:,:)
 		integer							:: R, ki
 		complex(dp)						:: phase
 		!
-		allocate( 	Ham(nWfs,nWfs)			)
-		allocate(	EnP(nWfs,nK)			)
-		allocate(	unkP(nR, nWfs, nK)		)
-		allocate(	AconnP(2,nWfs,nWfs,nK)	)
-		allocate(	FcurvP(2,nWfs,nWfs,nK)	)
-		allocate(	veloP(2,nWfs,nWfs,nK)	)
+		allocate(			tHopp(		nWfs	, 	nWfs	,	nSc				)			)
+		allocate(			rHopp(	2	,	nWfs, 	nWfs, 	nSC					)			)		
+		allocate(			EnP(nWfs,nK)			)
+		allocate(			AconnP(3,nWfs,nWfs,nK)	)
+		allocate(			FcurvP(3,nWfs,nWfs,nK)	)
+		allocate(			veloP(3,nWfs,nWfs,nK)	)
 		!
+		AconnP 	= dcmplx(0.0_dp) 
+		FcurvP 	= dcmplx(0.0_dp)
+		veloP	= dcmplx(0.0_dp)
+
+
+
 		write(*,*)	"[peierlsMethod]: start with peierls sub"
 
+		!GET TIGHT BINDING MAT ELEMENTS
+		call calcHopping(wnf, tHopp, rHopp)
 		!
 		!DO PEIERLS SUBSTITUTION
 		do R = 1, nSC
 			tHopp(:,:,R)	= tHopp(:,:,R) * shift(R0,R)
 		end do
-		write(*,*)	"[peierlsMethod]: done with sub, solve Ham now"
-		!SET UP K SPACE HAMILTONIAN & SOLVE
-		do ki = 1, nK
-			Ham				= dcmplx(0.0_dp)
-			do R = 1, nSC
-				phase		= myExp( 	dot_product ( kpts(:,ki), Rcell(:,R) )		)
-				Ham(:,:)	= Ham(:,:)	+ phase * tHopp(:,:,R)
-			end do
-			!SOLVE:
-			call eigSolver(	Ham, EnP(:,ki)	) 
-			call genUnk(ki, Ham, unkP(:,:,ki))
-		end do
-		!
-		!write(*,*)	"[peierlsMethod]: solved Ham, calc connection, etc."
-		!!CALC CONNECTION & POL
-		!call DoGaugeTrafo(unkP, tHopp, EnP, AconnP, FcurvP, veloP)
-		!call calcPolViaA(AconnP, pPei(1:2))
-		!write(*,*)	"[peierlsMethod]: calculated pol"
-		!!
-		!call writePeierls(unkP, AconnP, FcurvP)
+		
+		!INTERPOLATE
+		call DoWannInterpol(rHopp, tHopp, EnP, AconnP, FcurvP, veloP)
+
+
+		!CALC POL
+		call calcPolViaA(AconnP, pPei)
+
 		write(*,*)	"[peierlsMethod]: writing done, by.."
-		deallocate( Ham		)
 		deallocate(	EnP		)
-		deallocate(	unkP	)
 		deallocate(	AconnP	)
 		deallocate(	FcurvP	)
 		deallocate(	veloP	)

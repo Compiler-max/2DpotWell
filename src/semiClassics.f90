@@ -28,7 +28,7 @@ module semiClassics
 		!calculates the first order polarization p1 according to
 		!	P'= -int_dk [0.5 (Curv.Velo)*B_ext + a']
 		complex(dp),		intent(in)	::	Fcurv(:,:,:,:), Aconn(:,:,:,:)	!Fcurv(3,nWfs, nQ)
-		complex(dp),	intent(in)		:: 	Velo(:,:,:,:)		!	 Velo(3, nWfs,nWfs, nQ)	
+		complex(dp),	intent(inout)	:: 	Velo(:,:,:,:)		!	 Velo(3, nWfs,nWfs, nQ)	
 		real(dp),		intent(in)		::	En(:,:)				!	En(			nWfs, nQ)						
 		real(dp),		intent(out)		:: 	p1(3)
 		complex(dp), 	allocatable		::	f(:,:)
@@ -45,7 +45,7 @@ module semiClassics
 			write(*,*)"[calcFirstOrdP]: WARNING Energy and connection live on different k meshes!"
 		end if
 		!
-
+		!Velo(2,:,:,:) = dcmplx(0.0_dp)
 		!
 		do n = 1, nSize
 			f 	= dcmplx(0.0_dp)
@@ -66,15 +66,15 @@ module semiClassics
 			end do
 			!INTEGRATE
 			do ki = 1, kSize
-				pn = pn + f(:,ki)
+				pn = pn + f(:,ki)  / kSize
 			end do
 			!SUM OVER n
-			p1 = p1 + pn 
+			p1 = p1 + pn
 		end do
 		!
 		!
 		!NORMALIZE
-		p1 = p1 / kSize !	?!
+		p1 = p1  !	?!
 		!
 		return
 	end subroutine
@@ -91,7 +91,7 @@ module semiClassics
 		integer							:: i
 		!
 		Fmat = 0.0_dp		
-		call addF2(n0, ki, Velo, En, Fmat)
+		!call addF2(n0, ki, Velo, En, Fmat)
 		call addF3(n0, ki, Velo, En, Fmat)
 		!
 		return

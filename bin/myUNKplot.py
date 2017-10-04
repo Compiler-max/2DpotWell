@@ -42,6 +42,9 @@ nRy			= rawSysP[7]
 nWfs		= rawSysP[8]
 
 
+
+
+
 f5			= open("rawData/cellInfo.dat",'rb')
 cellI 	= np.fromfile(f5,dtype='float64',count=-1)
 f5.close()
@@ -62,6 +65,8 @@ f7.close()
 
 #RESHAPE RAW DATA
 #rpts	= np.reshape(rpts,(nR,2))
+atPos	= np.reshape(atPos,(nAt,2))
+
 qpts	= np.reshape(qpts,(nK,2))
 unkR	= np.reshape(rawDataR,(nK, nG , nR))  #	unk(		nR		, 	nK		, nWfs	)		
 unkI	= np.reshape(rawDataI,(nK, nG , nR))
@@ -69,19 +74,20 @@ unk		= unkR**2 + unkI**2
 
 
 
-k=32
-for n in range(nG):
-	print("k="+str(k)+" n="+str(n)+" oLap="  +str( np.sum(unk[k,n,:]) / float(nR) ))
+k=8
+#for n in range(nWfs):
+#	print("k="+str(k)+" n="+str(n)+" oLap="  +str( np.sum(unk[k,n,:]) / float(nR) ))
 
 #for q in range(nK):
 #	for n in range(nWfs):
 #		print('q='+str(q)+', n=,'+str(n)+', oLap='+str(np.sum(unk[q,n,0:nR-2])/float(nR)))
 #
 
-#2D HEATMAP
-n = 0				#which state to plot
-k = 26				#k point index to plot				
 
+#2D HEATMAP
+#n = 0				#which state to plot
+#k = 26				#k point index to plot				
+#
 for n in range(nWfs):
 	fig = plt.figure()
 	ax = fig.add_subplot(111)
@@ -91,7 +97,7 @@ for n in range(nWfs):
 	ypts	= np.linspace(0.0,aY*nKy,nRy)
 	#X, Y = numpy.meshgrid(x, y)  # `plot_surface` expects `x` and `y` data to be 2D
 	CS=ax.contourf(xpts, ypts,unkcont,cmap='magma', linewidth=0.1)
-	cbar = plt.colorbar(CS)
+	#cbar = plt.colorbar(CS)
 	#ax.set_xlim(0, nKx*aX)
 	#ax.set_ylim(0, nKy*aY)
 	
@@ -100,6 +106,14 @@ for n in range(nWfs):
 	yticks 		= np.arange(0,aY*(nKy+1),  aY	)		
 	ytickLabel	= np.arange(int(0),int(nKy+1)  )
 	
+	#plot atoms
+	atColor = 'white'
+	for at in range(nAt):
+		ax.plot(atPos[at,0],atPos[at,1],marker='+',color='white')
+		ax.plot([atPos[at,0]-1,atPos[at,0]-1]	, [atPos[at,1]-1,atPos[at,1]+1],color=atColor,linewidth=0.2)
+		ax.plot([atPos[at,0]+1,atPos[at,0]+1]	, [atPos[at,1]-1,atPos[at,1]+1],color=atColor,linewidth=0.2)
+		ax.plot([atPos[at,0]-1,atPos[at,0]+1]	, [atPos[at,1]-1,atPos[at,1]-1],color=atColor,linewidth=0.2)
+		ax.plot([atPos[at,0]-1,atPos[at,0]+1]	, [atPos[at,1]+1,atPos[at,1]+1],color=atColor,linewidth=0.2)
 	
 	ax.set_xticks(xticks)	
 	ax.set_xticklabels(xtickLabel,fontsize=12)
@@ -109,8 +123,11 @@ for n in range(nWfs):
 	ax.set_xlabel('a')
 	ax.set_ylabel('b')
 	
-	ax.set_title('u_n='+str(n)+'. q=('+str(qpts[k,0])+','+str(qpts[k,1])+').',fontsize =18)
 	
+		
+	ax.set_xlim([0,aX])
+	ax.set_ylim([0,aY])
+
 	plt.show()
 
 

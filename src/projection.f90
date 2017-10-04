@@ -212,6 +212,7 @@ module projection
 		!TWO BAND model
 		!yMin = atPos(2,1) - atR(2,1)
 		!yMax = atPos(2,1) + atR(2,1)
+		!!write(*,*)"[genTrialOrb]: yMin=",yMin," yMax=",yMax
 		!do ri = 1, nR
 		!	!ONLY 1. UNIT CELL
 		!	if(  rpts(1,ri) < aX .and. rpts(2,ri) < aY) then
@@ -234,43 +235,38 @@ module projection
 		!	do ri = 1, nR
 		!		if(  rpts(1,ri) < aX .and. rpts(2,ri) < aY) then
 		!			if( 	insideAt(1, rpts(:,ri)))	then
-		!				gnr(ri,n)	= gVal(1,n,ri) 
+		!				gnr(ri,n)	= infPotWell(1,n,ri) 
 		!			end if
 		!			!
 		!			if( 	insideAt(2, rpts(:,ri))		)	then
-		!				gnr(ri,n+1)	= gVal(2,n,ri)
+		!				gnr(ri,n+1)	= infPotWell(2,n,ri) 
 		!			end if
 		!		end if
 		!	end do
 		!end do
 
-		!HYBRID STATES
-		do n = 1, nWfs
-			do ri = 1, nR
-				!ONLY IN HOME UNIT CELL
-				if(  rpts(1,ri) < aX .and. rpts(2,ri) < aY) then
-					do at = 1, nAt 
-						if( insideAt(at,rpts(:,ri))) then
-							gnr(ri,n)	= gVal(at,n,ri)
-						end if 
-					end do
+
+		!NEW
+		do ri = 1, nR
+			if(  rpts(1,ri) < aX .and. rpts(2,ri) < aY) then
+				if( 	insideAt(1, rpts(:,ri)))	then
+					gnr(ri,1)	= infPotWell(1,1,ri)				!infPotWell(at, n, ri)
+					gnr(ri,2)	= infPotWell(1,1,ri)
 				end if
-			end do
+				!
+				if( 	insideAt(2, rpts(:,ri))		)	then
+					gnr(ri,1)	= infPotWell(2,1,ri)	 
+					gnr(ri,2)	= - infPotWell(2,1,ri)	
+				end if
+			end if
 		end do
 
-		!3 BAND MODEL
-		!do ri = 1, nR
-		!	!ONLY IN HOME UNIT CELL
-		!	if(  rpts(1,ri) < aX .and. rpts(2,ri) < aY) then
-		!		if( insideAt(1,rpts(:,ri))) then
-		!			gnr(ri,1)	= gVal(1,1,ri)
-		!			gnr(ri,3)	= gVal(1,1,ri)
-		!		else if(insideAt(2,rpts(:,ri))) then
-		!			gnr(ri,2)	= gVal(2,1,ri)
-		!			gnr(ri,3)	= gVal(2,1,ri)
-		!		end if
-		!	end if
-		!end do
+
+	
+
+
+	
+
 
 
 		return
@@ -280,20 +276,22 @@ module projection
 	logical function insideBond( xpt )
 		real(dp),		intent(in)		:: xpt
 		!
-		insideBond =  (atPos(1,1) <= xpt) .and. (xpt <= atPos(1,2) )
+		!insideBond =  (atPos(1,1) - atR(1,1) <= xpt) .and. (xpt <= atPos(1,2)  + atR(1,2))
+		insideBond =  (atPos(1,1)  <= xpt) .and. (xpt <= atPos(1,2) )
 		!
 		return
 	end function
+
+
+
 
 	logical function insideABond( xpt ) 
 		real(dp),		intent(in)		:: xpt
 		logical							:: left, right
 		!
-		left	= (  (atPos(1,1) - atR(1,1) ) <=  xpt)	 .and. ( xpt <= 		atPos(1,1)					)
-		right	= ( 		 atPos(1,2) 		<= 	xpt) .and. ( xpt <= ( atPos(1,2) + atR(1,2) )			)	
-
+		left	= (  (atPos(1,1) - 1.0_dp*  atR(1,1) ) <=  xpt)	 .and. ( xpt <= 		atPos(1,1)					)
+		right	= ( 		 atPos(1,2) 		<= 	xpt) .and. ( xpt <= ( atPos(1,2) + 1.0_dp* atR(1,2) )			)	
 		!
-		
 		insideABond = left .or. right
 		!
 		return
@@ -316,22 +314,32 @@ module projection
 	end function
 
 
-	complex(dp) function infPotWell(at, n, xi)
-		integer, 	intent(in)		:: at, n, xi
-		real(dp)					:: xc(dim), xrel(dim), k(dim), L(dim)
-		complex(dp)					:: A
+
+
+
+
+	complex(dp) function infPotWell(at, n, ri)
+		integer, 	intent(in)		:: at, n, ri
+		real(dp)					:: x,y, Lx, Ly, xc, yc, kx, ky, A
 		!
-		!vAvg = abs( sum(vPot) ) * 1.0_dp/ nWells
-		L 		= 2.0_dp * atR(:,at)
-		xc 		= atPos(:,at)
-		k 		= n*PI_dp / L(:)
-		A 		= dsqrt(	2.0_dp / product(L)		)
-		xrel	= rpts(:,xi) - xc + L / 2.0_dp
+		x	= rpts(1,ri)
+		y	= rpts(2,ri)
+		Lx 	= 2.0_dp * atR(1,at)
+		Ly 	= 2.0_dp * atR(2,at)
+		xc	= atPos(1,at)
+		yc	= atPos(2,at)
+		kx	= n*PI_dp/ Lx
+		ky	= n*PI_dp/ Ly
 		!
-		infPotWell = A * dcmplx(		 dsin(	dot_product( k , xrel)		) 	)
+		A	= dsqrt(4.0_dp / (Lx * Ly)	)
+		!
+		infPotWell = A * dsin( kx*(x -xc + 0.5_dp * Lx) ) * dsin( ky*(y -yc + 0.5_dp * Ly) )
 		!
 		return
 	end function
+
+
+
 
 
 

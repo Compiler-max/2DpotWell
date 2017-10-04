@@ -24,11 +24,6 @@ rawData		= np.fromfile(f2,dtype='float64',count=-1)
 f2.close()
 
 
-f3			= open("rawData/Ewann.dat",'rb') #rb = Read Binary
-rawWann		= np.fromfile(f3,dtype='float64',count=-1)
-f3.close()
-
-
 f5			= open("rawData/EnInterP.dat",'rb') #rb = Read Binary
 rawInterP	= np.fromfile(f5,dtype='float64',count=-1)
 f5.close()
@@ -78,7 +73,6 @@ if( nKx != nKy):
 #RESHAPE RAW DATA
 qpts	= np.reshape(	qpts		,	(nK,2)		)
 En		= np.reshape(	rawData		,	(nK,nG)		)    
-EW		= np.reshape(	rawWann		,	(nK,nWfs)	)		
 EI 		= np.reshape(	rawInterP	,	(nK,nWfs)	)
 
 #print(EW)
@@ -133,27 +127,22 @@ for n in range(0,nWfs):
 	offs	= 0
 	for i in range(0,nKx):	
 		ibar			= Kind(nKx-1-i,0)
-		EWPlot[offs+i]	= EW[ibar,n]
 		EIPlot[offs+i]	= EI[ibar,n]
 	#G to M
 	offs	= nKx		
 	for i in range(0,nKx):
 		ibar			= Kind(i,i)
-		EWPlot[offs+i]	= EW[ibar,n]
 		EIPlot[offs+i]	= EI[ibar,n]
 	#M to Y
 	offs	= 2 * nKx
 	for i in range(0,nKy):
 		ibar			= Kind(nKx-1-i,nKy-1)
-		EWPlot[offs+i]	= EW[ibar,n]
 		EIPlot[offs+i]	= EI[ibar,n]
 	#Y to G
 	offs	= 3 * nKx
 	for i in range(0,nKy):
 		ibar			= Kind(0,nKy-1-i)
-		EWPlot[offs+i]	= EW[ibar,n]
 		EIPlot[offs+i]	= EI[ibar,n]
-	#ax.plot(kPlot,EWPlot,marker='+',color='r',linewidth=0.4)
 	ax.plot(kPlot,EIPlot,marker='+',color='r',linewidth=0.4)
 
 

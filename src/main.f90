@@ -151,20 +151,20 @@ program main
 
 
 
-	!write(*,*)"*"
-	!write(*,*)"*"
-	!write(*,*)"*"
-	!write(*,*)"*"
-	!write(*,*)"[main]:**************************PEIERLS SUB*************************"
-	!call cpu_time(T0)
-	!!
-	!if(doPei)  then
-	!	call peierlsMethod(tHopp, pPei)
-	!end if
-	!!
-	!call cpu_time(T1)
-	!write(*,*)"[main]: done with peierls substitution"
-	!peiT = T1 - T0
+	write(*,*)"*"
+	write(*,*)"*"
+	write(*,*)"*"
+	write(*,*)"*"
+	write(*,*)"[main]:**************************PEIERLS SUB*************************"
+	call cpu_time(T0)
+	!
+	if(doPei)  then
+		call peierlsMethod(wnf, pPei)
+	end if
+	!
+	call cpu_time(T1)
+	write(*,*)"[main]: done with peierls substitution"
+	peiT = T1 - T0
 
 
 
@@ -183,7 +183,7 @@ program main
 	call writeMeshBin()
 	call writeUNKs(unkW)
 	write(*,*)"[main]: ...wrote mesh info"
-	call calcIonicPol(pIon)
+	!call calcIonicPol(pIon)
 	pTot	= pIon + pWann
 	call writePolFile(pWann, pIon, pTot, pBerry, pInt, pNiu, pPei )
 	write(*,*)"[main]: ...wrote polarization txt file"

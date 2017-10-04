@@ -130,7 +130,7 @@ module wannier
 				do xi = 1, nR
 					do qi = 1 , nQ
 						phase			= myExp( 	dot_product( qpts(:,qi) , rpts(:,xi) - Rcell(:,Ri) )			)
-						wnF(xi,Ri,n)	= wnF(xi,Ri,n) + unk(xi,n,qi) * phase / nQreal!dsqrt(nQreal)
+						wnF(xi,Ri,n)	= wnF(xi,Ri,n) + unk(xi,n,qi) * phase  / nQreal !/ dsqrt(nQreal)
 					end do
 				end do
 			end do

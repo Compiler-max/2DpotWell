@@ -6,16 +6,16 @@
 
 [atoms]
     nAt         = 2       
-    relXpos     = 0.40 0.61     
+    relXpos     = 0.40 0.60     
     relYpos     = 0.50 0.50 
     atRx        = 1.0 1.0    
     atRy        = 1.0 1.0
-    atPot       = -0.8 -1.2     
+    atPot       = -0.8 -1.0     
     Zion        = 1.00 1.00
 
 [numerics]
-    nG          = 128
-    Gcut        = 3.1	     
+    nG          = 256
+    Gcut        = 5.0	     
     nQx         = 8   
     nQy         = 8
     nSCx        = 8 
