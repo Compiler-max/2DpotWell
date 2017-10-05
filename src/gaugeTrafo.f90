@@ -28,15 +28,7 @@ module gaugeTrafo
 		allocate(	AW(		2	,	nWfs, 	nWfs			)		)
 		allocate(	Fw(		2	,	2	,	nWfs,	nWfs	)		)
 		allocate(	Abuff(	2	,	nWfs,	nWfs,	nQ		)		)
-		!
-		!call calcRhopp(unkW, rHopp)
-		!if ( .not. doGaugBack ) then
-		!	call calcConnOnCoarse(unkW,Abuff)
-		!end if
-
-		!call calcHopping(wnf, tHopp, rHopp)
-		!rHopp = dcmplx(0.0_dp)
-		!call calcRhopp(unkW, rHopp)
+	
 		
 		do ki = 1, nK
 			call interpolateMat(ki, tHopp, rHopp, HW, HaW, AW, FW)
