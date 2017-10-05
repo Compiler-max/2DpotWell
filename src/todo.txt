@@ -1,25 +1,4 @@
-today toDo:
-	
-	- private dynamic arrays in omp parallel regions - deallocate them
-		they seem to cause the segfault at the end of the execution
 
-
-	- switches for using berry wannier niu peierls
-	
-	- berry.f90 needs no te adjusted to new indexing( of unks)
-	
-	- omp do -> introduce runtime scheduling (and test it) 
-	
-	- trial orbital advanced (genTrialOrb call in wannGen/projectBWF)
-	
-	- peierls:
-		- set up Ham from Wannier functions
-		- resulting Ham: Yuriy adviced to check if Ham is still periodic
-
-	
-
-Montag:
-	- raum buchen für vortrag
 	- urlaub eintragen (shiff + weihnachten)
 
 
@@ -82,16 +61,8 @@ todo:
 	
 
 
-	DEBUG:
 
-	- compare interpolated energy bands with original energy bands
-	- complet new kpts array notsation!!!!!!!!!!!!!!!!!!!!!!!
-
-
-
-	-first order polarization
-		via Niu		-> debug indices seem to point in x not in y direction currtently
-		via Peierl
+	
 
 	- niu
 		see if zero field gives zero pol

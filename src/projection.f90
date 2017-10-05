@@ -28,14 +28,14 @@ module projection
 	contains
 !public:
 
-	subroutine projectUnk(En, unk, unkP)	!projectBwf(qi, bWf, loBwf, U(:,:), failCount, smin, smax)
+	subroutine projectUnk(En, unk, unkP, Uq)	!projectBwf(qi, bWf, loBwf, U(:,:), failCount, smin, smax)
 		!does the projection onto Loewdin-orthonormalized Bloch-like states
 		!see Marzari, Vanderbilt PRB 56, 12847 (1997) Sec.IV.G.1 for detailed description of the method 
 		real(dp),		intent(in)		:: En(:,:)		!	En(nBands,nQ)
 		complex(dp)	,	intent(in)		:: unk(:,:,:)   ! unk(nR,nG,nQ)
-		complex(dp)	,	intent(out)		:: unkP(:,:,:)	! unk(nR,nWfs,nQ) , tHopp(nWfs, nWfs nSC)
+		complex(dp)	,	intent(out)		:: unkP(:,:,:), Uq(:,:,:)	! unk(nR,nWfs,nQ) , tHopp(nWfs, nWfs nSC)
 		real(dp),		allocatable		:: EnP(:,:)	
-		complex(dp)	,	allocatable		:: loBwf(:,:), gnr(:,:), A(:,:), U(:,:), Ham(:,:)
+		complex(dp)	,	allocatable		:: loBwf(:,:), gnr(:,:), A(:,:), Ham(:,:)
 		
 		complex(dp)						:: phase
 		integer							:: qi, xi, n, m, R
@@ -43,7 +43,6 @@ module projection
 		allocate(	loBwf(nR,nWfs)		)
 		allocate(	gnr(nR,nWfs)		)
 		allocate( 	A(nBands,nWfs)		)
-		allocate(	U(nBands,nWfs)		)
 		allocate(	Ham(nWfs,nWfs)		)
 		allocate(	EnP(nWfs,nQ)		)
 		!
@@ -58,14 +57,14 @@ module projection
 		do qi = 1, nQ
 			if( doProj ) then 
 				call calcAmat(qi,unk(:,:,qi),gnr, A) 
-				call calcUmat(A, U)
+				call calcUmat(A, Uq(:,:,qi))
 			else
 				write(*,*)	"[projectUNK]: projection disabled, U= Identity"
-				U = dcmplx(0.0_dp)
-				do n = 1, size(U,1)
-					do m = 1, size(U,2)
+				Uq(:,:,qi) = dcmplx(0.0_dp)
+				do n = 1, size(Uq,1)
+					do m = 1, size(Uq,2)
 						if(n==m) then
-							U(n,m)	= dcmplx(1.0_dp)
+							Uq(n,m,qi)	= dcmplx(1.0_dp)
 						end if
 					end do
 				end do
@@ -75,7 +74,7 @@ module projection
 			!$OMP PARALLEL DO SCHEDULE(STATIC) DEFAULT(SHARED) PRIVATE(xi, phase)
 			do xi = 1, nR
 				phase		= myExp(	dot_product(qpts(:,qi),rpts(:,xi))		)
-				loBwf(xi,:) = matmul(	phase * unk(xi,1:nBands,qi) / dsqrt(real(nSC,dp)), U	)
+				loBwf(xi,:) = matmul(	phase * unk(xi,1:nBands,qi) / dsqrt(real(nSC,dp)), Uq(:,:,qi)	)
 			end do
 			!$OMP END PARALLEL DO
 			!
@@ -85,31 +84,7 @@ module projection
 			!call addThopp(qi, U,En, tHopp)
 		end do
 		!
-		!!CALC ENERGIES OF INTERPOLATED BANDS
-		!do qi = 1, nQ
-		!	!FOURIER TRAFO ON tHOPP
-		!	Ham	= dcmplx(0.0_dp)
-		!	do R = 1, nSC
-		!		phase		= myExp( dot_product(qpts(:,qi), Rcell(:,R)	)	)
-		!		Ham(:,:)	= Ham(:,:)	+ phase * tHopp(:,:,R)
-		!	end do
-		!	!
-		!	!TEST IF HERMITIAN
-		!	if( debugProj) then
-		!		if( .not. isHermitian(Ham) ) then
-		!			write(*,*)	"[projectUnk]: energy interpolation, Hamiltonian not hermitian at qi=",qi
-		!		end if
-		!	end if
-		!	!
-		!	!SOLVE HAM
-		!	call eigSolver(Ham(:,:), EnP(:,qi))
-		!end do
 
-
-		!
-		!
-		!
-		!call writeInterpBands(EnP)
 		write(*,*)	"[projectUnk]: done with projections at each k point"	
 		!
 		!

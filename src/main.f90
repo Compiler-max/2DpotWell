@@ -20,8 +20,8 @@ program main
 	implicit none
 
 	
-    complex(dp),	allocatable,	dimension(:,:,:)	:: 	unk, unkW, wnf!, ukn basCoeff,
-    real(dp),		allocatable,	dimension(:,:)		:: 	En, EnW
+    complex(dp),	allocatable,	dimension(:,:,:)	:: 	unk, unkW, wnf, Uq!, ukn basCoeff,
+    real(dp),		allocatable,	dimension(:,:)		:: 	En
     real(dp) 											:: 	pWann(2), pIon(2), pTot(2), pBerry(2), pInt(2), pNiu(3), pPei(3)
     real												:: 	mastT0, mastT1, mastT, T0, T1, &
     															aT,kT,wT, oT, bT,scT, peiT, pT
@@ -37,6 +37,7 @@ program main
 	!electronic structure arrays
 	allocate(			unk(		nR 		,	nG		, 	nQ		)				)
 	allocate(			unkW(		nR 		,	nWfs	, 	nQ		)				)
+	allocate(			Uq(			nBands	,	nWfs	, 	nQ		)				)
 	allocate(			wnF( 		nR		, 	nSC		, nWfs		)				)
 	allocate(			En(						nBands	, 	nQ		)				)
 	
@@ -91,7 +92,7 @@ program main
 	call cpu_time(T0)
 	!
 	!
-	call projectUnk(En, unk, unkW)
+	call projectUnk(En, unk, unkW, Uq)
 	!
 	call cpu_time(T1)
 	write(*,*)"[main]: done with projections."
@@ -196,8 +197,6 @@ program main
 
 
 	!TIMING INFO SECTION
-	!call printInp()
-	!call printWannInfo(wCent, wSprd, pEl, pIon, pTot, pElViaA)
 	call cpu_time(mastT1)
 	mastT= mastT1-mastT0
 	write(*,*)"*"

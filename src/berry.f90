@@ -148,6 +148,12 @@ module berry
 						qyl	= getLeft(  qy,nQy)
 						qyr = getRight( qy,nQy)
 						qi	= getKindex(qx,qy)
+						if(		norm2(qpts(:,qi)-qpts(:,qyl)) > dqx		) then
+							write(*,*)"[calcConnOnCoarse]: fd does not get the neighbours"
+						end if
+						if(		norm2(qpts(:,qyr)-qpts(:,qi)) > dqx		) then
+							write(*,*)"[calcConnOnCoarse]: fd does not get the neighbours"
+						end if
 						!
 						!OVERLAP TO NEAREST NEIGHBOURS
 						!one = UNKoverlap(	n,		m, 		qi		, 		qi					, unk	)

@@ -48,7 +48,7 @@ module gaugeTrafo
 				!AconnH(1:2,:,:,ki)	= AW(1:2,:,:)
 				call eigSolver(HW,EnH(:,ki))
 				AconnH(1:2,:,:,ki) 	= AW(1:2,:,:)
-				veloH(1:2,:,:,ki) 	= HaW(1:2,:,:)
+				veloH(1:2,:,:,ki) 	= HaW(1:2,:,:) 
 				FcurvH				= dcmplx(0.0_dp)
 				!call calcCurv(FW, DH, AW, FcurvH)
 			end if
