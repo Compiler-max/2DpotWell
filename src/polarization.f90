@@ -21,7 +21,7 @@ module polarization
 		!	uncertainty is resolved by projecting the wannier centers into the first unit cell at (0,0) 
 		real(dp), intent(in)	:: wCent(:,:)
 		real(dp), intent(out)	:: pE(2)
-		integer 				:: n, at
+		integer 				:: n
 		real(dp) 				:: cent(2), bondC(2)
 		!
 		

@@ -36,7 +36,7 @@ module output
 		!writes the generated meshes to readable txt file for debuggin purpose
 		!
 		!
-		integer		:: i, j
+		integer		:: i
 		open(unit=100,file='meshInfo.txt',action='write')
 		!
 		!R MESH
@@ -104,6 +104,9 @@ module output
 		write(300) nSC
 		write(300) nSCx
 		write(300) nSCy
+		write(300) nK
+		write(300) nKx
+		write(300) nKy
 		close(300)
 		!
 		!CELL INFO
@@ -190,22 +193,28 @@ module output
 
 	subroutine writeConnCurv(Aconn, Fcurv)
 		complex(dp),		intent(in)		:: Aconn(:,:,:,:), Fcurv(:,:,:,:)
-		real(dp),			allocatable		:: buffer(:,:,:,:)
+		real(dp),			allocatable		:: buffer(:,:,:)
+		integer								:: ki
 		!
-		allocate(	buffer( size(Aconn,1),size(Aconn,2),size(Aconn,3),size(Aconn,4) )		)
+		allocate(	buffer( size(Aconn,1),size(Aconn,2),size(Aconn,3) )		)
 		!
 		!CONNECTION
-		buffer	= dreal(Aconn)
 		open(unit=410,file='rawData/AconnR.dat',form='unformatted',access='stream',action='write')
-		write(410)	buffer
+		do ki = 1, size(Aconn,4)
+			buffer	= dreal(Aconn(:,:,:,ki))
+			write(410)	buffer
+		end do
 		close(410)
 		!
 		!
 		!CURVATURE
-		buffer	= dreal(Fcurv)	
 		open(unit=420,file='rawData/FcurvR.dat',form='unformatted',access='stream',action='write')
-		write(420) buffer	
+		do ki = 1, size(Fcurv,4)
+			buffer	= dreal(Fcurv(:,:,:,ki))
+			write(420) buffer
+		end do	
 		close(420)
+		!
 		!
 		!
 		return
@@ -307,8 +316,6 @@ module output
 		close(720)
 		!
 		!
-		deallocate(	buffer3		)
-		deallocate(	buffer4		)
 		return
 	end subroutine
 
@@ -324,8 +331,8 @@ module output
 	end subroutine
 
 
-	subroutine writePolFile(pWann, pIon, pTot, pBerry, pInt, pNiu, pPei )
-		real(dp),		intent(in)		:: pWann(2), pIon(2), pTot(2), pBerry(2), pInt(2), pNiu(3), pPei(3)
+	subroutine writePolFile(pWann, pBerry, pNiu, pPei )
+		real(dp),		intent(in)		:: pWann(2), pBerry(2), pNiu(3), pPei(3)
 		!	
 		!	
 		open(unit=600,file='polOutput.txt',action='write')
@@ -340,10 +347,10 @@ module output
 		write(600,*)"*"
 		!
 		write(600,*)"**************POL:"
-		write(600,'(a,e16.9,a,f16.12,a,f16.12,a)')	"pWann = ",norm2(pWann)	," * (", &	
-																pWann(1)/norm2(pWann) 	,	", ",	pWann(2)/norm2(pWann),		")"
-		write(600,'(a,e16.9,a,f16.12,a,f16.12,a)')	"pBerry= ",norm2(pBerry)," * (", &	
-																pBerry(1)/norm2(pBerry)	,	", ",	pBerry(2)/norm2(pBerry),	")"
+		!write(600,'(a,e16.9,a,f16.12,a,f16.12,a)')	"pWann = ",norm2(pWann)	," * (", &	
+		!														pWann(1)/norm2(pWann) 	,	", ",	pWann(2)/norm2(pWann),		")"
+		!write(600,'(a,e16.9,a,f16.12,a,f16.12,a)')	"pBerry= ",norm2(pBerry)," * (", &	
+		!														pBerry(1)/norm2(pBerry)	,	", ",	pBerry(2)/norm2(pBerry),	")"
 
 	
 		write(600,'(a,f16.12,a,f16.12,a)')	"pWann =  (",  pWann(1)	,	", ",	pWann(2),		")"
@@ -360,8 +367,8 @@ module output
 		write(600,'(a,f16.12,a,f16.12,a,f16.12,a,f16.12,a)')	"Bext= ",norm2(Bext) ," * (", &
 											Bext(1)/norm2(Bext),	", ",	Bext(2)/norm2(Bext),", ", Bext(3)/norm2(Bext),	")"
 		write(600,*)"*"
-		write(600,'(a,e16.9,a,f16.12,a,f16.12,a,f16.12,a)')	"pNiu= ",norm2(pNiu)," * (", &	
-											pNiu(1)/norm2(pNiu),	", ",	pNiu(2)/norm2(pNiu),", ", pNiu(3)/norm2(pNiu),	")"
+		!write(600,'(a,e16.9,a,f16.12,a,f16.12,a,f16.12,a)')	"pNiu= ",norm2(pNiu)," * (", &	
+		!									pNiu(1)/norm2(pNiu),	", ",	pNiu(2)/norm2(pNiu),", ", pNiu(3)/norm2(pNiu),	")"
 
 		write(600,'(a,f16.8,a,f16.8,a,f16.8,a)')	"pNiu= (", 	pNiu(1),	", ",	pNiu(2),", ", pNiu(3),	")"
 

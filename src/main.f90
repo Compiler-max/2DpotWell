@@ -1,7 +1,7 @@
 program main
 	!TWO dimensional potential well code
 	use omp_lib
-	use mathematics, 	only: 		dp, PI_dp, acc, eigSolver
+	use mathematics, 	only: 		dp
 
 	use sysPara
 	use potWellModel, 	only: 		solveHam
@@ -10,7 +10,6 @@ program main
 	use berry,			only:		berryMethod
 
 	use polarization,	only:		calcIonicPol
-	use semiclassics,	only:		calcFirstOrdP
 	use peierls,		only:		peierlsMethod
 	use output,		 	only:		writeMeshInfo, writeMeshBin, writeUNKs, writeInterpBands, writeWannFiles,writePolFile,& 
 									printTiming	!printMat, printInp, printWannInfo,writeSysInfo  
@@ -22,10 +21,9 @@ program main
 	
     complex(dp),	allocatable,	dimension(:,:,:)	:: 	unk, unkW, wnf, Uq!, ukn basCoeff,
     real(dp),		allocatable,	dimension(:,:)		:: 	En
-    real(dp) 											:: 	pWann(2), pIon(2), pTot(2), pBerry(2), pInt(2), pNiu(3), pPei(3)
+    real(dp) 											:: 	pWann(2), pBerry(2), pNiu(3), pPei(3)
     real												:: 	mastT0, mastT1, mastT, T0, T1, &
-    															aT,kT,wT, oT, bT,scT, peiT, pT
-    integer 											::	xi,ki
+    															aT,kT,wT, oT, bT, peiT, pT
     call cpu_time(mastT0)
 
 
@@ -92,7 +90,7 @@ program main
 	call cpu_time(T0)
 	!
 	!
-	call projectUnk(En, unk, unkW, Uq)
+	call projectUnk(unk, unkW, Uq)
 	!
 	call cpu_time(T1)
 	write(*,*)"[main]: done with projections."
@@ -129,7 +127,7 @@ program main
 	call cpu_time(T0)
 	if ( doBerry ) then
 		write(*,*)"[main]:**************************WAVEFUNCTION METHOD*************************"
-		call berryMethod(unkW, wnf, pBerry, pNiu)
+		call berryMethod(unkW, En, Uq, pBerry, pNiu)
 		write(*,*)"[main]: done with wavefunction method "
 	else
 		write(*,*)"[main]: berry method disabled"
@@ -152,20 +150,20 @@ program main
 
 
 
-	write(*,*)"*"
-	write(*,*)"*"
-	write(*,*)"*"
-	write(*,*)"*"
-	write(*,*)"[main]:**************************PEIERLS SUB*************************"
-	call cpu_time(T0)
-	!
-	if(doPei)  then
-		call peierlsMethod(wnf, pPei)
-	end if
-	!
-	call cpu_time(T1)
-	write(*,*)"[main]: done with peierls substitution"
-	peiT = T1 - T0
+	!write(*,*)"*"
+	!write(*,*)"*"
+	!write(*,*)"*"
+	!write(*,*)"*"
+	!write(*,*)"[main]:**************************PEIERLS SUB*************************"
+	!call cpu_time(T0)
+	!!
+	!if(doPei)  then
+	!	call peierlsMethod(wnf, pPei)
+	!end if
+	!!
+	!call cpu_time(T1)
+	!write(*,*)"[main]: done with peierls substitution"
+	!peiT = T1 - T0
 
 
 
@@ -186,7 +184,7 @@ program main
 	write(*,*)"[main]: ...wrote mesh info"
 	!call calcIonicPol(pIon)
 	pTot	= pIon + pWann
-	call writePolFile(pWann, pIon, pTot, pBerry, pInt, pNiu, pPei )
+	call writePolFile(pWann, pBerry, pNiu, pPei )
 	write(*,*)"[main]: ...wrote polarization txt file"
 	!
 	call cpu_time(T1)

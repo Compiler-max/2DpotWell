@@ -479,23 +479,7 @@ module mathematics
 		integer,		intent(in)		:: nR, nRx, nRy
 		real(dp),		intent(in)		:: dx, dy
 		real(dp),		intent(in)		:: f(:)				!f(nR)
-		real(dp),		allocatable		:: fy(:)
-		real(dp)						:: tmp
-		integer							:: yI, min, max
-		!
-		!allocate(	fy(nRy)		)
-		!fy = 0.0_dp
-		!!
-		!!X INTEGRATION (fill fy array)
-		!do yI = 1, nRy
-		!	min = (yI-1) * nRx + 1
-		!	max = (yI-1) * nRx + nRx
-		!	call hiordqWrapper(dx, f(min:max), fy(yI))
-		!	!write(*,'(a,i4,a,f15.10)')"[nIntegrateREAL]: yI=",yI," int val=",fy(yI)
-		!end do
-		!!
-		!!Y INTEGRATION
-		!call hiordqWrapper(dy, fy, nIntegrateREAL)
+		
 
 		nIntegrateREAL = sum(f) / real(size(f),dp)
 		!

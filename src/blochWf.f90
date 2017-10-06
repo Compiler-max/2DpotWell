@@ -119,7 +119,6 @@ module blochWf
 			!end do
 		end do
 		!!!$OMP END DO
-		deallocate(	f	)
 		!!!!$OMP END PARALLEL
 
 		!
@@ -163,7 +162,7 @@ module blochWf
 		integer,		intent(in)		:: qi
 		complex(dp),	intent(in)		:: bwf(:,:)
 		complex(dp),	allocatable		:: f(:)
-		integer							:: n,m, xi,yi,ri, cnt, tot
+		integer							:: n, xi,yi,ri, cnt
 		complex(dp)						:: oLap
 		!
 		allocate(	f(100)	)

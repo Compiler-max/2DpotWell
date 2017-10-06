@@ -28,10 +28,9 @@ module projection
 	contains
 !public:
 
-	subroutine projectUnk(En, unk, unkP, Uq)	!projectBwf(qi, bWf, loBwf, U(:,:), failCount, smin, smax)
+	subroutine projectUnk(unk, unkP, Uq)	!projectBwf(qi, bWf, loBwf, U(:,:), failCount, smin, smax)
 		!does the projection onto Loewdin-orthonormalized Bloch-like states
 		!see Marzari, Vanderbilt PRB 56, 12847 (1997) Sec.IV.G.1 for detailed description of the method 
-		real(dp),		intent(in)		:: En(:,:)		!	En(nBands,nQ)
 		complex(dp)	,	intent(in)		:: unk(:,:,:)   ! unk(nR,nG,nQ)
 		complex(dp)	,	intent(out)		:: unkP(:,:,:), Uq(:,:,:)	! unk(nR,nWfs,nQ) , tHopp(nWfs, nWfs nSC)
 		real(dp),		allocatable		:: EnP(:,:)	
@@ -51,7 +50,7 @@ module projection
 		end if
 		!
 		!
-		call genTrialOrb(unk, gnr)
+		call genTrialOrb(gnr)
 		!
 		!PROJECT
 		do qi = 1, nQ
@@ -80,8 +79,6 @@ module projection
 			!
 			!OVERWRITE UNKS WITH PROJECTED UNKs
 			call genUnk(qi, lobWf, unkP(:,:,qi))
-			!ADD CURRENT Q TO HOPPING MATRIX
-			!call addThopp(qi, U,En, tHopp)
 		end do
 		!
 
@@ -145,10 +142,6 @@ module projection
 		!
 		!tHopp	= tHopp    
 		!
-		!
-		deallocate(	tmp	)
-		deallocate(	EV 	)
-		deallocate( Udag)
 		return
 	end subroutine
 
@@ -159,11 +152,8 @@ module projection
 
 
 !privat:
-	subroutine genTrialOrb(unk, gnr)
-		complex(dp),	intent(in)	:: unk(:,:,:)       !gnr( nR, nWfs)	
+	subroutine genTrialOrb(gnr)
 		complex(dp),	intent(out)	:: gnr(:,:)       !gnr( nR, nWfs)	
-		real(dp)					:: posX, posY, xc, k, L, yMin, yMax
-		complex(dp)					:: A
 		integer						:: n, ri, at, gammaP
 		!
 		if(nWfs > nBands) then
@@ -174,15 +164,7 @@ module projection
 		gnr 	= dcmplx(0.0_dp)
 		
 
-		!ONTO UNKs
-		!do n = 1, nWfs
-		!	do ri = 1, nR
-		!		if(  rpts(1,ri) < aX .and. rpts(2,ri) < aY) then
-		!			gnr(ri,n)	= 	unk(ri,n,gammaP)
-		!		end if
-		!	end do
-		!end do
-
+	
 
 		!TWO BAND model
 		!yMin = atPos(2,1) - atR(2,1)
@@ -343,7 +325,6 @@ module projection
 			end do
 		end do
 		!$OMP END DO
-		deallocate(	f )
 		!$OMP END PARALLEL
 		!
 		!

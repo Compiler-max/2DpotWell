@@ -172,7 +172,6 @@ module wannier
 		integer,		intent(in)		:: R1, R2, n, m
 		complex(dp),	intent(in)		:: wnF(:,:,:)	 !wnF( nRpts, nSupC,		nWfs)
 		real(dp),		intent(out)		:: res(2)		
-		real(dp)				 		:: norm
 		real(dp), 		allocatable	 	:: fx(:),fy(:)
 		integer 				 		:: xi
 		!
@@ -202,7 +201,6 @@ module wannier
 		integer,		intent(in)	:: R1, R2, n, m
 		complex(dp),	intent(in)	:: wnF(:,:,:)
 		real(dp),		intent(out)	:: res(2)	
-		real(dp)				 	:: norm
 		real(dp), allocatable	 	:: fx(:),fy(:)
 		integer 				 	:: xi
 		!
@@ -288,7 +286,6 @@ module wannier
 		complex(dp),	intent(in)		:: wnF(:,:,:) !wnF( 	nR, nSC, nWfs		)	
 		real(dp),	allocatable			:: f(:)
 		real(dp)						:: oLap,  avg, dmax
-		logical							:: rLog, iLog
 		integer							:: n, m, ri, sc,sc1, sc2, tot
 		!
 		
@@ -331,7 +328,6 @@ module wannier
 			end do
 		end do
 		!!!!$OMP END DO
-		deallocate(	f )
 		!!!!$OMP END PARALLEL
 		avg	= avg / real(isNormal,dp)
 		write(*,'(a,i5,a,i8,a,f16.12,a,f16.12)')	"[isNormal]: ",isNormal," of ",tot, &

@@ -15,6 +15,12 @@ f0     		= open("rawData/qpts.dat",'rb')
 qpts   		= np.fromfile(f0,dtype='float64',count=-1)
 f0.close()
 
+f1     		= open("rawData/kpts.dat",'rb')
+kpts   		= np.fromfile(f1,dtype='float64',count=-1)
+f1.close()
+
+
+
 #f1	 		= open("rawData/rpts.dat",'rb') #rb = Read Binary
 #rpts 		= np.fromfile(f1,dtype='float64',count=-1)
 #f1.close()
@@ -34,13 +40,19 @@ f4.close()
 
 nAt			= rawSysP[0]
 nG			= rawSysP[1]
-nK			= rawSysP[2]
-nKx			= rawSysP[3]
-nKy			= rawSysP[4]
+nQ			= rawSysP[2]
+nQx			= rawSysP[3]
+nQy			= rawSysP[4]
 nR			= rawSysP[5]
 nRx			= rawSysP[6]
 nRy			= rawSysP[7]
 nWfs		= rawSysP[8]
+nSC			= rawSysP[9]		
+nSCx		= rawSysP[10]
+nSCy		= rawSysP[11]
+nK			= rawSysP[12]
+nKx			= rawSysP[13]
+nKy			= rawSysP[14]
 
 
 f5			= open("rawData/cellInfo.dat",'rb')
@@ -53,39 +65,35 @@ aY			= cellI[1]
 
 
 
-#integer function getKindex(kx,ky)
-#	integer,	intent(in)		:: kx, ky
-#	!
-#	getKindex = (ky-1) * nKx + kx
-#	return
-#end
+def Qind(qx,qy):
+	return int(qy * nQx + qx)
+
+
 def Kind(kx,ky):
-	ibar = int(ky * nKx + kx)
-	#print("nx="+str(kx)+", ny="+str(ky)+"ibar="+str(ibar))
-	return	ibar
+	return	int(ky * nKx + kx)
 
-
-
-
-if( nKx != nKy):
+if( nQx != nQy):
 	print("warning the k point spacing per dimension is differnent, this affects the path through k space")
 
 #RESHAPE RAW DATA
-qpts	= np.reshape(	qpts		,	(nK,2)		)
-En		= np.reshape(	rawData		,	(nK,nG)		)    
+qpts	= np.reshape(	qpts		,	(nQ,2)		)
+kpts	= np.reshape(	kpts		,	(nK,2)		)
+En		= np.reshape(	rawData		,	(nQ,nG)		)    
 EI 		= np.reshape(	rawInterP	,	(nK,nWfs)	)
 
 #print(EW)
 
 #PATH THROUGH K SPACE
 nPath 	= 4
-nKplot	= nPath * nKx #+ nKy + nKy
+nQplot	= nPath * nQx #+ nQy + nQy
+nKplot	= nPath * nKx
+qPlot	= np.linspace(0,nQplot,nQplot)
 kPlot	= np.linspace(0,nKplot,nKplot)
-EnPlot	= np.empty(nKplot)
-EWPlot	= np.empty(nKplot)
+
+EnPlot	= np.empty(nQplot)
 EIPlot	= np.empty(nKplot)
 
-xticks = np.arange(0,nKplot+nKx,nKx)				 #steps in kspace
+xticks = np.arange(0,nQplot+nQx,nQx)				 #steps in kspace
 xtickLabel = np.array([r'$X$',r'$\Gamma$',r'$M$',r'$Y$',r'$\Gamma$']) #symmetry points visited
 
 
@@ -98,27 +106,27 @@ n 		= 0
 for n in range(0,nG):
 	#X to G
 	offs	= 0
-	for i in range(0,nKx):	
-		ibar			= Kind(nKx-1-i,0)
+	for i in range(0,nQx):	
+		ibar			= Qind(nQx-1-i,0)
 		EnPlot[offs+i]	= En[ibar,n]
 	#G to M
-	offs	= nKx		
-	for i in range(0,nKx):
-		ibar			= Kind(i,i)
+	offs	= nQx		
+	for i in range(0,nQx):
+		ibar			= Qind(i,i)
 		EnPlot[offs+i]	= En[ibar,n]
 	#M to Y
-	offs	= 2 * nKx
-	for i in range(0,nKy):
-		ibar			= Kind(nKx-1-i,nKy-1)
+	offs	= 2 * nQx
+	for i in range(0,nQy):
+		ibar			= Qind(nQx-1-i,nQy-1)
 		EnPlot[offs+i]	= En[ibar,n]
 
 	#Y to G
-	offs	= 3 * nKx
-	for i in range(0,nKy):
-		ibar			= Kind(0,nKy-1-i)
+	offs	= 3 * nQx
+	for i in range(0,nQy):
+		ibar			= Qind(0,nQy-1-i)
 		EnPlot[offs+i]	= En[ibar,n]
 
-	ax.plot(kPlot,EnPlot,color='k',linewidth=0.4)
+	ax.plot(qPlot,EnPlot,color='k',linewidth=0.6)
 
 
 #PROJECTED STATES
@@ -147,7 +155,8 @@ for n in range(0,nWfs):
 
 
 
-ax.set_xlim([0,nKplot])
+ax.set_xlim([0,nQplot])
+ax.set_ylim([-2,2])
 ax.set_xticks(xticks)	
 ax.set_xticklabels(xtickLabel,fontsize=14)
 ax.grid(b=None, axis='x',color='black',alpha=0.2)

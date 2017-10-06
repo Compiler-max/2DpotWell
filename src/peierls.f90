@@ -2,7 +2,7 @@ module peierls
 	use mathematics,	only:	dp, PI_dp, i_dp, myExp, crossP, nIntegrate, eigSolver
 	use sysPara
 	use	wannier,		only:	calcHopping
-	use gaugeTrafo,		only:	DoWannInterpol
+	use wannInterp,		only:	DoWannInterpol
 	use	polarization,	only:	calcPolViaA
 	use output,			only:	writePeierls
 	implicit none
@@ -40,12 +40,12 @@ module peierls
 		FcurvP 	= dcmplx(0.0_dp)
 		veloP	= dcmplx(0.0_dp)
 
-
+		pPei	= 0.0_dp
 
 		write(*,*)	"[peierlsMethod]: start with peierls sub"
 
 		!GET TIGHT BINDING MAT ELEMENTS
-		call calcHopping(wnf, tHopp, rHopp)
+		!call calcHopping(wnf, tHopp, rHopp)
 		!
 		!DO PEIERLS SUBSTITUTION
 		do R = 1, nSC
@@ -53,17 +53,13 @@ module peierls
 		end do
 		
 		!INTERPOLATE
-		call DoWannInterpol(rHopp, tHopp, EnP, AconnP, FcurvP, veloP)
+		!call DoWannInterpol(rHopp, tHopp, EnP, AconnP, FcurvP, veloP)
 
 
 		!CALC POL
-		call calcPolViaA(AconnP, pPei)
+		!call calcPolViaA(AconnP, pPei)
 
 		write(*,*)	"[peierlsMethod]: writing done, by.."
-		deallocate(	EnP		)
-		deallocate(	AconnP	)
-		deallocate(	FcurvP	)
-		deallocate(	veloP	)
 		!
 		!
 		return

@@ -30,8 +30,7 @@ module potWellModel
 		real(dp),		intent(out)		::	En(:,:)																	
 		complex(dp),	allocatable		::	Hmat(:,:)
 		real(dp),		allocatable		::	EnT(:,:)
-		integer							:: 	qi , n, Ri
-		complex(dp)						:: 	phase
+		integer							:: 	qi 
 		real(dp)						::	kVal(2)
 		!
 		allocate(	Hmat(	nG,	nG		)			)
@@ -147,7 +146,7 @@ module potWellModel
 		!the integrals were solved analytical and are hard coded in this function
 		integer,	intent(in)	::	i, j
 		integer					::	at
-		complex(dp)				::	Vx, Vy, Vpot
+		complex(dp)				::	Vpot
 		real(dp)				::  xL, yL, xR, yR, dGx, dGy
 		!
 		V 		= dcmplx(0.0_dp)

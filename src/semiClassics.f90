@@ -88,7 +88,6 @@ module semiClassics
 		complex(dp),	intent(in)		:: Velo(:,:,:,:)  !V(3,nWfs,nWfs,nK)
 		real(dp),		intent(in)		:: En(:,:)			!En(nK nWfs)
 		real(dp),		intent(out)		:: Fmat(:,:)
-		integer							:: i
 		!
 		Fmat = 0.0_dp		
 		!call addF2(n0, ki, Velo, En, Fmat)

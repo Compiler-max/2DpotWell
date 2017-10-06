@@ -46,8 +46,8 @@
     trialOrbSw  = 0
     trialOrbVAL = 1.0 1.0
     R0          = 1
-    nKx         = 8
-    nKy         = 8
+    nKx         = 64
+    nKy         = 64
     connSwitch  = 1
     gaugeBack   = 0
   

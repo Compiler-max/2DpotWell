@@ -46,7 +46,6 @@ module sysPara
 		!the first array index is always the x,y value of the vector
 		!
 		type(CFG_t) :: my_cfg
-		integer 	:: i
 		
 		!read in config
 		call CFG_read_file(my_cfg,"input.txt")

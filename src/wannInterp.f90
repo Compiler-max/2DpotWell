@@ -1,4 +1,4 @@
-module gaugeTrafo
+module wannInterp
 	use mathematics,	only:	dp, PI_dp, i_dp, acc, machineP, myExp, myLeviCivita, nIntegrate, eigSolver, rotMat, myCommutat
 	use sysPara
 	use output,			only: 	writeEnH
@@ -13,35 +13,33 @@ module gaugeTrafo
 
 !public
 	subroutine DoWannInterpol(rHopp, tHopp, EnH, AconnH, FcurvH, veloH)
-		complex(dp),	intent(inout)	:: rHopp(:,:,:,:), tHopp(:,:,:)
+		complex(dp),	intent(in)		:: rHopp(:,:,:,:), tHopp(:,:,:)
 		real(dp),		intent(out)		:: EnH(:,:)
 		complex(dp),	intent(out)		:: AconnH(:,:,:,:), FcurvH(:,:,:,:)
 		complex(dp),	intent(out)		:: veloH(:,:,:,:)
 		complex(dp),	allocatable		:: U(:,:), HW(:,:), HaW(:,:,:), AW(:,:,:), FW(:,:,:,:)
-		real(dp),		allocatable		:: Abuff(:,:,:,:)
 		integer							:: ki
 		!
 		
-		allocate(	U(		nWfs, 	nWfs					)		)
-		allocate(	HW(		nWfs, 	nWfs					)		)
+		allocate(	U(				nWfs, 	nWfs			)		)
+		allocate(	HW(				nWfs, 	nWfs			)		)
 		allocate(	HaW(	2	,	nWfs, 	nWfs			)		)
 		allocate(	AW(		2	,	nWfs, 	nWfs			)		)
-		allocate(	Fw(		2	,	2	,	nWfs,	nWfs	)		)
-		allocate(	Abuff(	2	,	nWfs,	nWfs,	nQ		)		)
+		allocate(	Fw(		2,2	,	nWfs,	nWfs			)		)
 	
 		
 		do ki = 1, nK
 			call interpolateMat(ki, tHopp, rHopp, HW, HaW, AW, FW)
 			if( doGaugBack ) then
-				write(*,*)	"[DoGaugeTrafo]: start gauging back"
+				if(ki == 1) write(*,*)	"[DoGaugeTrafo]: start gauging back" 	
 				call gaugeBack(Hw, HaW, AW, FW, EnH(:,ki), U, AconnH(:,:,:,ki), FcurvH(:,:,:,ki), veloH(:,:,:,ki))	
 			else
-				write(*,*)	"[DoGaugeTrafo]: Gauge trafo DISABLED	"
+				if(ki ==1)	write(*,*)	"[DoGaugeTrafo]: Gauge trafo DISABLED	"
 				!AconnH(1:2,:,:,ki)	= AW(1:2,:,:)
 				call eigSolver(HW,EnH(:,ki))
-				AconnH(1:2,:,:,ki) 	= AW(1:2,:,:)
-				veloH(1:2,:,:,ki) 	= HaW(1:2,:,:) 
-				FcurvH				= dcmplx(0.0_dp)
+				AconnH(1:2,:,:,ki) 		= AW(1:2,:,:)
+				veloH(1:2,:,:,ki) 		= HaW(1:2,:,:) 
+				FcurvH(1:2,:,:,ki)		= dcmplx(0.0_dp)
 				!call calcCurv(FW, DH, AW, FcurvH)
 			end if
 		end do	
@@ -49,12 +47,6 @@ module gaugeTrafo
 		write(*,*)	"[DoGaugeTrafo]: calculated (H) gauge energy, connection, curvature, velocity"
 		!
 		call writeEnH(EnH)
-		!
-		deallocate(	U		)
-		deallocate(	HW		)
-		deallocate(	HaW		)
-		deallocate(	AW		)
-		deallocate(	Fw		)
 		!
 		return
 	end subroutine
@@ -93,20 +85,20 @@ module gaugeTrafo
 		FW	= dcmplx(0.0_dp)
 		!
 		do R = 1, nSC
-			phase			= myExp(	dot_product(kpts(:,ki),Rcell(:,R))	)
+			phase			= myExp(	dot_product(kpts(:,ki),Rcell(:,R))	)   / dsqrt(real(nQ,dp) )
 			!HAM
-			HW(:,:)		= HW(:,:) 		+ phase		 					* tHopp(:,:,R)	!/ dsqrt(real(nQ,dp) )
+			HW(:,:)		= HW(:,:) 		+ phase		 					* tHopp(:,:,R)
 			!HAM DERIVATIVE
-			HaW(1,:,:)	= HaW(1,:,:)	+ phase * i_dp *  Rcell(1,R) 	* tHopp(:,:,R) !/ dsqrt(real(nQ,dp) )
-			HaW(2,:,:)	= HaW(2,:,:)	+ phase * i_dp *  Rcell(2,R) 	* tHopp(:,:,R) !/ dsqrt(real(nQ,dp) )
+			HaW(1,:,:)	= HaW(1,:,:)	+ phase * i_dp *  Rcell(1,R) 	* tHopp(:,:,R) 
+			HaW(2,:,:)	= HaW(2,:,:)	+ phase * i_dp *  Rcell(2,R) 	* tHopp(:,:,R) 
 			!CONNECTION
-			AW(1,:,:)	= AW(1,:,:) 	+ phase 						* rHopp(1,:,:,R) !/ dsqrt(real(nQ,dp) )
-			AW(2,:,:)	= AW(2,:,:) 	+ phase 						* rHopp(2,:,:,R)!/ dsqrt(real(nQ,dp) )
+			AW(1,:,:)	= AW(1,:,:) 	+ phase 						* rHopp(1,:,:,R) 
+			AW(2,:,:)	= AW(2,:,:) 	+ phase 						* rHopp(2,:,:,R)
 			!CURVATURE
 			do a = 1, 2
 				do b = 1, 2
-					FW(a,b,:,:) = FW(a,b,:,:) + phase * i_dp * Rcell(a,R) * rHopp(b,:,:,R) !/ dsqrt(real(nQ,dp) )
-					FW(a,b,:,:) = FW(a,b,:,:) - phase * i_dp * Rcell(b,R) * rHopp(a,:,:,R) !/ dsqrt(real(nQ,dp) )
+					FW(a,b,:,:) = FW(a,b,:,:) + phase * i_dp * Rcell(a,R) * rHopp(b,:,:,R)
+					FW(a,b,:,:) = FW(a,b,:,:) - phase * i_dp * Rcell(b,R) * rHopp(a,:,:,R) 	
 				end do
 			end do
 		end do
@@ -118,6 +110,7 @@ module gaugeTrafo
 
 
 	subroutine gaugeBack(Hw, HaW, AW, FW, EnH, U, AconnH, FcurvH, veloH)
+		!transform from wannier gauge back to hamiltonian gauge
 		complex(dp),	intent(in)		:: Hw(:,:)
 		complex(dp),	intent(inout)	:: HaW(:,:,:), AW(:,:,:), FW(:,:,:,:)
 		real(dp),		intent(out)		:: EnH(:)
@@ -144,7 +137,6 @@ module gaugeTrafo
 
 		!
 		!		
-		deallocate(	DH	)
 		return
 	end subroutine
 
@@ -199,7 +191,6 @@ module gaugeTrafo
 		end do
 		!
 		!
-		deallocate( Uc	)
 		return
 	end subroutine
 
@@ -294,4 +285,4 @@ module gaugeTrafo
 
 
 
-end module gaugeTrafo
+end module wannInterp
