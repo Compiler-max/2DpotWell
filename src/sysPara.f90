@@ -146,7 +146,6 @@ module sysPara
 		!return true if real point is inside the potential of atom at
 		integer,	intent(in)		:: at
 		real(dp),	intent(in)		:: r(2)
-		integer						:: i
 		real(dp)					:: posX, posY, radX, radY, xRel, yRel
 		logical						:: insideX, insideY
 		!
