@@ -50,9 +50,9 @@ program main
 	
 	!
 	write(*,*)"[main]:**************************Infos about this run*************************"
-	write(*,*)"[main]: nK=",nK
-	write(*,*)"[main]: nQ=",nQ
-	write(*,*)"[main]: nG=",nG
+	write(*,*)"[main]: electronic structure mesh nQ=",nQ
+	write(*,*)"[main]: interpolation mesh        nK=",nK
+	write(*,*)"[main]: basis functions           nG=",nG
 
     write(*,*)"[main]: nBands=", nBands
 	write(*,*)"[main]: nWfs  =", nWfs	
@@ -182,8 +182,6 @@ program main
 	call writeMeshBin()
 	call writeUNKs(unkW)
 	write(*,*)"[main]: ...wrote mesh info"
-	!call calcIonicPol(pIon)
-	pTot	= pIon + pWann
 	call writePolFile(pWann, pBerry, pNiu, pPei )
 	write(*,*)"[main]: ...wrote polarization txt file"
 	!

@@ -43,16 +43,15 @@ module polarization
 
 		!2BAND
 		bondC(:)	= ( atPos(:,1) + atPos(:,2) ) / 2
+		
 		do n = 1 , size(wCent,2)
-			cent(1) = dmod(wCent(1,n),aX) 
-			cent(2)	= dmod(wCent(2,n),aY)
-			pE	= pE + cent(:) - bondC(:)
+			pE 	= pE + wCent(:,n) - bondC(:)
 		end do
 
-		!NORMALIZE
-		!pE(1) = dmod(pE(1),aX)
-		!pE(2) = dmod(pE(2),aY)
-		pE = 1.0_dp * pE  / vol
+		!MOD QUANTUM
+		pE(1) = dmod(pE(1),aX/vol)
+		pE(2) = dmod(pE(2),aY/vol)
+		
 
 		!
 		!NORMALIZE
@@ -78,30 +77,54 @@ module polarization
 		complex(dp),		intent(in)		:: A(:,:,:,:)			!A(2,	 nWfs, nWfs, nQ	)	
 		real(dp),			intent(out)		:: pElA(:)
 		complex(dp)	,		allocatable		:: val(:)
-		real(dp)							:: machine
+		real(dp)							:: machine, bondC(2)
 		integer								:: n, qi
 		!
 		allocate(	val( size(A,1) )	)
 		val		= dcmplx(0.0_dp)
 		pElA	= 0.0_dp
 		machine	= 1e-15_dp
+		bondC(:)	= ( atPos(:,1) + atPos(:,2) ) / 2
+		
 		!
-		!SUM OVER K SPACE AND OVER STATES
+		!
+		!SUM OVER  STATES
 		do n 	= 1, size(A,2)
+			val	= dcmplx(0.0_dp)
+			!INTEGRATE
 			do qi = 1, size(A,4)
-				val(:)	= val(:) + A(1:2,n,n,qi)
+				val(1:2)	= val(1:2) + A(1:2,n,n,qi) / real(size(A,4),dp)
 			end do
+			!relative to bond center
+			val	= val - bondC
+
+			pelA(:)	= pElA(:) + dreal(val(:)) 
 		end do
+		
+
+
+
+		!MOD QUANTUM
+		pelA(1)	= dmod(pElA(1),aX/vol)	
+		pelA(2)	= dmod(pElA(2),aY/vol)	
+
+
+
+
+
+
+
+
+
+
 		!
 		if( dimag(val(1)) > acc .or. dimag(val(2)) > acc ) then
 			write(*,*)	"[calcPolViaA]: warning, connection has imaginary part none zeroDoGaugeTrafo(unkW, tHopp, EnH, AconnH, FcurvH, veloH)"
 		end if 
-		!NORMALIZE K INTEGRATION	
-		pElA(:)	= dreal(val(:)) / real(size(A,4),dp)
+		
 		!
 		!MOD QUANTUM e \vec{a} / V0
-		pElA(1)	= dmod(pElA(1),aX/vol) 
-		pElA(2)	= dmod(pElA(2),aY/vol)
+		
 		return
 	end subroutine
 

@@ -253,20 +253,23 @@ module output
 		open(unit=515,file='rawData/wSprd.dat',form='unformatted',access='stream',action='write')
 		write(515)	wCent
 		close(515)
-
+		!
 		!TEXT FILE
 		open(unit=516,file='wannier.txt',action='write')
-		write(516,*)	"****************atom positions****************************"
+		write(516,'(a)')	"****************atom positions****************************"
 		do n = 1, nAt
-			write(516,'(a,i3,a,f6.4,a,f6.4,a)')	"atom=,",n,	"centered at (",atPos(1,n),", ",atPos(2,n),")."
+			write(516,'(a,i3,a,f6.3,a,f6.3,a)')	"atom=,",n,	"centered at (",atPos(1,n),", ",atPos(2,n),")."
 		end do
-
-		write(516,*)	"****************Wannier functions****************************"
+		!
+		write(516,'(a)')	"****************Wannier functions****************************"
 		do n = 1, nWfs
-			write(516,'(a,i3,a,f10.5,a,f10.5,a,f10.8,a,f10.8,a,f10.8)')	"n=",n	,"wCent= (",wCent(1,n),", ",wCent(2,n), ").wSprd=(",wSprd(1,n),", ",wSprd(2,n),&
-																	"), norm2(wSprd)=",norm2(wSprd(:,n))
-			write(516,'(a,i3,a,f10.5,a,f10.5,a,f10.8,a,f10.8,a,f10.8)')	"n=",n	,"wCent= (",dmod(wCent(1,n),aX),", ",dmod(wCent(2,n),aY), ").wSprd=(",wSprd(1,n),", ",wSprd(2,n),&
-																	"), norm2(wSprd)=",norm2(wSprd(:,n))
+			write(516,'(a,i3,a,f10.5,a,f10.5,a,f10.5,a,f10.5)') &	
+					"n=",n	,"wCent= (",wCent(1,n),", ",wCent(2,n), &
+					").wSprd=(",wSprd(1,n),", ",wSprd(2,n)
+			write(516,'(a,i3,a,f10.5,a,f10.5,a,f10.5,a,f10.5)')	&
+					"n=",n	,"wCent= (",dmod(wCent(1,n),aX),", ",dmod(wCent(2,n),aY), & 
+					").wSprd=(",wSprd(1,n),", ",wSprd(2,n)
+		!															
 		end do
 		close(516)
 		!

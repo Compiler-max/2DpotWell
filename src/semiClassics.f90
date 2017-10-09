@@ -2,7 +2,7 @@ module semiClassics
 	!this module uses a semiclassic approach to calculate the first ordrer correction
 	!	to the polariztion induced by a perturbive magnetic field
 	! 	see Niu PRL 112, 166601 (2014)
-	use mathematics,	only:	dp, PI_dp, i_dp,acc, myExp, myLeviCivita
+	use mathematics,	only:	dp, PI_dp, i_dp, acc, myExp, myLeviCivita
 	use sysPara,		only:	Bext
 
 	implicit none
@@ -37,9 +37,10 @@ module semiClassics
 		real(dp)						:: 	densCorr(3)
 		integer							:: 	n, ki, nSize, kSize
 		!
+		write(*,*)"[calcFirstOrdP]: start calculating P' via semiclassic approach"
 		nSize	= size(Velo,3)
 		kSize	= size(Velo,4)
-		allocate(	f(3,nSize )		)
+		allocate(	f(3,kSize )		)
 		p1 = 0.0_dp
 		if(		kSize /= size(En,2)		) then
 			write(*,*)"[calcFirstOrdP]: WARNING Energy and connection live on different k meshes!"
@@ -52,6 +53,7 @@ module semiClassics
 			pn	= 0.0_dp
 			!FILL INTEGRATION ARRAY
 			do ki = 1, kSize
+				write(*,*)"[calcFirstOrdP]: start ki=",ki
 				!PHASE SPACE DENSITY CORRECTION
 				densCorr	= 0.5_dp * dot_product(		dreal(Fcurv(:,n,n,ki)), dreal(Aconn(:,n,n,ki) )	)		* Bext
 				!f(:,ki)		= f(:,ki) + densCorr
@@ -60,9 +62,11 @@ module semiClassics
 				end if
 				!POSITIONAL SHIFT
 				call calcFmat(n,ki,Velo,En, Fmat)
+				write(*,*)"[calcFirstOrdP]: calulated Fmat"
 				!write(*,*)"ki=",ki
 				!write(*,*)	Fmat
 				f(:,ki)	= f(:,ki) + matmul(Fmat, Bext) 
+				write(*,*)"[calcFirstOrdP]: done for this ki"
 			end do
 			!INTEGRATE
 			do ki = 1, kSize

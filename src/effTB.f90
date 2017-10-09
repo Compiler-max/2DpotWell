@@ -100,13 +100,14 @@ use omp_lib
 		complex(dp),	intent(in)		:: unk(:,:,:)		
 		real(dp),		intent(out)		:: A(:,:,:,:)			
 		complex(dp)						:: Mxl, Mxr, Myl, Myr, one
-		integer							:: n, m, Z, qi, qx, qy, qxl, qxr, qyl, qyr, found, tot
-		real(dp)						:: wbx,wby, bxl(2), bxr(2), byl(2), byr(2),dmax, avg, val 
+		integer							:: n, m, Z, qi, qx, qy, qxl, qxr, qyl, qyr, found, tot, al, be
+		real(dp)						:: wbx,wby, bxl(2), bxr(2), byl(2), byr(2),dmax, avg, delta
 		!
 		A 		= 0.0_dp
 		Z 		= 4	!amount of nearest neighbours( 2 for 2D cubic unit cell)
-		wbx 	= 1.0_dp / 		( real(Z,dp) * dqx**2 )
-		wby 	= 1.0_dp /		( real(Z,dp) * dqy**2 )
+		wbx 	= 2.0_dp / 		( real(Z,dp) * dqx**2 )
+		wby		= wbx
+		!wby 	= 1.0_dp /		( real(Z,dp) * dqy**2 )
 		!b vector two nearest X neighbours:
 		bxl(1) 	= -dqx				
 		bxl(2)	= 0.0_dp
@@ -118,43 +119,64 @@ use omp_lib
 		byr(1) 	= 0.0_dp
 		byr(2)	= +dqy
 		!
+		!DEBUG WEIGHTS
+		do al = 1, 2
+			do be = 1, 2
+				delta 	= 0.0_dp
+				delta = delta + wbx * bxl(al) * bxl(be)
+				delta = delta + wbx * bxr(al) * bxr(be)
+				delta = delta + wby * byl(al) * byl(be)
+				delta = delta + wby * byr(al) * byr(be)
+				if( al==be .and. abs(delta-1.0_dp) > acc ) then
+					write(*,'(a,i1,a,i1,a,f6.3)') &
+							"[calcConnCoarse]: weights dont fullfill condition for a=",al," b=",be," delta=",delta
+				else if ( al/=be .and. abs(delta) > acc ) then
+					write(*,'(a,i1,a,i1,a,f6.3)') & 
+							"[calcConnCoarse]: weights dont fullfill condition for a=",al," b=",be,"delta=",delta
+				end if
+			end do
+		end do
+
+		!
 		found	= 0
 		tot		= 0
 		dmax	= 0.0_dp
 		avg		= 0.0_dp
 		!
-		!!!!!$OMP PARALLEL DO COLLAPSE(3) SCHEDULE(STATIC),  &
-		!!!!!$OMP& DEFAULT(SHARED), PRIVATE(m, n, qx, qxl, qxr, qy, qyl, qyr, qi, one, Mxl, Mxr, Myl, Myr, val),&
-		!!!!!$OMP& REDUCTION(+:found,avg,tot), REDUCTION(max:dmax)
+		write(*,'(a,f6.3,a,f6.3)')	"[calcConnOnCoarse]: dqx=",dqx," dqy=",dqy
+		!
 		do m = 1, nWfs
 			do n = 1, nWfs
 				do qx = 1, nQx
-					qxl	= getLeft( qx,nQx)
-					qxr	= getRight(qx,nQx)
-					!
 					do qy = 1, nQy
+						!GET NEIGHBOURS
+						qxl	= getLeft( qx,nQx)
+						qxr	= getRight(qx,nQx)
 						qyl	= getLeft(  qy,nQy)
 						qyr = getRight( qy,nQy)
+
+						!GET GRID POSITION OF NEIGHBOURS
 						qi	= getKindex(qx,qy)
-						if(		norm2(qpts(:,qi)-qpts(:,qyl)) > dqx		) then
-							write(*,*)"[calcConnOnCoarse]: fd does not get the neighbours"
-						end if
-						if(		norm2(qpts(:,qyr)-qpts(:,qi)) > dqx		) then
-							write(*,*)"[calcConnOnCoarse]: fd does not get the neighbours"
-						end if
+						qxl	= getKindex(qxl,qy)
+						qxr	= getKindex(qxr,qy)
+						qyl	= getKindex(qx,qyl)
+						qyr	= getKindex(qx,qyr)
+						!call testNeighB(qi, qxl, qxr, qyl, qyr)
 						!
 						!OVERLAP TO NEAREST NEIGHBOURS
-						!one = UNKoverlap(	n,		m, 		qi		, 		qi					, unk	)
-						Mxl	= UNKoverlap(	n,		m, 		qi		, getKindex( qxl, qy ) 		, unk	) 
-						Mxr	= UNKoverlap(	n,		m, 		qi		, getKindex( qxr, qy )		, unk	)
-						Myl	= UNKoverlap(	n,		m, 		qi		, getKindex( qx ,qyl )		, unk	)
-						Myr	= UNKoverlap(	n,		m, 		qi		, getKindex( qx ,qyr )		, unk	)
+						one	= UNKoverlap(	n,		m,		qi		, 	qi		, unk	)
+						Mxl	= UNKoverlap(	n,		m, 		qi		,	qxl 	, unk	) 
+						Mxr	= UNKoverlap(	n,		m, 		qi		,	qxr		, unk	)
+						Myl	= UNKoverlap(	n,		m, 		qi		, 	qyl		, unk	)
+						Myr	= UNKoverlap(	n,		m, 		qi		, 	qyr		, unk	)
 
-						if(n == m) then
-							one	= dcmplx(1.0_dp)
+						if(		 n==m 	) then		!.and.			 abs(one-dcmplx(1.0_dp)) > acc ) then
+							write(*,'(a,i2,a,f6.3,a,f6.3)') "[calcConnOnCoarse]: n=m=",n," one=",dreal(one),"+i*",dimag(one)
 						else
-							one = dcmplx(0.0_dp)
+							write(*,'(a,f6.3,a,f6.3)') "[calcConnOnCoarse]:  one=",dreal(one),"+i*",dimag(one)
 						end if
+
+
 						!FD SUM OVER NEAREST NEIGHBOURS
 						A(1:2,n,m, qi) = A(1:2,n,m, qi) + wbx * bxl(1:2) * dimag( Mxl - one )
 						A(1:2,n,m, qi) = A(1:2,n,m, qi) + wbx * bxr(1:2) * dimag( Mxr - one )
@@ -166,67 +188,17 @@ use omp_lib
 						!A(1:2,n,m, qi) = A(1:2,n,m, qi) - wbx * bxr(1:2) * dimag( zlog( Mxr ) )
 						!A(1:2,n,m, qi) = A(1:2,n,m, qi) - wby * byl(1:2) * dimag( zlog( Myl ) )
 						!A(1:2,n,m, qi) = A(1:2,n,m, qi) - wby * byr(1:2) * dimag( zlog( Myr ) )
-						!DEBUG:
-						if(n == m) then
-							val	= abs( abs(one) - 1.0_dp )
-						else
-							val = abs(one)
-						end if
 						
-						if( val > acc ) then
-							!write(*,'(a,i2,a,i7,a,f16.8,a,f16.8)')	"[calcConn]: n=",n," unk normalization problem at ki=",ki,&
-							!							" one=",dreal(one),"+i*",dimag(one)
-							found 	= found + 1
-							avg		= avg + val
-							if( val > dmax) then
-								dmax = val
-							end if 
-						end if
-						tot = tot + 1
 					end do
 				end do
 			end do
 		end do
-		!!!!!$OMP END PARALLEL DO
 		!
-		!DEBUG
-		avg	= avg / real(found,dp)
-		write(*,'(a,i6,a,i6,a,f16.12,a,f16.12)')	"[calcConnOnCoarse]: ",found," of ",tot,&
-										" checked unk functions had normalization issues;  max delta=",dmax,&
-										" avg diff=",avg
 		!
 		return
 	end subroutine
 
 
-	integer function getLeft(i,N)
-		!HELPER for calcConn
-		!gets left (lower) neighbour, using the periodicity at boundary
-		!
-		integer,	intent(in)	:: i,N
-		if(i==1) then
-			getLeft = N
-		else
-			getLeft = i-1
-		end if
-		!
-		return
-	end function
-
-
-	integer function getRight(i,N)
-		!HELPER for calcConn
-		!gets right (upper) neighbour, using the periodicity at boundary
-		!
-		integer,	intent(in)	:: i,N
-		if(i==N) then
-			getRight = 1
-		else
-			getRight = i+1
-		end if
-		!
-		return
-	end function
 
 
 
@@ -246,13 +218,96 @@ use omp_lib
 		end do
 		!integrate, normalize for integration over only one unit cell
 		UNKoverlap = nIntegrate(nR, nRx, nRy, dx, dy, f) / real(nSC,dp)
-		if( dimag(UNKoverlap) > acc ) then
-			write(*,*)"[UNKoverlap]: none zero imaginary part:,",dimag(UNKoverlap)
-		end if
 		!
 		!
 		return
 	end function
+
+
+
+
+
+
+
+	subroutine testNeighB(qi, qxl, qxr, qyl, qyr)
+		integer,		intent(in)		:: qi, qxl, qxr, qyl, qyr
+		!
+		!
+		!X LEFT
+		if( 	norm2(qpts(:,qi)-qpts(:,qxl)) > dqx+machineP		 ) then
+			write(*,'(a,i3,a,f6.3,a,f6.3,a,a,f6.3,a,f6.3,a)')	&
+						"[testNeighB]: problem with x left  at qi=",qi,&
+						", qi=(",qpts(1,qi),", ",qpts(2,qi),")",&
+						", qxl=(",qpts(1,qxl),", ",qpts(2,qxl),")."
+		end if
+		!
+		!X RIGHT
+		if( 	norm2(qpts(:,qxr)-qpts(:,qi)) > dqx+machineP 		 ) then
+			write(*,'(a,i3,a,f6.3,a,f6.3,a,a,f6.3,a,f6.3,a)')	&
+					"[testNeighB]: problem with x right at qi=",qi,&
+					", qi=(",qpts(1,qi),", ",qpts(2,qi),")",&
+					", qxr=(",qpts(1,qxr),", ",qpts(2,qxr),")."
+		end if
+		!
+		!
+		!Y LEFT
+		if( norm2(qpts(:,qi)-qpts(:,qyl)) > dqy+machineP  		 ) then
+			write(*,'(a,i3,a,f6.3,a,f6.3,a,a,f6.3,a,f6.3,a)')	&
+					"[testNeighB]: problem with y left  at qi=",qi,&
+					", qi=(",qpts(1,qi),", ",qpts(2,qi),")",&
+					", qyl=(",qpts(1,qyl),", ",qpts(2,qyl),")."
+		end if
+		!
+		!Y RIGHT
+		if( 	norm2(qpts(:,qyr)-qpts(:,qi)) > dqy+machineP  		 ) then
+			write(*,'(a,i3,a,f6.3,a,f6.3,a,a,f6.3,a,f6.3,a)')	& 
+					"[testNeighB]: problem with y right at qi=",qi,&
+					", qi=(",qpts(1,qi),", ",qpts(2,qi),")",&
+					", qyr=(",qpts(1,qyr),", ",qpts(2,qyr),")."
+		end if
+		write(*,*)"*"
+		write(*,*)"*"
+		write(*,*)"*"
+		!
+		!
+		return
+	end subroutine
+
+
+
+
+	integer function getLeft(i,N)
+		!HELPER for calcConn
+		!gets left (lower) neighbour, using the periodicity at boundary
+		!
+		integer,	intent(in)	:: i,N
+		if(i.eq.1) then
+			getLeft = N
+		else
+			getLeft = i-1
+		end if
+		!
+		return
+	end function
+
+
+	integer function getRight(i,N)
+		!HELPER for calcConn
+		!gets right (upper) neighbour, using the periodicity at boundary
+		!
+		integer,	intent(in)	:: i,N
+		if(i.eq.N) then
+			getRight = 1
+		else
+			getRight = i+1
+		end if
+		!
+		return
+	end function
+
+
+
+	
 
 
 

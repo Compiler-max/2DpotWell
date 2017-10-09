@@ -126,7 +126,7 @@ for n in range(0,nG):
 		ibar			= Qind(0,nQy-1-i)
 		EnPlot[offs+i]	= En[ibar,n]
 
-	ax.plot(qPlot,EnPlot,color='k',linewidth=0.6)
+	ax.plot(qPlot,EnPlot,color='k',marker='*',markersize=0.5,linewidth=0.6)
 
 
 #PROJECTED STATES

@@ -6,20 +6,20 @@
 
 [atoms]
     nAt         = 2       
-    relXpos     = 0.40 0.60     
+    relXpos     = 0.35 0.65     
     relYpos     = 0.50 0.50 
     atRx        = 1.0 1.0    
     atRy        = 1.0 1.0
-    atPot       = -0.8 -1.0     
+    atPot       = -0.8 -1.2     
     Zion        = 1.00 1.00
 
 [numerics]
-    nG          = 256
+    nG          = 64
     Gcut        = 5.0	     
-    nQx         = 8   
-    nQy         = 8
-    nSCx        = 8 
-    nSCy        = 8
+    nQx         = 4   
+    nQy         = 4
+    nSCx        = 4 
+    nSCy        = 4
     nRx         = 80   
     nRy         = 80
     thres       = 0.1
@@ -29,8 +29,8 @@
     doGaugBack  = f
     doBerry     = t
     doWanni     = t
-    doNiu       = t
-    doPei       = t 
+    doNiu       = f
+    doPei       = f 
 
 
 [debug]
@@ -46,8 +46,8 @@
     trialOrbSw  = 0
     trialOrbVAL = 1.0 1.0
     R0          = 1
-    nKx         = 64
-    nKy         = 64
+    nKx         = 8
+    nKy         = 8
     connSwitch  = 1
     gaugeBack   = 0
   

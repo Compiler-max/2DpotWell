@@ -3,7 +3,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
-from mpl_toolkits.mplot3d import Axes3D
+import matplotlib.animation as animation
+
 
 
 
@@ -33,9 +34,9 @@ f4.close()
 
 nAt			= rawSysP[0]
 nG			= rawSysP[1]
-nK			= rawSysP[2]
-nKx			= rawSysP[3]
-nKy			= rawSysP[4]
+nQ			= rawSysP[2]
+nQx			= rawSysP[3]
+nQy			= rawSysP[4]
 nR			= rawSysP[5]
 nRx			= rawSysP[6]
 nRy			= rawSysP[7]
@@ -67,9 +68,9 @@ f7.close()
 #rpts	= np.reshape(rpts,(nR,2))
 atPos	= np.reshape(atPos,(nAt,2))
 
-qpts	= np.reshape(qpts,(nK,2))
-unkR	= np.reshape(rawDataR,(nK, nG , nR))  #	unk(		nR		, 	nK		, nWfs	)		
-unkI	= np.reshape(rawDataI,(nK, nG , nR))
+qpts	= np.reshape(qpts,(nQ,2))
+unkR	= np.reshape(rawDataR,(nQ, nWfs , nR))  #	unk(		nR		, 	nK		, nWfs	)		
+unkI	= np.reshape(rawDataI,(nQ, nWfs , nR))
 unk		= unkR**2 + unkI**2
 
 
@@ -78,59 +79,57 @@ k=8
 #for n in range(nWfs):
 #	print("k="+str(k)+" n="+str(n)+" oLap="  +str( np.sum(unk[k,n,:]) / float(nR) ))
 
-#for q in range(nK):
-#	for n in range(nWfs):
-#		print('q='+str(q)+', n=,'+str(n)+', oLap='+str(np.sum(unk[q,n,0:nR-2])/float(nR)))
-#
+for q in range(nQ):
+	for n in range(nWfs):
+		print('q='+str(q)+', n=,'+str(n)+', oLap='+str(np.sum(unk[q,n,:])/float(nR)))
+
 
 
 #2D HEATMAP
 #n = 0				#which state to plot
 #k = 26				#k point index to plot				
 #
-for n in range(nWfs):
-	fig = plt.figure()
-	ax = fig.add_subplot(111)
-	
-	unkcont	=	np.reshape(unk[k,n,:],(nRy, nRx))
-	xpts	= np.linspace(0.0,aX*nKx,nRx)
-	ypts	= np.linspace(0.0,aY*nKy,nRy)
-	#X, Y = numpy.meshgrid(x, y)  # `plot_surface` expects `x` and `y` data to be 2D
-	CS=ax.contourf(xpts, ypts,unkcont,cmap='magma', linewidth=0.1)
-	#cbar = plt.colorbar(CS)
-	#ax.set_xlim(0, nKx*aX)
-	#ax.set_ylim(0, nKy*aY)
-	
-	xticks 		= np.arange(0,aX*(nKx+1),  aX	)		
-	xtickLabel	= np.arange(int(0),int(nKx+1)  )
-	yticks 		= np.arange(0,aY*(nKy+1),  aY	)		
-	ytickLabel	= np.arange(int(0),int(nKy+1)  )
-	
-	#plot atoms
-	atColor = 'white'
-	for at in range(nAt):
-		ax.plot(atPos[at,0],atPos[at,1],marker='+',color='white')
-		ax.plot([atPos[at,0]-1,atPos[at,0]-1]	, [atPos[at,1]-1,atPos[at,1]+1],color=atColor,linewidth=0.2)
-		ax.plot([atPos[at,0]+1,atPos[at,0]+1]	, [atPos[at,1]-1,atPos[at,1]+1],color=atColor,linewidth=0.2)
-		ax.plot([atPos[at,0]-1,atPos[at,0]+1]	, [atPos[at,1]-1,atPos[at,1]-1],color=atColor,linewidth=0.2)
-		ax.plot([atPos[at,0]-1,atPos[at,0]+1]	, [atPos[at,1]+1,atPos[at,1]+1],color=atColor,linewidth=0.2)
-	
-	ax.set_xticks(xticks)	
-	ax.set_xticklabels(xtickLabel,fontsize=12)
-	ax.set_yticks(yticks)	
-	ax.set_yticklabels(ytickLabel,fontsize=12)
-	ax.grid(b=None, axis='both',color='black',alpha=0.2)
-	ax.set_xlabel('a')
-	ax.set_ylabel('b')
-	
-	
-		
-	ax.set_xlim([0,aX])
-	ax.set_ylim([0,aY])
-
-	plt.show()
-
-
+#for n in range(nWfs):
+#	fig = plt.figure()
+#	ax = fig.add_subplot(111)
+#	
+#	unkcont	=	np.reshape(unk[k,n,:],(nRy, nRx))
+#	xpts	= np.linspace(0.0,aX*nKx,nRx)
+#	ypts	= np.linspace(0.0,aY*nKy,nRy)
+#	#X, Y = numpy.meshgrid(x, y)  # `plot_surface` expects `x` and `y` data to be 2D
+#	CS=ax.contourf(xpts, ypts,unkcont,cmap='magma', linewidth=0.1)
+#	#cbar = plt.colorbar(CS)
+#	#ax.set_xlim(0, nKx*aX)
+#	#ax.set_ylim(0, nKy*aY)
+#	
+#	xticks 		= np.arange(0,aX*(nKx+1),  aX	)		
+#	xtickLabel	= np.arange(int(0),int(nKx+1)  )
+#	yticks 		= np.arange(0,aY*(nKy+1),  aY	)		
+#	ytickLabel	= np.arange(int(0),int(nKy+1)  )
+#	
+#	#plot atoms
+#	atColor = 'white'
+#	for at in range(nAt):
+#		ax.plot(atPos[at,0],atPos[at,1],marker='+',color='white')
+#		ax.plot([atPos[at,0]-1,atPos[at,0]-1]	, [atPos[at,1]-1,atPos[at,1]+1],color=atColor,linewidth=0.2)
+#		ax.plot([atPos[at,0]+1,atPos[at,0]+1]	, [atPos[at,1]-1,atPos[at,1]+1],color=atColor,linewidth=0.2)
+#		ax.plot([atPos[at,0]-1,atPos[at,0]+1]	, [atPos[at,1]-1,atPos[at,1]-1],color=atColor,linewidth=0.2)
+#		ax.plot([atPos[at,0]-1,atPos[at,0]+1]	, [atPos[at,1]+1,atPos[at,1]+1],color=atColor,linewidth=0.2)
+#	
+#	ax.set_xticks(xticks)	
+#	ax.set_xticklabels(xtickLabel,fontsize=12)
+#	ax.set_yticks(yticks)	
+#	ax.set_yticklabels(ytickLabel,fontsize=12)
+#	ax.grid(b=None, axis='both',color='black',alpha=0.2)
+#	ax.set_xlabel('a')
+#	ax.set_ylabel('b')
+#	
+#	
+#		
+#	ax.set_xlim([0,aX])
+#	ax.set_ylim([0,aY])
+#
+#	plt.show()
 
 
 
@@ -138,6 +137,22 @@ for n in range(nWfs):
 
 
 
+## To save the animation, use the command: line_ani.save('lines.mp4')
+#fig2 = plt.figure()
+#
+#x = np.arange(-9, 10)
+#y = np.arange(-9, 10).reshape(-1, 1)
+#base = np.hypot(x, y)
+#ims = []
+#for add in np.arange(15):
+# 	ims.append((plt.pcolor(x, y, base + add, norm=plt.Normalize(0, 30)),))
+#
+#im_ani = animation.ArtistAnimation(fig2, ims, interval=100, repeat_delay=3000,
+#                                   blit=True)
+## To save this second animation with some metadata, use the following command:
+## im_ani.save('im.mp4', metadata={'artist':'Guido'})
+#
+#plt.show()
 
 
 #3D PLOT

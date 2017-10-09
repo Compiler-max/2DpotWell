@@ -1,13 +1,12 @@
 
 	- urlaub eintragen (shiff + weihnachten)
 
-
-	- konferenz anmelden
-
-
-
-
-	- velocity calculation neu machen
+	- convergence tests:
+		- basis functions: charge density
+		- real grid wannier centers 
+		- k points berry connection fd
+		
+	- velocity calculation neu machen ist es vw=Haw oder vw=Haw-dE*Aw
 	
 
 
