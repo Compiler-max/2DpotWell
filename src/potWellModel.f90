@@ -161,14 +161,11 @@ module potWellModel
 			!
 			if( i == j) then		
 				V	= V + Vpot 			*	 ( xR - xL ) * 	( yR - yL )			 / vol
-			else if( abs(dGx) < machineP ) then
-				
+			else if( abs(dGx) < machineP ) then	
 				V	= V + Vpot  * i_dp 	* 	( xR - xL ) *( myExp(dGy*yL) - myExp(dGy*yR) )/ ( vol * dGy )
 			else if( abs(dGy) < machineP ) then
-
 				V	= V + Vpot * i_dp	 * ( myExp(dGx*xL) - myExp(dGx*xR) ) 	* 			( yR - yL) 		/ (vol * dGx )
 			else
-
 				V	= V -  Vpot 	 * ( myExp(dGx*xL) - myExp(dGx*xR) ) * ( myExp(dGy*yL) - myExp(dGy*yR) ) / (vol * dGx * dGy )
 			end if
 		end do

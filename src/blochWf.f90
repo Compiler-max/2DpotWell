@@ -41,9 +41,9 @@ module blochWf
 			!
 			!WAVE FUNCTIONS
 			phase			= myExp( -1.0_dp * dot_product( qpts(:,qi), rpts(:,xi) )		)
-			!unk(xi,:)	= phase * dsqrt(real(nSc,dp))   * matmul(basVec,basCoeff) 
+			unk(xi,:)	= phase * dsqrt(real(nSc,dp))   * matmul(basVec,basCoeff) 
 			!unk(xi,:)	= phase   * matmul(basVec,basCoeff) 
-			unk(xi,:)	= matmul(basVec,basCoeff) 
+			!unk(xi,:)	= matmul(basVec,basCoeff) 
 			!
 		end do
 		!$OMP END DO

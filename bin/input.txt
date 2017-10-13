@@ -8,14 +8,14 @@
     nAt         = 2       
     relXpos     = 0.25 0.75     
     relYpos     = 0.50 0.50 
-    atRx        = 0.50 0.50    
-    atRy        = 0.50 0.50
-    atPot       = -8.0 -9.0   
+    atRx        = 1.0 1.0    
+    atRy        = 1.0 1.0
+    atPot       = -6.0 -7.0   
     Zion        = 1.00 1.00
 
 [numerics]
-    nGdim       = 8
-    Gcut        = 5.0	     
+    nGdim       = 16
+    Gcut        = 2.3	     
     nQx         = 4   
     nQy         = 4
     nSCx        = 4 
