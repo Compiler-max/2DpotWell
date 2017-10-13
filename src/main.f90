@@ -1,7 +1,7 @@
 program main
 	!TWO dimensional potential well code
 	use omp_lib
-	use mathematics, 	only: 		dp
+	use mathematics, 	only: 		dp, PI_dp
 
 	use sysPara
 	use potWellModel, 	only: 		solveHam
@@ -52,10 +52,15 @@ program main
 	write(*,*)"[main]:**************************Infos about this run*************************"
 	write(*,*)"[main]: electronic structure mesh nQ=",nQ
 	write(*,*)"[main]: interpolation mesh        nK=",nK
+	write(*,*)"[main]: basis function per dim nGdim=",nGdim
 	write(*,*)"[main]: basis functions           nG=",nG
 
     write(*,*)"[main]: nBands=", nBands
 	write(*,*)"[main]: nWfs  =", nWfs	
+	if(			nG		< 		vol * Gcut * dsqrt(Gcut) /	(2.0_dp*PI_dp**2)		) then
+		write(*,*)	"[main]: increase nG or decrease Gcut"
+	end if
+	if(		nR	<		vol * dsqrt(Gcut) 	/ PI_dp)	write(*,*)"[main]: need more real space points or smaller Gcut"
 	!
 	call cpu_time(T1)
 	aT = T1 - T0

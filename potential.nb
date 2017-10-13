@@ -10,10 +10,10 @@
 NotebookFileLineBreakTest
 NotebookFileLineBreakTest
 NotebookDataPosition[       158,          7]
-NotebookDataLength[      9492,        286]
-NotebookOptionsPosition[      8843,        259]
-NotebookOutlinePosition[      9177,        274]
-CellTagsIndexPosition[      9134,        271]
+NotebookDataLength[     10385,        260]
+NotebookOptionsPosition[      9837,        238]
+NotebookOutlinePosition[     10172,        253]
+CellTagsIndexPosition[     10129,        250]
 WindowFrame->Normal*)
 
 (* Beginning of Notebook Content *)
@@ -32,8 +32,7 @@ Cell[BoxData[
        RowBox[{
         RowBox[{"V0", "/", "Vcell"}], "*", 
         RowBox[{"Exp", "[", 
-         RowBox[{
-          RowBox[{"-", "\[ImaginaryI]"}], "*", 
+         RowBox[{"\[ImaginaryI]", "*", 
           RowBox[{"(", 
            RowBox[{
             RowBox[{"Gx", "*", "x"}], "+", 
@@ -50,13 +49,27 @@ Cell[BoxData[
    RowBox[{"V", "[", 
     RowBox[{"Gx", ",", "0"}], "]"}], "\[IndentingNewLine]", 
    RowBox[{"V", "[", 
-    RowBox[{"Gx", ",", "Gy"}], "]"}], "\[IndentingNewLine]"}]}]], "Input",
+    RowBox[{"Gx", ",", "Gy"}], "]"}], "\[IndentingNewLine]", 
+   RowBox[{"Numerator", "[", 
+    RowBox[{"V", "[", 
+     RowBox[{"0", ",", "Gy"}], "]"}], "]"}], "\[IndentingNewLine]", 
+   RowBox[{"Numerator", "[", 
+    RowBox[{"V", "[", 
+     RowBox[{"Gx", ",", "0"}], "]"}], "]"}], "\[IndentingNewLine]", 
+   RowBox[{"Numerator", "[", 
+    RowBox[{"V", "[", 
+     RowBox[{"Gx", ",", "Gy"}], "]"}], "]"}], 
+   "\[IndentingNewLine]"}]}]], "Input",
  CellChangeTimes->{{3.715951483260426*^9, 3.7159515787802773`*^9}, {
-  3.7159520568905077`*^9, 3.7159520585301647`*^9}, {3.715952137107614*^9, 
-  3.715952138729876*^9}, {3.7159533200632*^9, 3.7159533266141663`*^9}, {
-  3.715954148273836*^9, 3.7159541586880407`*^9}, {3.7160097244855537`*^9, 
-  3.716009732101198*^9}, {3.716009820632236*^9, 3.7160098662073593`*^9}, {
-  3.716010301741127*^9, 3.716010331124851*^9}}],
+   3.7159520568905077`*^9, 3.7159520585301647`*^9}, {3.715952137107614*^9, 
+   3.715952138729876*^9}, {3.7159533200632*^9, 3.7159533266141663`*^9}, {
+   3.715954148273836*^9, 3.7159541586880407`*^9}, {3.7160097244855537`*^9, 
+   3.716009732101198*^9}, {3.716009820632236*^9, 3.7160098662073593`*^9}, {
+   3.716010301741127*^9, 3.716010331124851*^9}, {3.716806207714674*^9, 
+   3.716806251414749*^9}, {3.716806723594617*^9, 3.716806730921969*^9}, {
+   3.716806764296959*^9, 3.716806765880228*^9}, {3.71687594743957*^9, 
+   3.7168759491760187`*^9}, {3.7168762427078667`*^9, 3.716876248161216*^9}, 
+   3.716876575250721*^9, {3.716876847840219*^9, 3.7168768694079237`*^9}}],
 
 Cell[BoxData[
  FractionBox[
@@ -72,7 +85,34 @@ Cell[BoxData[
    3.715952140232232*^9, 3.715953327382122*^9, {3.715954152155674*^9, 
    3.715954160019236*^9}, 3.7160097345110197`*^9, {3.7160098505870943`*^9, 
    3.716009867413022*^9}, {3.716010302651926*^9, 3.716010331700815*^9}, 
-   3.716010482033737*^9}],
+   3.716010482033737*^9, 3.716806159487103*^9, {3.7168062261903563`*^9, 
+   3.7168062522899027`*^9}, {3.7168067279060698`*^9, 3.716806731307241*^9}, 
+   3.716806767610237*^9, 3.716875951633704*^9, 3.716876248824276*^9, 
+   3.716876576245488*^9, 3.716876870525683*^9}],
+
+Cell[BoxData[
+ FractionBox[
+  RowBox[{"\[ImaginaryI]", " ", 
+   RowBox[{"(", 
+    RowBox[{
+     SuperscriptBox["\[ExponentialE]", 
+      RowBox[{"\[ImaginaryI]", " ", "Gy", " ", "yL"}]], "-", 
+     SuperscriptBox["\[ExponentialE]", 
+      RowBox[{"\[ImaginaryI]", " ", "Gy", " ", "yR"}]]}], ")"}], " ", "V0", 
+   " ", 
+   RowBox[{"(", 
+    RowBox[{
+     RowBox[{"-", "xL"}], "+", "xR"}], ")"}]}], 
+  RowBox[{"Gy", " ", "Vcell"}]]], "Output",
+ CellChangeTimes->{
+  3.715951579773769*^9, 3.715952030335918*^9, 3.715952060441066*^9, 
+   3.715952140232232*^9, 3.715953327382122*^9, {3.715954152155674*^9, 
+   3.715954160019236*^9}, 3.7160097345110197`*^9, {3.7160098505870943`*^9, 
+   3.716009867413022*^9}, {3.716010302651926*^9, 3.716010331700815*^9}, 
+   3.716010482033737*^9, 3.716806159487103*^9, {3.7168062261903563`*^9, 
+   3.7168062522899027`*^9}, {3.7168067279060698`*^9, 3.716806731307241*^9}, 
+   3.716806767610237*^9, 3.716875951633704*^9, 3.716876248824276*^9, 
+   3.716876576245488*^9, 3.716876870568553*^9}],
 
 Cell[BoxData[
  RowBox[{"-", 
@@ -81,103 +121,27 @@ Cell[BoxData[
     RowBox[{"(", 
      RowBox[{
       SuperscriptBox["\[ExponentialE]", 
-       RowBox[{
-        RowBox[{"-", "\[ImaginaryI]"}], " ", "Gy", " ", "yL"}]], "-", 
+       RowBox[{"\[ImaginaryI]", " ", "Gx", " ", "xL"}]], "-", 
       SuperscriptBox["\[ExponentialE]", 
-       RowBox[{
-        RowBox[{"-", "\[ImaginaryI]"}], " ", "Gy", " ", "yR"}]]}], ")"}], " ",
-     "V0", " ", 
+       RowBox[{"\[ImaginaryI]", " ", "Gx", " ", "xR"}]]}], ")"}], " ", "V0", 
+    " ", 
     RowBox[{"(", 
-     RowBox[{
-      RowBox[{"-", "xL"}], "+", "xR"}], ")"}]}], 
-   RowBox[{"Gy", " ", "Vcell"}]]}]], "Output",
+     RowBox[{"yL", "-", "yR"}], ")"}]}], 
+   RowBox[{"Gx", " ", "Vcell"}]]}]], "Output",
  CellChangeTimes->{
   3.715951579773769*^9, 3.715952030335918*^9, 3.715952060441066*^9, 
    3.715952140232232*^9, 3.715953327382122*^9, {3.715954152155674*^9, 
    3.715954160019236*^9}, 3.7160097345110197`*^9, {3.7160098505870943`*^9, 
    3.716009867413022*^9}, {3.716010302651926*^9, 3.716010331700815*^9}, 
-   3.7160104821099043`*^9}],
+   3.716010482033737*^9, 3.716806159487103*^9, {3.7168062261903563`*^9, 
+   3.7168062522899027`*^9}, {3.7168067279060698`*^9, 3.716806731307241*^9}, 
+   3.716806767610237*^9, 3.716875951633704*^9, 3.716876248824276*^9, 
+   3.716876576245488*^9, 3.716876870594707*^9}],
 
 Cell[BoxData[
- FractionBox[
-  RowBox[{"\[ImaginaryI]", " ", 
-   SuperscriptBox["\[ExponentialE]", 
-    RowBox[{
-     RowBox[{"-", "\[ImaginaryI]"}], " ", "Gx", " ", 
-     RowBox[{"(", 
-      RowBox[{"xL", "+", "xR"}], ")"}]}]], " ", 
-   RowBox[{"(", 
-    RowBox[{
-     RowBox[{"-", 
-      SuperscriptBox["\[ExponentialE]", 
-       RowBox[{"\[ImaginaryI]", " ", "Gx", " ", "xL"}]]}], "+", 
-     SuperscriptBox["\[ExponentialE]", 
-      RowBox[{"\[ImaginaryI]", " ", "Gx", " ", "xR"}]]}], ")"}], " ", "V0", 
-   " ", 
-   RowBox[{"(", 
-    RowBox[{"yL", "-", "yR"}], ")"}]}], 
-  RowBox[{"Gx", " ", "Vcell"}]]], "Output",
- CellChangeTimes->{
-  3.715951579773769*^9, 3.715952030335918*^9, 3.715952060441066*^9, 
-   3.715952140232232*^9, 3.715953327382122*^9, {3.715954152155674*^9, 
-   3.715954160019236*^9}, 3.7160097345110197`*^9, {3.7160098505870943`*^9, 
-   3.716009867413022*^9}, {3.716010302651926*^9, 3.716010331700815*^9}, 
-   3.7160104821330957`*^9}],
-
-Cell[BoxData[
- FractionBox[
-  RowBox[{
-   SuperscriptBox["\[ExponentialE]", 
-    RowBox[{
-     RowBox[{"-", "\[ImaginaryI]"}], " ", 
-     RowBox[{"(", 
-      RowBox[{
-       RowBox[{"Gx", " ", 
-        RowBox[{"(", 
-         RowBox[{"xL", "+", "xR"}], ")"}]}], "+", 
-       RowBox[{"Gy", " ", 
-        RowBox[{"(", 
-         RowBox[{"yL", "+", "yR"}], ")"}]}]}], ")"}]}]], " ", 
-   RowBox[{"(", 
-    RowBox[{
-     SuperscriptBox["\[ExponentialE]", 
-      RowBox[{"\[ImaginaryI]", " ", "Gx", " ", "xL"}]], "-", 
-     SuperscriptBox["\[ExponentialE]", 
-      RowBox[{"\[ImaginaryI]", " ", "Gx", " ", "xR"}]]}], ")"}], " ", 
-   RowBox[{"(", 
-    RowBox[{
-     RowBox[{"-", 
-      SuperscriptBox["\[ExponentialE]", 
-       RowBox[{"\[ImaginaryI]", " ", "Gy", " ", "yL"}]]}], "+", 
-     SuperscriptBox["\[ExponentialE]", 
-      RowBox[{"\[ImaginaryI]", " ", "Gy", " ", "yR"}]]}], ")"}], " ", "V0"}], 
-  
-  RowBox[{"Gx", " ", "Gy", " ", "Vcell"}]]], "Output",
- CellChangeTimes->{
-  3.715951579773769*^9, 3.715952030335918*^9, 3.715952060441066*^9, 
-   3.715952140232232*^9, 3.715953327382122*^9, {3.715954152155674*^9, 
-   3.715954160019236*^9}, 3.7160097345110197`*^9, {3.7160098505870943`*^9, 
-   3.716009867413022*^9}, {3.716010302651926*^9, 3.716010331700815*^9}, 
-   3.716010482271538*^9}]
-}, Open  ]],
-
-Cell[CellGroupData[{
-
-Cell[BoxData[
- RowBox[{"Numerator", "[", 
+ RowBox[{"-", 
   FractionBox[
    RowBox[{
-    SuperscriptBox["\[ExponentialE]", 
-     RowBox[{
-      RowBox[{"-", "\[ImaginaryI]"}], " ", 
-      RowBox[{"(", 
-       RowBox[{
-        RowBox[{"Gx", " ", 
-         RowBox[{"(", 
-          RowBox[{"xL", "+", "xR"}], ")"}]}], "+", 
-        RowBox[{"Gy", " ", 
-         RowBox[{"(", 
-          RowBox[{"yL", "+", "yR"}], ")"}]}]}], ")"}]}]], " ", 
     RowBox[{"(", 
      RowBox[{
       SuperscriptBox["\[ExponentialE]", 
@@ -186,64 +150,50 @@ Cell[BoxData[
        RowBox[{"\[ImaginaryI]", " ", "Gx", " ", "xR"}]]}], ")"}], " ", 
     RowBox[{"(", 
      RowBox[{
-      RowBox[{"-", 
-       SuperscriptBox["\[ExponentialE]", 
-        RowBox[{"\[ImaginaryI]", " ", "Gy", " ", "yL"}]]}], "+", 
+      SuperscriptBox["\[ExponentialE]", 
+       RowBox[{"\[ImaginaryI]", " ", "Gy", " ", "yL"}]], "-", 
       SuperscriptBox["\[ExponentialE]", 
        RowBox[{"\[ImaginaryI]", " ", "Gy", " ", "yR"}]]}], ")"}], " ", "V0"}], 
-   RowBox[{"Gx", " ", "Gy", " ", "Vcell"}]], "]"}]], "Input",
- NumberMarks->False],
-
-Cell[BoxData[
- RowBox[{
-  RowBox[{"(", 
-   RowBox[{
-    SuperscriptBox["\[ExponentialE]", 
-     RowBox[{"\[ImaginaryI]", " ", "Gx", " ", "xL"}]], "-", 
-    SuperscriptBox["\[ExponentialE]", 
-     RowBox[{"\[ImaginaryI]", " ", "Gx", " ", "xR"}]]}], ")"}], " ", 
-  RowBox[{"(", 
-   RowBox[{
-    RowBox[{"-", 
-     SuperscriptBox["\[ExponentialE]", 
-      RowBox[{"\[ImaginaryI]", " ", "Gy", " ", "yL"}]]}], "+", 
-    SuperscriptBox["\[ExponentialE]", 
-     RowBox[{"\[ImaginaryI]", " ", "Gy", " ", "yR"}]]}], ")"}], " ", 
-  "V0"}]], "Output",
- CellChangeTimes->{3.7160105050978737`*^9}]
-}, Open  ]],
-
-Cell[CellGroupData[{
-
-Cell[BoxData[
- RowBox[{"Numerator", "[", 
-  FractionBox[
-   RowBox[{"\[ImaginaryI]", " ", 
-    SuperscriptBox["\[ExponentialE]", 
-     RowBox[{
-      RowBox[{"-", "\[ImaginaryI]"}], " ", "Gx", " ", 
-      RowBox[{"(", 
-       RowBox[{"xL", "+", "xR"}], ")"}]}]], " ", 
-    RowBox[{"(", 
-     RowBox[{
-      RowBox[{"-", 
-       SuperscriptBox["\[ExponentialE]", 
-        RowBox[{"\[ImaginaryI]", " ", "Gx", " ", "xL"}]]}], "+", 
-      SuperscriptBox["\[ExponentialE]", 
-       RowBox[{"\[ImaginaryI]", " ", "Gx", " ", "xR"}]]}], ")"}], " ", "V0", 
-    " ", 
-    RowBox[{"(", 
-     RowBox[{"yL", "-", "yR"}], ")"}]}], 
-   RowBox[{"Gx", " ", "Vcell"}]], "]"}]], "Input",
- NumberMarks->False],
+   RowBox[{"Gx", " ", "Gy", " ", "Vcell"}]]}]], "Output",
+ CellChangeTimes->{
+  3.715951579773769*^9, 3.715952030335918*^9, 3.715952060441066*^9, 
+   3.715952140232232*^9, 3.715953327382122*^9, {3.715954152155674*^9, 
+   3.715954160019236*^9}, 3.7160097345110197`*^9, {3.7160098505870943`*^9, 
+   3.716009867413022*^9}, {3.716010302651926*^9, 3.716010331700815*^9}, 
+   3.716010482033737*^9, 3.716806159487103*^9, {3.7168062261903563`*^9, 
+   3.7168062522899027`*^9}, {3.7168067279060698`*^9, 3.716806731307241*^9}, 
+   3.716806767610237*^9, 3.716875951633704*^9, 3.716876248824276*^9, 
+   3.716876576245488*^9, 3.716876870695136*^9}],
 
 Cell[BoxData[
  RowBox[{"\[ImaginaryI]", " ", 
   RowBox[{"(", 
    RowBox[{
-    RowBox[{"-", 
-     SuperscriptBox["\[ExponentialE]", 
-      RowBox[{"\[ImaginaryI]", " ", "Gx", " ", "xL"}]]}], "+", 
+    SuperscriptBox["\[ExponentialE]", 
+     RowBox[{"\[ImaginaryI]", " ", "Gy", " ", "yL"}]], "-", 
+    SuperscriptBox["\[ExponentialE]", 
+     RowBox[{"\[ImaginaryI]", " ", "Gy", " ", "yR"}]]}], ")"}], " ", "V0", 
+  " ", 
+  RowBox[{"(", 
+   RowBox[{
+    RowBox[{"-", "xL"}], "+", "xR"}], ")"}]}]], "Output",
+ CellChangeTimes->{
+  3.715951579773769*^9, 3.715952030335918*^9, 3.715952060441066*^9, 
+   3.715952140232232*^9, 3.715953327382122*^9, {3.715954152155674*^9, 
+   3.715954160019236*^9}, 3.7160097345110197`*^9, {3.7160098505870943`*^9, 
+   3.716009867413022*^9}, {3.716010302651926*^9, 3.716010331700815*^9}, 
+   3.716010482033737*^9, 3.716806159487103*^9, {3.7168062261903563`*^9, 
+   3.7168062522899027`*^9}, {3.7168067279060698`*^9, 3.716806731307241*^9}, 
+   3.716806767610237*^9, 3.716875951633704*^9, 3.716876248824276*^9, 
+   3.716876576245488*^9, 3.716876870731392*^9}],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"-", "\[ImaginaryI]"}], " ", 
+  RowBox[{"(", 
+   RowBox[{
+    SuperscriptBox["\[ExponentialE]", 
+     RowBox[{"\[ImaginaryI]", " ", "Gx", " ", "xL"}]], "-", 
     SuperscriptBox["\[ExponentialE]", 
      RowBox[{"\[ImaginaryI]", " ", "Gx", " ", "xR"}]]}], ")"}], " ", "V0", 
   " ", 
@@ -253,12 +203,41 @@ Cell[BoxData[
   3.715951579773769*^9, 3.715952030335918*^9, 3.715952060441066*^9, 
    3.715952140232232*^9, 3.715953327382122*^9, {3.715954152155674*^9, 
    3.715954160019236*^9}, 3.7160097345110197`*^9, {3.7160098505870943`*^9, 
-   3.716009867413022*^9}, {3.716010302651926*^9, 3.7160103319346037`*^9}, 
-   3.716010396228746*^9}]
+   3.716009867413022*^9}, {3.716010302651926*^9, 3.716010331700815*^9}, 
+   3.716010482033737*^9, 3.716806159487103*^9, {3.7168062261903563`*^9, 
+   3.7168062522899027`*^9}, {3.7168067279060698`*^9, 3.716806731307241*^9}, 
+   3.716806767610237*^9, 3.716875951633704*^9, 3.716876248824276*^9, 
+   3.716876576245488*^9, 3.716876870749426*^9}],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"-", 
+   RowBox[{"(", 
+    RowBox[{
+     SuperscriptBox["\[ExponentialE]", 
+      RowBox[{"\[ImaginaryI]", " ", "Gx", " ", "xL"}]], "-", 
+     SuperscriptBox["\[ExponentialE]", 
+      RowBox[{"\[ImaginaryI]", " ", "Gx", " ", "xR"}]]}], ")"}]}], " ", 
+  RowBox[{"(", 
+   RowBox[{
+    SuperscriptBox["\[ExponentialE]", 
+     RowBox[{"\[ImaginaryI]", " ", "Gy", " ", "yL"}]], "-", 
+    SuperscriptBox["\[ExponentialE]", 
+     RowBox[{"\[ImaginaryI]", " ", "Gy", " ", "yR"}]]}], ")"}], " ", 
+  "V0"}]], "Output",
+ CellChangeTimes->{
+  3.715951579773769*^9, 3.715952030335918*^9, 3.715952060441066*^9, 
+   3.715952140232232*^9, 3.715953327382122*^9, {3.715954152155674*^9, 
+   3.715954160019236*^9}, 3.7160097345110197`*^9, {3.7160098505870943`*^9, 
+   3.716009867413022*^9}, {3.716010302651926*^9, 3.716010331700815*^9}, 
+   3.716010482033737*^9, 3.716806159487103*^9, {3.7168062261903563`*^9, 
+   3.7168062522899027`*^9}, {3.7168067279060698`*^9, 3.716806731307241*^9}, 
+   3.716806767610237*^9, 3.716875951633704*^9, 3.716876248824276*^9, 
+   3.716876576245488*^9, 3.7168768708439198`*^9}]
 }, Open  ]]
 },
-WindowSize->{1024, 1268},
-WindowMargins->{{Automatic, 0}, {0, Automatic}},
+WindowSize->{610, 770},
+WindowMargins->{{Automatic, 1064}, {Automatic, 7}},
 FrontEndVersion->"11.0 for Linux x86 (64-bit) (July 28, 2016)",
 StyleDefinitions->"Default.nb"
 ]
@@ -274,19 +253,14 @@ CellTagsIndex->{}
 (*NotebookFileOutline
 Notebook[{
 Cell[CellGroupData[{
-Cell[580, 22, 1467, 36, 152, "Input"],
-Cell[2050, 60, 565, 14, 51, "Output"],
-Cell[2618, 76, 856, 22, 63, "Output"],
-Cell[3477, 100, 953, 24, 60, "Output"],
-Cell[4433, 126, 1288, 34, 63, "Output"]
-}, Open  ]],
-Cell[CellGroupData[{
-Cell[5758, 165, 1032, 29, 77, "Input"],
-Cell[6793, 196, 584, 16, 40, "Output"]
-}, Open  ]],
-Cell[CellGroupData[{
-Cell[7414, 217, 689, 20, 74, "Input"],
-Cell[8106, 239, 721, 17, 40, "Output"]
+Cell[580, 22, 2136, 49, 232, "Input"],
+Cell[2719, 73, 807, 17, 51, "Output"],
+Cell[3529, 92, 1018, 22, 63, "Output"],
+Cell[4550, 116, 1026, 22, 60, "Output"],
+Cell[5579, 140, 1196, 25, 63, "Output"],
+Cell[6778, 167, 959, 20, 40, "Output"],
+Cell[7740, 189, 957, 20, 40, "Output"],
+Cell[8700, 211, 1121, 24, 73, "Output"]
 }, Open  ]]
 }
 ]

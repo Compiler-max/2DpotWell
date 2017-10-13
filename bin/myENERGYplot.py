@@ -127,6 +127,7 @@ for n in range(0,nG):
 		EnPlot[offs+i]	= En[ibar,n]
 
 	ax.plot(qPlot,EnPlot,color='k',marker='*',markersize=0.5,linewidth=0.6)
+	#ax.plot(qPlot,EnPlot,color='k',marker='*',markersize=0.5,linewidth=0.6)
 
 
 #PROJECTED STATES
@@ -156,7 +157,7 @@ for n in range(0,nWfs):
 
 
 ax.set_xlim([0,nQplot])
-ax.set_ylim([-2,2])
+#ax.set_ylim([-2,2])
 ax.set_xticks(xticks)	
 ax.set_xticklabels(xtickLabel,fontsize=14)
 ax.grid(b=None, axis='x',color='black',alpha=0.2)

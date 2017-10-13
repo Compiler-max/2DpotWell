@@ -1,13 +1,13 @@
 module sysPara
 	!this modules reads the input file and generates the meshes accordingly
-	use mathematics, only: dp, PI_dp, setAcc
+	use mathematics, only: dp, PI_dp, setAcc, acc
 	use m_config
 	implicit none
 	private
 	public :: 	readInp, insideAt, getRindex, getRleftX, getRrightX, getRleftY, getRrightY,& 
 				getKindex, getGammaPoint, getPot, &
 				dim, aX, aY, vol, nAt, relXpos, relYpos, atRx, atRy, atPot,&
-				nG, nG0, Gcut, nQ, nQx, nQy, nKx, nKy, nK, nSC, nSCx, nSCy, nR, nRx, nRy, R0,  dx, dy, dqx, dqy, dkx, dky, &
+				nG, nGdim, nG0, Gcut, nQ, nQx, nQy, nKx, nKy, nK, nSC, nSCx, nSCy, nR, nRx, nRy, R0,  dx, dy, dqx, dqy, dkx, dky, &
 				gaugeSwitch, nBands, nWfs, connSwitch,  &
 				Gvec, atPos, atR, qpts, rpts, Rcell, kpts, trialOrbVAL, trialOrbSw, Zion, &
 				Bext, &
@@ -15,7 +15,7 @@ module sysPara
 
 
 	!
-	integer  										:: 	dim=2, nAt=0, nG=11, nG0,  nQx=1, nQy=1,nQ , nSCx=1, nSCy=1,& 
+	integer  										:: 	dim=2, nAt=0, nG, nGdim=16, nG0,  nQx=1, nQy=1,nQ , nSCx=1, nSCy=1,& 
 														nKx=1, nKy=1, nK, connSwitch=0, &
 														nRx=10, nRy=10, nR, R0=1, nBands=1,nWfs=1, nSC, gaugeSwitch, trialOrbSw
 	real(dp) 										::	aX=0.0_dp, aY=0.0_dp,vol=0.0_dp, Gcut=2*PI_dp, thres,& 
@@ -56,7 +56,7 @@ module sysPara
 		![atoms]
 		call CFG_add_get(my_cfg,	"atoms%nAt"			,	nAt			,	"number of atoms per unit cell"			)
 		![numerics]
-		call CFG_add_get(my_cfg,	"numerics%nG"       ,	nG	     	,	"amount of G_n used"					)
+		call CFG_add_get(my_cfg,	"numerics%nGdim"    ,	nGdim	    ,	"amount of G_n used"					)
 		call CFG_add_get(my_cfg,	"numerics%Gcut"		,	Gcut	    ,	"k space cut of parameter"				)
 		call CFG_add_get(my_cfg,	"numerics%nQx"     	,	nQx      	,	"amount of k points used"				)
 		call CFG_add_get(my_cfg,	"numerics%nQy"     	,	nQy      	,	"amount of k points used"				)
@@ -92,7 +92,7 @@ module sysPara
 
 		
 		dim = 	2
-		nG	=	floor(	sqrt(real(nG,dp))	)**2 !makes sure that bove dimensions get equal basis vectors
+		nG	=	nGdim**2 !makes sure that bove dimensions get equal basis vectors
 		vol	=	aX 		* 	aY
 		nR 	= 	nRx 	*	nRy
 		nQ 	= 	nQx 	*	nQy
@@ -288,10 +288,10 @@ module sysPara
 		integer		:: qIx, qIy, qI
 		real(dp)	:: qxMin, qyMin
 		!
-		qxMin	= -1.0_dp * PI_dp /  aX
-		dqx		=  2.0_dp * PI_dp / (aX * nQx)
-		qyMin	= -1.0_dp * PI_dp /  aY
-		dqy		=  2.0_dp * PI_dp / (aY * nQy)
+		qxMin	= -1.0_dp * PI_dp * aX 	/ 		vol
+		dqx		=  2.0_dp * PI_dp * aX  /	(vol * nQx)
+		qyMin	= -1.0_dp * PI_dp * aY	/		vol
+		dqy		=  2.0_dp * PI_dp * aY	/	(vol * nQy)
 		!
 		do qIy = 1, nQy
 			do qIx = 1, nQx
@@ -310,10 +310,10 @@ module sysPara
 		integer		:: kIx, kIy, kI
 		real(dp)	:: kxMin, kyMin
 		!
-		kxMin	= -1.0_dp * PI_dp /  aX
-		dkx		=  2.0_dp * PI_dp / (aX * nKx)
-		kyMin	= -1.0_dp * PI_dp /  aY
-		dky		=  2.0_dp * PI_dp / (aY * nKy)
+		kxMin	= -1.0_dp * PI_dp * aX / vol
+		dkx		=  2.0_dp * PI_dp * aX / (vol * nKx)
+		kyMin	= -1.0_dp * PI_dp * aY / vol
+		dky		=  2.0_dp * PI_dp * aY / (vol* nKy)
 		!
 		do kIy = 1, nKy
 			do kIx = 1, nKx
@@ -352,27 +352,63 @@ module sysPara
 
 	subroutine popGvec()
 		!populates the G vector (basis vector)
-		integer		:: i, ix, iy, nxMin, nyMin, nGdim
-		real(dp)	:: thres
+		integer		:: i, ix, iy, nxMin, nyMin
+		real(dp)	:: thres, b1(2), b2(2), a1(2), a2(2)
 		!
 		thres	= 1e-15_dp
-		nGdim	= int (		sqrt(  real(nG,dp)	)		)
-		nxMin	= -(nGdim-1)/2
-		nyMin	= nxMin	
-		!
-		do iy = 1, nGdim
-			do ix = 1, nGdim
-				i = (iy-1) * nGdim + ix
-				Gvec(1,i)	= (nxMin+ix-1) * 2*PI_dp / aX		!x component 
-				Gvec(2,i)	= (nyMin+iy-1) * 2*PI_dp / aY		!y component
-				if( 	abs( Gvec(1,i) ) < thres 	.and.	abs( Gvec(2,i) ) < thres ) then
-					nG0 = i
-				end if
+		
+		
+		a1(1)	= aX
+		a1(2)	= 0.0_dp
+		a2(1)	= 0.0_dp
+		a2(2)	= aY
+
+
+		b1(1)	= 2.0_dp * PI_dp * aY / vol
+		b1(2)	= 0.0_dp
+		b2(1)	= 0.0_dp
+		b2(2)	= 2.0_dp * PI_dp * aX / vol
+
+		call testG( a1, a2, b1, b2)
+
+		do ix = 1, nGdim
+			do iy = 1, nGdim
+				i	= (iy-1) * nGdim + ix
+				Gvec(:,i)	= (ix-1-nGdim/2) * b1(:) + (iy-1-nGdim/2) * b2(:)
 			end do
 		end do
+
+
 		!
 		return
 	end subroutine
+
+
+
+	subroutine testG(a1, a2, b1, b2)
+		real(dp),		intent(in)		:: a1(2), a2(2), b1(2), b2(2)
+
+		if( abs( dot_product(a1,b1)  - 2.0_dp*PI_dp) > acc   ) then
+			write(*,*)"[testG]: problem with reciprocal lattice setup  (cond1 not fullfilled)"
+		end if
+
+		if( abs( dot_product(a2,b2)  - 2.0_dp*PI_dp) > acc   ) then
+			write(*,*)"[testG]: problem with reciprocal lattice setup  (cond2 not fullfilled)"
+		end if
+
+		if( abs( dot_product(a1,b2)  ) > acc   ) then
+			write(*,*)"[testG]: problem with reciprocal lattice setup  (cond1 not fullfilled)"
+		end if
+
+		if( abs( dot_product(a2,b1)  ) > acc   ) then
+			write(*,*)"[testG]: problem with reciprocal lattice setup  (cond1 not fullfilled)"
+		end if
+
+
+		return
+	end subroutine
+
+
 
 
 	subroutine popAtPos()

@@ -6,22 +6,22 @@
 
 [atoms]
     nAt         = 2       
-    relXpos     = 0.35 0.65     
+    relXpos     = 0.25 0.75     
     relYpos     = 0.50 0.50 
-    atRx        = 1.0 1.0    
-    atRy        = 1.0 1.0
-    atPot       = -0.8 -1.2     
+    atRx        = 0.50 0.50    
+    atRy        = 0.50 0.50
+    atPot       = -8.0 -9.0   
     Zion        = 1.00 1.00
 
 [numerics]
-    nG          = 64
+    nGdim       = 8
     Gcut        = 5.0	     
     nQx         = 4   
     nQy         = 4
     nSCx        = 4 
     nSCy        = 4
-    nRx         = 80   
-    nRy         = 80
+    nRx         = 128   
+    nRy         = 128
     thres       = 0.1
 
 [methods]
@@ -34,7 +34,7 @@
 
 
 [debug]
-    debugHam    = f
+    debugHam    = t
     debugProj   = f
     debugWann   = f
 
@@ -46,8 +46,8 @@
     trialOrbSw  = 0
     trialOrbVAL = 1.0 1.0
     R0          = 1
-    nKx         = 8
-    nKy         = 8
+    nKx         = 4
+    nKy         = 4
     connSwitch  = 1
     gaugeBack   = 0
   

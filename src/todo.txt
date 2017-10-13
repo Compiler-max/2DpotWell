@@ -10,13 +10,14 @@
 	
 
 
+-	fd connection check without implying periodicity (?!) boundary condition of fd approx
 
 
 
+-	modell system with fully y symmetric wannier functions
 
-
-
-
+-	underlying electronic structure as optional,
+	read in safed values if switch demands it
 
 
 

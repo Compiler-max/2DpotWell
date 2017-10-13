@@ -41,8 +41,9 @@ module blochWf
 			!
 			!WAVE FUNCTIONS
 			phase			= myExp( -1.0_dp * dot_product( qpts(:,qi), rpts(:,xi) )		)
-			unk(xi,:)	= phase * dsqrt(real(nSc,dp))   * matmul(basVec,basCoeff) 
-			!unk(xi,:)	= matmul(basVec,basCoeff) 
+			!unk(xi,:)	= phase * dsqrt(real(nSc,dp))   * matmul(basVec,basCoeff) 
+			!unk(xi,:)	= phase   * matmul(basVec,basCoeff) 
+			unk(xi,:)	= matmul(basVec,basCoeff) 
 			!
 		end do
 		!$OMP END DO
@@ -144,8 +145,8 @@ module blochWf
 		do i =1, nG
 			k(:) = qpts(:,qi) + Gvec(:,i)
 			!
-			if( norm2(k) < Gcut ) then
-				basVec(i) 		= myExp( dot_product( k(:), rpts(:,ri) )		) 
+			if( 0.5_dp*dot_product(k,k) < Gcut ) then
+				basVec(i) 		= myExp( dot_product( k(:), rpts(:,ri) )		)  !/ dsqrt(vol)
 			else
 				!write(*,*)	"[calcBasis]: set i=",i,"to zero"
 				basVec(i) 		= dcmplx( 0.0_dp )

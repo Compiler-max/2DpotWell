@@ -28,7 +28,8 @@ if (Fortran_COMPILER_NAME MATCHES "gfortran.*")
 	message("only intel compiler is supported")
 elseif (Fortran_COMPILER_NAME MATCHES "ifort.*")
   # ifort (untested)
-  	set (CMAKE_Fortran_FLAGS "-mkl -qopenmp -g -check all -fpe0 -warn -traceback -debug extended")
+  	#set (CMAKE_Fortran_FLAGS "-mkl -qopenmp -g -check all -fpe0 -warn -traceback -debug extended")
+  	set (CMAKE_Fortran_FLAGS "-mkl -O3 -qopenmp")
 endif (Fortran_COMPILER_NAME MATCHES "gfortran.*")
 
 

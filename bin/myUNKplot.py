@@ -69,68 +69,70 @@ f7.close()
 atPos	= np.reshape(atPos,(nAt,2))
 
 qpts	= np.reshape(qpts,(nQ,2))
-unkR	= np.reshape(rawDataR,(nQ, nWfs , nR))  #	unk(		nR		, 	nK		, nWfs	)		
-unkI	= np.reshape(rawDataI,(nQ, nWfs , nR))
+unkR	= np.reshape(rawDataR,(nQ, nG , nR))  #	unk(		nR		, 	nK		, nWfs	)		
+unkI	= np.reshape(rawDataI,(nQ, nG , nR))
 unk		= unkR**2 + unkI**2
 
 
 
-k=8
+k=1
 #for n in range(nWfs):
 #	print("k="+str(k)+" n="+str(n)+" oLap="  +str( np.sum(unk[k,n,:]) / float(nR) ))
 
 for q in range(nQ):
-	for n in range(nWfs):
+	for n in range(10):
 		print('q='+str(q)+', n=,'+str(n)+', oLap='+str(np.sum(unk[q,n,:])/float(nR)))
 
 
 
 #2D HEATMAP
-#n = 0				#which state to plot
-#k = 26				#k point index to plot				
-#
-#for n in range(nWfs):
-#	fig = plt.figure()
-#	ax = fig.add_subplot(111)
-#	
-#	unkcont	=	np.reshape(unk[k,n,:],(nRy, nRx))
-#	xpts	= np.linspace(0.0,aX*nKx,nRx)
-#	ypts	= np.linspace(0.0,aY*nKy,nRy)
-#	#X, Y = numpy.meshgrid(x, y)  # `plot_surface` expects `x` and `y` data to be 2D
-#	CS=ax.contourf(xpts, ypts,unkcont,cmap='magma', linewidth=0.1)
-#	#cbar = plt.colorbar(CS)
-#	#ax.set_xlim(0, nKx*aX)
-#	#ax.set_ylim(0, nKy*aY)
-#	
-#	xticks 		= np.arange(0,aX*(nKx+1),  aX	)		
-#	xtickLabel	= np.arange(int(0),int(nKx+1)  )
-#	yticks 		= np.arange(0,aY*(nKy+1),  aY	)		
-#	ytickLabel	= np.arange(int(0),int(nKy+1)  )
-#	
-#	#plot atoms
-#	atColor = 'white'
-#	for at in range(nAt):
-#		ax.plot(atPos[at,0],atPos[at,1],marker='+',color='white')
-#		ax.plot([atPos[at,0]-1,atPos[at,0]-1]	, [atPos[at,1]-1,atPos[at,1]+1],color=atColor,linewidth=0.2)
-#		ax.plot([atPos[at,0]+1,atPos[at,0]+1]	, [atPos[at,1]-1,atPos[at,1]+1],color=atColor,linewidth=0.2)
-#		ax.plot([atPos[at,0]-1,atPos[at,0]+1]	, [atPos[at,1]-1,atPos[at,1]-1],color=atColor,linewidth=0.2)
-#		ax.plot([atPos[at,0]-1,atPos[at,0]+1]	, [atPos[at,1]+1,atPos[at,1]+1],color=atColor,linewidth=0.2)
-#	
-#	ax.set_xticks(xticks)	
-#	ax.set_xticklabels(xtickLabel,fontsize=12)
-#	ax.set_yticks(yticks)	
-#	ax.set_yticklabels(ytickLabel,fontsize=12)
-#	ax.grid(b=None, axis='both',color='black',alpha=0.2)
-#	ax.set_xlabel('a')
-#	ax.set_ylabel('b')
-#	
-#	
-#		
-#	ax.set_xlim([0,aX])
-#	ax.set_ylim([0,aY])
-#
-#	plt.show()
+n = 0				#which state to plot
+k = 1				#k point index to plot				
 
+for n in range(nG):
+	fig = plt.figure()
+	ax = fig.add_subplot(111)
+	
+	unkcont	=	np.reshape(unk[k,n,:],(nRy, nRx))
+	xpts	= np.linspace(0.0,aX*nQx,nRx)
+	ypts	= np.linspace(0.0,aY*nQy,nRy)
+	#X, Y = numpy.meshgrid(x, y)  # `plot_surface` expects `x` and `y` data to be 2D
+	CS=ax.contourf(xpts, ypts,unkcont,cmap='magma', linewidth=0.1)
+	#cbar = plt.colorbar(CS)
+	#ax.set_xlim(0, nKx*aX)
+	#ax.set_ylim(0, nKy*aY)
+	
+	xticks 		= np.arange(0,aX*(nQx+1),  aX	)		
+	xtickLabel	= np.arange(int(0),int(nQx+1)  )
+	yticks 		= np.arange(0,aY*(nQy+1),  aY	)		
+	ytickLabel	= np.arange(int(0),int(nQy+1)  )
+	
+	#plot atoms
+	atColor = 'white'
+	for at in range(nAt):
+		ax.plot(atPos[at,0],atPos[at,1],marker='+',color='white')
+		ax.plot([atPos[at,0]-0.5,atPos[at,0]-0.5]	, [atPos[at,1]-0.5,atPos[at,1]+0.5],color=atColor,linewidth=0.2)
+		ax.plot([atPos[at,0]+0.5,atPos[at,0]+0.5]	, [atPos[at,1]-0.5,atPos[at,1]+0.5],color=atColor,linewidth=0.2)
+		ax.plot([atPos[at,0]-0.5,atPos[at,0]+0.5]	, [atPos[at,1]-0.5,atPos[at,1]-0.5],color=atColor,linewidth=0.2)
+		ax.plot([atPos[at,0]-0.5,atPos[at,0]+0.5]	, [atPos[at,1]+0.5,atPos[at,1]+0.5],color=atColor,linewidth=0.2)
+		#
+		ax.plot([atPos[at,0]-10,atPos[at,0]+10]	, [atPos[at,1],atPos[at,1]],color=atColor,linewidth=0.2)
+		ax.plot([atPos[at,0],atPos[at,0]]	, [atPos[at,1]-10,atPos[at,1]+10],color=atColor,linewidth=0.2)
+	
+	ax.set_xticks(xticks)	
+	ax.set_xticklabels(xtickLabel,fontsize=12)
+	ax.set_yticks(yticks)	
+	ax.set_yticklabels(ytickLabel,fontsize=12)
+	ax.grid(b=None, axis='both',color='black',alpha=0.2)
+	ax.set_xlabel('a')
+	ax.set_ylabel('b')
+	
+	plt.title('n='+str(n))
+		
+	ax.set_xlim([0,2*aX])
+	ax.set_ylim([0,2*aY])
+
+	plt.show()
 
 
 
