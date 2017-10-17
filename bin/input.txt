@@ -5,21 +5,21 @@
     aY          = 10
 
 [atoms]
-    nAt         = 2       
-    relXpos     = 0.25 0.75     
-    relYpos     = 0.50 0.50 
-    atRx        = 1.0 1.0    
-    atRy        = 1.0 1.0
-    atPot       = -6.0 -7.0   
-    Zion        = 1.00 1.00
+    nAt         = 1       
+    relXpos     = 0.50     
+    relYpos     = 0.50 
+    atRx        = 1.00    
+    atRy        = 1.00
+    atPot       = -3.0   
+    Zion        = 1.00
 
 [numerics]
-    nGdim       = 16
-    Gcut        = 2.3	     
-    nQx         = 4   
-    nQy         = 4
-    nSCx        = 4 
-    nSCy        = 4
+    nGdim       = 32
+    Gcut        = 5.0	     
+    nQx         = 8   
+    nQy         = 8
+    nSCx        = 8 
+    nSCy        = 8
     nRx         = 128   
     nRy         = 128
     thres       = 0.1
@@ -32,6 +32,9 @@
     doNiu       = f
     doPei       = f 
 
+[output]
+    writeBin    = f
+
 
 [debug]
     debugHam    = t
@@ -41,13 +44,13 @@
 
 [wann]
     gaugeSwitch = 0
-    nBands      = 2 
-    nWfs        = 2
+    nBands      = 1
+    nWfs        = 1
     trialOrbSw  = 0
-    trialOrbVAL = 1.0 1.0
+    trialOrbVAL = 1.0
     R0          = 1
-    nKx         = 4
-    nKy         = 4
+    nKx         = 8
+    nKy         = 8
     connSwitch  = 1
     gaugeBack   = 0
   

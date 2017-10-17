@@ -7,7 +7,7 @@ module tightBind
 	implicit none	
 	
 	private
-	public ::					solveELECTRstruct(unk, En)
+	public ::					solveELECTRstruct
 
 
 
@@ -17,8 +17,70 @@ module tightBind
 
 
 	contains
+	
+
 	subroutine solveELECTRstruct(unk, En)
+		complex(dp),		intent(out)		:: unk(:,:,:)
+		real(dp),			intent(out)		:: En(:,:)
+		complex(dp),		allocatable		:: Hmat(:,:), tHopp(:,:,:,:,:)
+
+		integer								:: nOrb
+
+		allocate(	Hmat(nOrb*nAt,nOrb,nAt)			)
+		allocate(	tHopp(nOrb,nOrb,nAt,nAt,nSC)	)
+		call setUpHopping(tHopp)
+
+		do qi = 1, nQ
+
+			call setUpHam(qi, tHopp, Hmat)
+			call eigSolver(Hmat,En(:,qi))
+		
+			call genBwfVelo(qi, Hmat, unk(:,:,qi))	!omp 
+		end do
+
 
 	end subroutine
+
+
+
+
+
+
+	subroutine setUpHam(qi, tHopp, Hmat)
+		integer,			intent(in)		:: qi
+		complex(dp),		intent(in)		:: tHopp(:,:,:,:,:)
+		complex(dp),		intent(out)		:: Hmat(:,:)
+
+			do j = 1, nAt
+				do i = 1, nAt
+					do nu = 1, nOrb
+						do mu = 1, nOrb
+
+						end do
+					end do
+				end do
+			end do
+
+			call addSS(Hmat)
+			call addSP(Hmat)
+			call addPP(Hmat)
+		return
+	end subroutine
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 end module tightBind

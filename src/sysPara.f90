@@ -11,7 +11,7 @@ module sysPara
 				gaugeSwitch, nBands, nWfs, connSwitch,  &
 				Gvec, atPos, atR, qpts, rpts, Rcell, kpts, trialOrbVAL, trialOrbSw, Zion, &
 				Bext, &
-				debugProj, debugHam, debugWann, doProj, doBerry, doWanni, doNiu, doPei, doGaugBack
+				debugProj, debugHam, debugWann, doProj, doBerry, doWanni, doNiu, doPei, doGaugBack, writeBin
 
 
 	!
@@ -22,7 +22,9 @@ module sysPara
 														dx, dy, dqx, dqy, dkx, dky, B0, Bext(3)											
 	real(dp),	allocatable,	dimension(:)		::	relXpos, relYpos, atRx, atRy, atPot, trialOrbVAL, Zion
 	real(dp),	allocatable,	dimension(:,:)		::	Gvec, atPos, atR, qpts, rpts, Rcell, kpts 
-	logical											::	debugHam, debugWann, debugProj, doProj , doBerry, doWanni, doNiu, doPei, doGaugBack
+	logical											::	debugHam, debugWann, debugProj, doProj , &
+														doBerry, doWanni, doNiu, doPei, doGaugBack, &
+														writeBin
 
 
 
@@ -72,6 +74,8 @@ module sysPara
 		call CFG_add_get(my_cfg,	"methods%doNiu"		,	doNiu		,	"switch for nius first order pol"		)
 		call CFG_add_get(my_cfg,	"methods%doPei"		,	doPei		,	"switch for  peierls first order pol"	)
 		call CFG_add_get(my_cfg,	"methods%doGaugBack",	doGaugBack	,	"switch for trafo: Wann to Ham gauge"	)
+		![output]
+		call CFG_add_get(my_cfg,	"output%writeBin"	,	writeBin	,	"switch for writing binary files"		)
 		![debug]
 		call CFG_add_get(my_cfg,	"debug%debugProj"	, 	debugProj	,	"switch for debuging tests in solveHam"	)
 		call CFG_add_get(my_cfg,	"debug%debugHam"	, 	debugHam	,	"switch for debuging tests in solveHam"	)

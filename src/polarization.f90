@@ -28,25 +28,24 @@ module polarization
 		pE	 	= 0.0_dp
 		!
 		!ATOM LIKE
-		!do n = 1,size(wCent,2)
-		!	cent(1) = dmod(wCent(1,n),aX) !get current center by projection into first unit cell
-		!	cent(2)	= dmod(wCent(2,n),aY)
-		!	!
-		!	cent(:) = cent(:) - atPos(:,n)
-		!	write(*,'(a,f8.5,a,f8.5,a,f8.6,a,f8.6,a)')"[calc0ElPol]: Wcent = (",wCent(1,n),", ",wCent(2,n),") modified cent = (", cent(1),", ",cent(2),")"
-		!	pE = pE + cent(:)				
-		!end do
+		do n = 1,size(wCent,2)
+			cent(1) = dmod(wCent(1,n),aX) !get current center by projection into first unit cell
+			cent(2)	= dmod(wCent(2,n),aY)
+			!
+			cent(:) = cent(:) - atPos(:,n)
+			write(*,'(a,f8.5,a,f8.5,a,f8.6,a,f8.6,a)')"[calc0ElPol]: Wcent = (",wCent(1,n),", ",wCent(2,n),") modified cent = (", cent(1),", ",cent(2),")"
+			pE = pE + cent(:)				
+		end do
 
 
 
 	
 
 		!2BAND
-		bondC(:)	= ( atPos(:,1) + atPos(:,2) ) / 2
-		
-		do n = 1 , size(wCent,2)
-			pE 	= pE + wCent(:,n) - bondC(:)
-		end do
+		!bondC(:)	= ( atPos(:,1) + atPos(:,2) ) / 2
+		!do n = 1 , size(wCent,2)
+		!	pE 	= pE + wCent(:,n) - bondC(:)
+		!end do
 
 		!MOD QUANTUM
 		pE(1) = dmod(pE(1),aX/vol)
@@ -82,13 +81,13 @@ module polarization
 		!
 		allocate(	val( size(A,1) )	)
 		val		= dcmplx(0.0_dp)
-		pElA	= 0.0_dp
 		machine	= 1e-15_dp
-		bondC(:)	= ( atPos(:,1) + atPos(:,2) ) / 2
+		bondC(:)	=  atPos(:,1) !+ atPos(:,2) ) / 2
 		
 		!
 		!
 		!SUM OVER  STATES
+		pElA	= 0.0_dp
 		do n 	= 1, size(A,2)
 			val	= dcmplx(0.0_dp)
 			!INTEGRATE

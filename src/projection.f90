@@ -203,20 +203,31 @@ module projection
 		!end do
 
 
-		!NEW
-		do ri = 1, nR
-			if(  rpts(1,ri) < aX .and. rpts(2,ri) < aY) then
-				if( 	insideAt(1, rpts(:,ri)))	then
-					gnr(ri,1)	= infPotWell(1,1,ri)				!infPotWell(at, n, ri)
-					gnr(ri,2)	= infPotWell(1,1,ri)
+		!SINGLE ATOM
+		do n = 1, nWfs
+			do ri = 1, nR
+				if(  rpts(1,ri) < aX .and. rpts(2,ri) < aY) then
+					if( 	insideAt(1, rpts(:,ri)))	then
+						gnr(ri,n)	= infPotWell(1,n,ri) 
+					end if
 				end if
-				!
-				if( 	insideAt(2, rpts(:,ri))		)	then
-					gnr(ri,1)	= infPotWell(2,1,ri)	 
-					gnr(ri,2)	= - infPotWell(2,1,ri)	
-				end if
-			end if
+			end do
 		end do
+
+		!NEW
+		!do ri = 1, nR
+		!	if(  rpts(1,ri) < aX .and. rpts(2,ri) < aY) then
+		!		if( 	insideAt(1, rpts(:,ri)))	then
+		!			gnr(ri,1)	= infPotWell(1,1,ri)				!infPotWell(at, n, ri)
+		!			gnr(ri,2)	= infPotWell(1,1,ri)
+		!		end if
+		!		!
+		!		if( 	insideAt(2, rpts(:,ri))		)	then
+		!			gnr(ri,1)	= infPotWell(2,1,ri)	 
+		!			gnr(ri,2)	= - infPotWell(2,1,ri)	
+		!		end if
+		!	end if
+		!end do
 
 
 	

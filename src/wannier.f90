@@ -32,13 +32,14 @@ module wannier
 
 
 !public:
-	subroutine wannMethod(unk,  wnf, pWann)
+	subroutine wannMethod(unk,  pWann)
 		complex(dp),	intent(in)		:: unk(:,:,:)		!	unk(	nR 	,	nWfs	, nQ	)
-		complex(dp),	intent(out)		:: wnf(:,:,:)	
 		real(dp),		intent(out)		:: pWann(2)
+		complex(dp),	allocatable		:: wnF(:,:,:)
 		real(dp),		allocatable		:: wCent(:,:), wSprd(:,:)
 		integer							:: normCount
 		!
+		allocate(			wnF( 		nR		, 	nSC		, nWfs		)				)
 		allocate(			wCent(		2		, 	nWfs				)				)
 		allocate(			wSprd(		2		, 	nWfs				)				)
 
@@ -54,7 +55,7 @@ module wannier
 		!write(*,*)	"[wannMethod]: interpolated bands"
 		!
 		!write results
-		call writeWannFiles(wnF, wCent, wSprd)
+		if( writeBin )	call writeWannFiles(wnF, wCent, wSprd)
 		write(*,*)	"[wannMethod]: wrote wannier files"
 
 		!DEBUG

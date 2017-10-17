@@ -11,7 +11,7 @@ program main
 
 	use polarization,	only:		calcIonicPol
 	use peierls,		only:		peierlsMethod
-	use output,		 	only:		writeMeshInfo, writeMeshBin, writeUNKs, writeInterpBands, writeWannFiles,writePolFile,& 
+	use output,		 	only:		writeMeshInfo, writeMeshBin, writeUNKs, writePolFile,& 
 									printTiming	!printMat, printInp, printWannInfo,writeSysInfo  
 
 
@@ -19,7 +19,7 @@ program main
 	implicit none
 
 	
-    complex(dp),	allocatable,	dimension(:,:,:)	:: 	unk, unkW, wnf, Uq!, ukn basCoeff,
+    complex(dp),	allocatable,	dimension(:,:,:)	:: 	unk, unkW, Uq!, ukn basCoeff,
     real(dp),		allocatable,	dimension(:,:)		:: 	En
     real(dp) 											:: 	pWann(2), pBerry(2), pNiu(3), pPei(3)
     real												:: 	mastT0, mastT1, mastT, T0, T1, &
@@ -33,20 +33,11 @@ program main
     call cpu_time(T0)
 	call readInp()
 	!electronic structure arrays
-	allocate(			unk(		nR 		,	nG		, 	nQ		)				)
+	allocate(			En(						nBands	, 	nQ		)				)
+	allocate(			unk(		nR 		,	nBands	, 	nQ		)				)
 	allocate(			unkW(		nR 		,	nWfs	, 	nQ		)				)
 	allocate(			Uq(			nBands	,	nWfs	, 	nQ		)				)
-	allocate(			wnF( 		nR		, 	nSC		, nWfs		)				)
-	allocate(			En(						nBands	, 	nQ		)				)
 	
-	
-
-
-	!wannier interpolation arrays
-	!allocate(			Ah(		3		,	nK		, nWfs, nWfs	)			)
-	!allocate(			Fh(		3		,	nK		, nWfs, nWfs	)			)
-	!allocate(			Vh(		3		,	nK		, nWfs, nWfs	)			)
-	!allocate(			EnH(				nK		,	 nWfs		)			)
 	
 	!
 	write(*,*)"[main]:**************************Infos about this run*************************"
@@ -57,10 +48,7 @@ program main
 
     write(*,*)"[main]: nBands=", nBands
 	write(*,*)"[main]: nWfs  =", nWfs	
-	if(			nG		< 		vol * Gcut * dsqrt(Gcut) /	(2.0_dp*PI_dp**2)		) then
-		write(*,*)	"[main]: increase nG or decrease Gcut"
-	end if
-	if(		nR	<		vol * dsqrt(Gcut) 	/ PI_dp)	write(*,*)"[main]: need more real space points or smaller Gcut"
+	
 	!
 	call cpu_time(T1)
 	aT = T1 - T0
@@ -111,7 +99,7 @@ program main
 	if( doWanni ) then
 		write(*,*)	"[main]:**************************WANNIER FUNCTION METHOD*************************"
 		!
-		call wannMethod(unkW, wnf,pWann)
+		call wannMethod(unkW, pWann)
 		!
 		write(*,*)	"[main]: done with center polarization calc"
 	else
@@ -182,10 +170,12 @@ program main
 	write(*,*)"*"
 	write(*,*)"[main]:**************************WRITE OUTPUT*************************"
 	call cpu_time(T0)
-	!call writeSysInfo() 
 	call writeMeshInfo() 
-	call writeMeshBin()
-	call writeUNKs(unkW)
+	
+	if( writeBin )	then
+		call writeMeshBin()
+		call writeUNKs(unkW)
+	end if
 	write(*,*)"[main]: ...wrote mesh info"
 	call writePolFile(pWann, pBerry, pNiu, pPei )
 	write(*,*)"[main]: ...wrote polarization txt file"
@@ -193,8 +183,15 @@ program main
 	call cpu_time(T1)
 	oT = T1 - T0
 	
-
-
+	write(*,*)"*"
+	write(*,*)"*"
+	write(*,*)"*"
+	write(*,*)"*"
+	write(*,*)"[main]:**************************BASIS SET INFO*************************"
+	if(			nG		< 		vol * Gcut * dsqrt(Gcut) /	(2.0_dp*PI_dp**2)		) then
+		write(*,*)	"[main]: increase nG or decrease Gcut"
+	end if
+	if(		nR	<		vol * dsqrt(Gcut) 	/ PI_dp)	write(*,*)"[main]: need more real space points or smaller Gcut"
 
 
 	!TIMING INFO SECTION

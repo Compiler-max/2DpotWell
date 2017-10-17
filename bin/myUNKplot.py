@@ -65,7 +65,7 @@ f7.close()
 	
 
 #RESHAPE RAW DATA
-#rpts	= np.reshape(rpts,(nR,2))
+rpts	= np.reshape(rpts,(nR,2))
 atPos	= np.reshape(atPos,(nAt,2))
 
 qpts	= np.reshape(qpts,(nQ,2))
@@ -80,8 +80,16 @@ k=1
 #	print("k="+str(k)+" n="+str(n)+" oLap="  +str( np.sum(unk[k,n,:]) / float(nR) ))
 
 for q in range(nQ):
-	for n in range(10):
+	for n in range(3):
 		print('q='+str(q)+', n=,'+str(n)+', oLap='+str(np.sum(unk[q,n,:])/float(nR)))
+
+		xC 	= np.sum(unk[q,n,:]*rpts[:,0]) / float(nR)
+		yC 	= np.sum(unk[q,n,:]*rpts[:,1])	/ float(nR)
+		xC	= np.mod(xC,aX)
+		yC	= np.mod(yC,aY)
+		print('xC='+str(xC)+' yC='+str(yC))
+
+
 
 
 
@@ -89,7 +97,7 @@ for q in range(nQ):
 n = 0				#which state to plot
 k = 1				#k point index to plot				
 
-for n in range(nG):
+for n in range(3):
 	fig = plt.figure()
 	ax = fig.add_subplot(111)
 	
@@ -108,9 +116,9 @@ for n in range(nG):
 	ytickLabel	= np.arange(int(0),int(nQy+1)  )
 	
 	#plot atoms
-	atColor = 'white'
+	atColor = 'k'
 	for at in range(nAt):
-		ax.plot(atPos[at,0],atPos[at,1],marker='+',color='white')
+		ax.plot(atPos[at,0],atPos[at,1],marker='+',color='k')
 		ax.plot([atPos[at,0]-0.5,atPos[at,0]-0.5]	, [atPos[at,1]-0.5,atPos[at,1]+0.5],color=atColor,linewidth=0.2)
 		ax.plot([atPos[at,0]+0.5,atPos[at,0]+0.5]	, [atPos[at,1]-0.5,atPos[at,1]+0.5],color=atColor,linewidth=0.2)
 		ax.plot([atPos[at,0]-0.5,atPos[at,0]+0.5]	, [atPos[at,1]-0.5,atPos[at,1]-0.5],color=atColor,linewidth=0.2)
@@ -119,6 +127,9 @@ for n in range(nG):
 		ax.plot([atPos[at,0]-10,atPos[at,0]+10]	, [atPos[at,1],atPos[at,1]],color=atColor,linewidth=0.2)
 		ax.plot([atPos[at,0],atPos[at,0]]	, [atPos[at,1]-10,atPos[at,1]+10],color=atColor,linewidth=0.2)
 	
+	#ax.grid(color='white',linestyle='-',linewidth=1)
+
+
 	ax.set_xticks(xticks)	
 	ax.set_xticklabels(xtickLabel,fontsize=12)
 	ax.set_yticks(yticks)	

@@ -16,21 +16,19 @@ use omp_lib
 		real(dp),			intent(in)		:: EnQ(:,:)
 		complex(dp),		intent(out)		:: tHopp(:,:,:), rHopp(:,:,:,:)
 		real(dp),			allocatable		:: AconnQ(:,:,:,:)
-		complex(dp),		allocatable		:: Htmp(:,:,:), rImag(:,:,:,:), tImag(:,:,:)
+		complex(dp),		allocatable		:: Htmp(:,:,:)
 		complex(dp)							:: phase
 		integer								:: R, qi
 		!
 		allocate(	AconnQ(	2,	nWfs,	nWfs,	nQ		)			)
 		allocate(	Htmp(			nWfs,	nWfs,	nQ		)			)
-		allocate(	rImag(		2,	nWfs,	nwfs,	nSC		)			)
-		allocate(	timag(			nWfs,	nWfs,	nSC		)			)
-		rImag	= dcmplx(0.0_dp)
-		tImag	= dcmplx(0.0_dp)
-		!
+		
 		!SET UP K SPACE QUANTITIES
 		call calcConnOnCoarse(unkQ, AconnQ)
 		call calcHtmp(EnQ, Uq, Htmp)
 		!FT TO REAL SPACE
+		rHopp	= dcmplx(0.0_dp)
+		tHopp	= dcmplx(0.0_dp)
 		do R = 1, nSC
 			do qi = 1, nQ
 				phase			= myExp( -1.0_dp * dot_product(qpts(:,qi),Rcell(:,R))		)  / dsqrt(real(nQ,dp) )

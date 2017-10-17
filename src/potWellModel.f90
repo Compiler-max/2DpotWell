@@ -28,12 +28,13 @@ module potWellModel
 																				!unkW(nR	,	nWfs,  nKpts	)
 																				!veloBwf(nR,nK,2*nG)
 		real(dp),		intent(out)		::	En(:,:)																	
-		complex(dp),	allocatable		::	Hmat(:,:)
+		complex(dp),	allocatable		::	Hmat(:,:), unkT(:,:)
 		real(dp),		allocatable		::	EnT(:,:)
 		integer							:: 	qi 
 		real(dp)						::	kVal(2)
 		!
 		allocate(	Hmat(	nG,	nG		)			)
+		allocate(	unkT(	nR,	nG		)			)
 		allocate(	EnT(	nG	, nQ	)			)	
 		!
 		unk			=	dcmplx(0.0_dp)
@@ -53,7 +54,14 @@ module potWellModel
 			!
 			!BLOCH WAVEFUNCTIONS
 			!call gaugeCoeff(kVal, Hmat)
-			call genBwfVelo(qi, Hmat, unk(:,:,qi))	!omp
+			call genBwfVelo(qi, Hmat, unkT)	!omp
+			unk(:,1:nBands,qi)	= unkT(:,1:nBands)
+			!
+			!DEBUG TESTS
+			if( debugHam ) then
+				if( .not. isUnit(Hmat) ) write(*,'(a,i4)')	"[solveHam]: basis coeff not unitary for qi=",qi
+			end if
+
 			!
 		end do
 		!
@@ -64,7 +72,7 @@ module potWellModel
 		end do
 		write(*,*)			"[solveHam]: copied eigenvalues"
 		write(*,*)			"[solveHam]: found ", countBandsSubZero(EnT)," bands at the gamma point beneath zero"
-		call writeEnAndUNK(EnT, unk)
+		if( writeBin )	call writeEnAndUNK(EnT, unk)
 		!
 		!DEBUG
 		!if(debugHam) then
@@ -109,11 +117,8 @@ module potWellModel
 		!init to zero
 		Hmat = dcmplx(0.0_dp) 
 		!
-		!FEATURES:
-		!call Hkin(k,Hmat) 
-		!call Hpot( Hmat)
 
-		!$OMP PARALLEL DO SCHEDULE(DYNAMIC) COLLAPSE(2) DEFAULT(SHARED) PRIVATE(j, i, kg, onSite)
+		!!!$OMP PARALLEL DO SCHEDULE(DYNAMIC) COLLAPSE(2) DEFAULT(SHARED) PRIVATE(j, i, kg, onSite)
 		do j = 1, nG
 			do i = 1, nG
 				if(i == j )	then
@@ -125,7 +130,7 @@ module potWellModel
 				end if
 			end do
 		end do
-		!$OMP END PARALLEL DO
+		!!!$OMP END PARALLEL DO
 
 		!
 		if(debugHam) then
@@ -164,7 +169,7 @@ module potWellModel
 			else if( abs(dGx) < machineP ) then	
 				V	= V + Vpot  * i_dp 	* 	( xR - xL ) *( myExp(dGy*yL) - myExp(dGy*yR) )/ ( vol * dGy )
 			else if( abs(dGy) < machineP ) then
-				V	= V + Vpot * i_dp	 * ( myExp(dGx*xL) - myExp(dGx*xR) ) 	* 			( yR - yL) 		/ (vol * dGx )
+				V	= V + Vpot * i_dp	 * ( myExp(dGx*xL) - myExp(dGx*xR) ) 	* 	( yR - yL) 		/ (vol * dGx )
 			else
 				V	= V -  Vpot 	 * ( myExp(dGx*xL) - myExp(dGx*xR) ) * ( myExp(dGy*yL) - myExp(dGy*yR) ) / (vol * dGx * dGy )
 			end if
