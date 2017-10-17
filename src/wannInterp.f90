@@ -20,14 +20,18 @@ module wannInterp
 		complex(dp),	allocatable		:: U(:,:), HW(:,:), HaW(:,:,:), AW(:,:,:), FW(:,:,:,:)
 		integer							:: ki, n, m, a, b
 		!
-		
 		allocate(	U(				nWfs, 	nWfs			)		)
 		allocate(	HW(				nWfs, 	nWfs			)		)
 		allocate(	HaW(	2	,	nWfs, 	nWfs			)		)
 		allocate(	AW(		2	,	nWfs, 	nWfs			)		)
 		allocate(	Fw(		2,2	,	nWfs,	nWfs			)		)
-	
-		
+		!
+		EnH	= 0.0_dp
+		AconnH	= dcmplx(0.0_dp)
+		FcurvH	= dcmplx(0.0_dp)
+		veloH	= dcmplx(0.0_dp)
+		!
+		!
 		do ki = 1, nK
 			call interpolateMat(ki, tHopp, rHopp, HW, HaW, AW, FW)
 			if( doGaugBack ) then
