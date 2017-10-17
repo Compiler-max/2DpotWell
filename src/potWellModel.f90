@@ -185,7 +185,6 @@ module potWellModel
 		!
 		cnt	= 0
 		gammaP	= getGammaPoint()
-		write(*,'(a,i8,a,f16.8,a,f16.8,a)')	"[countBandsSubZero]: counting sub zero bands at q(",gammaP,")= (",qpts(1,gammaP),", ",qpts(2,gammaP)," )."
 		do n = 1, nG
 			if( EnT(n,gammaP) < 0.0_dp )	then
 				cnt	= cnt + 1
