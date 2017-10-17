@@ -37,23 +37,20 @@ module semiClassics
 		real(dp)						:: 	densCorr(3)
 		integer							:: 	n, ki, nSize, kSize
 		!
-		write(*,*)"[calcFirstOrdP]: start calculating P' via semiclassic approach"
 		nSize	= size(Velo,3)
 		kSize	= size(Velo,4)
 		allocate(	f(3,kSize )		)
-		p1 = 0.0_dp
 		if(		kSize /= size(En,2)		) then
 			write(*,*)"[calcFirstOrdP]: WARNING Energy and connection live on different k meshes!"
 		end if
 		!
-		!Velo(2,:,:,:) = dcmplx(0.0_dp)
 		!
+		write(*,*)"[calcFirstOrdP]: start calculating P' via semiclassic approach"
+		p1 = 0.0_dp
 		do n = 1, nSize
 			f 	= dcmplx(0.0_dp)
-			pn	= 0.0_dp
 			!FILL INTEGRATION ARRAY
 			do ki = 1, kSize
-				write(*,*)"[calcFirstOrdP]: start ki=",ki
 				!PHASE SPACE DENSITY CORRECTION
 				densCorr	= 0.5_dp * dot_product(		dreal(Fcurv(:,n,n,ki)), dreal(Aconn(:,n,n,ki) )	)		* Bext
 				!f(:,ki)		= f(:,ki) + densCorr
@@ -68,7 +65,8 @@ module semiClassics
 				f(:,ki)	= f(:,ki) + matmul(Fmat, Bext) 
 				write(*,*)"[calcFirstOrdP]: done for this ki"
 			end do
-			!INTEGRATE
+			!INTEGRATE over k-space
+			pn	= 0.0_dp
 			do ki = 1, kSize
 				pn = pn + f(:,ki)  / kSize
 			end do

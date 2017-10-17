@@ -21,7 +21,7 @@ use omp_lib
 		integer								:: R, qi
 		!
 		allocate(	AconnQ(	2,	nWfs,	nWfs,	nQ		)			)
-		allocate(	Htmp(			nWfs,	nWfs,	nQ		)			)
+		allocate(	Htmp(			nWfs,	nWfs,	nQ	)			)
 		
 		!SET UP K SPACE QUANTITIES
 		call calcConnOnCoarse(unkQ, AconnQ)

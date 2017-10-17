@@ -69,8 +69,8 @@ rpts	= np.reshape(rpts,(nR,2))
 atPos	= np.reshape(atPos,(nAt,2))
 
 qpts	= np.reshape(qpts,(nQ,2))
-unkR	= np.reshape(rawDataR,(nQ, nG , nR))  #	unk(		nR		, 	nK		, nWfs	)		
-unkI	= np.reshape(rawDataI,(nQ, nG , nR))
+unkR	= np.reshape(rawDataR,(nQ, nWfs , nR))  #	unk(		nR		, 	nK		, nWfs	)		
+unkI	= np.reshape(rawDataI,(nQ, nWfs , nR))
 unk		= unkR**2 + unkI**2
 
 
@@ -80,7 +80,7 @@ k=1
 #	print("k="+str(k)+" n="+str(n)+" oLap="  +str( np.sum(unk[k,n,:]) / float(nR) ))
 
 for q in range(nQ):
-	for n in range(3):
+	for n in range(1):
 		print('q='+str(q)+', n=,'+str(n)+', oLap='+str(np.sum(unk[q,n,:])/float(nR)))
 
 		xC 	= np.sum(unk[q,n,:]*rpts[:,0]) / float(nR)
