@@ -144,8 +144,22 @@ module potWellModel
 		return
 	end subroutine
 
+	complex(dp)	function V(i,j)
+		integer,	intent(in)	::	i, j
+		!
+		V	= dcmplx(0.0_dp)
+		if( doVdesc ) then
+			V = Vdesc(i,j)
+		else
+			V = Vconst(i,j)
+		end if
+		!
+		!
+		return
+	end function
 
-	complex(dp) function V(i,j)
+
+	complex(dp) function Vconst(i,j)
 		!calc potential matrix elements
 		!the integrals were solved analytical and are hard coded in this function
 		integer,	intent(in)	::	i, j
@@ -153,7 +167,7 @@ module potWellModel
 		complex(dp)				::	Vpot
 		real(dp)				::  xL, yL, xR, yR, dGx, dGy
 		!
-		V 		= dcmplx(0.0_dp)
+		Vconst 	= dcmplx(0.0_dp)
 		dGx		= Gvec(1,j) - Gvec(1,i)
 		dGy		= Gvec(2,j) - Gvec(2,i)
 		!
@@ -165,13 +179,13 @@ module potWellModel
 			yR	=	atPos(2,at) + atR(2,at) 
 			!
 			if( i == j) then		
-				V	= V + Vpot 			*	 ( xR - xL ) * 	( yR - yL )			 / vol
+				Vconst	= Vconst + Vpot 			*	 ( xR - xL ) * 	( yR - yL )			 / vol
 			else if( abs(dGx) < machineP ) then	
-				V	= V + Vpot  * i_dp 	* 	( xR - xL ) *( myExp(dGy*yL) - myExp(dGy*yR) )/ ( vol * dGy )
+				Vconst	= Vconst + Vpot  * i_dp 	* 	( xR - xL ) *( myExp(dGy*yL) - myExp(dGy*yR) )/ ( vol * dGy )
 			else if( abs(dGy) < machineP ) then
-				V	= V + Vpot * i_dp	 * ( myExp(dGx*xL) - myExp(dGx*xR) ) 	* 	( yR - yL) 		/ (vol * dGx )
+				Vconst	= Vconst + Vpot * i_dp	 * ( myExp(dGx*xL) - myExp(dGx*xR) ) 	* 	( yR - yL) 		/ (vol * dGx )
 			else
-				V	= V -  Vpot 	 * ( myExp(dGx*xL) - myExp(dGx*xR) ) * ( myExp(dGy*yL) - myExp(dGy*yR) ) / (vol * dGx * dGy )
+				Vconst	= Vconst -  Vpot 	 * ( myExp(dGx*xL) - myExp(dGx*xR) ) * ( myExp(dGy*yL) - myExp(dGy*yR) ) / (vol * dGx * dGy )
 			end if
 		end do
 		!
