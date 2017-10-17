@@ -180,46 +180,49 @@ module potWellModel
 
 
 	complex(dp) function Vdesc(i,j)
+		!potential integration for a well linear descending in x direction
+		!it starts from V0 at xL till V0-dV at xR
 		integer,	intent(in)	::	i, j
 		integer					::	at
 		complex(dp)				::	Vpot
-		real(dp)				::  xL, yL, xR, yR, dGx, dGy, dVpot, fact
+		real(dp)				::  xL, yL, xR, yR, dGx, dGy, dV, fact
 		!
-		dVpot	= 1.0_dp
+		dV		= 1.0_dp
 		Vdesc 	= dcmplx(0.0_dp)
 		dGx		= Gvec(1,j) - Gvec(1,i)
 		dGy		= Gvec(2,j) - Gvec(2,i)
 		!
 		do at = 1, nAt
-			Vpot	=	dcmplx(atPot(at))
+			Vpot=	dcmplx(atPot(at))
+			dV	=	dVpot(at)
 			xL	=	atPos(1,at) - atR(1,at)
 			xR	=	atPos(1,at) + atR(1,at) 
 			yL	=	atPos(2,at) - atR(2,at)
 			yR	=	atPos(2,at) + atR(2,at) 
 			!
 			if( i == j) then
-				fact	= (2.0_dp*Vpot - dVpot)	 / (2.0_dP*vol)	
+				fact	= (2.0_dp*Vpot - dV)	 / (2.0_dP*vol)	
 				Vdesc	= Vdesc 	+			fact *	(xL-xR) * 	(yL-yR)			
 				!
 				!
 				!
 			else if( abs(dGx) < machineP ) then	
-				fact	= (2.0_dp*Vpot - dVpot) / ( 2.0_dP* vol * dGy )
+				fact	= (2.0_dp*Vpot - dV) / ( 2.0_dP* vol * dGy )
 				Vdesc	= Vdesc 	- 	i_dp  * fact * (xL-xR) * ( myExp(dGy*yL) - myExp(dGy*yR) )
 				!
 				!
 				!
 			else if( abs(dGy) < machineP ) then
 				fact	=  1.0_dp / ( dGx**2 * vol * (xL-xR) )
-				Vdesc	= Vdesc 	+ 	i_dp * fact * (yR-yL) * myExp(dGx*xL) * (dGx * Vpot			* (xL-xR) + i_dp * dVpot) 	
-				Vdesc	= Vdesc 	-	i_dp * fact * (yR-yL) * myExp(dGx*xR) * (dGx * (Vpot-dVpot) * (xL-xR) + i_dp * dVpot)	
+				Vdesc	= Vdesc 	+ 	i_dp * fact * (yR-yL) * myExp(dGx*xL) * (dGx * Vpot			* (xL-xR) + i_dp * dV) 	
+				Vdesc	= Vdesc 	-	i_dp * fact * (yR-yL) * myExp(dGx*xR) * (dGx * (Vpot-dV) * (xL-xR) + i_dp * dV)	
 				!
 				!
 				!
 			else
 				fact	= -1.0_dp * ( myExp(dGy*yL)-myExp(dGy*yR) ) 	/ ( dGx**2 * dGy * vol * (xL-xR) )
-				Vdesc	= Vdesc		+			fact * 			myExp(dGx*xL) * (dGx * Vpot			* (xL-xR) + i_dp * dVpot) 
-				Vdesc	= Vdesc		-			fact *			myExp(dGx*xR) * (dGx * (Vpot-dVpot)	* (xL-xR) + i_dp * dVpot)
+				Vdesc	= Vdesc		+			fact * 			myExp(dGx*xL) * (dGx * Vpot			* (xL-xR) + i_dp * dV) 
+				Vdesc	= Vdesc		-			fact *			myExp(dGx*xR) * (dGx * (Vpot-dV)	* (xL-xR) + i_dp * dV)
 				!
 				!
 				!

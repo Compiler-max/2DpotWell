@@ -9,6 +9,9 @@
 	- velocity calculation neu machen ist es vw=Haw oder vw=Haw-dE*Aw
 	
 
+-	test linear descending well
+	
+
 
 -	fd connection check without implying periodicity (?!) boundary condition of fd approx
 

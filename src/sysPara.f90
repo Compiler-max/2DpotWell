@@ -6,7 +6,7 @@ module sysPara
 	private
 	public :: 	readInp, insideAt, getRindex, getRleftX, getRrightX, getRleftY, getRrightY,& 
 				getKindex, getGammaPoint, getPot, &
-				dim, aX, aY, vol, nAt, relXpos, relYpos, atRx, atRy, atPot,&
+				dim, aX, aY, vol, nAt, relXpos, relYpos, atRx, atRy, atPot, dVpot, &
 				nG, nGdim, nG0, Gcut, nQ, nQx, nQy, nKx, nKy, nK, nSC, nSCx, nSCy, nR, nRx, nRy, R0,  dx, dy, dqx, dqy, dkx, dky, &
 				gaugeSwitch, nBands, nWfs, connSwitch,  &
 				Gvec, atPos, atR, qpts, rpts, Rcell, kpts, trialOrbVAL, trialOrbSw, Zion, &
@@ -20,7 +20,7 @@ module sysPara
 														nRx=10, nRy=10, nR, R0=1, nBands=1,nWfs=1, nSC, gaugeSwitch, trialOrbSw
 	real(dp) 										::	aX=0.0_dp, aY=0.0_dp,vol=0.0_dp, Gcut=2*PI_dp, thres,& 
 														dx, dy, dqx, dqy, dkx, dky, B0, Bext(3)											
-	real(dp),	allocatable,	dimension(:)		::	relXpos, relYpos, atRx, atRy, atPot, trialOrbVAL, Zion
+	real(dp),	allocatable,	dimension(:)		::	relXpos, relYpos, atRx, atRy, atPot, dVpot, trialOrbVAL, Zion
 	real(dp),	allocatable,	dimension(:,:)		::	Gvec, atPos, atR, qpts, rpts, Rcell, kpts 
 	logical											::	debugHam, debugWann, debugProj, doProj , &
 														doBerry, doWanni, doNiu, doPei, doGaugBack, &
@@ -112,6 +112,7 @@ module sysPara
 		allocate(	atRx(nAt)			)
 		allocate(	atRy(nAt)			)
 		allocate(	atPot(nAt)			)
+		allocate(	dVpot(nAt)			)
 		allocate(	atPos(dim,nAt)		)
 		allocate(	atR(dim,nAt) 		)
 		allocate(	trialOrbVAL(nAt)	)
@@ -128,6 +129,7 @@ module sysPara
 		call CFG_add_get(my_cfg,	"atoms%atRx"		,	atRx		,	"radius of each atom in angstroem"		)
 		call CFG_add_get(my_cfg,	"atoms%atRy"		,	atRy		,	"radius of each atom in angstroem"		)
 		call CFG_add_get(my_cfg,	"atoms%atPot"		,	atPot		,	"potential depth in hartree"			)
+		call CFG_add_get(my_cfg,	"atoms%atPot"		,	dVpot		,	"potential gradient"					)
 		call CFG_add_get(my_cfg,	"atoms%Zion"		,	Zion		,	"effective charge of the ions"			)
 		![wann]
 		call CFG_add_get(my_cfg,	"wann%trialOrbVAL"	,	trialOrbVAL	,	"weight of trial orbital for each atom"	)

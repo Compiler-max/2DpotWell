@@ -10,7 +10,8 @@
     relYpos     = 0.50 
     atRx        = 1.00    
     atRy        = 1.00
-    atPot       = -3.0   
+    atPot       = -3.0
+    dVpot       = 1.00   
     Zion        = 1.00
 
 [numerics]
