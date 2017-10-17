@@ -18,7 +18,7 @@ module wannInterp
 		complex(dp),	intent(out)		:: AconnH(:,:,:,:), FcurvH(:,:,:,:)
 		complex(dp),	intent(out)		:: veloH(:,:,:,:)
 		complex(dp),	allocatable		:: U(:,:), HW(:,:), HaW(:,:,:), AW(:,:,:), FW(:,:,:,:)
-		integer							:: ki
+		integer							:: ki, n, m, a, b
 		!
 		
 		allocate(	U(				nWfs, 	nWfs			)		)
@@ -37,9 +37,19 @@ module wannInterp
 				if(ki ==1)	write(*,*)	"[DoGaugeTrafo]: Gauge trafo DISABLED	"
 				!AconnH(1:2,:,:,ki)	= AW(1:2,:,:)
 				call eigSolver(HW,EnH(:,ki))
+				!DESIRED QUANTITIES
 				AconnH(1:2,:,:,ki) 		= AW(1:2,:,:)
-				veloH(1:2,:,:,ki) 		= HaW(1:2,:,:) 
+				do m = 1, nWfs
+					do n = 1, nWfs
+						veloH(1:2,n,m,ki)	= HaW(1:2,n,m) - i_dp * ( EnH(m,ki)-EnH(n,ki) ) * AW(1:2,n,m) 
+					end do
+				end do
 				FcurvH(1:2,:,:,ki)		= dcmplx(0.0_dp)
+				do b = 1, 2
+					do a = 1,2
+						FcurvH(3,:,:,ki)	= myLeviCivita(a,b,3) * FW(a,b,:,:)
+					end do
+				end do
 				!call calcCurv(FW, DH, AW, FcurvH)
 			end if
 		end do	
