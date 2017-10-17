@@ -15,7 +15,7 @@ use omp_lib
 		complex(dp),		intent(in)		:: unkQ(:,:,:), Uq(:,:,:)
 		real(dp),			intent(in)		:: EnQ(:,:)
 		complex(dp),		intent(out)		:: tHopp(:,:,:), rHopp(:,:,:,:)
-		real(dp),			allocatable		:: AconnQ(:,:,:,:)
+		complex(dp),		allocatable		:: AconnQ(:,:,:,:)
 		complex(dp),		allocatable		:: Htmp(:,:,:)
 		complex(dp)							:: phase
 		integer								:: R, qi
@@ -96,12 +96,12 @@ use omp_lib
 		! see Mazari, Vanderbilt PRB.56.12847 (1997), Appendix B
 		!
 		complex(dp),	intent(in)		:: unk(:,:,:)		
-		real(dp),		intent(out)		:: A(:,:,:,:)			
+		complex(dp),	intent(out)		:: A(:,:,:,:)			
 		complex(dp)						:: Mxl, Mxr, Myl, Myr, one
 		integer							:: n, m, Z, qi, qx, qy, qxl, qxr, qyl, qyr, found, tot, al, be
 		real(dp)						:: wbx,wby, bxl(2), bxr(2), byl(2), byr(2),dmax, avg, delta
 		!
-		A 		= 0.0_dp
+		A 		= dcmplx(0.0_dp)
 		Z 		= 4	!amount of nearest neighbours( 2 for 2D cubic unit cell)
 		wbx 	= 2.0_dp / 		( real(Z,dp) * dqx**2 )
 		wby		= wbx
@@ -176,10 +176,10 @@ use omp_lib
 
 
 						!FD SUM OVER NEAREST NEIGHBOURS
-						A(1:2,n,m, qi) = A(1:2,n,m, qi) + wbx * bxl(1:2) * dimag( Mxl - one )
-						A(1:2,n,m, qi) = A(1:2,n,m, qi) + wbx * bxr(1:2) * dimag( Mxr - one )
-						A(1:2,n,m, qi) = A(1:2,n,m, qi) + wby * byl(1:2) * dimag( Myl - one )
-						A(1:2,n,m, qi) = A(1:2,n,m, qi) + wby * byr(1:2) * dimag( Myr - one )
+						A(1:2,n,m, qi) = A(1:2,n,m, qi) + i_dp * wbx * bxl(1:2) * ( Mxl - one )
+						A(1:2,n,m, qi) = A(1:2,n,m, qi) + i_dp * wbx * bxr(1:2) * ( Mxr - one )
+						A(1:2,n,m, qi) = A(1:2,n,m, qi) + i_dp * wby * byl(1:2) * ( Myl - one )
+						A(1:2,n,m, qi) = A(1:2,n,m, qi) + i_dp * wby * byr(1:2) * ( Myr - one )
 
 
 						!A(1:2,n,m, qi) = A(1:2,n,m, qi) - wbx * bxl(1:2) * dimag( zlog( Mxl ) )
