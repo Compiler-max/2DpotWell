@@ -35,22 +35,23 @@ module wannInterp
 				call gaugeBack(Hw, HaW, AW, FW, EnH(:,ki), U, AconnH(:,:,:,ki), FcurvH(:,:,:,ki), veloH(:,:,:,ki))	
 			else
 				if(ki ==1)	write(*,*)	"[DoGaugeTrafo]: Gauge trafo DISABLED	"
-				!AconnH(1:2,:,:,ki)	= AW(1:2,:,:)
+				!ENERGIES
 				call eigSolver(HW,EnH(:,ki))
-				!DESIRED QUANTITIES
+				!CONNECTION
 				AconnH(1:2,:,:,ki) 		= AW(1:2,:,:)
+				!VELOCITIES
 				do m = 1, nWfs
 					do n = 1, nWfs
 						veloH(1:2,n,m,ki)	= HaW(1:2,n,m) - i_dp * ( EnH(m,ki)-EnH(n,ki) ) * AW(1:2,n,m) 
 					end do
 				end do
+				!CURVATURE
 				FcurvH(1:2,:,:,ki)		= dcmplx(0.0_dp)
 				do b = 1, 2
 					do a = 1,2
 						FcurvH(3,:,:,ki)	= myLeviCivita(a,b,3) * FW(a,b,:,:)
 					end do
 				end do
-				!call calcCurv(FW, DH, AW, FcurvH)
 			end if
 		end do	
 
