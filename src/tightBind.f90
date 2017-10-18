@@ -24,11 +24,11 @@ module tightBind
 		real(dp),			intent(out)		:: En(:,:)
 		complex(dp),		allocatable		:: Hmat(:,:), tHopp(:,:,:,:,:)
 
-		integer								:: nOrb
+		integer								:: qi, nOrb
 
-		allocate(	Hmat(nOrb*nAt,nOrb,nAt)			)
+		allocate(	Hmat(nOrb*nAt,nOrb*nAt)			)
 		allocate(	tHopp(nOrb,nOrb,nAt,nAt,nSC)	)
-		call setUpHopping(tHopp)
+		!call setUpHopping(tHopp)
 
 		do qi = 1, nQ
 
@@ -50,7 +50,9 @@ module tightBind
 		integer,			intent(in)		:: qi
 		complex(dp),		intent(in)		:: tHopp(:,:,:,:,:)
 		complex(dp),		intent(out)		:: Hmat(:,:)
-
+		integer								:: j, i, nu, mu, nOrb
+		nOrb = 1
+		Hmat = dcmplx(0.0_dp)
 			do j = 1, nAt
 				do i = 1, nAt
 					do nu = 1, nOrb
@@ -61,9 +63,9 @@ module tightBind
 				end do
 			end do
 
-			call addSS(Hmat)
-			call addSP(Hmat)
-			call addPP(Hmat)
+			!call addSS(Hmat)
+			!call addSP(Hmat)
+			!call addPP(Hmat)
 		return
 	end subroutine
 

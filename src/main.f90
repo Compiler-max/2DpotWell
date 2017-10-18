@@ -3,7 +3,9 @@ program main
 	use omp_lib
 	use mathematics, 	only: 		dp, PI_dp
 
+	
 	use sysPara
+	use input,			only:		filesExist, readHam 
 	use potWellModel, 	only: 		solveHam
 	use projection,		only:		projectUnk
 	use wannier,	 	only: 		wannMethod	
@@ -65,7 +67,13 @@ program main
 	call cpu_time(T0)
 	!
 	!
-	call solveHam(unk, En)
+	if( .not. doSolveHam .and. filesExist() ) then
+		write(*,*)	"[main]: electronic structure disabled. Read in unks and energies"
+		call readHam( unk, En)
+	else
+
+		call solveHam(unk, En)
+	end if
 	!
 	call cpu_time(T1)
 	write(*,*)"[main]: done solving Schroedinger eq."
@@ -120,7 +128,7 @@ program main
 	call cpu_time(T0)
 	if ( doBerry ) then
 		write(*,*)"[main]:**************************WAVEFUNCTION METHOD*************************"
-		call berryMethod(unkW, En, Uq, pBerry, pNiu)
+		call berryMethod(unkW, En, Uq, pBerry, pNiu, pPei)
 		write(*,*)"[main]: done with wavefunction method "
 	else
 		write(*,*)"[main]: berry method disabled"
@@ -128,39 +136,6 @@ program main
 	call cpu_time(T1)
 	bT	= T1 - T0
 	
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-	!write(*,*)"*"
-	!write(*,*)"*"
-	!write(*,*)"*"
-	!write(*,*)"*"
-	!write(*,*)"[main]:**************************PEIERLS SUB*************************"
-	!call cpu_time(T0)
-	!!
-	!if(doPei)  then
-	!	call peierlsMethod(wnf, pPei)
-	!end if
-	!!
-	!call cpu_time(T1)
-	!write(*,*)"[main]: done with peierls substitution"
-	!peiT = T1 - T0
-
-
-
-
 
 
 

@@ -2,11 +2,8 @@
 	- urlaub eintragen (shiff + weihnachten)
 
 	- convergence tests:
-		- basis functions: charge density
-		- real grid wannier centers 
 		- k points berry connection fd
 		
-	- velocity calculation neu machen ist es vw=Haw oder vw=Haw-dE*Aw
 	
 
 -	test linear descending well
@@ -23,7 +20,7 @@
 	read in safed values if switch demands it
 
 
-
+-	connection on Dense mesh for peierls substitution
 
 
 

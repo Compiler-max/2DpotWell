@@ -8,6 +8,7 @@ module berry
 	use wannInterp,		only:	DoWannInterpol
 	use polarization,	only:	calcPolViaA
 	use semiClassics,	only:	calcFirstOrdP
+	use peierls,		only:	peierlsMethod
 	use output,			only:	writeConnCurv
 	implicit none
 
@@ -19,10 +20,10 @@ module berry
 
 
 !public
-	subroutine berryMethod(unkW, EnQ, Uq, pBerry, pNiu)
+	subroutine berryMethod(unkW, EnQ, Uq, pBerry, pNiu, pPei)
 		complex(dp),	intent(in)		:: unkW(:,:,:), Uq(:,:,:)
 		real(dp),		intent(in)		:: EnQ(:,:)
-		real(dp),		intent(out)		:: pBerry(2), pNiu(3)
+		real(dp),		intent(out)		:: pBerry(2), pNiu(3), pPei(3)
 		real(dp),		allocatable		:: EnK(:,:)
 		complex(dp),	allocatable		:: AconnK(:,:,:,:), FcurvK(:,:,:,:), veloK(:,:,:,:) , tHopp(:,:,:), rHopp(:,:,:,:) 
 		!
@@ -58,13 +59,13 @@ module berry
 		if(doNiu) then
 			write(*,*)	"[berrryMethod]: now calc first order pol"
 			call calcFirstOrdP(FcurvK, AconnK, veloK, EnK, pNiu)
-
 		end if
 
 
 		!PEIERLS SUBSTITUTION
 		if(doPei) then
-
+			write(*,*)	"[berrryMethod]: now calc first order pol via peierls sub."
+			call peierlsMethod(tHopp, pPei)
 		end if
 
 		

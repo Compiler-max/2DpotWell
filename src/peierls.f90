@@ -21,45 +21,54 @@ module peierls
 
 
 !public:
-	subroutine	peierlsMethod(wnf, pPei)
-		complex(dp),	intent(in)		:: wnf(:,:,:)	! tHopp(nWfs,nWfs,nSC)
+	subroutine	peierlsMethod(tHopp, pPei)
+		complex(dp),	intent(in)		:: tHopp(:,:,:)	! tHopp(nWfs,nWfs,nSC)
 		real(dp),		intent(out)		:: pPei(3)
-		complex(dp),	allocatable		:: tHopp(:,:,:), rHopp(:,:,:,:), AconnP(:,:,:,:), FcurvP(:,:,:,:), veloP(:,:,:,:)
+		complex(dp),	allocatable		:: Hp(:,:), unkP(:,:,:), tshift(:,:,:), AconnP(:,:,:,:)
 		real(dp),		allocatable		:: EnP(:,:)
 		integer							:: R, ki
 		complex(dp)						:: phase
 		!
-		allocate(			tHopp(		nWfs	, 	nWfs	,	nSc				)			)
-		allocate(			rHopp(	2	,	nWfs, 	nWfs, 	nSC					)			)		
-		allocate(			EnP(nWfs,nK)			)
-		allocate(			AconnP(3,nWfs,nWfs,nK)	)
-		allocate(			FcurvP(3,nWfs,nWfs,nK)	)
-		allocate(			veloP(3,nWfs,nWfs,nK)	)
+		allocate(			Hp(			nWfs	,	nWfs				)			)
+		allocate(			unkP(		nR		,	nWfs	,	nK		)			)
+		allocate(			tshift(		nWfs	, 	nWfs	,	nSc		)			)
+		allocate(			EnP(					nWfs	,	nK		)			)
+		allocate(			AconnP(3,	nWfs	,	nWfs	,	nK		)			)
 		!
-		AconnP 	= dcmplx(0.0_dp) 
-		FcurvP 	= dcmplx(0.0_dp)
-		veloP	= dcmplx(0.0_dp)
-
 		pPei	= 0.0_dp
-
 		write(*,*)	"[peierlsMethod]: start with peierls sub"
 
-		!GET TIGHT BINDING MAT ELEMENTS
-		!call calcHopping(wnf, tHopp, rHopp)
+		
 		!
 		!DO PEIERLS SUBSTITUTION
 		do R = 1, nSC
-			tHopp(:,:,R)	= tHopp(:,:,R) * shift(R0,R)
+			tshift(:,:,R)	= tHopp(:,:,R) * shift(R0,R)
 		end do
-		
-		!INTERPOLATE
-		!call DoWannInterpol(rHopp, tHopp, EnP, AconnP, FcurvP, veloP)
+		write(*,*)	"[peierlsMethod]: substiution of hopping parameters done"
 
+		!GET CONNECTION
+		AconnP	= dcmplx(0.0_dp)
+		do ki = 1, nK
+			Hp	= dcmplx(0.0_dp)
+			!FT to k space
+			do R = 1, nSC
+				phase	= myExp(	dot_product(kpts(:,ki),Rcell(:,R))	)  / dsqrt(real(nQ,dp) )
+				Hp(:,:)	= Hp(:,:) + phase * tshift(:,:,R)
+			end do
+			!SOLVE ELECTRONIC STRUCTURE
+			call eigSolver(Hp,EnP(:,ki))
+			call genUnk(ki, Hp, unkP(:,:,ki))
+			!GENERATE CONNECTION
+			!call calcConnOnDense(unkP, AconnP)
+		end do
+		write(*,*)	"[peierlsMethod]: calculated Berry connection."
 
 		!CALC POL
-		!call calcPolViaA(AconnP, pPei)
+		call calcPolViaA(AconnP, pPei)
 
-		write(*,*)	"[peierlsMethod]: writing done, by.."
+
+
+		write(*,*)	"[peierlsMethod]: calculated polarization, by.."
 		!
 		!
 		return
@@ -90,7 +99,7 @@ module peierls
 		rL(3)		= 0.0_dp
 		!
 		integrateA	= -0.5_dp * dot_product( crossP(rL,Bext)	, (rU-rL)	)
-		shift		= myExp( integrateA)
+		shift		= myExp( integrateA )
 		!
 		return
 	end function
