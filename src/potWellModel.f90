@@ -75,15 +75,15 @@ module potWellModel
 		if( writeBin )	call writeEnAndUNK(EnT, unk)
 		!
 		!DEBUG
-		!if(debugHam) then
-		!	write(*,*)		"[solveHam]: start test normalization of unks"
-		!	if(.not. testNormUNK(unk)	) then
-		!		write(*,*)	"[solveHam]: found normalization issues for unks"
-		!	else
-		!		write(*,*)	"[solveHam]: no issues detected"
-		!	end if
-		!end if
-		!write(*,*)			"[solveHam]: finished debuging."
+		if(debugHam) then
+			write(*,*)		"[solveHam]: start test normalization of unks"
+			if(.not. testNormUNK(unk)	) then
+				write(*,*)	"[solveHam]: found normalization issues for unks"
+			else
+				write(*,*)	"[solveHam]: no issues detected"
+			end if
+		end if
+		write(*,*)			"[solveHam]: finished debuging."
 		!
 		!
 		return
@@ -201,7 +201,6 @@ module potWellModel
 		complex(dp)				::	Vpot
 		real(dp)				::  xL, yL, xR, yR, dGx, dGy, dV, fact
 		!
-		dV		= 1.0_dp
 		Vdesc 	= dcmplx(0.0_dp)
 		dGx		= Gvec(1,j) - Gvec(1,i)
 		dGy		= Gvec(2,j) - Gvec(2,i)

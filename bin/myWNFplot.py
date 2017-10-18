@@ -93,7 +93,7 @@ for R in range(nK):
 #
 
 #2D HEATMAP
-R = 0				#unit cell
+R = 10				#unit cell
 n = 0				#state			
 
 colorMap 	= 'magma'

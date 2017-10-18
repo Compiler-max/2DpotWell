@@ -343,9 +343,9 @@ module sysPara
 		integer		:: rIx, rIy, rI
 		real(dp)	:: rxMin, ryMin
 		!
-		rxMin	= 0.0_dp
+		rxMin	=  -real(nSCx,dp) * aX / 2.0_dp
 		dx		= real(nSCx,dp) * aX / real(nRx,dp)
-		ryMin	= 0.0_dp
+		ryMin	= -real(nSCy,dp) * aX / 2.0_dp
 		dy		= real(nSCy,dp) * aY / real(nRy,dp)
 		!
 		do rIy = 1, nRy
@@ -453,8 +453,8 @@ module sysPara
 		do nJ = 1, nSCy
 			do nI = 1, nSCx
 				n = (nJ-1) * nSCx + nI  !rI	=	(rIy-1) * nRy + rIx
-				Rcell(1,n)	= real((nI-1),dp) * aX
-				Rcell(2,n)	= real((nJ-1),dp) * aY
+				Rcell(1,n)	= real((nI-1),dp) * aX -real(nSCx,dp) * aX / 2.0_dp
+				Rcell(2,n)	= real((nJ-1),dp) * aY -real(nSCy,dp) * aY / 2.0_dp
 			end do
 		end do
 

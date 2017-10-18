@@ -155,6 +155,7 @@ module projection
 	subroutine genTrialOrb(gnr)
 		complex(dp),	intent(out)	:: gnr(:,:)       !gnr( nR, nWfs)	
 		integer						:: n, ri, at, gammaP
+		real(dp)					:: drX(2), drY(2)
 		!
 		if(nWfs > nBands) then
 			write(*,*)"[genTrialOrb]: warning, nWfs larger then nBands! No propper subspace..."
@@ -204,11 +205,20 @@ module projection
 
 
 		!SINGLE ATOM
+		drX(1)	= 1.5_dp * atR(1,1)
+		drX(2)	= 0.0_dp
+		drY(1)	= 0.0_dp
+		drY(2)	= 1.5_dp * atR(2,1)
 		do n = 1, nWfs
 			do ri = 1, nR
-				if(  rpts(1,ri) < aX .and. rpts(2,ri) < aY) then
+				if( 0.0_dp < rpts(1,ri) .and.  rpts(1,ri) < aX .and. 0.0_dp < rpts(2,ri) .and. rpts(2,ri) < aY) then
+					!
+					!
+					!s
 					if( 	insideAt(1, rpts(:,ri)))	then
-						gnr(ri,n)	= infPotWell(1,n,ri) 
+						!gnr(ri,1)	= gaussian( rpts(:,ri), atPos(:,1), 1.0_dp, atR(1,1) )
+						gnr(ri,n)	= potWell(1,n,ri)
+						!gnr(ri,2)	= (	2.0_dp * infPotWell(1,1,ri) 	) / dsqrt(2.0_dp)
 					end if
 				end if
 			end do
@@ -239,6 +249,17 @@ module projection
 
 		return
 	end subroutine
+
+
+	real(dp) function gaussian(rpt,cent, alpha, width)
+		real(dp),		intent(in)		:: rpt(2), cent(2), alpha, width
+		real(dp)						:: relP(2), val
+		!
+		relP(:)	= rpt(:) - cent(:)
+		gaussian= alpha * exp(	dot_product(relP, relP)	  / (2.0_dp*width)	)
+		!
+		return
+	end function
 
 
 	logical function insideBond( xpt )
@@ -283,6 +304,31 @@ module projection
 
 
 
+	complex(dp) function potWell(at, n, ri)
+		integer, 	intent(in)		:: at, n, ri
+		real(dp)					:: x,y, Lx, Ly, xc, yc, kx, ky, A
+		!
+		x	= rpts(1,ri)
+		y	= rpts(2,ri)
+		Lx 	= 2.0_dp * atR(1,at)
+		Ly 	= 2.0_dp * atR(2,at)
+		xc	= atPos(1,at)
+		yc	= atPos(2,at)
+		kx	= PI_dp/ Lx
+		ky	= PI_dp/ Ly
+		A	= dsqrt(4.0_dp / (Lx * Ly)	)
+		!
+		if( n==1 ) then
+			potWell = A * dsin( kx*(x -xc + 0.5_dp * Lx) ) * dsin( ky*(y -yc + 0.5_dp * Ly) )
+		else if( n==2 ) then
+			potWell = A * dcos( kx*(x -xc + 0.5_dp * Lx) ) * dsin( ky*(y -yc + 0.5_dp * Ly) )
+		else if( n==3 ) then
+			potWell = A * dsin( kx*(x -xc + 0.5_dp * Lx) ) * dcos( ky*(y -yc + 0.5_dp * Ly) )
+		end if 
+
+
+		return
+	end function
 
 
 
