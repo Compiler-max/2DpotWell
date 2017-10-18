@@ -97,7 +97,7 @@ for q in range(nQ):
 n = 0				#which state to plot
 k = 1				#k point index to plot				
 
-for n in range(3):
+for n in range(6):
 	fig = plt.figure()
 	ax = fig.add_subplot(111)
 	

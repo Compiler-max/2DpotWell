@@ -2,6 +2,7 @@ module peierls
 	use mathematics,	only:	dp, PI_dp, i_dp, myExp, crossP, nIntegrate, eigSolver
 	use sysPara
 	use	wannier,		only:	calcHopping
+	use effTB,			only:	calcConnOnCoarse
 	use wannInterp,		only:	DoWannInterpol
 	use	polarization,	only:	calcPolViaA
 	use output,			only:	writePeierls
@@ -59,14 +60,20 @@ module peierls
 			call eigSolver(Hp,EnP(:,ki))
 			call genUnk(ki, Hp, unkP(:,:,ki))
 			!GENERATE CONNECTION
-			!call calcConnOnDense(unkP, AconnP)
+			call calcConnOnCoarse(unkP, AconnP)
 		end do
-		write(*,*)	"[peierlsMethod]: calculated Berry connection."
+		if( nK /= nQ ) then
+			write(*,*)	"[peierlsMethod]: WARNING, coarse & mesh do not have same grid spacing... "
+			write(*,*)	"[peierlsMethod]: ... the FD implementation of Berry conn. is wrong in that case!!! "
+			write(*,*)	"[peierlsMethod]: ... will set pPei to zero "
+		else
+			write(*,*)	"[peierlsMethod]: calculated Berry connection."
+		end if
 
 		!CALC POL
 		call calcPolViaA(AconnP, pPei)
 
-
+		if( nK /= nQ ) pPei = 0.0_dp
 
 		write(*,*)	"[peierlsMethod]: calculated polarization, by.."
 		!

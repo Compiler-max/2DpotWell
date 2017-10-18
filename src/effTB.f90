@@ -7,7 +7,7 @@ use omp_lib
 	implicit none
 
 	private
-	public	::					TBviaKspace
+	public	::					TBviaKspace, calcConnOnCoarse
 	contains	
 
 
