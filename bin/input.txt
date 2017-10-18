@@ -15,7 +15,7 @@
     Zion        = 1.00
 
 [numerics]
-    nGdim       = 16
+    nGdim       = 32
     Gcut        = 5.0	     
     nQx         = 4   
     nQy         = 4
@@ -52,8 +52,8 @@
     trialOrbSw  = 0
     trialOrbVAL = 1.0
     R0          = 11
-    nKx         = 8
-    nKy         = 8
+    nKx         = 4
+    nKy         = 4
     connSwitch  = 1
     gaugeBack   = 0
   
