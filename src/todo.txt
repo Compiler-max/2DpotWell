@@ -1,29 +1,42 @@
 
-	- reintroduce two atom projections
-
-
 	- urlaub eintragen (shiff + weihnachten)
 
-	- convergence tests:
-		- k points berry connection fd
+
+
+
+
+-	peierls sub neu machen: mit real space hamiltonian arbeiten, expandieren in basis der null order wannier funktionen
+-	debug peierls for zero magnetic field solution should be same as zero pBerry!!!
+-	shift currently one even though field is applied!!!
+
+
+
+
+
+
+- convergence tests:
+	- k points berry connection fd
 		
-	
-
--	test linear descending well: why isnt the same as constant well for zero slope?
-	
 
 
--	fd connection check without implying periodicity (?!) boundary condition of fd approx
-
-
+- 	symmetric case project onto 6 and 3 wannier functions compare
+		-> with good converged system
 
 -	modell system with fully y symmetric wannier functions
 
 
 
+-	velocity calculation how to
 
--	connection on Dense mesh for peierls substitution
 
+-	test linear descending well: why isnt the same as constant well for zero slope?
+
+
+
+- 	niu debug plus/minus for Fmatrix 
+
+
+-	arch: microcode updates einfuehren
 
 
 

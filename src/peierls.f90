@@ -29,6 +29,7 @@ module peierls
 		real(dp),		allocatable		:: EnP(:,:)
 		integer							:: R, ki
 		complex(dp)						:: phase
+		real(dp)						:: shft
 		!
 		allocate(			Hp(			nWfs	,	nWfs				)			)
 		allocate(			unkP(		nR		,	nWfs	,	nK		)			)
@@ -43,7 +44,9 @@ module peierls
 		!
 		!DO PEIERLS SUBSTITUTION
 		do R = 1, nSC
-			tshift(:,:,R)	= tHopp(:,:,R) * shift(R0,R)
+			shft			= shift(R0,R)
+			tshift(:,:,R)	= tHopp(:,:,R) * shft
+			write(*,'(a,i3,a,f10.4)')	"[peierlsMethod]: R=",R," shift=",shft
 		end do
 		write(*,*)	"[peierlsMethod]: substiution of hopping parameters done"
 
@@ -54,7 +57,7 @@ module peierls
 			!FT to k space
 			do R = 1, nSC
 				phase	= myExp(	dot_product(kpts(:,ki),Rcell(:,R))	)  / dsqrt(real(nQ,dp) )
-				Hp(:,:)	= Hp(:,:) + phase * tshift(:,:,R)
+				!Hp(:,:)	= Hp(:,:) + phase * )
 			end do
 			!SOLVE ELECTRONIC STRUCTURE
 			call eigSolver(Hp,EnP(:,ki))

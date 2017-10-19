@@ -44,7 +44,7 @@ module potWellModel
 		end if
 		!
 		!
-		!MPI scatter : unk, EnT, bwf
+		!MPI scatter : unk, EnT
 		do qi = 1, nQ
 			kVal	=	qpts(:,qi)
 			!

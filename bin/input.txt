@@ -15,18 +15,18 @@
     Zion        = 1.00 1.00
 
 [numerics]
-    nGdim       = 8
+    nGdim       = 32
     Gcut        = 5.0        
     nQx         = 8   
     nQy         = 8
     nSCx        = 8 
     nSCy        = 8
-    nRx         = 16   
-    nRy         = 16
+    nRx         = 128   
+    nRy         = 128
     thres       = 0.1
 
 [methods]
-    doSolveHam  = t
+    doSolveHam  = f
     doVdesc     = f
     doProj      = t
     doGaugBack  = f
@@ -52,8 +52,8 @@
     trialOrbSw  = 0
     trialOrbVAL = 1.0 1.0
     R0          = 11
-    nKx         = 4
-    nKy         = 4
+    nKx         = 8
+    nKy         = 8
     connSwitch  = 1
     gaugeBack   = 0
   
