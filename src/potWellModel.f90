@@ -61,7 +61,7 @@ module potWellModel
 			if( debugHam ) then
 				if( .not. isUnit(Hmat) ) write(*,'(a,i4)')	"[solveHam]: basis coeff not unitary for qi=",qi
 			end if
-
+			write(*,*)"[solveHam]: done for qi=",qi
 			!
 		end do
 		!
