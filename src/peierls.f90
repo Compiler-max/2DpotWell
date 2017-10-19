@@ -59,9 +59,10 @@ module peierls
 			!SOLVE ELECTRONIC STRUCTURE
 			call eigSolver(Hp,EnP(:,ki))
 			call genUnk(ki, Hp, unkP(:,:,ki))
-			!GENERATE CONNECTION
-			call calcConnOnCoarse(unkP, AconnP)
 		end do
+		!GENERATE CONNECTION
+		call calcConnOnCoarse(unkP, AconnP)
+
 		if( nK /= nQ ) then
 			write(*,*)	"[peierlsMethod]: WARNING, coarse & mesh do not have same grid spacing... "
 			write(*,*)	"[peierlsMethod]: ... the FD implementation of Berry conn. is wrong in that case!!! "
