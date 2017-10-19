@@ -1,6 +1,6 @@
 module sysPara
 	!this modules reads the input file and generates the meshes accordingly
-	use mathematics, only: dp, PI_dp, setAcc, acc
+	use mathematics, only: dp, PI_dp, setAcc, acc, machineP
 	use m_config
 	implicit none
 	private
@@ -455,6 +455,7 @@ module sysPara
 				n = (nJ-1) * nSCx + nI  !rI	=	(rIy-1) * nRy + rIx
 				Rcell(1,n)	= real((nI-1),dp) * aX -real(nSCx,dp) * aX / 2.0_dp
 				Rcell(2,n)	= real((nJ-1),dp) * aY -real(nSCy,dp) * aY / 2.0_dp
+				if(abs(Rcell(1,n))< machineP .and. abs(Rcell(2,n))< machineP ) R0 = n
 			end do
 		end do
 
