@@ -47,7 +47,7 @@ program main
 	write(*,*)"[main]: interpolation mesh        nK=",nK
 	write(*,*)"[main]: basis function per dim nGdim=",nGdim
 	write(*,*)"[main]: basis functions           nG=",nG
-
+	write(*,*)"[main]: real space grid           nR=",nR
     write(*,*)"[main]: nBands=", nBands
 	write(*,*)"[main]: nWfs  =", nWfs	
 	
@@ -168,6 +168,7 @@ program main
 	end if
 	if(		nR	<		vol * dsqrt(Gcut) 	/ PI_dp)	write(*,*)"[main]: need more real space points or smaller Gcut"
 
+	if(		nRx / nSCx <  nQx) write(*,*)"[main]: need more reals space points or less k points"
 
 	!TIMING INFO SECTION
 	call cpu_time(mastT1)
