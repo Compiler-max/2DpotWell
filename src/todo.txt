@@ -1,4 +1,7 @@
 
+	- reintroduce two atom projections
+
+
 	- urlaub eintragen (shiff + weihnachten)
 
 	- convergence tests:
@@ -6,7 +9,7 @@
 		
 	
 
--	test linear descending well
+-	test linear descending well: why isnt the same as constant well for zero slope?
 	
 
 
@@ -16,8 +19,7 @@
 
 -	modell system with fully y symmetric wannier functions
 
--	underlying electronic structure as optional,
-	read in safed values if switch demands it
+
 
 
 -	connection on Dense mesh for peierls substitution

@@ -69,8 +69,8 @@ rpts	= np.reshape(rpts,(nR,2))
 atPos	= np.reshape(atPos,(nAt,2))
 
 qpts	= np.reshape(qpts,(nQ,2))
-unkR	= np.reshape(rawDataR,(nQ, nWfs , nR))  #	unk(		nR		, 	nK		, nWfs	)		
-unkI	= np.reshape(rawDataI,(nQ, nWfs , nR))
+unkR	= np.reshape(rawDataR,(nQ, 6 , nR))  #	unk(		nR		, 	nK		, nWfs	)		
+unkI	= np.reshape(rawDataI,(nQ, 6 , nR))
 unk		= unkR**2 + unkI**2
 
 

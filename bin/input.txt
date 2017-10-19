@@ -33,7 +33,7 @@
     doBerry     = t
     doWanni     = t
     doNiu       = t
-    doPei       = f 
+    doPei       = t 
 
 [output]
     writeBin    = t
@@ -48,7 +48,7 @@
 [wann]
     gaugeSwitch = 0
     nBands      = 6
-    nWfs        = 3
+    nWfs        = 6
     trialOrbSw  = 0
     trialOrbVAL = 1.0 1.0
     R0          = 11

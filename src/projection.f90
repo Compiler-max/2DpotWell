@@ -167,6 +167,32 @@ module projection
 
 	
 
+
+		!SINGLE ATOM
+		!do n = 1, nWfs
+		!	do ri = 1, nR
+		!		if( 0.0_dp < rpts(1,ri) .and.  rpts(1,ri) < aX .and. 0.0_dp < rpts(2,ri) .and. rpts(2,ri) < aY) then
+		!			if( 	insideAt(1, rpts(:,ri)))	then
+		!				gnr(ri,n)	= potWell(1,n,ri)
+		!			end if
+		!		end if
+		!	end do
+		!end do
+
+		!TWO ATOMS
+		do n = 1, nWfs-1, 2
+			do ri, nR
+				if( 0.0_dp < rpts(1,ri) .and.  rpts(1,ri) < aX .and. 0.0_dp < rpts(2,ri) .and. rpts(2,ri) < aY) then
+					if( 	insideAt(1, rpts(:,ri)))	then
+						gnr(ri,n)	= potWell(1,n,ri)
+					else if( insideAt(2, rpts(:,ri)) ) then
+						gnr(ri,n+1) = potWell(2,n,ri)
+					end if
+				end if
+			end do
+		end do		
+
+
 		!TWO BAND model
 		!yMin = atPos(2,1) - atR(2,1)
 		!yMax = atPos(2,1) + atR(2,1)
@@ -203,27 +229,6 @@ module projection
 		!	end do
 		!end do
 
-
-		!SINGLE ATOM
-		drX(1)	= 1.5_dp * atR(1,1)
-		drX(2)	= 0.0_dp
-		drY(1)	= 0.0_dp
-		drY(2)	= 1.5_dp * atR(2,1)
-		do n = 1, nWfs
-			do ri = 1, nR
-				if( 0.0_dp < rpts(1,ri) .and.  rpts(1,ri) < aX .and. 0.0_dp < rpts(2,ri) .and. rpts(2,ri) < aY) then
-					!
-					!
-					!s
-					if( 	insideAt(1, rpts(:,ri)))	then
-						!gnr(ri,1)	= gaussian( rpts(:,ri), atPos(:,1), 1.0_dp, atR(1,1) )
-						gnr(ri,n)	= potWell(1,n,ri)
-						!gnr(ri,2)	= (	2.0_dp * infPotWell(1,1,ri) 	) / dsqrt(2.0_dp)
-					end if
-				end if
-			end do
-		end do
-
 		!NEW
 		!do ri = 1, nR
 		!	if(  rpts(1,ri) < aX .and. rpts(2,ri) < aY) then
@@ -238,7 +243,6 @@ module projection
 		!		end if
 		!	end if
 		!end do
-
 
 	
 
