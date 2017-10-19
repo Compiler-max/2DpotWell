@@ -27,7 +27,7 @@ module semiClassics
 	subroutine	calcFirstOrdP(Fcurv, Aconn, Velo, En, p1)
 		!calculates the first order polarization p1 according to
 		!	P'= -int_dk [0.5 (Curv.Velo)*B_ext + a']
-		complex(dp),		intent(in)	::	Fcurv(:,:,:,:), Aconn(:,:,:,:)	!Fcurv(3,nWfs, nQ)
+		complex(dp),	intent(in)		::	Fcurv(:,:,:,:), Aconn(:,:,:,:)	!Fcurv(3,nWfs, nQ)
 		complex(dp),	intent(inout)	:: 	Velo(:,:,:,:)		!	 Velo(3, nWfs,nWfs, nQ)	
 		real(dp),		intent(in)		::	En(:,:)				!	En(			nWfs, nQ)						
 		real(dp),		intent(out)		:: 	p1(3)
@@ -41,7 +41,7 @@ module semiClassics
 		kSize	= size(Velo,4)
 		allocate(	f(3,kSize )		)
 		if(		kSize /= size(En,2)		) then
-			write(*,*)"[calcFirstOrdP]: WARNING Energy and connection live on different k meshes!"
+			write(*,*)"[calcFirstOrdP]: WARNING Energy and velocities live on different k meshes!"
 		end if
 		!
 		!
@@ -134,6 +134,7 @@ module semiClassics
 									eDiff		= ( 	En(n0,ki) - En(n,ki)	 )**2 	* 	 ( 	En(n0,ki) - En(m,ki)	)
 									!MATRIX
 									Fmat(i,j) 	= Fmat(i,j) +  myLeviCivita(j,k,l) * dreal(	Vtmp ) / eDiff	
+									if(abs(dimag(Vtmp)) > acc ) write(*,*)	"[addF2]: non vanishing imag part detected"
 									!write(*,'(a,e10.3,a,e10.3)')"[addF2]: |Vtmp|=",abs(Vtmp), "eDiff=",eDiff
 								end if
 							end do
@@ -179,6 +180,7 @@ module semiClassics
 								eDiff		= ( 	En(n0,ki) - En(n,ki)	 )**3 	
 								!MATRIX
 								Fmat(i,j) 	= Fmat(i,j) -  myLeviCivita(j,k,l) * dreal(		Vtmp / dcmplx(eDiff)	)
+								if(abs(dimag(Vtmp)) > acc ) write(*,*)	"[addF2]: non vanishing imag part detected"
 								!write(*,'(a,e10.3,a,e10.3)')"[addF3]: |Vtmp|=",abs(Vtmp), "eDiff=",eDiff
 							end if
 						end do
