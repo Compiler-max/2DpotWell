@@ -15,14 +15,14 @@
     Zion        = 1.00 1.00
 
 [numerics]
-    nGdim       = 32
+    nGdim       = 8
     Gcut        = 5.0        
-    nQx         = 4   
-    nQy         = 4
-    nSCx        = 4 
-    nSCy        = 4
-    nRx         = 64   
-    nRy         = 64
+    nQx         = 8   
+    nQy         = 8
+    nSCx        = 8 
+    nSCy        = 8
+    nRx         = 16   
+    nRy         = 16
     thres       = 0.1
 
 [methods]
