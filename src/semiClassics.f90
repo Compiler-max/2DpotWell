@@ -58,12 +58,9 @@ module semiClassics
 					write(*,*)	"[calcFirstOrdP]: warning the densCorr is none zero, norm2(densCorr)",norm2(densCorr)
 				end if
 				!POSITIONAL SHIFT
+				Fmat	= 0.0_dp
 				call calcFmat(n,ki,Velo,En, Fmat)
-				write(*,*)"[calcFirstOrdP]: calulated Fmat"
-				!write(*,*)"ki=",ki
-				!write(*,*)	Fmat
 				f(:,ki)	= f(:,ki) + matmul(Fmat, Bext) 
-				write(*,*)"[calcFirstOrdP]: done for this ki"
 			end do
 			!INTEGRATE over k-space
 			pn	= 0.0_dp
@@ -92,7 +89,7 @@ module semiClassics
 		real(dp),		intent(out)		:: Fmat(:,:)
 		!
 		Fmat = 0.0_dp		
-		!call addF2(n0, ki, Velo, En, Fmat)
+		call addF2(n0, ki, Velo, En, Fmat)
 		call addF3(n0, ki, Velo, En, Fmat)
 		!
 		return

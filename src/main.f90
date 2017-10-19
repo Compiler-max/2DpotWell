@@ -71,7 +71,7 @@ program main
 		write(*,*)	"[main]: electronic structure disabled. Read in unks and energies"
 		call readHam( unk, En)
 	else
-
+		write(*,*)	"[main]: start electronic structure calculation now"
 		call solveHam(unk, En)
 	end if
 	!
