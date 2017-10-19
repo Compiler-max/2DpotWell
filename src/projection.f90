@@ -181,7 +181,7 @@ module projection
 
 		!TWO ATOMS
 		do n = 1, nWfs-1, 2
-			do ri, nR
+			do ri = 1, nR
 				if( 0.0_dp < rpts(1,ri) .and.  rpts(1,ri) < aX .and. 0.0_dp < rpts(2,ri) .and. rpts(2,ri) < aY) then
 					if( 	insideAt(1, rpts(:,ri)))	then
 						gnr(ri,n)	= potWell(1,n,ri)

@@ -379,9 +379,8 @@ module output
 
 		write(600,'(a,f16.8,a,f16.8,a,f16.8,a)')	"pNiu= (", 	pNiu(1),	", ",	pNiu(2),", ", pNiu(3),	")"
 
-
-		write(600,'(a,e16.9,a,f16.12,a,f16.12,a,f16.12,a)')	"pPei= ",norm2(pPei)," * (", &	
-											pPei(1)/norm2(pPei),	", ",	pPei(2)/norm2(pPei),", ", pPei(3)/norm2(pPei),	")"
+		write(600,'(a,f16.8,a,f16.8,a,f16.8,a)')	"pPei= (", 	pPei(1),	", ",	pPei(2),", ", pPei(3),	")"
+	
 		close(600)
 		!
 		!
