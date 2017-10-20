@@ -7,7 +7,7 @@ module blochWf
 	implicit none
 
 	private
-	public	::	genBwfVelo, genUnk, testNormUNK
+	public	::	genBwfVelo, genUnk, testNormUNK, calcBasis
 
 
 	contains

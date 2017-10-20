@@ -11,7 +11,8 @@
 
 
 
-
+- intel mkl matrix operations
+	- projections/projectUNK: matmul umschreiben
 
 
 - convergence tests:

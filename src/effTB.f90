@@ -11,8 +11,8 @@ use omp_lib
 	contains	
 
 
-	subroutine TBviaKspace(unkQ, EnQ, Uq, tHopp, rHopp)
-		complex(dp),		intent(in)		:: unkQ(:,:,:), Uq(:,:,:)
+	subroutine TBviaKspace(ckQ, EnQ, Uq, tHopp, rHopp)
+		complex(dp),		intent(in)		:: ckQ(:,:,:), Uq(:,:,:)
 		real(dp),			intent(in)		:: EnQ(:,:)
 		complex(dp),		intent(out)		:: tHopp(:,:,:), rHopp(:,:,:,:)
 		complex(dp),		allocatable		:: AconnQ(:,:,:,:)
@@ -20,11 +20,11 @@ use omp_lib
 		complex(dp)							:: phase
 		integer								:: R, qi
 		!
-		allocate(	AconnQ(	2,	nWfs,	nWfs,	nQ		)			)
+		allocate(	AconnQ(	2,		nWfs,	nWfs,	nQ	)			)
 		allocate(	Htmp(			nWfs,	nWfs,	nQ	)			)
 		
 		!SET UP K SPACE QUANTITIES
-		call calcConnOnCoarse(unkQ, AconnQ)
+		call calcConnOnCoarse(ckQ, AconnQ)
 		call calcHtmp(EnQ, Uq, Htmp)
 		!FT TO REAL SPACE
 		rHopp	= dcmplx(0.0_dp)
@@ -87,7 +87,7 @@ use omp_lib
 	end subroutine
 
 		
-	subroutine calcConnOnCoarse(unk, A)
+	subroutine calcConnOnCoarse(ck, A)
 		!finite difference on lattice periodic unk to calculate the Berry connection A
 		!	A_n(k) 	= <u_n(k)|i \nabla_k|u_n(k)>
 		!		 	= i  <u_n(k)| \sum_b{ w_b * b * [u_n(k+b)-u_n(k)]}
@@ -95,7 +95,7 @@ use omp_lib
 		!
 		! see Mazari, Vanderbilt PRB.56.12847 (1997), Appendix B
 		!
-		complex(dp),	intent(in)		:: unk(:,:,:)		
+		complex(dp),	intent(in)		:: ck(:,:,:) 	! ckW(nG, nWfs, nQ)		
 		complex(dp),	intent(out)		:: A(:,:,:,:)			
 		complex(dp)						:: Mxl, Mxr, Myl, Myr, one
 		integer							:: n, m, Z, qi, qx, qy, qxl, qxr, qyl, qyr, found, tot, al, be
@@ -162,11 +162,11 @@ use omp_lib
 						!call testNeighB(qi, qxl, qxr, qyl, qyr)
 						!
 						!OVERLAP TO NEAREST NEIGHBOURS
-						one	= UNKoverlap(	n,		m,		qi		, 	qi		, unk	)
-						Mxl	= UNKoverlap(	n,		m, 		qi		,	qxl 	, unk	) 
-						Mxr	= UNKoverlap(	n,		m, 		qi		,	qxr		, unk	)
-						Myl	= UNKoverlap(	n,		m, 		qi		, 	qyl		, unk	)
-						Myr	= UNKoverlap(	n,		m, 		qi		, 	qyr		, unk	)
+						one	= UNKoverlap(	n,		m,		qi		, 	qi		, ck	)
+						Mxl	= UNKoverlap(	n,		m, 		qi		,	qxl 	, ck	) 
+						Mxr	= UNKoverlap(	n,		m, 		qi		,	qxr		, ck	)
+						Myl	= UNKoverlap(	n,		m, 		qi		, 	qyl		, ck	)
+						Myr	= UNKoverlap(	n,		m, 		qi		, 	qyr		, ck	)
 
 						if(		 n==m 	) then		!.and.			 abs(one-dcmplx(1.0_dp)) > acc ) then
 							write(*,'(a,i2,a,f6.3,a,f6.3)') "[calcConnOnCoarse]: n=m=",n," one=",dreal(one),"+i*",dimag(one)
@@ -200,22 +200,20 @@ use omp_lib
 
 
 
-	complex(dp) function UNKoverlap(n, m, qi, knb, unk)
+	complex(dp) function UNKoverlap(n, m, qi, knb, ck)
 		!HELPER for calcConn
 		!calculates the overlap between unk at qi and at a neigbhouring k point knb
 		!	integration only over the first unit cell
 		!
 		integer,		intent(in)		:: n, m, qi, knb
-		complex(dp),	intent(in)		:: unk(:,:,:)  !unk(	nR, nK, nWfs/nG	)
+		complex(dp),	intent(in)		:: ck(:,:,:)  !ck(			nG		,	nBands  	,	nQ	)		
 		complex(dp),	allocatable		:: f(:)
-		integer							:: ri
+		integer							:: gi
 		!
-		allocate( f(nR)	)
-		do ri = 1, nR
-			f(ri)	= dconjg( unk(ri,n,qi) ) * unk(ri,m,knb)
+		UNKoverlap	= dcmplx(0.0_dp)
+		do gi = 1 , nG
+			UNKoverlap = UNKoverlap + vol * dconjg( ck(gi,n,qi) ) * ck(gi,m,qi)
 		end do
-		!integrate, normalize for integration over only one unit cell
-		UNKoverlap = nIntegrate(nR, nRx, nRy, dx, dy, f) / real(nSC,dp)
 		!
 		!
 		return

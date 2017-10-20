@@ -22,17 +22,17 @@ module peierls
 
 
 !public:
-	subroutine	peierlsMethod(unk, tHopp, pPei)
-		complex(dp),	intent(in)		:: unk(:,:,:), tHopp(:,:,:)	! tHopp(nWfs,nWfs,nSC)
+	subroutine	peierlsMethod(ck, tHopp, pPei)
+		complex(dp),	intent(in)		:: ck(:,:,:), tHopp(:,:,:)	! tHopp(nWfs,nWfs,nSC)
 		real(dp),		intent(out)		:: pPei(3)
-		complex(dp),	allocatable		:: Hp(:,:), unkP(:,:,:),Up(:,:,:), tshift(:,:,:), AconnP(:,:,:,:)
+		complex(dp),	allocatable		:: Hp(:,:), ckP(:,:,:),Up(:,:,:), tshift(:,:,:), AconnP(:,:,:,:)
 		real(dp),		allocatable		:: EnP(:,:)
 		integer							:: R, ki, ri
 		complex(dp)						:: phase
 		real(dp)						:: shft
 		!
 		allocate(			Hp(			nWfs	,	nWfs				)			)
-		allocate(			unkP(		nR		,	nWfs	,	nK		)			)
+		allocate(			ckP(		nWfs	,	nWfs	,	nK		)			)
 		allocate(			tshift(		nWfs	, 	nWfs	,	nSc		)			)
 		allocate(			EnP(					nWfs	,	nK		)			)
 		allocate(			Up(			nWfs	,	nWfs	, 	nK		)			)
@@ -62,10 +62,8 @@ module peierls
 			end do
 			!SOLVE HAM	
 			call eigSolver(Hp(:,:),EnP(:,ki))
-			!GET UNKs
-			do ri = 1, nR
-				unkP(ri,:,ki)	= matmul( Hp(:,:) , unk(ri,:,ki)	)
-			end do
+			!
+			ckP(:,:,ki)	= HP(:,:)
 		end do
 
 
@@ -76,14 +74,14 @@ module peierls
 
 		!GENERATE CONNECTION
 		AconnP	= dcmplx(0.0_dp)
-		call calcConnOnCoarse(unkP, AconnP)
+		!call calcConnOnCoarse(ckP, AconnP) todo
 
 
 		!CALC POL
 		call calcPolViaA(AconnP, pPei)
 
 		!WRITE UNKs & ENERGIES
-		call writePeierls(unkP, EnP)
+		!call writePeierls(ckP, EnP) todo
 
 
 		!DEBUG

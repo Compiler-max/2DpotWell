@@ -57,10 +57,10 @@ module projection
 		do qi = 1, nQ
 			if( doProj ) then 
 				Uq(:,:,qi)	= dcmplx(0.0_dp)
-				!call calcAmat(qi,ckH ,gnr, A)  todo introduce ck version
+				call calcAmat(qi,ckH(:,:,qi) ,gnr, A) 
 				call calcUmat(A, Uq(:,:,qi))
-				write(*,*)	"[projectUNK]: projection disabled, U= Identity"
 			else
+				write(*,*)	"[projectUNK]: projection disabled, U= Identity"
 				Uq(:,:,qi) = dcmplx(0.0_dp)
 				do n = 1, size(Uq,1)
 					do m = 1, size(Uq,2)

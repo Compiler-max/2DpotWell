@@ -20,8 +20,8 @@ module berry
 
 
 !public
-	subroutine berryMethod(unkW, EnQ, Uq, pBerry, pNiu, pPei)
-		complex(dp),	intent(in)		:: unkW(:,:,:), Uq(:,:,:)
+	subroutine berryMethod(ckW, EnQ, Uq, pBerry, pNiu, pPei)
+		complex(dp),	intent(in)		:: ckW(:,:,:), Uq(:,:,:)
 		real(dp),		intent(in)		:: EnQ(:,:)
 		real(dp),		intent(out)		:: pBerry(2), pNiu(3), pPei(3)
 		real(dp),		allocatable		:: EnK(:,:)
@@ -39,7 +39,7 @@ module berry
 		
 
 		!SET UP EFFECTIVE TIGHT BINDING MODELL
-		call TBviaKspace(unkW, EnQ, Uq, tHopp, rHopp)
+		call TBviaKspace(ckW, EnQ, Uq, tHopp, rHopp)
 		write(*,*)	"[berryMethod]: set up effective tight binding model (k-Space method)"
 
 		!INTERPOLATE CONN,CURV, VELO
@@ -65,7 +65,7 @@ module berry
 		!PEIERLS SUBSTITUTION
 		if(doPei) then
 			write(*,*)	"[berrryMethod]: now calc first order pol via peierls sub."
-			call peierlsMethod(unkW, tHopp, pPei)
+			call peierlsMethod(ckW, tHopp, pPei)
 		end if
 
 		

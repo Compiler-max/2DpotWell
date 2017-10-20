@@ -21,7 +21,7 @@ program main
 	implicit none
 
 	
-    complex(dp),	allocatable,	dimension(:,:,:)	:: 	unk, unkW, Uq!, ukn basCoeff,
+    complex(dp),	allocatable,	dimension(:,:,:)	:: 	ck, ckW, Uq
     real(dp),		allocatable,	dimension(:,:)		:: 	En
     real(dp) 											:: 	pWann(2), pBerry(2), pNiu(3), pPei(3)
     real												:: 	mastT0, mastT1, mastT, T0, T1, &
@@ -36,8 +36,8 @@ program main
 	call readInp()
 	!electronic structure arrays
 	allocate(			En(						nBands	, 	nQ		)				)
-	allocate(			unk(		nR 		,	nBands	, 	nQ		)				)
-	allocate(			unkW(		nR 		,	nWfs	, 	nQ		)				)
+	allocate(			ck(			nG		,	nBands  	,	nQ	)				)
+	allocate(			ckW(		nG		,	nWfs		,	nQ	)				)
 	allocate(			Uq(			nBands	,	nWfs	, 	nQ		)				)
 	
 	
@@ -69,10 +69,10 @@ program main
 	!
 	if( .not. doSolveHam .and. filesExist() ) then
 		write(*,*)	"[main]: electronic structure disabled. Read in unks and energies"
-		call readHam( unk, En)
+		call readHam( ck, En)
 	else
 		write(*,*)	"[main]: start electronic structure calculation now"
-		call solveHam(unk, En)
+		call solveHam(ck, En)
 	end if
 	!
 	call cpu_time(T1)
@@ -91,7 +91,7 @@ program main
 	call cpu_time(T0)
 	!
 	!
-	call projectUnk(unk, unkW, Uq)
+	call projectUnk(ck, ckW, Uq)
 	!
 	call cpu_time(T1)
 	write(*,*)"[main]: done with projections."
@@ -107,7 +107,7 @@ program main
 	if( doWanni ) then
 		write(*,*)	"[main]:**************************WANNIER FUNCTION METHOD*************************"
 		!
-		call wannMethod(unkW, pWann)
+		call wannMethod(ckW, pWann)
 		!
 		write(*,*)	"[main]: done with center polarization calc"
 	else
@@ -128,7 +128,7 @@ program main
 	call cpu_time(T0)
 	if ( doBerry ) then
 		write(*,*)"[main]:**************************WAVEFUNCTION METHOD*************************"
-		call berryMethod(unkW, En, Uq, pBerry, pNiu, pPei)
+		call berryMethod(ckW, En, Uq, pBerry, pNiu, pPei)
 		write(*,*)"[main]: done with wavefunction method "
 	else
 		write(*,*)"[main]: berry method disabled"
@@ -149,7 +149,7 @@ program main
 	
 	if( writeBin )	then
 		call writeMeshBin()
-		call writeUNKs(unkW)
+		!call writeUNKs(unkW)
 	end if
 	write(*,*)"[main]: ...wrote mesh info"
 	call writePolFile(pWann, pBerry, pNiu, pPei )
