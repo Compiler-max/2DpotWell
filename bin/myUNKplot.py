@@ -20,11 +20,11 @@ f1	 		= open("rawData/rpts.dat",'rb') #rb = Read Binary
 rpts 		= np.fromfile(f1,dtype='float64',count=-1)
 f1.close()
 
-f2			= open("rawData/unkR.dat",'rb') #rb = Read Binary
+f2			= open("rawData/unkPeiR.dat",'rb') #rb = Read Binary
 rawDataR	= np.fromfile(f2,dtype='float64',count=-1)
 f2.close()
 
-f3			= open("rawData/unkI.dat",'rb') #rb = Read Binary
+f3			= open("rawData/unkPeiI.dat",'rb') #rb = Read Binary
 rawDataI	= np.fromfile(f3,dtype='float64',count=-1)
 f3.close()
 

@@ -34,6 +34,10 @@ f5			= open("rawData/EnInterP.dat",'rb') #rb = Read Binary
 rawInterP	= np.fromfile(f5,dtype='float64',count=-1)
 f5.close()
 
+f6			= open("rawData/EnPei.dat",'rb') #rb = Read Binary
+rawENpei	= np.fromfile(f6,dtype='float64',count=-1)
+f6.close()
+
 f4			= open("rawData/sysPara.dat",'rb')
 rawSysP 	= np.fromfile(f4,dtype='int32',count=-1)
 f4.close()
@@ -80,6 +84,7 @@ qpts	= np.reshape(	qpts		,	(nQ,2)		)
 kpts	= np.reshape(	kpts		,	(nK,2)		)
 En		= np.reshape(	rawData		,	(nQ,nG)		)    
 EI 		= np.reshape(	rawInterP	,	(nK,nWfs)	)
+EnP 	= np.reshape(	rawENpei	,	(nK,nWfs)	)
 
 #print(EW)
 
@@ -92,6 +97,7 @@ kPlot	= np.linspace(0,nKplot,nKplot)
 
 EnPlot	= np.empty(nQplot)
 EIPlot	= np.empty(nKplot)
+EnpPlot	= np.empty(nKplot)
 
 xticks = np.arange(0,nQplot+nQx,nQx)				 #steps in kspace
 xtickLabel = np.array([r'$X$',r'$\Gamma$',r'$M$',r'$Y$',r'$\Gamma$']) #symmetry points visited
@@ -137,22 +143,27 @@ for n in range(0,nWfs):
 	for i in range(0,nKx):	
 		ibar			= Kind(nKx-1-i,0)
 		EIPlot[offs+i]	= EI[ibar,n]
+		EnpPlot[offs+i] = EnP[ibar,n]
 	#G to M
 	offs	= nKx		
 	for i in range(0,nKx):
 		ibar			= Kind(i,i)
 		EIPlot[offs+i]	= EI[ibar,n]
+		EnpPlot[offs+i] = EnP[ibar,n]
 	#M to Y
 	offs	= 2 * nKx
 	for i in range(0,nKy):
 		ibar			= Kind(nKx-1-i,nKy-1)
 		EIPlot[offs+i]	= EI[ibar,n]
+		EnpPlot[offs+i] = EnP[ibar,n]
 	#Y to G
 	offs	= 3 * nKx
 	for i in range(0,nKy):
 		ibar			= Kind(0,nKy-1-i)
 		EIPlot[offs+i]	= EI[ibar,n]
+		EnpPlot[offs+i] = EnP[ibar,n]
 	ax.plot(kPlot,EIPlot,marker='+',color='r',linewidth=0.4)
+	ax.plot(kPlot,EIPlot,marker='+',color='g',linewidth=0.3)
 
 
 

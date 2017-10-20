@@ -1,7 +1,7 @@
 module peierls
 	use mathematics,	only:	dp, PI_dp, i_dp, myExp, crossP, nIntegrate, eigSolver
 	use sysPara
-	use	wannier,		only:	calcHopping
+	use projection,		only:	projectUnk
 	use effTB,			only:	calcConnOnCoarse
 	use wannInterp,		only:	DoWannInterpol
 	use	polarization,	only:	calcPolViaA
@@ -22,12 +22,12 @@ module peierls
 
 
 !public:
-	subroutine	peierlsMethod(tHopp, pPei)
-		complex(dp),	intent(in)		:: tHopp(:,:,:)	! tHopp(nWfs,nWfs,nSC)
+	subroutine	peierlsMethod(unk, tHopp, pPei)
+		complex(dp),	intent(in)		:: unk(:,:,:), tHopp(:,:,:)	! tHopp(nWfs,nWfs,nSC)
 		real(dp),		intent(out)		:: pPei(3)
-		complex(dp),	allocatable		:: Hp(:,:), unkP(:,:,:), tshift(:,:,:), AconnP(:,:,:,:)
+		complex(dp),	allocatable		:: Hp(:,:), unkP(:,:,:),Up(:,:,:), tshift(:,:,:), AconnP(:,:,:,:)
 		real(dp),		allocatable		:: EnP(:,:)
-		integer							:: R, ki
+		integer							:: R, ki, ri
 		complex(dp)						:: phase
 		real(dp)						:: shft
 		!
@@ -35,6 +35,7 @@ module peierls
 		allocate(			unkP(		nR		,	nWfs	,	nK		)			)
 		allocate(			tshift(		nWfs	, 	nWfs	,	nSc		)			)
 		allocate(			EnP(					nWfs	,	nK		)			)
+		allocate(			Up(			nWfs	,	nWfs	, 	nK		)			)
 		allocate(			AconnP(3,	nWfs	,	nWfs	,	nK		)			)
 		!
 		pPei	= 0.0_dp
@@ -44,41 +45,56 @@ module peierls
 		!
 		!DO PEIERLS SUBSTITUTION
 		do R = 1, nSC
-			shft			= shift(R0,R)
+			shft			= 1.0_dp!shift(R0,R)
 			tshift(:,:,R)	= tHopp(:,:,R) * shft
 			write(*,'(a,i3,a,f10.4)')	"[peierlsMethod]: R=",R," shift=",shft
 		end do
 		write(*,*)	"[peierlsMethod]: substiution of hopping parameters done"
 
-		!GET CONNECTION
-		AconnP	= dcmplx(0.0_dp)
+		
+		
 		do ki = 1, nK
+			!SET UP HAMILTONIAN
 			Hp	= dcmplx(0.0_dp)
-			!FT to k space
 			do R = 1, nSC
-				phase	= myExp(	dot_product(kpts(:,ki),Rcell(:,R))	)  / dsqrt(real(nQ,dp) )
-				!Hp(:,:)	= Hp(:,:) + phase * )
+				phase	= myExp( dot_product(kpts(:,ki),Rcell(:,R))	) / dsqrt(real(nSC,dp))
+				Hp(:,:)	= Hp(:,:) + phase * tshift(:,:,R)
 			end do
-			!SOLVE ELECTRONIC STRUCTURE
-			call eigSolver(Hp,EnP(:,ki))
-			call genUnk(ki, Hp, unkP(:,:,ki))
+			!SOLVE HAM	
+			call eigSolver(Hp(:,:),EnP(:,ki))
+			!GET UNKs
+			do ri = 1, nR
+				unkP(ri,:,ki)	= matmul( Hp(:,:) , unk(ri,:,ki)	)
+			end do
 		end do
+
+
+		!call projectUnk(unkP, unkP, Up)
+		!call TBviaKspace(unkP, EnP, Up, tHopp, rHopp)
+		!call DoWannInterpol(rHopp, tHopp, EnP, AconnP, FcurvP, veloP)
+
+
 		!GENERATE CONNECTION
+		AconnP	= dcmplx(0.0_dp)
 		call calcConnOnCoarse(unkP, AconnP)
 
-		if( nK /= nQ ) then
-			write(*,*)	"[peierlsMethod]: WARNING, coarse & mesh do not have same grid spacing... "
-			write(*,*)	"[peierlsMethod]: ... the FD implementation of Berry conn. is wrong in that case!!! "
-			write(*,*)	"[peierlsMethod]: ... will set pPei to zero "
-		else
-			write(*,*)	"[peierlsMethod]: calculated Berry connection."
-		end if
 
 		!CALC POL
 		call calcPolViaA(AconnP, pPei)
 
-		if( nK /= nQ ) pPei = 0.0_dp
+		!WRITE UNKs & ENERGIES
+		call writePeierls(unkP, EnP)
 
+
+		!DEBUG
+		if( nK /= nQ ) then
+			write(*,*)	"[peierlsMethod]: WARNING, coarse & mesh do not have same grid spacing... "
+			write(*,*)	"[peierlsMethod]: ... the FD implementation of Berry conn. is wrong in that case!!! "
+			write(*,*)	"[peierlsMethod]: ... will set pPei to zero "
+			pPei = 0.0_dp
+		else
+			write(*,*)	"[peierlsMethod]: calculated Berry connection."
+		end if
 		write(*,*)	"[peierlsMethod]: calculated polarization, by.."
 		!
 		!

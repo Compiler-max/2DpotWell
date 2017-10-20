@@ -65,7 +65,7 @@ module berry
 		!PEIERLS SUBSTITUTION
 		if(doPei) then
 			write(*,*)	"[berrryMethod]: now calc first order pol via peierls sub."
-			call peierlsMethod(tHopp, pPei)
+			call peierlsMethod(unkW, tHopp, pPei)
 		end if
 
 		
