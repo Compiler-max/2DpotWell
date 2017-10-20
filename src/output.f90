@@ -7,7 +7,7 @@ module output
 	implicit none
 	private
 
-	public ::	writeMeshInfo, writeMeshBin, writeEnAndUNK, writeUNKs ,writeConnCurv, writeWannFiles, writePolFile, &
+	public ::	writeMeshInfo, writeMeshBin, writeEnAndCK, writeUNKs ,writeConnCurv, writeWannFiles, writePolFile, &
 				printMat, printTiming , writePeierls,  writeInterpBands, writeEnH
 
 
@@ -150,24 +150,24 @@ module output
 	end subroutine
 
 
-	subroutine writeEnAndUNK(EnT, unk)
+	subroutine writeEnAndCK(EnT, ck)
 		real(dp),		intent(in)		:: EnT(:,:)
-		complex(dp),	intent(in)		:: unk(:,:,:)
+		complex(dp),	intent(in)		:: ck(:,:,:)
 		real(dp),		allocatable		:: buffer(:,:,:)
 		!
-		allocate(	buffer(	size(unk,1), size(unk,2), size(unk,3)	)		)
+		allocate(	buffer(	size(ck,1), size(ck,2), size(ck,3)	)		)
 		!
 		open(unit=200, file='rawData/bandStruct.dat', form='unformatted', access='stream', action='write')
 		write(200)	EnT
 		close(200)
 		!
-		buffer	= dreal(unk) 
-		open(unit=210, file='rawData/unkR.dat'		, form='unformatted', access='stream', action='write',status='replace') 
+		buffer	= dreal(ck) 
+		open(unit=210, file='rawData/ckR.dat'		, form='unformatted', access='stream', action='write',status='replace') 
 		write(210)	buffer
 		close(210)
 		!
-		buffer	= dimag(unk)
-		open(unit=211, file='rawData/unkI.dat'		, form='unformatted', access='stream', action='write')
+		buffer	= dimag(ck)
+		open(unit=211, file='rawData/ckI.dat'		, form='unformatted', access='stream', action='write')
 		write(211)	buffer
 		write(*,*)	"[solveHam]: wrote eigenvalues and bwfs"
 
