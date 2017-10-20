@@ -5,7 +5,7 @@ module projection
 	use omp_lib
 	use mathematics, 	only: 	dp, PI_dp, acc, myExp, nIntegrate, eigSolver,  mySVD, myMatInvSqrt, isUnit, isIdentity, isHermitian
 	use sysPara
-	use blochWf,		only:	genUnk, testNormUNK
+	use blochWf,		only:	calcBasis, genUnk, testNormUNK
 	use output,			only:	writeInterpBands
 	implicit none	
 	
@@ -28,13 +28,13 @@ module projection
 	contains
 !public:
 
-	subroutine projectUnk(unk, unkP, Uq)	!projectBwf(qi, bWf, loBwf, U(:,:), failCount, smin, smax)
+	subroutine projectUnk(ckH, ckW, Uq)	!projectBwf(qi, bWf, loBwf, U(:,:), failCount, smin, smax)
 		!does the projection onto Loewdin-orthonormalized Bloch-like states
 		!see Marzari, Vanderbilt PRB 56, 12847 (1997) Sec.IV.G.1 for detailed description of the method 
-		complex(dp)	,	intent(in)		:: unk(:,:,:)   ! unk(nR,nG,nQ)
-		complex(dp)	,	intent(out)		:: unkP(:,:,:), Uq(:,:,:)	! unk(nR,nWfs,nQ) , tHopp(nWfs, nWfs nSC)
+		complex(dp)	,	intent(in)		:: ckH(:,:,:)  ! unk(nR,nG,nQ)
+		complex(dp)	,	intent(out)		:: ckW(:,:,:), Uq(:,:,:)	! Uq(nBands	,nWfs, 	nQ	)	
 		real(dp),		allocatable		:: EnP(:,:)	
-		complex(dp)	,	allocatable		:: loBwf(:,:), gnr(:,:), A(:,:), Ham(:,:)
+		complex(dp)	,	allocatable		:: loBwf(:,:), gnr(:,:), A(:,:), Ham(:,:), tmp(:,:)
 		
 		complex(dp)						:: phase
 		integer							:: qi, xi, n, m, R
@@ -43,6 +43,7 @@ module projection
 		allocate(	gnr(nR,nWfs)		)
 		allocate( 	A(nBands,nWfs)		)
 		allocate(	Ham(nWfs,nWfs)		)
+		allocate(	tmp(nBands,nWfs))
 		allocate(	EnP(nWfs,nQ)		)
 		!
 		if( debugProj ) then
@@ -55,10 +56,11 @@ module projection
 		!PROJECT
 		do qi = 1, nQ
 			if( doProj ) then 
-				call calcAmat(qi,unk(:,:,qi),gnr, A) 
+				Uq(:,:,qi)	= dcmplx(0.0_dp)
+				!call calcAmat(qi,ckH ,gnr, A)  todo introduce ck version
 				call calcUmat(A, Uq(:,:,qi))
-			else
 				write(*,*)	"[projectUNK]: projection disabled, U= Identity"
+			else
 				Uq(:,:,qi) = dcmplx(0.0_dp)
 				do n = 1, size(Uq,1)
 					do m = 1, size(Uq,2)
@@ -70,15 +72,19 @@ module projection
 			end if
 			!
 			!ROTATE BLOCH STATES
-			!$OMP PARALLEL DO SCHEDULE(STATIC) DEFAULT(SHARED) PRIVATE(xi, phase)
-			do xi = 1, nR
-				phase		= myExp(	dot_product(qpts(:,qi),rpts(:,xi))		)
-				loBwf(xi,:) = matmul(	phase * unk(xi,1:nBands,qi) / dsqrt(real(nSC,dp)), Uq(:,:,qi)	)
-			end do
-			!$OMP END PARALLEL DO
-			!
-			!OVERWRITE UNKS WITH PROJECTED UNKs
-			call genUnk(qi, lobWf, unkP(:,:,qi))
+			ckW(:,:,qi)	= matmul( ckH(:,:,qi) , Uq(:,:,qi)	 ) !	
+
+
+			!!!!!!ROTATE BLOCH STATES
+			!!!!!!$OMP PARALLEL DO SCHEDULE(STATIC) DEFAULT(SHARED) PRIVATE(xi, phase)
+			!!!!!do xi = 1, nR
+			!!!!!	phase		= myExp(	dot_product(qpts(:,qi),rpts(:,xi))		)
+			!!!!!	loBwf(xi,:) = matmul(	phase * unk(xi,1:nBands,qi) / dsqrt(real(nSC,dp)), Uq(:,:,qi)	)
+			!!!!!end do
+			!!!!!!$OMP END PARALLEL DO
+			!!!!!!
+			!!!!!!OVERWRITE UNKS WITH PROJECTED UNKs
+			!!!!!call genUnk(qi, lobWf, unkP(:,:,qi))
 		end do
 		!
 
@@ -86,21 +92,21 @@ module projection
 		!
 		!
 		!DEBUG
-		if( debugProj ) then
-			write(*,*)		"[projectUnk]: start test normalization of projected unks"
-			!if(.not. testNormUNK(unkP)	) then
-			!	write(*,*)	"[projectUnk]: found normalization issues for projected unks"
-			!else
-			!	write(*,*)	"[projectUnk]: no issues detected"
-			!end if
-			!
-			!
-			if( .not. doProj ) then 
-				write(*,*)		"[projectUnk]: start unk comparisson"
-				call compareUNKs(unk,unkP)
-			end if 
-		end if
-		write(*,*)			"[projectUnk]: finished debuging."
+		!if( debugProj ) then
+		!	write(*,*)		"[projectUnk]: start test normalization of projected unks"
+		!	!if(.not. testNormUNK(unkP)	) then
+		!	!	write(*,*)	"[projectUnk]: found normalization issues for projected unks"
+		!	!else
+		!	!	write(*,*)	"[projectUnk]: no issues detected"
+		!	!end if
+		!	!
+		!	!
+		!	if( .not. doProj ) then 
+		!		write(*,*)		"[projectUnk]: start unk comparisson"
+		!		call compareUNKs(unk,unkP)
+		!	end if 
+		!end if
+		!write(*,*)			"[projectUnk]: finished debuging."
 		!
 		!
 		return
@@ -191,64 +197,6 @@ module projection
 				end if
 			end do
 		end do		
-
-
-		!TWO BAND model
-		!yMin = atPos(2,1) - atR(2,1)
-		!yMax = atPos(2,1) + atR(2,1)
-		!!write(*,*)"[genTrialOrb]: yMin=",yMin," yMax=",yMax
-		!do ri = 1, nR
-		!	!ONLY 1. UNIT CELL
-		!	if(  rpts(1,ri) < aX .and. rpts(2,ri) < aY) then
-		!		!Y LIMITS
-		!		if( yMin <= rpts(2,ri) .and. rpts(2,ri) <= yMax ) then
-		!			!BONDING
-		!			if( insideBond( rpts(1,ri) )		) then
-		!				gnr(ri,1)	= dcmplx(1.0_dp)
-		!			end if
-		!			!ANTI BONDING
-		!			if( insideABond( rpts(1,ri) )	) then
-		!				gnr(ri,2)	= dcmplx(1.0_dp)
-		!			end if
-		!		end if
-		!	end if
-		!end do
-
-		!ATOM LIKE (LOCALIZED)
-		!do n = 1, nWfs-1, 2
-		!	do ri = 1, nR
-		!		if(  rpts(1,ri) < aX .and. rpts(2,ri) < aY) then
-		!			if( 	insideAt(1, rpts(:,ri)))	then
-		!				gnr(ri,n)	= infPotWell(1,n,ri) 
-		!			end if
-		!			!
-		!			if( 	insideAt(2, rpts(:,ri))		)	then
-		!				gnr(ri,n+1)	= infPotWell(2,n,ri) 
-		!			end if
-		!		end if
-		!	end do
-		!end do
-
-		!NEW
-		!do ri = 1, nR
-		!	if(  rpts(1,ri) < aX .and. rpts(2,ri) < aY) then
-		!		if( 	insideAt(1, rpts(:,ri)))	then
-		!			gnr(ri,1)	= infPotWell(1,1,ri)				!infPotWell(at, n, ri)
-		!			gnr(ri,2)	= infPotWell(1,1,ri)
-		!		end if
-		!		!
-		!		if( 	insideAt(2, rpts(:,ri))		)	then
-		!			gnr(ri,1)	= infPotWell(2,1,ri)	 
-		!			gnr(ri,2)	= - infPotWell(2,1,ri)	
-		!		end if
-		!	end if
-		!end do
-
-	
-
-
-	
-
 
 
 		return
@@ -361,32 +309,36 @@ module projection
 
 
 
-	subroutine calcAmat(qi, unk,gnr, A)
+	subroutine calcAmat(qi,ckH ,gnr, A)
 		!calculates the inner product matrix of bwfs and trial orbital gnr
 		integer,		intent(in)	:: qi
-		complex(dp),	intent(in)	:: unk(:,:), gnr(:,:) 
+		complex(dp),	intent(in)	:: ckH(:,:), gnr(:,:) 
 		complex(dp),	intent(out)	:: A(:,:) !A(nBands,nWfs)
-		complex(dp),	allocatable	:: f(:)
+		complex(dp),	allocatable	:: psi(:), basVec(:)
 		complex(dp)					:: phase
 		integer						:: m,n, xi
 		!
-		A = dcmplx(0.0_dp)
+		allocate(	basVec(nG)	)
+		allocate(	psi(nBands)	)
 		!
-		!$OMP PARALLEL DEFAULT(SHARED) PRIVATE(n, m, f, xi)
-		allocate(	f(nR)	)
-		!$OMP DO COLLAPSE(2) SCHEDULE(STATIC) 
-		do n = 1, nWfs
-			do m = 1, nBands
-				f = dcmplx(0.0_dp)
-				do xi = 1, nR
-					phase	= myExp( 	dot_product( qpts(:,qi), rpts(:,xi))		)				
-					f(xi)	= dconjg(	phase * unk(xi,m) / dsqrt(real(nSC,dp))  ) * gnr(xi,n)
-				end do
-				A(m,n) = nIntegrate(nR, nRx, nRy, dx, dy, f)		
+		!
+		!INTEGRATION OVER REAL SPACE
+		A = dcmplx(0.0_dp)
+		do xi = 1, nR
+			!GET BASIS VECTOR
+			call calcBasis(qi,xi, basVec)
+			psi(:)	= matmul( basVec, ckH ) / dsqrt(vol)
+			!CALC OVERLAP AT CURRENT GRID POINT
+			do n = 1, nWfs
+				do m = 1 , nBands 
+					A(m,n)	= A(m,n) + psi(m) * gnr(xi,n)
+				end do 
 			end do
+			!phase	= myExp( 	dot_product( qpts(:,qi), rpts(:,xi))		)				
+			!f(xi)	= dconjg(	phase * unk(xi,m) / dsqrt(real(nSC,dp))  ) * gnr(xi,n)
 		end do
-		!$OMP END DO
-		!$OMP END PARALLEL
+		!NORMALIZE REAL SPACE INTEGRATION
+		A	= A / real(nR,dp)
 		!
 		!
 		return
