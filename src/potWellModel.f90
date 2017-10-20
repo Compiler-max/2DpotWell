@@ -5,7 +5,7 @@ module potWellModel
 	use mathematics,	only:	dp, PI_dp,i_dp, machineP, myExp, myLeviCivita, eigSolver, nIntegrate, isUnit, isHermitian
 	use sysPara
 	use blochWf,		only:	genBwfVelo, testNormUNK							
-	use output,			only:	printMat, writeEnAndUNK
+	use output,			only:	printMat, 	writeEnAndCK
 	implicit none	
 	
 	private
@@ -20,10 +20,10 @@ module potWellModel
 
 	contains
 !public:
-	subroutine solveHam(unk, En)   !call solveHam(wnF, unk, EnW, VeloBwf)
+	subroutine solveHam(ck, En)   !call solveHam(wnF, unk, EnW, VeloBwf)
 		!solves Hamiltonian at each k point
 		!also generates the Wannier functions on the fly (sum over all k)
-		complex(dp),	intent(out)		::	unk(:,:,:)	
+		complex(dp),	intent(out)		::	ck(:,:,:)
 																				!wnF( nR	, nSupC,	nWfs	)	
 																				!unkW(nR	,	nWfs,  nKpts	)
 																				!veloBwf(nR,nK,2*nG)
@@ -34,10 +34,8 @@ module potWellModel
 		real(dp)						::	kVal(2)
 		!
 		allocate(	Hmat(	nG,	nG		)			)
-		allocate(	unkT(	nR,	nG		)			)
 		allocate(	EnT(	nG	, nQ	)			)	
 		!
-		unk			=	dcmplx(0.0_dp)
 		!
 		if(debugHam) then
 			write(*,*)	"[solveHam]: debugging ON. Will do additional tests of the results"
@@ -51,11 +49,12 @@ module potWellModel
 			!ELECTRONIC STRUCTURE
 			call populateH(kVal, Hmat) 	!omp
 			call eigSolver(Hmat, EnT(:,qi))	!mkl
+			ck(1:nG,1:nBands,qi)	= Hmat(1:nG,1:nBands)
 			!
 			!BLOCH WAVEFUNCTIONS
 			!call gaugeCoeff(kVal, Hmat)
-			call genBwfVelo(qi, Hmat, unkT)	!omp
-			unk(:,1:nBands,qi)	= unkT(:,1:nBands)
+			!call genBwfVelo(qi, Hmat, unkT)	!omp
+			!unk(:,1:nBands,qi)	= unkT(:,1:nBands)
 			!
 			!DEBUG TESTS
 			if( debugHam ) then
@@ -72,18 +71,8 @@ module potWellModel
 		end do
 		write(*,*)			"[solveHam]: copied eigenvalues"
 		write(*,*)			"[solveHam]: found ", countBandsSubZero(EnT)," bands at the gamma point beneath zero"
-		if( writeBin )	call writeEnAndUNK(EnT, unk)
+		if( writeBin )	call writeEnAndCK(EnT, ck)
 		!
-		!DEBUG
-		if(debugHam) then
-			write(*,*)		"[solveHam]: start test normalization of unks"
-			if(.not. testNormUNK(unk)	) then
-				write(*,*)	"[solveHam]: found normalization issues for unks"
-			else
-				write(*,*)	"[solveHam]: no issues detected"
-			end if
-		end if
-		write(*,*)			"[solveHam]: finished debuging."
 		!
 		!
 		return
