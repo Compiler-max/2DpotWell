@@ -4,6 +4,7 @@ module wannier
 	use omp_lib
 	use mathematics,	only:	dp, PI_dp, i_dp, acc, myExp, nIntegrate, eigSolver
 	use sysPara
+	use blochWf,		only:	calcBasis
 	use polarization,	only:	calcPolWannCent
 	use output,			only:	writeWannFiles
 
@@ -32,8 +33,8 @@ module wannier
 
 
 !public:
-	subroutine wannMethod(unk,  pWann)
-		complex(dp),	intent(in)		:: unk(:,:,:)		!	unk(	nR 	,	nWfs	, nQ	)
+	subroutine wannMethod(ckW,  pWann)
+		complex(dp),	intent(in)		:: ckW(:,:,:)		!	unk(	nR 	,	nWfs	, nQ	)
 		real(dp),		intent(out)		:: pWann(2)
 		complex(dp),	allocatable		:: wnF(:,:,:)
 		real(dp),		allocatable		:: wCent(:,:), wSprd(:,:)
@@ -45,7 +46,7 @@ module wannier
 
 		!
 		!Generate Wannier functions and calc polarization from wannier centers
-		call genWannF(unk, wnF)
+		call genWannF(ckW, wnF)
 		write(*,*)	"[wannMethod]: generated the wannier functions"
 		call calcCentSpread(wnF, wCent, wSprd)
 		write(*,*)	"[wannMethod]: calculated centers and spreads"
@@ -114,29 +115,35 @@ module wannier
 
 
 !privat:
-	subroutine genWannF(unk, wnF)
+	subroutine genWannF(ckW, wnF)
 		! generates wannier functions from (projected) bloch wavefunctions
 		!
-		complex(dp), 	intent(in)  	:: unk(:,:,:) ! lobWf(nRpts,nWfs)	
+		complex(dp), 	intent(in)  	:: ckW(:,:,:) ! ckW(nG, nWfs, nQ)
 		complex(dp), 	intent(inout) 	:: wnF(:,:,:) ! wnF( 	nR, nSC, nWfs		)	
+		complex(dp),	allocatable		:: basVec(:)
 		integer 						:: n, Ri, xi, qi
 		complex(dp)						:: phase
 		real(dp)						:: nQreal
 		!
+		
+		!
 		nQreal	= real(nQ,dp)
 		wnF		= dcmplx(0.0_dp)
-		!$OMP PARALLEL DO SCHEDULE(STATIC) COLLAPSE(3) DEFAULT(SHARED) PRIVATE(n, Ri, xi, qi, phase) 
-		do n = 1, nWfs
-			do Ri = 1, nSC
-				do xi = 1, nR
-					do qi = 1 , nQ
-						phase			= myExp( 	dot_product( qpts(:,qi) , rpts(:,xi) - Rcell(:,Ri) )			)
-						wnF(xi,Ri,n)	= wnF(xi,Ri,n) + unk(xi,n,qi) * phase  / nQreal !/ dsqrt(nQreal)
-					end do
+		!$OMP PARALLEL DEFAULT(SHARED) PRIVATE(Ri, xi, qi, phase, basVec ) 
+		allocate(	basVec(nG)		)
+		!$OMP DO SCHEDULE(STATIC) COLLAPSE(2) 
+		do Ri = 1, nSC
+			do xi = 1, nR
+				do qi = 1 , nQ
+					call calcBasis(qi, xi, basVec)
+					phase			= myExp( -1.0_dp *	dot_product( qpts(:,qi) ,  Rcell(:,Ri) ) )	
+					phase			= phase 	/ ( dsqrt(real(nSC,dp)) * dsqrt(vol) )
+					wnF(xi,Ri,:)	= wnF(xi,Ri,:) + phase * matmul( basVec, ckW(:,:,qi)	)
 				end do
 			end do
 		end do
-		!$OMP END PARALLEL DO
+		!$OMP END DO
+		!$OMP END PARALLEL
 		!
 		!
 		return
