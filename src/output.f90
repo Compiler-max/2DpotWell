@@ -1,14 +1,15 @@
 module output
 	!module contains several routines for printing and writing data
 	use mathematics,	only:	dp, PI_dp
+	use blochWf,		only:	calcBasis
 	use sysPara 
 
 
 	implicit none
 	private
 
-	public ::	writeMeshInfo, writeMeshBin, writeEnAndCK, writeUNKs ,writeConnCurv, writeWannFiles, writePolFile, &
-				printMat, printTiming , writePeierls,  writeInterpBands, writeEnH
+	public ::	writeMeshInfo, writeMeshBin, writeEnAndCK, writeCkASunk, writeConnCurv, writeWannFiles, writePolFile, &
+				printMat, printTiming , writePeierls,  writeInterpBands, writeEnH, printBasisInfo
 
 
 	interface printMat
@@ -169,8 +170,58 @@ module output
 		buffer	= dimag(ck)
 		open(unit=211, file='rawData/ckI.dat'		, form='unformatted', access='stream', action='write')
 		write(211)	buffer
-		write(*,*)	"[solveHam]: wrote eigenvalues and bwfs"
+		write(*,*)	"[writeEnAndCK]: wrote eigenvalues and eigencoefficients"
 
+		return
+	end subroutine
+
+
+	subroutine writeCkASunk(ck, ckW)
+		complex(dp),	intent(in)		:: ck(:,:,:), ckW(:,:,:)
+		complex(dp),	allocatable		:: basVec(:), unk(:,:,:), unkW(:,:,:)
+		real(dp),		allocatable		:: buffer(:,:,:), bufferW(:,:,:)
+		integer							:: qi, ri
+		!
+		allocate( basVec(nG)		)
+		allocate( unk(nR,nBands,nQ)	)
+		allocate( unkW(nR,nWfs,nQ)	)
+		allocate( buffer(nR,nBands,nQ))
+		allocate( bufferW(nR,nBands,nQ))
+
+		!
+		!CALCULATE UNKs on real space grid
+		do qi = 1, nQ
+			do ri = 1, nR
+				call calcBasis(qi, ri, basVec)
+				unk(ri,:,qi) = matmul(basVec, ck(:,:,qi)	)
+				unkW(ri,:,qi)= matmul(basVec, ckW(:,:,qi)	)
+			end do
+		end do
+		!
+		!WRITE RESULTS
+		!UNK
+		buffer	= dreal(unk)
+		open(unit=400,file='rawData/unkR.dat',form='unformatted',access='stream',action='write')
+		write(400)	buffer
+		close(400)
+		!
+		buffer	= dimag(unk)
+		open(unit=405,file='rawData/unkI.dat',form='unformatted',access='stream',action='write')
+		write(405)	buffer
+		close(405)
+		!
+		!UNK (W)
+		bufferW	= dreal(unkW)
+		open(unit=410,file='rawData/ROTunkR.dat',form='unformatted',access='stream',action='write')
+		write(410)	bufferW
+		close(410)
+		!
+		bufferW	= dimag(unkW)
+		open(unit=415,file='rawData/ROTunkI.dat',form='unformatted',access='stream',action='write')
+		write(415)	bufferW
+		close(415)
+		!
+		!
 		return
 	end subroutine
 
@@ -293,21 +344,21 @@ module output
 	end subroutine
 
 
-	subroutine writePeierls(unkP, EnP)
-		complex(dp),	intent(in)		:: unkP(:,:,:)
+	subroutine writePeierls(ckP, EnP)
+		complex(dp),	intent(in)		:: ckP(:,:,:)
 		real(dp),		intent(in)		:: EnP(:,:)
 		real(dp),		allocatable		:: buffer(:,:,:)
 		!
-		allocate(	buffer( size(unkP,1)	,	size(unkP,2)	,	size(unkP,3) 					)			)
+		allocate(	buffer( size(ckP,1)	,	size(ckP,2)	,	size(ckP,3) 					)			)
 		
 		!real(UNK)
-		buffer	= dreal(unkP)
-		open(unit=700,file='rawData/unkPeiR.dat',form='unformatted',access='stream',action='write')
+		buffer	= dreal(ckP)
+		open(unit=700,file='rawData/ckPeiR.dat',form='unformatted',access='stream',action='write')
 		write(700)	buffer
 		close(700)
 		!imag(UNK)
-		buffer	= dimag(unkP)
-		open(unit=705,file='rawData/unkPeiI.dat',form='unformatted',access='stream',action='write')
+		buffer	= dimag(ckP)
+		open(unit=705,file='rawData/ckPeiI.dat',form='unformatted',access='stream',action='write')
 		write(705)	buffer
 		close(705)
 		!
@@ -349,14 +400,14 @@ module output
 		write(600,*)"*"
 		!
 		write(600,*)"**************POL:"
-		!write(600,'(a,e16.9,a,f16.12,a,f16.12,a)')	"pWann = ",norm2(pWann)	," * (", &	
-		!														pWann(1)/norm2(pWann) 	,	", ",	pWann(2)/norm2(pWann),		")"
-		!write(600,'(a,e16.9,a,f16.12,a,f16.12,a)')	"pBerry= ",norm2(pBerry)," * (", &	
-		!														pBerry(1)/norm2(pBerry)	,	", ",	pBerry(2)/norm2(pBerry),	")"
+	
 
 	
-		write(600,'(a,f16.12,a,f16.12,a)')	"pWann =  (",  pWann(1)	,	", ",	pWann(2),		")"
-		write(600,'(a,f16.12,a,f16.12,a)')	"pBerry=  (",		pBerry(1)	,	", ",	pBerry(2),	")"
+		write(600,'(a,f8.4,a,f8.4,a,a,f8.4,a,f8.4,a)')	"pWann =  (",  pWann(1)	,	", ",	pWann(2),		"),",& 
+												" moded=(",dmod(pWann(1),aX/vol),", ",dmod(pWann(2),aY/vol),")."
+		!
+		write(600,'(a,f8.4,a,f8.4,a,a,f8.4,a,f8.4,a)')	"pBerry=  (",		pBerry(1)	,	", ",	pBerry(2),		"),",& 
+												" moded=(",dmod(pBerry(1),aX/vol),", ",dmod(pBerry(2),aY/vol),")."
 		!write(600,'(a,e16.9,a,f16.12,a,f16.12,a)')	"pInt= ",norm2(pInt)," * (", &	
 		!														pInt(1)/norm2(pInt),	", ",	pInt(2)/norm2(pInt),	")"
 		!write(600,'(a,e16.9,a,f16.12,a,f16.12,a)')	"pIon= ",norm2(pIon)," * (", &	
@@ -382,6 +433,26 @@ module output
 		return
 	end subroutine
 
+
+
+	subroutine printBasisInfo()
+		!nG to Gcut RATIO
+		if(			nG		< 		vol * Gcut * dsqrt(Gcut) /	(2.0_dp*PI_dp**2)		) then
+			write(*,*)	"[main]: increase nG or decrease Gcut"
+		else
+			write(*,*)	"[main]: it seem to be enough basis functions for the choosen Gcut parameter."
+		end if
+		!nR to Gcut RATIO
+		if(		nR	<		vol * dsqrt(Gcut) 	/ PI_dp) then
+			write(*,*)	"[main]: need more real space points or smaller Gcut"
+		else
+			write(*,*)	"[main]: real space mesh seems fine enough"
+		end if
+		!real space grid TO supercells
+		if(		nRx / nSCx <  nQx) write(*,*)	"[main]: need more reals space points or less k points"
+
+		return 
+	end subroutine
 
 
 
