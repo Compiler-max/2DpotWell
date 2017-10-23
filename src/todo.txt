@@ -11,6 +11,13 @@
 
 
 
+- projections analytisch (projectUNK/calcAmat)
+		-> am besten mit einem switch für analytisch, numerisch zum vergleich!!!
+- connection mit neuem formalismus (TBviaKspace/CalcConnOnCoarse/UNKoverlap )
+
+
+- write unks for peierls
+
 - intel mkl matrix operations
 	- projections/projectUNK: matmul umschreiben
 
@@ -35,10 +42,6 @@
 
 
 - 	niu debug plus/minus for Fmatrix 
-
-
--	arch: microcode updates einfuehren
-
 
 
 BEYOND:

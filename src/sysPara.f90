@@ -11,7 +11,7 @@ module sysPara
 				gaugeSwitch, nBands, nWfs, connSwitch,  &
 				Gvec, atPos, atR, qpts, rpts, Rcell, kpts, trialOrbVAL, trialOrbSw, Zion, &
 				Bext, &
-				debugProj, debugHam, debugWann, doSolveHam, doVdesc, doProj, doBerry, doWanni, doNiu, doPei, doGaugBack, writeBin
+				debugProj, debugHam, debugWann, doSolveHam, doVdesc, doProj, doProjNUM, doBerry, doWanni, doNiu, doPei, doGaugBack, writeBin
 
 
 	!
@@ -23,7 +23,7 @@ module sysPara
 	real(dp),	allocatable,	dimension(:)		::	relXpos, relYpos, atRx, atRy, atPot, dVpot, trialOrbVAL, Zion
 	real(dp),	allocatable,	dimension(:,:)		::	Gvec, atPos, atR, qpts, rpts, Rcell, kpts 
 	logical											::	debugHam, debugWann, debugProj, &
-														doSolveHam, doVdesc , doProj , &
+														doSolveHam, doVdesc , doProj, doProjNUM, &
 														doBerry, doWanni, doNiu, doPei, doGaugBack, &
 														writeBin
 
@@ -73,6 +73,7 @@ module sysPara
 		call CFG_add_get(my_cfg,	"methods%doSolveHam",	doSolveHam	,	"solve electronic structure or read in"	)
 		call CFG_add_get(my_cfg,	"methods%doVdesc"	,	doVdesc		,	"switch on/off linear descending pot"	)
 		call CFG_add_get(my_cfg,	"methods%doProj"	,	doProj		,	"switch on/off 	projections onto trial"	)
+		call CFG_add_get(my_cfg,	"methods%doProjNUM"	,	doProjNUM	,	"switch on/off 	projections onto trial"	)
 		call CFG_add_get(my_cfg,	"methods%doBerry"	,	doBerry		,	"switch on/off 	berry( unk) method "	)
 		call CFG_add_get(my_cfg,	"methods%doWanni"	,	doWanni		,	"switch on/off 	wannier( wnf ) method"	)
 		call CFG_add_get(my_cfg,	"methods%doNiu"		,	doNiu		,	"switch for nius first order pol"		)

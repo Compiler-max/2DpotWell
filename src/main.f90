@@ -3,7 +3,6 @@ program main
 	use omp_lib
 	use mathematics, 	only: 		dp, PI_dp
 
-	
 	use sysPara
 	use input,			only:		filesExist, readHam 
 	use potWellModel, 	only: 		solveHam
@@ -11,10 +10,8 @@ program main
 	use wannier,	 	only: 		wannMethod	
 	use berry,			only:		berryMethod
 
-	use polarization,	only:		calcIonicPol
-	use peierls,		only:		peierlsMethod
-	use output,		 	only:		writeMeshInfo, writeMeshBin, writeUNKs, writePolFile,& 
-									printTiming	!printMat, printInp, printWannInfo,writeSysInfo  
+	use output,		 	only:		writeMeshInfo, writeMeshBin, writeCkASunk, writePolFile,& 
+									printTiming, printBasisInfo	!printMat, printInp, printWannInfo,writeSysInfo  
 
 
 
@@ -26,21 +23,16 @@ program main
     real(dp) 											:: 	pWann(2), pBerry(2), pNiu(3), pPei(3)
     real												:: 	mastT0, mastT1, mastT, T0, T1, &
     															aT,kT,wT, oT, bT, peiT, pT
-    call cpu_time(mastT0)
-
-
-
-
+    
     !INPUT & ALLOCATION SECTION
+    call cpu_time(mastT0)
     call cpu_time(T0)
 	call readInp()
-	!electronic structure arrays
+	!
 	allocate(			En(						nBands	, 	nQ		)				)
 	allocate(			ck(			nG		,	nBands  	,	nQ	)				)
 	allocate(			ckW(		nG		,	nWfs		,	nQ	)				)
 	allocate(			Uq(			nBands	,	nWfs	, 	nQ		)				)
-	
-	
 	!
 	write(*,*)"[main]:**************************Infos about this run*************************"
 	write(*,*)"[main]: electronic structure mesh nQ=",nQ
@@ -50,7 +42,6 @@ program main
 	write(*,*)"[main]: real space points per cell  =",nR/nSC
     write(*,*)"[main]: nBands=", nBands
 	write(*,*)"[main]: nWfs  =", nWfs	
-	
 	!
 	call cpu_time(T1)
 	aT = T1 - T0
@@ -58,7 +49,7 @@ program main
 
 
 	
-	!SOLVE ELECTRONIC STRUCTURE & GENERATE THE WANNIER FUNCTIONS ON THE FLY
+	!ELECTRONIC STRUCTURE
 	write(*,*)"*"
 	write(*,*)"*"
 	write(*,*)"*"
@@ -82,14 +73,13 @@ program main
 
 
 
-	!PROJECT THE STATES
+	!PROJECTIONS
 	write(*,*)"*"
 	write(*,*)"*"
 	write(*,*)"*"
 	write(*,*)"*"
 	write(*,*)"[main]:**************************PROJECT STATES *************************"
 	call cpu_time(T0)
-	!
 	!
 	call projectUnk(ck, ckW, Uq)
 	!
@@ -98,7 +88,7 @@ program main
 	pT = T1-T0
 
 
-	
+	!REAL SPACE METHOD
 	write(*,*)"*"
 	write(*,*)"*"
 	write(*,*)"*"
@@ -120,7 +110,7 @@ program main
 
 
 
-	!TODO REWRITE WITH EnP, veloP
+	!K SPACE METHOD
 	write(*,*)"*"
 	write(*,*)"*"
 	write(*,*)"*"
@@ -138,37 +128,38 @@ program main
 	
 
 
-
+	!OUTPUT
 	write(*,*)"*"
 	write(*,*)"*"
 	write(*,*)"*"
 	write(*,*)"*"
 	write(*,*)"[main]:**************************WRITE OUTPUT*************************"
 	call cpu_time(T0)
+	!
+	call writePolFile(pWann, pBerry, pNiu, pPei )
+	write(*,*)"[main]: ...wrote polarization txt file"
 	call writeMeshInfo() 
-	
+	write(*,*)"[main]: ...wrote mesh info"
 	if( writeBin )	then
 		call writeMeshBin()
 		!call writeUNKs(unkW)
+		call writeCkASunk(ck, ckW)
+		write(*,*)"[main]: ...wrote binary files for meshes and unks"
 	end if
-	write(*,*)"[main]: ...wrote mesh info"
-	call writePolFile(pWann, pBerry, pNiu, pPei )
-	write(*,*)"[main]: ...wrote polarization txt file"
 	!
 	call cpu_time(T1)
 	oT = T1 - T0
 	
+	
+	!WARNINGS IF GCUT IS TO HIGH
 	write(*,*)"*"
 	write(*,*)"*"
 	write(*,*)"*"
 	write(*,*)"*"
-	write(*,*)"[main]:**************************BASIS SET INFO*************************"
-	if(			nG		< 		vol * Gcut * dsqrt(Gcut) /	(2.0_dp*PI_dp**2)		) then
-		write(*,*)	"[main]: increase nG or decrease Gcut"
-	end if
-	if(		nR	<		vol * dsqrt(Gcut) 	/ PI_dp)	write(*,*)"[main]: need more real space points or smaller Gcut"
+	write(*,*)"[main]:**************************BASIS SET DEBUG*************************"
+	call printBasisInfo()
+	write(*,*)"[main]: ...wrote basis set debug info"
 
-	if(		nRx / nSCx <  nQx) write(*,*)"[main]: need more reals space points or less k points"
 
 	!TIMING INFO SECTION
 	call cpu_time(mastT1)
@@ -179,7 +170,7 @@ program main
 	write(*,*)"*"
 	write(*,*) '**************TIMING INFORMATION************************'
 	call printTiming(aT, kT, pT, wT, bT,peiT, oT, mastT)
-	write(*,*)	"[main]: all done, deallocate and exit"
+	write(*,*)	"[main]: all done, exit"
 	!
 	!
 	stop

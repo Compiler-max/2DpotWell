@@ -17,10 +17,10 @@
 [numerics]
     nGdim       = 32
     Gcut        = 5.0        
-    nQx         = 8   
-    nQy         = 8
-    nSCx        = 8 
-    nSCy        = 8
+    nQx         = 4   
+    nQy         = 4
+    nSCx        = 4 
+    nSCy        = 4
     nRx         = 64   
     nRy         = 64
     thres       = 0.1
@@ -29,6 +29,7 @@
     doSolveHam  = f
     doVdesc     = f
     doProj      = f
+    doProjNUM   = t
     doGaugBack  = f
     doBerry     = t
     doWanni     = t
@@ -41,7 +42,7 @@
 
 [debug]
     debugHam    = f
-    debugProj   = f
+    debugProj   = t
     debugWann   = f
 
 
@@ -52,13 +53,13 @@
     trialOrbSw  = 0
     trialOrbVAL = 1.0 1.0
     R0          = 11
-    nKx         = 8
-    nKy         = 8
+    nKx         = 4
+    nKy         = 4
     connSwitch  = 1
     gaugeBack   = 0
   
 
 
 [perturbation]
-    B0          = 1.0               #hbar/(e*a0**2)
+    B0          = 0.0               #hbar/(e*a0**2)
     Bext        = 0.0 0.0 1.0

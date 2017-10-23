@@ -32,7 +32,13 @@ module polarization
 			cent(1) = dmod(wCent(1,n),aX) !get current center by projection into first unit cell
 			cent(2)	= dmod(wCent(2,n),aY)
 			!
-			cent(:) = cent(:) - atPos(:,n)
+			
+			if( mod(n,2) == 0 ) then
+				cent(:) = cent(:) - atPos(:,2)
+			else
+				cent(:) = cent(:) - atPos(:,1)
+			end if
+
 			write(*,'(a,f8.5,a,f8.5,a,f8.6,a,f8.6,a)')"[calc0ElPol]: Wcent = (",wCent(1,n),", ",wCent(2,n),") modified cent = (", cent(1),", ",cent(2),")"
 			pE = pE + cent(:)				
 		end do
@@ -48,8 +54,8 @@ module polarization
 		!end do
 
 		!MOD QUANTUM
-		pE(1) = dmod(pE(1),aX/vol)
-		pE(2) = dmod(pE(2),aY/vol)
+		!pE(1) = dmod(pE(1),aX/vol)
+		!pE(2) = dmod(pE(2),aY/vol)
 		
 
 		!
@@ -104,8 +110,8 @@ module polarization
 
 
 		!MOD QUANTUM
-		pelA(1)	= dmod(pElA(1),aX/vol)	
-		pelA(2)	= dmod(pElA(2),aY/vol)	
+		!pelA(1)	= dmod(pElA(1),aX/vol)	
+		!pelA(2)	= dmod(pElA(2),aY/vol)	
 
 
 

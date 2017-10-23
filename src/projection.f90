@@ -74,6 +74,9 @@ module projection
 			!ROTATE BLOCH STATES
 			ckW(:,:,qi)	= matmul( ckH(:,:,qi) , Uq(:,:,qi)	 ) !	
 
+			if( debugProj  ) then
+				if( .not. isUnit(Uq(:,:,qi)) 	) write(*,*) "[projectUNK]: Uq not a unitary matrix at qi=",qi
+			end if
 
 			!!!!!!ROTATE BLOCH STATES
 			!!!!!!$OMP PARALLEL DO SCHEDULE(STATIC) DEFAULT(SHARED) PRIVATE(xi, phase)
@@ -310,7 +313,46 @@ module projection
 
 
 	subroutine calcAmat(qi,ckH ,gnr, A)
+		integer,		intent(in)	:: qi
+		complex(dp),	intent(in)	:: ckH(:,:), gnr(:,:) 
+		complex(dp),	intent(out)	:: A(:,:) !A(nBands,nWfs)
 		!calculates the inner product matrix of bwfs and trial orbital gnr
+		if( doProjNUM ) then
+			if( qi==1 )		write(*,*)"[calcAmat]: numeric calculation of projection matrix A"
+			call calcAmatNUM(qi, ckH, gnr, A)
+		else
+			if( qi == 1)	write(*,*)"[calcAmat]: analytic calculation of projection matrix A"
+			call calcAmatANA(qi, ckH, A)
+		end if
+		!
+		!
+		return
+	end subroutine
+
+
+	subroutine calcAmatANA(qi,ckH, A)
+		!analytic projection with hard coded integrals
+		!	projection onto sin**2, sin cos, cos sin
+		integer,		intent(in)	:: qi
+		complex(dp),	intent(in)	:: ckH(:,:)
+		complex(dp),	intent(out)	:: A(:,:) !A(nBands,nWfs)
+		integer						:: n, m
+		!
+		A	= dcmplx(0.0_dp)
+		!reminder: use dconjg on ckH
+		do n = 1, nWfs
+			do m = 1, nBands
+				!A(m,n) = 
+			end do
+		end do
+
+		!
+		return
+	end subroutine
+
+
+	subroutine calcAmatNUM(qi, ckH, gnr, A)
+		!numerical caluclation allows for quick change of trial orbitals 
 		integer,		intent(in)	:: qi
 		complex(dp),	intent(in)	:: ckH(:,:), gnr(:,:) 
 		complex(dp),	intent(out)	:: A(:,:) !A(nBands,nWfs)
@@ -328,6 +370,7 @@ module projection
 			!GET BASIS VECTOR
 			call calcBasis(qi,xi, basVec)
 			psi(:)	= matmul( basVec, ckH ) / dsqrt(vol)
+			psi(:)	= dconjg(psi)
 			!CALC OVERLAP AT CURRENT GRID POINT
 			do n = 1, nWfs
 				do m = 1 , nBands 

@@ -137,7 +137,7 @@ module wannier
 				do qi = 1 , nQ
 					call calcBasis(qi, xi, basVec)
 					phase			= myExp( -1.0_dp *	dot_product( qpts(:,qi) ,  Rcell(:,Ri) ) )	
-					!phase			= phase 	/ ( dsqrt(real(nSC,dp)) * dsqrt(vol) )
+					phase			= phase 	/ ( dsqrt(real(nSC,dp)) )
 					!phase			= phase		/ dsqrt( vol )
 					wnF(xi,Ri,:)	= wnF(xi,Ri,:) + phase * matmul( basVec, ckW(:,:,qi)	)
 				end do

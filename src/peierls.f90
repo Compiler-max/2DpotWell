@@ -52,7 +52,7 @@ module peierls
 		write(*,*)	"[peierlsMethod]: substiution of hopping parameters done"
 
 		
-		
+		!ELECTRONIC STRUCTURE
 		do ki = 1, nK
 			!SET UP HAMILTONIAN
 			Hp	= dcmplx(0.0_dp)
@@ -67,21 +67,19 @@ module peierls
 		end do
 
 
-		!call projectUnk(unkP, unkP, Up)
-		!call TBviaKspace(unkP, EnP, Up, tHopp, rHopp)
-		!call DoWannInterpol(rHopp, tHopp, EnP, AconnP, FcurvP, veloP)
+	
 
 
 		!GENERATE CONNECTION
 		AconnP	= dcmplx(0.0_dp)
-		!call calcConnOnCoarse(ckP, AconnP) todo
+		call calcConnOnCoarse(ckP, AconnP) 
 
 
 		!CALC POL
 		call calcPolViaA(AconnP, pPei)
 
 		!WRITE UNKs & ENERGIES
-		!call writePeierls(ckP, EnP) todo
+		if( writeBin ) call writePeierls(ckP, EnP)
 
 
 		!DEBUG

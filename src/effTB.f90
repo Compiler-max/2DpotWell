@@ -171,7 +171,7 @@ use omp_lib
 						if(		 n==m 	) then		!.and.			 abs(one-dcmplx(1.0_dp)) > acc ) then
 							write(*,'(a,i2,a,f6.3,a,f6.3)') "[calcConnOnCoarse]: n=m=",n," one=",dreal(one),"+i*",dimag(one)
 						else
-							write(*,'(a,f6.3,a,f6.3)') "[calcConnOnCoarse]:  one=",dreal(one),"+i*",dimag(one)
+							write(*,'(a,f10.8,a,f10.8)') "[calcConnOnCoarse]:  one=",dreal(one),"+i*",dimag(one)
 						end if
 
 
@@ -211,8 +211,8 @@ use omp_lib
 		integer							:: gi
 		!
 		UNKoverlap	= dcmplx(0.0_dp)
-		do gi = 1 , nG
-			UNKoverlap = UNKoverlap + vol * dconjg( ck(gi,n,qi) ) * ck(gi,m,qi)
+		do gi = 1 , size(ck,1)
+			UNKoverlap = UNKoverlap + vol * dconjg( ck(gi,n,qi) ) * ck(gi,m,knb) 
 		end do
 		!
 		!

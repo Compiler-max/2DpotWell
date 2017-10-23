@@ -71,7 +71,7 @@ module potWellModel
 		end do
 		write(*,*)			"[solveHam]: copied eigenvalues"
 		write(*,*)			"[solveHam]: found ", countBandsSubZero(EnT)," bands at the gamma point beneath zero"
-		if( writeBin )	call writeEnAndCK(EnT, ck)
+		call writeEnAndCK(EnT, ck)
 		!
 		!
 		!
