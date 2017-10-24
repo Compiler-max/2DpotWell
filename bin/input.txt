@@ -15,33 +15,33 @@
     Zion        = 1.00 1.00
 
 [numerics]
-    nGdim       = 32
-    Gcut        = 100.0        
-    nQx         = 4   
-    nQy         = 4
-    nSCx        = 4 
-    nSCy        = 4
+    nGdim       = 16
+    Gcut        = 10.0        
+    nQx         = 8   
+    nQy         = 8
+    nSCx        = 8 
+    nSCy        = 8
     nRx         = 80   
     nRy         = 80
     thres       = 0.1
 
 [methods]
-    doSolveHam  = t
+    doSolveHam  = f
     doVdesc     = f
-    doProj      = f
+    doProj      = t
     doProjNUM   = t
     doGaugBack  = f
     doBerry     = t
-    doWanni     = f
+    doWanni     = t
     doNiu       = t
-    doPei       = f 
+    doPei       = t
 
 [output]
     writeBin    = t
 
 
 [debug]
-    debugHam    = f
+    debugHam    = t
     debugProj   = t
     debugWann   = f
 
@@ -53,8 +53,8 @@
     trialOrbSw  = 0
     trialOrbVAL = 1.0 1.0
     R0          = 11
-    nKx         = 4
-    nKy         = 4
+    nKx         = 8
+    nKy         = 8
     connSwitch  = 1
     gaugeBack   = 0
   

@@ -49,8 +49,8 @@ module potWellModel
 			!ELECTRONIC STRUCTURE
 
 			call populateH(kVal, Hmat) 	!omp
-			call eigSolver(Hmat(1:nCut,1:nCut), EnT(1:nCut,qi))	!mkl
-			ck(1:nCut,1:nBands,qi)	= Hmat(1:nG,1:nBands)
+			call eigSolver(Hmat, EnT(:,qi))	!mkl
+			ck(1:nG,1:nBands,qi)	= Hmat(1:nG,1:nBands)
 
 			!
 			!BLOCH WAVEFUNCTIONS
@@ -66,15 +66,6 @@ module potWellModel
 			!
 		end do
 		!
-		!CUTOFF
-		do qi = 1, nQ
-			do gi = 1, nG
-				kVal= qpts(:,qi) + Gvec(:,gi)
-				if( 0.5*dot_product(kVal,kVal) > Gcut)   then
-					ck(gi,:,qi) = dcmplx(0.0_dp)
-				end if
-			end do
-		end do
 		!
 		!COPY & WRITE ENERGIES/BWFs
 		do qi = 1, size(En,2)
@@ -111,9 +102,9 @@ module potWellModel
 		!and checks if the resulting matrix is still hermitian( for debugging)
 		real(dp)   , intent(in)    	:: q(2)
 		complex(dp), intent(inout) 	:: Hmat(:,:)
-		real(dp)					:: kg(2)
+		real(dp)					:: kgi(2), kgj(2)
 		complex(dp)					:: onSite
-		integer						:: i, j, gi
+		integer						:: i, j
 		!init to zero
 		Hmat = dcmplx(0.0_dp) 
 		!
@@ -121,15 +112,18 @@ module potWellModel
 
 
 
-		!!!$OMP PARALLEL DO SCHEDULE(DYNAMIC) COLLAPSE(2) DEFAULT(SHARED) PRIVATE(j, i, kg, onSite)
+		!!!$OMP PARALLEL DO SCHEDULE(DYNAMIC) COLLAPSE(2) DEFAULT(SHARED) PRIVATE(j, i, kgi, kgj, onSite)
 		do j = 1, nG
 			do i = 1, nG
-				if(i == j )	then
-					kg(:) 	= q(:) + Gvec(:,i)
-					onSite	= 0.5_dp * 	dot_product(kg,kg)
-					Hmat(i,j)	=	V(i,j)	+	onSite
-				else
-					Hmat(i,j)	=	V(i,j)
+				kgi(:) 	= q(:) + Gvec(:,i)
+				kgj(:)	= q(:) + Gvec(:,j)
+				if( norm2(kgi) < Gcut .and. norm2(kgj) < Gcut ) then
+					if(i == j )	then	
+						onSite	= 0.5_dp * 	dot_product(kgi,kgi)
+						Hmat(i,j)	=	V(i,j)	+	onSite
+					else
+						Hmat(i,j)	=	V(i,j)
+					end if
 				end if
 			end do
 		end do
