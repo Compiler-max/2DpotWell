@@ -384,7 +384,7 @@ module output
 	end subroutine
 
 
-	subroutine writePolFile(pWann, pBerry, pNiu, pPei )
+	subroutine writePolFile(pWann, pBerry, pNiu, pPei )	!writePolFile(pWann, pBerry, pNiu, pPei )
 		real(dp),		intent(in)		:: pWann(2), pBerry(2), pNiu(3), pPei(3)
 		!	
 		!	
@@ -403,10 +403,10 @@ module output
 		write(600,*) "aX/vol=",aX/vol,"aY/vol=",aY/vol
 
 	
-		write(600,'(a,f8.4,a,f8.4,a,a,f8.4,a,f8.4,a)')	"pWann =  (",  pWann(1)	,	", ",	pWann(2),		"),",& 
+		write(600,'(a,f12.8,a,f12.8,a,a,f12.8,a,f12.8,a)')	"pWann =  (",  pWann(1)	,	", ",	pWann(2),		"),",& 
 												" moded=(",dmod(pWann(1),aX/vol),", ",dmod(pWann(2),aY/vol),")."
 		!
-		write(600,'(a,f8.4,a,f8.4,a,a,f8.4,a,f8.4,a)')	"pBerry=  (",		pBerry(1)	,	", ",	pBerry(2),		"),",& 
+		write(600,'(a,f12.8,a,f12.8,a,a,f12.8,a,f12.8,a)')	"pBerry=  (",		pBerry(1)	,	", ",	pBerry(2),		"),",& 
 												" moded=(",dmod(pBerry(1),aX/vol),", ",dmod(pBerry(2),aY/vol),")."
 		!write(600,'(a,e16.9,a,f16.12,a,f16.12,a)')	"pInt= ",norm2(pInt)," * (", &	
 		!														pInt(1)/norm2(pInt),	", ",	pInt(2)/norm2(pInt),	")"

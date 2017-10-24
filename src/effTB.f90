@@ -208,13 +208,17 @@ use omp_lib
 		integer,		intent(in)		:: n, m, qi, knb
 		complex(dp),	intent(in)		:: ck(:,:,:)  !ck(			nG		,	nBands  	,	nQ	)		
 		complex(dp),	allocatable		:: f(:)
-		integer							:: gi
+		integer							:: gi, gj
 		!
 		UNKoverlap	= dcmplx(0.0_dp)
-		!do gi = 1 , size(ck,1)
-		!	UNKoverlap = UNKoverlap + dconjg( ck(gi,n,qi) ) * ck(gi,m,knb) 
-		!end do
-		UNKoverlap = dot_product( ck(:,n,qi) , ck(:,m,knb)	)
+		
+		do gi = 1, nG
+			do gj = 1, nG
+				UNKoverlap	= UNKoverlap +  dconjg( ck(gi,n,qi) ) * ck(gj,m,knb) 
+			end do
+		end do
+
+		!UNKoverlap = dot_product( ck(:,n,qi) , ck(:,m,knb)	)
 		!
 		!
 		return

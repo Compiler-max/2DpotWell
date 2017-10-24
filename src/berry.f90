@@ -50,7 +50,7 @@ module berry
 		
 		!INTEGRATE CONNECTION
 		call calcPolViaA(AconnK,pBerry)
-		write(*,*)	"[berrryMethod]: calculated zero order pol"
+		write(*,'(a,f12.8,a,f12.8,a)')	"[berrryMethod]: calculated zero order pol=(",pBerry(1),", ",pBerry(2),")."
 		
 
 

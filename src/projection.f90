@@ -151,29 +151,34 @@ module projection
 
 
 		!SINGLE ATOM
-		!do n = 1, nWfs
-		!	do ri = 1, nR
-		!		if( 0.0_dp < rpts(1,ri) .and.  rpts(1,ri) < aX .and. 0.0_dp < rpts(2,ri) .and. rpts(2,ri) < aY) then
-		!			if( 	insideAt(1, rpts(:,ri)))	then
-		!				gnr(ri,n)	= potWell(1,n,ri)
-		!			end if
-		!		end if
-		!	end do
-		!end do
-
-		!TWO ATOMS
-		do n = 1, nWfs-1, 2
-			do ri = 1, nR
-				if( 0.0_dp < rpts(1,ri) .and.  rpts(1,ri) < aX .and. 0.0_dp < rpts(2,ri) .and. rpts(2,ri) < aY) then
-					if( 	insideAt(1, rpts(:,ri)))	then
-						gnr(ri,n)	= potWell(1,n,ri)
-					else if( insideAt(2, rpts(:,ri)) ) then
-						gnr(ri,n+1) = potWell(2,n,ri)
+		if( nAt == 1 ) then
+			write(*,*)	"[genTrialOrb]: assuming a one atom per unit cell" 
+			do n = 1, nWfs
+				do ri = 1, nR
+					if( 0.0_dp < rpts(1,ri) .and.  rpts(1,ri) < aX .and. 0.0_dp < rpts(2,ri) .and. rpts(2,ri) < aY) then
+						if( 	insideAt(1, rpts(:,ri)))	then
+							gnr(ri,n)	= potWell(1,n,ri)
+						end if
 					end if
-				end if
+				end do
 			end do
-		end do		
-
+		!TWO ATOMS
+		else if( nAt == 2) then
+			write(*,*)	"[genTrialOrb]: assuming a two atoms per unit cell" 
+			do n = 1, nWfs-1, 2
+				do ri = 1, nR
+					if( 0.0_dp < rpts(1,ri) .and.  rpts(1,ri) < aX .and. 0.0_dp < rpts(2,ri) .and. rpts(2,ri) < aY) then
+						if( 	insideAt(1, rpts(:,ri)))	then
+							gnr(ri,n)	= potWell(1,n,ri)
+						else if( insideAt(2, rpts(:,ri)) ) then
+							gnr(ri,n+1) = potWell(2,n,ri)
+						end if
+					end if
+				end do
+			end do		
+		else
+			write(*,*)	"[genTrialOrb]: to many atoms per unit cell for trial orbitals" 
+		end if
 
 		return
 	end subroutine
@@ -313,15 +318,31 @@ module projection
 		!
 		A	= dcmplx(0.0_dp)
 		!reminder: use dconjg on ckH
-		do n = 1, nWfs
-			do m = 1, nBands
-				if( mod(n,2) == 0 ) then
+		!
+		!
+		!SINGLE ATOM
+		if( nAt == 1 ) then
+			do n = 1, nWfs
+				do m = 1, nBands
 
-				else 
-
-				end if
+				end do
 			end do
-		end do
+		!DUAL ATOMS
+		else if( nAt == 2 ) then
+			do n = 1, nWfs
+				do m = 1, nBands
+					if( mod(n,2) == 0 ) then
+
+					else 
+
+					end if
+				end do
+			end do
+		!FALLBACK
+		else
+			write(*,*)	"[calcAmatANA]: more then two atoms per unit cell. I can only handle two tough"
+		end if 
+		
 
 		!
 		return

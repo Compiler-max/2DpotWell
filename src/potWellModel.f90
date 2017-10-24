@@ -44,11 +44,10 @@ module potWellModel
 		!
 		!MPI scatter : unk, EnT
 		do qi = 1, nQ
-			kVal	=	qpts(:,qi)
 			!
 			!ELECTRONIC STRUCTURE
 
-			call populateH(kVal, Hmat) 	!omp
+			call populateH(qi, Hmat) 	!omp
 			call eigSolver(Hmat, EnT(:,qi))	!mkl
 			ck(1:nG,1:nBands,qi)	= Hmat(1:nG,1:nBands)
 
@@ -95,14 +94,14 @@ module potWellModel
 
 !private:
 	!POPULATION OF H MATRIX
-	subroutine populateH(q, Hmat)
+	subroutine populateH(qi, Hmat)
 		!populates the Hamiltonian matrix by adding 
 		!	1. qinetic energy terms
 		!	2. potential terms
 		!and checks if the resulting matrix is still hermitian( for debugging)
-		real(dp)   , intent(in)    	:: q(2)
+		integer,		intent(in)	:: qi
 		complex(dp), intent(inout) 	:: Hmat(:,:)
-		real(dp)					:: kgi(2), kgj(2)
+		real(dp)					:: kgi(2), kgj(2), q(2)
 		complex(dp)					:: onSite
 		integer						:: i, j
 		!init to zero
@@ -110,9 +109,9 @@ module potWellModel
 		!
 		!GET CUTOFF
 
+		q(:)	= qpts(:,qi)
 
-
-		!!!$OMP PARALLEL DO SCHEDULE(DYNAMIC) COLLAPSE(2) DEFAULT(SHARED) PRIVATE(j, i, kgi, kgj, onSite)
+		!!!$OMP PARALLEL DO SCHEDULE(DYNAMIC) COLLAPSE(2) DEFAULT(SHARED) FIRSTPRIVATE(q) PRIVATE(j, i, kgi, kgj, onSite)
 		do j = 1, nG
 			do i = 1, nG
 				kgi(:) 	= q(:) + Gvec(:,i)

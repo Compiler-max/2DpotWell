@@ -120,6 +120,7 @@ program main
 		write(*,*)"[main]:**************************WAVEFUNCTION METHOD*************************"
 		call berryMethod(ckW, En, Uq, pBerry, pNiu, pPei)
 		write(*,*)"[main]: done with wavefunction method "
+		write(*,'(a,f12.8,a,f12.8,a)')	"[main]: calculated zero order pBerry=(",pBerry(1),", ",pBerry(2),")."
 	else
 		write(*,*)"[main]: berry method disabled"
 	end if

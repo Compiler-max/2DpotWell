@@ -112,17 +112,13 @@ module polarization
 			!end if
 
 			pelA(:)	= pElA(:) + dreal(val(:)) 
+			write(*,'(a,i3,a,f8.4,a,f8.4,a)')	"[calcPolViaA]: n=",n,"dreal(p)=",pElA(1),",",pElA(2),")."
 		end do
 		
 
 		!MOD QUANTUM
 		!pelA(1)	= dmod(pElA(1),aX/vol)	
 		!pelA(2)	= dmod(pElA(2),aY/vol)	
-
-		!
-		if( dimag(val(1)) > acc .or. dimag(val(2)) > acc ) then
-			write(*,*)	"[calcPolViaA]: warning, connection has imaginary part none zeroDoGaugeTrafo(unkW, tHopp, EnH, AconnH, FcurvH, veloH)"
-		end if 
 		
 		return
 	end subroutine

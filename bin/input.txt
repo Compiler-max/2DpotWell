@@ -5,22 +5,22 @@
     aY          = 10
 
 [atoms]
-    nAt         = 2       
-    relXpos     = 0.25 0.75     
-    relYpos     = 0.50 0.50
-    atRx        = 1.00 1.00   
-    atRy        = 1.00 1.00
-    atPot       = -3.0 -3.0
-    dVpot       = 0.00 0.00  
-    Zion        = 1.00 1.00
+    nAt         = 1       
+    relXpos     = 0.50     
+    relYpos     = 0.50 
+    atRx        = 1.00    
+    atRy        = 1.00
+    atPot       = -3.0
+    dVpot       = 0.00   
+    Zion        = 1.00
 
 [numerics]
-    nGdim       = 16
-    Gcut        = 10.0        
-    nQx         = 8   
-    nQy         = 8
-    nSCx        = 8 
-    nSCy        = 8
+    nGdim       = 32
+    Gcut        = 20.0        
+    nQx         = 4   
+    nQy         = 4
+    nSCx        = 4 
+    nSCy        = 4
     nRx         = 80   
     nRy         = 80
     thres       = 0.1
@@ -48,13 +48,13 @@
 
 [wann]
     gaugeSwitch = 0
-    nBands      = 6
-    nWfs        = 6
+    nBands      = 3
+    nWfs        = 3
     trialOrbSw  = 0
-    trialOrbVAL = 1.0 1.0
+    trialOrbVAL = 1.0
     R0          = 11
-    nKx         = 8
-    nKy         = 8
+    nKx         = 4
+    nKy         = 4
     connSwitch  = 1
     gaugeBack   = 0
   
@@ -63,3 +63,5 @@
 [perturbation]
     B0          = 0.0               #hbar/(e*a0**2)
     Bext        = 0.0 0.0 1.0
+
+
