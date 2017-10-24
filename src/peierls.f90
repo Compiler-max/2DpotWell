@@ -1,5 +1,5 @@
 module peierls
-	use mathematics,	only:	dp, PI_dp, i_dp, myExp, crossP, nIntegrate, eigSolver
+	use mathematics,	only:	dp, PI_dp, i_dp, myExp, crossP, nIntegrate, eigSolver, isUnit
 	use sysPara
 	use projection,		only:	projectUnk
 	use effTB,			only:	calcConnOnCoarse
@@ -64,6 +64,7 @@ module peierls
 			call eigSolver(Hp(:,:),EnP(:,ki))
 			!
 			ckP(:,:,ki)	= HP(:,:)
+			if( .not. isUnit(ckP(:,:,ki))	) write(*,*) "[peierlsMethod]: ckP not unitary at ki=",ki
 		end do
 
 

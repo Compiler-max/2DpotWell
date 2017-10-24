@@ -3,7 +3,8 @@ module projection
 	!	this includes the calculation of the orthonormalized projected bloch wavefunctions
 	!	and the FT of the bwfs to calculate the wannier functions
 	use omp_lib
-	use mathematics, 	only: 	dp, PI_dp, acc, myExp, nIntegrate, eigSolver,  mySVD, myMatInvSqrt, isUnit, isIdentity, isHermitian
+	use mathematics, 	only: 	dp, PI_dp, acc, machineP,&
+								myExp, nIntegrate, eigSolver,  mySVD, myMatInvSqrt, isUnit, isIdentity, isHermitian
 	use sysPara
 	use blochWf,		only:	calcBasis, genUnk, testNormUNK
 	use output,			only:	writeInterpBands
@@ -31,7 +32,7 @@ module projection
 	subroutine projectUnk(ckH, ckW, Uq)	!projectBwf(qi, bWf, loBwf, U(:,:), failCount, smin, smax)
 		!does the projection onto Loewdin-orthonormalized Bloch-like states
 		!see Marzari, Vanderbilt PRB 56, 12847 (1997) Sec.IV.G.1 for detailed description of the method 
-		complex(dp)	,	intent(in)		:: ckH(:,:,:)  ! unk(nR,nG,nQ)
+		complex(dp)	,	intent(in)		:: ckH(:,:,:)  ! 	ck(nG,nBands  ,	nQ)		
 		complex(dp)	,	intent(out)		:: ckW(:,:,:), Uq(:,:,:)	! Uq(nBands	,nWfs, 	nQ	)	
 		real(dp),		allocatable		:: EnP(:,:)	
 		complex(dp)	,	allocatable		:: loBwf(:,:), gnr(:,:), A(:,:), Ham(:,:), tmp(:,:)
@@ -75,42 +76,14 @@ module projection
 			ckW(:,:,qi)	= matmul( ckH(:,:,qi) , Uq(:,:,qi)	 ) !	
 
 			if( debugProj  ) then
-				if( .not. isUnit(Uq(:,:,qi)) 	) write(*,*) "[projectUNK]: Uq not a unitary matrix at qi=",qi
+				!if( .not. isUnit(ckW(:,:,qi))	)	write(*,*) "[projectUNK]: ckW not a unitary matrix at qi=",qi
+				if( .not. isUnit(Uq(:,:,qi)) 	) 	write(*,*) "[projectUNK]: Uq not a unitary matrix at qi=",qi
 			end if
 
-			!!!!!!ROTATE BLOCH STATES
-			!!!!!!$OMP PARALLEL DO SCHEDULE(STATIC) DEFAULT(SHARED) PRIVATE(xi, phase)
-			!!!!!do xi = 1, nR
-			!!!!!	phase		= myExp(	dot_product(qpts(:,qi),rpts(:,xi))		)
-			!!!!!	loBwf(xi,:) = matmul(	phase * unk(xi,1:nBands,qi) / dsqrt(real(nSC,dp)), Uq(:,:,qi)	)
-			!!!!!end do
-			!!!!!!$OMP END PARALLEL DO
-			!!!!!!
-			!!!!!!OVERWRITE UNKS WITH PROJECTED UNKs
-			!!!!!call genUnk(qi, lobWf, unkP(:,:,qi))
 		end do
 		!
 
 		write(*,*)	"[projectUnk]: done with projections at each k point"	
-		!
-		!
-		!DEBUG
-		!if( debugProj ) then
-		!	write(*,*)		"[projectUnk]: start test normalization of projected unks"
-		!	!if(.not. testNormUNK(unkP)	) then
-		!	!	write(*,*)	"[projectUnk]: found normalization issues for projected unks"
-		!	!else
-		!	!	write(*,*)	"[projectUnk]: no issues detected"
-		!	!end if
-		!	!
-		!	!
-		!	if( .not. doProj ) then 
-		!		write(*,*)		"[projectUnk]: start unk comparisson"
-		!		call compareUNKs(unk,unkP)
-		!	end if 
-		!end if
-		!write(*,*)			"[projectUnk]: finished debuging."
-		!
 		!
 		return
 	end subroutine
@@ -342,7 +315,11 @@ module projection
 		!reminder: use dconjg on ckH
 		do n = 1, nWfs
 			do m = 1, nBands
-				!A(m,n) = 
+				if( mod(n,2) == 0 ) then
+
+				else 
+
+				end if
 			end do
 		end do
 
@@ -350,6 +327,35 @@ module projection
 		return
 	end subroutine
 
+
+	complex(dp) function g1Int(qi, at,ckH)
+		integer,		intent(in)	:: qi, at
+		complex(dp),	intent(in)	:: ckH(:,:)
+		complex(dp)					:: num1, num2, denom
+		real(dp)					:: kappa, xL, xR, yL, yR, Gx, Gy, kG
+		integer						:: gi
+		!
+		g1Int 	= dcmplx(0.0_dp)
+		!xL 		= atPos[1,at] - atR[1,at] 
+		!xR		= atPos[1,at] + atR[1,at]
+		!yL		= atPos[2,at] - atR[2,at]
+		!yR		= atPos[2,at] + atR[2,at]
+
+		!
+		do gi = 1, nG
+			!
+
+			!num1 	= 
+			!num2 	=
+			denom	= machineP
+			denom	= denom + dsqrt(vol) * (Gy**2-kappa**2) * (kappa**2-Gx**2)  
+			!
+			g1Int = g1Int +  num1 * num2 / denom
+		end do
+
+
+		return
+	end function
 
 	subroutine calcAmatNUM(qi, ckH, gnr, A)
 		!numerical caluclation allows for quick change of trial orbitals 

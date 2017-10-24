@@ -118,11 +118,12 @@ for n in range(nWfs):
 
 	#plot atoms
 	for at in range(nAt):
-		ax.plot(atPos[at,0],atPos[at,1],marker='+',color='white')
-		ax.plot([atPos[at,0]-1,atPos[at,0]-1]	, [atPos[at,1]-1,atPos[at,1]+1],color=atColor,linewidth=0.2)
-		ax.plot([atPos[at,0]+1,atPos[at,0]+1]	, [atPos[at,1]-1,atPos[at,1]+1],color=atColor,linewidth=0.2)
-		ax.plot([atPos[at,0]-1,atPos[at,0]+1]	, [atPos[at,1]-1,atPos[at,1]-1],color=atColor,linewidth=0.2)
-		ax.plot([atPos[at,0]-1,atPos[at,0]+1]	, [atPos[at,1]+1,atPos[at,1]+1],color=atColor,linewidth=0.2)
+		print(atPos[at,1])
+		ax.plot(2*aX+atPos[at,0],2*aX+atPos[at,1],marker='+',color='white')
+		ax.plot([2*aX+atPos[at,0]-1,2*aX+atPos[at,0]-1]	, [2*aX+atPos[at,1]-1, 2*aX+atPos[at,1]+1],color=atColor,linewidth=0.2)
+		ax.plot([2*aX+atPos[at,0]+1,2*aX+atPos[at,0]+1]	, [2*aX+atPos[at,1]-1, 2*aX+atPos[at,1]+1],color=atColor,linewidth=0.2)
+		ax.plot([2*aX+atPos[at,0]-1,2*aX+atPos[at,0]+1]	, [2*aX+atPos[at,1]-1, 2*aX+atPos[at,1]-1],color=atColor,linewidth=0.2)
+		ax.plot([2*aX+atPos[at,0]-1,2*aX+atPos[at,0]+1]	, [2*aX+atPos[at,1]+1, 2*aX+atPos[at,1]+1],color=atColor,linewidth=0.2)
 	
 	xticks 		= np.arange(0,aX*(nKx+1),  aX	)		
 	xtickLabel	= np.arange(int(0),int(nKx+1)  )

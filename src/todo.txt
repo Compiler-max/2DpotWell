@@ -3,6 +3,13 @@
 
 
 
+- plane wave cutoff into new formalism
+	-> here coefficients must be set to zero
+
+
+
+
+
 
 
 -	peierls sub neu machen: mit real space hamiltonian arbeiten, expandieren in basis der null order wannier funktionen
@@ -13,13 +20,13 @@
 
 - projections analytisch (projectUNK/calcAmat)
 		-> am besten mit einem switch für analytisch, numerisch zum vergleich!!!
+
+
 - connection mit neuem formalismus (TBviaKspace/CalcConnOnCoarse/UNKoverlap )
 
 
 - write unks for peierls
 
-- intel mkl matrix operations
-	- projections/projectUNK: matmul umschreiben
 
 
 - convergence tests:

@@ -407,7 +407,7 @@ module output
 												" moded=(",dmod(pWann(1),aX/vol),", ",dmod(pWann(2),aY/vol),")."
 		!
 		write(600,'(a,f8.4,a,f8.4,a,a,f8.4,a,f8.4,a)')	"pBerry=  (",		pBerry(1)	,	", ",	pBerry(2),		"),",& 
-												" moded=(",modulo(pBerry(1),aX/vol),", ",modulo(pBerry(2),aY/vol),")."
+												" moded=(",dmod(pBerry(1),aX/vol),", ",dmod(pBerry(2),aY/vol),")."
 		!write(600,'(a,e16.9,a,f16.12,a,f16.12,a)')	"pInt= ",norm2(pInt)," * (", &	
 		!														pInt(1)/norm2(pInt),	", ",	pInt(2)/norm2(pInt),	")"
 		!write(600,'(a,e16.9,a,f16.12,a,f16.12,a)')	"pIon= ",norm2(pIon)," * (", &	

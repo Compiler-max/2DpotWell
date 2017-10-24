@@ -211,9 +211,10 @@ use omp_lib
 		integer							:: gi
 		!
 		UNKoverlap	= dcmplx(0.0_dp)
-		do gi = 1 , size(ck,1)
-			UNKoverlap = UNKoverlap + vol * dconjg( ck(gi,n,qi) ) * ck(gi,m,knb) 
-		end do
+		!do gi = 1 , size(ck,1)
+		!	UNKoverlap = UNKoverlap + dconjg( ck(gi,n,qi) ) * ck(gi,m,knb) 
+		!end do
+		UNKoverlap = dot_product( ck(:,n,qi) , ck(:,m,knb)	)
 		!
 		!
 		return

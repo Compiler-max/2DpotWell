@@ -33,11 +33,11 @@ module polarization
 			cent(2)	= dmod(wCent(2,n),aY)
 			!
 			
-			if( mod(n,2) == 0 ) then
-				cent(:) = cent(:) - atPos(:,2)
-			else
-				cent(:) = cent(:) - atPos(:,1)
-			end if
+			!if( mod(n,2) == 0 ) then
+			!	cent(:) = cent(:) - atPos(:,2)
+			!else
+			!	cent(:) = cent(:) - atPos(:,1)
+			!end if
 
 			write(*,'(a,f8.5,a,f8.5,a,f8.6,a,f8.6,a)')"[calc0ElPol]: Wcent = (",wCent(1,n),", ",wCent(2,n),") modified cent = (", cent(1),", ",cent(2),")"
 			pE = pE + cent(:)				
@@ -88,7 +88,6 @@ module polarization
 		allocate(	val( size(A,1) )	)
 		val		= dcmplx(0.0_dp)
 		machine	= 1e-15_dp
-		bondC(:)	=  atPos(:,1) !+ atPos(:,2) ) / 2
 		
 		!
 		!
@@ -100,35 +99,30 @@ module polarization
 			do qi = 1, size(A,4)
 				val(1:2)	= val(1:2) + A(1:2,n,n,qi) / real(size(A,4),dp)
 			end do
+			write(*,'(a,i3,a,f8.4,a,f8.4,a)')	"[calcPolViaA]: n=",n,"dreal(p_n)=",dreal(val(1)),",",dreal(val(2)),")."
+
+			if( abs(dimag(val(1))) > acc .or. abs(dimag(val(2))) > acc	) then
+				write(*,*)	"[calcPolViaA]: found non zero imaginary contribution from band n=",n 
+			end if
 			!relative to bond center
-			val	= val - bondC
+			!if( mod(n,2) == 0 ) then
+			!	val(:) = val(:) - atPos(:,2)
+			!else
+			!	val(:) = val(:) - atPos(:,1)
+			!end if
 
 			pelA(:)	= pElA(:) + dreal(val(:)) 
 		end do
 		
 
-
-
 		!MOD QUANTUM
 		!pelA(1)	= dmod(pElA(1),aX/vol)	
 		!pelA(2)	= dmod(pElA(2),aY/vol)	
-
-
-
-
-
-
-
-
-
 
 		!
 		if( dimag(val(1)) > acc .or. dimag(val(2)) > acc ) then
 			write(*,*)	"[calcPolViaA]: warning, connection has imaginary part none zeroDoGaugeTrafo(unkW, tHopp, EnH, AconnH, FcurvH, veloH)"
 		end if 
-		
-		!
-		!MOD QUANTUM e \vec{a} / V0
 		
 		return
 	end subroutine

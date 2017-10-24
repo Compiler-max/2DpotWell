@@ -16,25 +16,25 @@
 
 [numerics]
     nGdim       = 32
-    Gcut        = 5.0        
+    Gcut        = 100.0        
     nQx         = 4   
     nQy         = 4
     nSCx        = 4 
     nSCy        = 4
-    nRx         = 64   
-    nRy         = 64
+    nRx         = 80   
+    nRy         = 80
     thres       = 0.1
 
 [methods]
-    doSolveHam  = f
+    doSolveHam  = t
     doVdesc     = f
     doProj      = f
     doProjNUM   = t
     doGaugBack  = f
     doBerry     = t
-    doWanni     = t
+    doWanni     = f
     doNiu       = t
-    doPei       = t 
+    doPei       = f 
 
 [output]
     writeBin    = t

@@ -30,7 +30,7 @@ module potWellModel
 		real(dp),		intent(out)		::	En(:,:)																	
 		complex(dp),	allocatable		::	Hmat(:,:), unkT(:,:)
 		real(dp),		allocatable		::	EnT(:,:)
-		integer							:: 	qi 
+		integer							:: 	qi, gi, n, nCut
 		real(dp)						::	kVal(2)
 		!
 		allocate(	Hmat(	nG,	nG		)			)
@@ -47,9 +47,11 @@ module potWellModel
 			kVal	=	qpts(:,qi)
 			!
 			!ELECTRONIC STRUCTURE
+
 			call populateH(kVal, Hmat) 	!omp
-			call eigSolver(Hmat, EnT(:,qi))	!mkl
-			ck(1:nG,1:nBands,qi)	= Hmat(1:nG,1:nBands)
+			call eigSolver(Hmat(1:nCut,1:nCut), EnT(1:nCut,qi))	!mkl
+			ck(1:nCut,1:nBands,qi)	= Hmat(1:nG,1:nBands)
+
 			!
 			!BLOCH WAVEFUNCTIONS
 			!call gaugeCoeff(kVal, Hmat)
@@ -64,6 +66,15 @@ module potWellModel
 			!
 		end do
 		!
+		!CUTOFF
+		do qi = 1, nQ
+			do gi = 1, nG
+				kVal= qpts(:,qi) + Gvec(:,gi)
+				if( 0.5*dot_product(kVal,kVal) > Gcut)   then
+					ck(gi,:,qi) = dcmplx(0.0_dp)
+				end if
+			end do
+		end do
 		!
 		!COPY & WRITE ENERGIES/BWFs
 		do qi = 1, size(En,2)
@@ -102,10 +113,13 @@ module potWellModel
 		complex(dp), intent(inout) 	:: Hmat(:,:)
 		real(dp)					:: kg(2)
 		complex(dp)					:: onSite
-		integer						:: i, j
+		integer						:: i, j, gi
 		!init to zero
 		Hmat = dcmplx(0.0_dp) 
 		!
+		!GET CUTOFF
+
+
 
 		!!!$OMP PARALLEL DO SCHEDULE(DYNAMIC) COLLAPSE(2) DEFAULT(SHARED) PRIVATE(j, i, kg, onSite)
 		do j = 1, nG
