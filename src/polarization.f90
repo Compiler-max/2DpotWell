@@ -32,6 +32,20 @@ module polarization
 			cent(1) = dmod(wCent(1,n),aX) !get current center by projection into first unit cell
 			cent(2)	= dmod(wCent(2,n),aY)
 			!
+			!SINGLE ATOM
+			if( nAt == 1 ) then
+				cent(:)	= cent(:) - atPos(:,1)		!calc center w.r.t. atom center
+			!DOUBLE ATOM
+			else if( nAt == 2 ) then
+				if( mod(n,2)== 0 ) then
+					cent(:)	= cent(:) - atPos(:,2)
+				else	
+					cent(:)	= cent(:) - atPos(:,1)
+				end if
+			!DEFAULT
+			else
+				write(*,*)	"[calcPolWannCent]: to many atoms in unit cell!"
+			end if
 			
 			!if( mod(n,2) == 0 ) then
 			!	cent(:) = cent(:) - atPos(:,2)

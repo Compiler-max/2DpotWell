@@ -175,11 +175,11 @@ module potWellModel
 			yR	=	atPos(2,at) + atR(2,at) 
 			!
 			if( i == j) then		
-				Vconst	= Vconst + Vpot 			*	 ( xR - xL ) * 	( yR - yL )			 / vol
+				Vconst	= Vconst + Vpot 			*	( xR - xL ) * 	( yR - yL )			 			/ vol
 			else if( abs(dGx) < machineP ) then	
-				Vconst	= Vconst + Vpot  * i_dp 	* 	( xR - xL ) *( myExp(dGy*yL) - myExp(dGy*yR) )/ ( vol * dGy )
+				Vconst	= Vconst + Vpot  * i_dp 	* 	( xR - xL ) * ( myExp(dGy*yL) - myExp(dGy*yR) )	/ ( vol * dGy )
 			else if( abs(dGy) < machineP ) then
-				Vconst	= Vconst + Vpot * i_dp	 * ( myExp(dGx*xL) - myExp(dGx*xR) ) 	* 	( yR - yL) 		/ (vol * dGx )
+				Vconst	= Vconst + Vpot * i_dp	 	* 	( yR - yL) 	* ( myExp(dGx*xL) - myExp(dGx*xR) ) / (vol * dGx )
 			else
 				Vconst	= Vconst -  Vpot 	 * ( myExp(dGx*xL) - myExp(dGx*xR) ) * ( myExp(dGy*yL) - myExp(dGy*yR) ) / (vol * dGx * dGy )
 			end if

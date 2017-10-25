@@ -78,8 +78,8 @@ wSprd	= np.reshape(wSprd,(nWfs,2))
 
 #for R in range(nK):
 #	for R2 in range(nK):
-R	= 10
-R2	= 10
+R	= 37
+R2	= 37
 for n in range(nWfs):
 	for m in range(nWfs):
 		print("R="+str(R)+", R2="+str(R2) +" n="+str(n)+", m="+str(m)+": oLap="  +str( np.sum(wnfR[n,R,:]* wnfR[m,R2,:] ) / float(nR) ))
@@ -95,7 +95,7 @@ for n in range(nWfs):
 #
 
 #2D HEATMAP
-R = 10				#unit cell
+R = 37				#unit cell
 n = 0				#state			
 
 colorMap 	= 'magma'

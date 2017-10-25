@@ -3,7 +3,7 @@ module projection
 	!	this includes the calculation of the orthonormalized projected bloch wavefunctions
 	!	and the FT of the bwfs to calculate the wannier functions
 	use omp_lib
-	use mathematics, 	only: 	dp, PI_dp, acc, machineP,&
+	use mathematics, 	only: 	dp, PI_dp, i_dp, acc, machineP,&
 								myExp, nIntegrate, eigSolver,  mySVD, myMatInvSqrt, isUnit, isIdentity, isHermitian
 	use sysPara
 	use blochWf,		only:	calcBasis, genUnk, testNormUNK
@@ -142,14 +142,10 @@ module projection
 		if(nWfs > nBands) then
 			write(*,*)"[genTrialOrb]: warning, nWfs larger then nBands! No propper subspace..."
 		end if
-
+		!
 		gammaP	= getGammaPoint()
 		gnr 	= dcmplx(0.0_dp)
-		
-
-	
-
-
+		!
 		!SINGLE ATOM
 		if( nAt == 1 ) then
 			write(*,*)	"[genTrialOrb]: assuming a one atom per unit cell" 
@@ -175,65 +171,14 @@ module projection
 						end if
 					end if
 				end do
-			end do		
+			end do
+		!DEFAULT		
 		else
 			write(*,*)	"[genTrialOrb]: to many atoms per unit cell for trial orbitals" 
 		end if
-
+		!
 		return
 	end subroutine
-
-
-	real(dp) function gaussian(rpt,cent, alpha, width)
-		real(dp),		intent(in)		:: rpt(2), cent(2), alpha, width
-		real(dp)						:: relP(2), val
-		!
-		relP(:)	= rpt(:) - cent(:)
-		gaussian= alpha * exp(	dot_product(relP, relP)	  / (2.0_dp*width)	)
-		!
-		return
-	end function
-
-
-	logical function insideBond( xpt )
-		real(dp),		intent(in)		:: xpt
-		!
-		!insideBond =  (atPos(1,1) - atR(1,1) <= xpt) .and. (xpt <= atPos(1,2)  + atR(1,2))
-		insideBond =  (atPos(1,1)  <= xpt) .and. (xpt <= atPos(1,2) )
-		!
-		return
-	end function
-
-
-
-
-	logical function insideABond( xpt ) 
-		real(dp),		intent(in)		:: xpt
-		logical							:: left, right
-		!
-		left	= (  (atPos(1,1) - 1.0_dp*  atR(1,1) ) <=  xpt)	 .and. ( xpt <= 		atPos(1,1)					)
-		right	= ( 		 atPos(1,2) 		<= 	xpt) .and. ( xpt <= ( atPos(1,2) + 1.0_dp* atR(1,2) )			)	
-		!
-		insideABond = left .or. right
-		!
-		return
-	end function 
-
-
-
-	complex(dp) function gVal(at, n, xi)
-		!wrapper for calling different trial Orbitals according to input file var trialOrbSw
-		integer, 	intent(in)		:: at, n, xi
-		!
-		select case(trialOrbSw)
-			case (1)
-				gVal = infPotWell(at, n, xi)
-			case default
-				gVal = dcmplx(1.0_dp)!dcmplx(	trialOrbVAL(at) /sum( trialOrbVAL )		)
-		end select
-		!
-		return
-	end function
 
 
 
@@ -263,27 +208,6 @@ module projection
 		return
 	end function
 
-
-
-	complex(dp) function infPotWell(at, n, ri)
-		integer, 	intent(in)		:: at, n, ri
-		real(dp)					:: x,y, Lx, Ly, xc, yc, kx, ky, A
-		!
-		x	= rpts(1,ri)
-		y	= rpts(2,ri)
-		Lx 	= 2.0_dp * atR(1,at)
-		Ly 	= 2.0_dp * atR(2,at)
-		xc	= atPos(1,at)
-		yc	= atPos(2,at)
-		kx	= n*PI_dp/ Lx
-		ky	= n*PI_dp/ Ly
-		!
-		A	= dsqrt(4.0_dp / (Lx * Ly)	)
-		!
-		infPotWell = A * dsin( kx*(x -xc + 0.5_dp * Lx) ) * dsin( ky*(y -yc + 0.5_dp * Ly) )
-		!
-		return
-	end function
 
 
 
@@ -324,18 +248,40 @@ module projection
 		if( nAt == 1 ) then
 			do n = 1, nWfs
 				do m = 1, nBands
-
+					select case( n )
+					case(1)
+						A(m,n)	= g1Int(qi,m,1, ckH)
+					case(2)
+						A(m,n)	= g2Int(qi,m,1, ckH)
+					case(3)
+						A(m,n)	= g3Int(qi,m,1, ckH)
+					case default
+						write(*,*)"[calcAmatANA]: Warning hit default in single atom switch"
+						A(m,n)	= dcmplx(0.0_dp)
+					end select
 				end do
 			end do
 		!DUAL ATOMS
 		else if( nAt == 2 ) then
 			do n = 1, nWfs
 				do m = 1, nBands
-					if( mod(n,2) == 0 ) then
-
-					else 
-
-					end if
+					select case( n )
+					case(1)
+						A(m,n)	= g1Int(qi,m,1,ckH)
+					case(2)
+						A(m,n)	= g1Int(qi,m,2,ckH)
+					case(3)
+						A(m,n)	= g2Int(qi,m,1,ckH)
+					case(4)
+						A(m,n)	= g2Int(qi,m,2,ckH)
+					case(5)
+						A(m,n)	= g3Int(qi,m,1,ckH)
+					case(6)
+						A(m,n)	= g3Int(qi,m,2,ckH)
+					case default
+						write(*,*)"[calcAmatANA]: Warning hit default in dual atom switch"
+						A(m,n)	= dcmplx(0.0_dp)
+					end select
 				end do
 			end do
 		!FALLBACK
@@ -349,34 +295,141 @@ module projection
 	end subroutine
 
 
-	complex(dp) function g1Int(qi, at,ckH)
-		integer,		intent(in)	:: qi, at
+	complex(dp) function g1Int(qi,m, at,ckH)
+		integer,		intent(in)	:: qi, m, at
 		complex(dp),	intent(in)	:: ckH(:,:)
 		complex(dp)					:: num1, num2, denom
 		real(dp)					:: kappa, xL, xR, yL, yR, Gx, Gy, kG
 		integer						:: gi
 		!
-		g1Int 	= dcmplx(0.0_dp)
-		!xL 		= atPos[1,at] - atR[1,at] 
-		!xR		= atPos[1,at] + atR[1,at]
-		!yL		= atPos[2,at] - atR[2,at]
-		!yR		= atPos[2,at] + atR[2,at]
-
+		kappa	= PI_dp / (2.0_dp*atR(1,at))
+		if( atR(1,at) /= atR(2,at) ) write(*,*)"[g1Int]: warning analytic projection can not handle non cubic wells"
+		xL 		= atPos(1,at) - atR(1,at) 
+		xR		= atPos(1,at) + atR(1,at)
+		yL		= atPos(2,at) - atR(2,at)
+		yR		= atPos(2,at) + atR(2,at)
 		!
+		g1Int 	= dcmplx(0.0_dp)
 		do gi = 1, nG
 			!
-
-			!num1 	= 
-			!num2 	=
-			denom	= machineP
-			denom	= denom + dsqrt(vol) * (Gy**2-kappa**2) * (kappa**2-Gx**2)  
+			Gx 		= qpts(1,qi) + Gvec(1,gi)
+			Gy		= qpts(2,qi) + Gvec(2,gi)
 			!
-			g1Int = g1Int +  num1 * num2 / denom
+			num1 = dcmplx(0.0_dp)
+			num2 = dcmplx(0.0_dp)
+			denom	= machineP			
+			!
+			!if( abs(dsqrt(Gx**2+Gy**2)) < Gcut) then
+				!
+				num1 	= num1 - myExp(-Gx*xL) * (		 kappa*dcos(xL*kappa)	+ 	i_dp * Gx * dsin(xL*Kappa) 		)
+				num1 	= num1 + myExp(-Gx*xR) * (		 kappa*dcos(xR*kappa)	+	i_dp * Gx * dsin(xR*Kappa)		)
+				!
+				num2 	= num2 + myExp(Gy*yL) * (		 kappa*dcos(yR*kappa)	+	i_dp * Gy * dsin(yR*kappa)		) 
+				num2 	= num2 - myExp(Gy*yR) * (	     kappa*dcos(yL*kappa)	+	i_dp * Gy * dsin(yL*kappa)		)
+				!
+				denom	= denom + myExp(Gy*(yL+yR)) * (Gy**2-kappa**2) * (Gx**2-kappa**2)
+				!  
+			!end if
+			!
+			g1Int = g1Int + dconjg(ckH(gi,m)) * num1 * num2 / (dsqrt(vol) * denom)
 		end do
-
-
+		!
+		!
 		return
 	end function
+
+
+	complex(dp) function g2Int(qi,m, at,ckH)
+		integer,		intent(in)	:: qi, m, at
+		complex(dp),	intent(in)	:: ckH(:,:)
+		complex(dp)					:: num1, num2, denom
+		real(dp)					:: kappa, xL, xR, yL, yR, Gx, Gy, kG
+		integer						:: gi
+		!
+		kappa	= PI_dp / (2.0_dp*atR(1,at))
+		if( atR(1,at) /= atR(2,at) ) write(*,*)"[g1Int]: warning analytic projection can not handle non cubic wells"
+		xL 		= atPos(1,at) - atR(1,at) 
+		xR		= atPos(1,at) + atR(1,at)
+		yL		= atPos(2,at) - atR(2,at)
+		yR		= atPos(2,at) + atR(2,at)
+		!
+		g2Int 	= dcmplx(0.0_dp)
+		do gi = 1, nG
+			!
+			Gx 		= qpts(1,qi) + Gvec(1,gi)
+			Gy		= qpts(2,qi) + Gvec(2,gi)
+			!
+			num1 = dcmplx(0.0_dp)
+			num2 = dcmplx(0.0_dp)
+			denom	= machineP
+			!
+			!if( abs(dsqrt(Gx**2+Gy**2)) < Gcut) then
+				!
+				num1 	= num1 - 		myExp(-Gx*xL)* (		 kappa*dcos(xL*kappa)	+ 	i_dp * Gx * dsin(xL*Kappa) 		)
+				num1 	= num1 + 		myExp(-Gx*xR)* (		 kappa*dcos(xR*kappa)	+	i_dp * Gx * dsin(xR*Kappa)		)
+				!
+				num2 	= num2 + 		myExp(Gy*yR) * ( 		 kappa*dsin(yL*kappa)	-	i_dp * Gy 	 * dcos(yL*kappa)	)
+				num2 	= num2 + i_dp *	myExp(Gy*yL) * (			Gy*dcos(yR*kappa)	+	i_dp * kappa * dsin(yR*kappa)	) 
+				!
+				denom	= denom + myExp(Gy*(yL+yR)) * (Gy**2-kappa**2) * (Gx**2-kappa**2)
+				!  
+			!end if
+			!
+			g2Int = g2Int + dconjg(ckH(gi,m)) * num1 * num2 / (dsqrt(vol) * denom)
+		end do
+		!
+		!
+		return
+	end function
+
+	complex(dp) function g3Int(qi,m, at,ckH)
+		integer,		intent(in)	:: qi, m, at
+		complex(dp),	intent(in)	:: ckH(:,:)
+		complex(dp)					:: num1, num2, denom
+		real(dp)					:: kappa, xL, xR, yL, yR, Gx, Gy, kG
+		integer						:: gi
+		!
+		kappa	= PI_dp / (2.0_dp*atR(1,at))
+		if( atR(1,at) /= atR(2,at) ) write(*,*)"[g3Int]: warning analytic projection can not handle non cubic wells"
+		xL 		= atPos(1,at) - atR(1,at) 
+		xR		= atPos(1,at) + atR(1,at)
+		yL		= atPos(2,at) - atR(2,at)
+		yR		= atPos(2,at) + atR(2,at)
+		!
+		g3Int 	= dcmplx(0.0_dp)
+		do gi = 1, nG
+			!
+			Gx 		= qpts(1,qi) + Gvec(1,gi)
+			Gy		= qpts(2,qi) + Gvec(2,gi)
+			!
+			num1 = dcmplx(0.0_dp)
+			num2 = dcmplx(0.0_dp)
+			denom= machineP
+			!
+			!if( abs(dsqrt(Gx**2+Gy**2)) < Gcut) then
+				!
+				num1	= num1 - i_dp * myExp(Gx*xR) * Gx 		* dcos(xL*kappa)
+				num1	= num1 + i_dp * myExp(Gx*xL) * Gx 		* dcos(xR*kappa)
+				num1	= num1 + 	    myExp(Gx*xR) * kappa 	* dsin(xL*kappa)
+				num1	= num1 - 		myExp(Gx*xL) * kappa	* dsin(xR*kappa)
+				!
+				num2	= num2 - 		myExp(Gy*yR) *  ( kappa	* dcos(yL*kappa) + i_dp * Gy * dsin(yL*kappa) )
+				num2	= num2 +		myExp(Gy*yL) * 	( kappa * dcos(yR*kappa) + i_dp * Gy * dsin(yR*kappa) )
+				!
+				denom	= denom + myExp( Gx*(xL+xR) + Gy*(yL+yR) )	* (Gy**2-kappa**2) * (kappa**2-Gx**2)
+				!  
+			!end if
+			!
+			g3Int = g3Int + dconjg(ckH(gi,m)) * num1 * num2 / (dsqrt(vol) * denom)
+		end do
+		!
+		!
+		return
+	end function
+
+
+
+
 
 	subroutine calcAmatNUM(qi, ckH, gnr, A)
 		!numerical caluclation allows for quick change of trial orbitals 
@@ -413,6 +466,13 @@ module projection
 		!
 		return
 	end subroutine
+
+
+
+
+
+
+
 
 
 	subroutine calcUmat(A, U)
