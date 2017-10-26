@@ -7,7 +7,7 @@ module mathematics
 
 
 	public :: dp, PI_dp, i_dp, acc, setAcc, machineP, myExp, Cangle, myLeviCivita, nIntegrate, crossP,& 
-				isUnit, isIdentity, isHermitian, mySVD, eigSolver, myMatInvSqrt, rotMat, myCommutat
+				isUnit, isIdentity, isHermitian, mySVD, eigSolver, eigSolver2, myMatInvSqrt, rotMat, myCommutat
 
 
 	interface nIntegrate

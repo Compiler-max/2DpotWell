@@ -15,14 +15,14 @@
     Zion        = 1.00
 
 [numerics]
-    nGdim       = 32
+    nGdim       = 33
     Gcut        = 2000.0        
-    nQx         = 8   
-    nQy         = 8
-    nSCx        = 8 
-    nSCy        = 8
-    nRx         = 80   
-    nRy         = 80
+    nQx         = 4   
+    nQy         = 4
+    nSCx        = 4 
+    nSCy        = 4
+    nRx         = 81   
+    nRy         = 81
     thres       = 0.1
 
 [methods]
@@ -31,7 +31,7 @@
     doProj      = t
     doProjNUM   = f
     doGaugBack  = f
-    doBerry     = t
+    doBerry     = f
     doWanni     = f
     doNiu       = t
     doPei       = t

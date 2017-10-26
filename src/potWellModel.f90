@@ -2,7 +2,8 @@ module potWellModel
 	!this modules sets up the Hamiltonian matrix and solves it for each k point
 	!	in the process the wannier functions are generated aswell with routines from wannGen module
 	use omp_lib
-	use mathematics,	only:	dp, PI_dp,i_dp, machineP, myExp, myLeviCivita, eigSolver, nIntegrate, isUnit, isHermitian
+	use mathematics,	only:	dp, PI_dp,i_dp, machineP, myExp, myLeviCivita, &
+								eigSolver, eigSolver2, nIntegrate, isUnit, isHermitian
 	use sysPara
 	use blochWf,		only:	genBwfVelo, testNormUNK							
 	use output,			only:	printMat, 	writeEnAndCK
@@ -28,13 +29,13 @@ module potWellModel
 																				!unkW(nR	,	nWfs,  nKpts	)
 																				!veloBwf(nR,nK,2*nG)
 		real(dp),		intent(out)		::	En(:,:)																	
-		complex(dp),	allocatable		::	Hmat(:,:), unkT(:,:)
+		complex(dp),	allocatable		::	Hmat(:,:) , ctemp(:,:,:)
 		real(dp),		allocatable		::	EnT(:,:)
-		integer							:: 	qi, gi, n, nCut
-		real(dp)						::	kVal(2)
+		integer							:: 	qi, found
 		!
 		allocate(	Hmat(	nG,	nG		)			)
-		allocate(	EnT(	nG	, nQ	)			)	
+		allocate(	ctemp(	nG,	nSolve, qi	)			)
+		allocate(	EnT(	nG, nQ	)			)	
 		!
 		!
 		if(debugHam) then
@@ -48,19 +49,18 @@ module potWellModel
 			!ELECTRONIC STRUCTURE
 
 			call populateH(qi, Hmat) 	!omp
-			call eigSolver(Hmat, EnT(:,qi))	!mkl
-			ck(1:nG,1:nBands,qi)	= Hmat(1:nG,1:nBands)
+			
+			!old
+			!call eigSolver(Hmat, EnT(:,qi))	!mkl
+			!ck(1:nG,1:nBands,qi)	= Hmat(1:nG,1:nBands)
 
-			!
-			!BLOCH WAVEFUNCTIONS
-			!call gaugeCoeff(kVal, Hmat)
-			!call genBwfVelo(qi, Hmat, unkT)	!omp
-			!unk(:,1:nBands,qi)	= unkT(:,1:nBands)
-			!
+			!new
+			call eigSolver2(Hmat,EnT(:,qi), ctemp, found)!a, w ,z, m
 			!DEBUG TESTS
-			if( debugHam ) then
-				if( .not. isUnit(Hmat) ) write(*,'(a,i4)')	"[solveHam]: basis coeff not unitary for qi=",qi
-			end if
+			if(found /= nSolve )write(*,*)"[solveHam]: only found ",found," bands of required ",nSolve
+			if(nBands > found) write(*,*)"[solveHam]: warning did not found required amount of bands"
+			!
+			!
 			write(*,*)"[solveHam]: done for qi=",qi
 			!
 		end do
@@ -69,6 +69,7 @@ module potWellModel
 		!COPY & WRITE ENERGIES/BWFs
 		do qi = 1, size(En,2)
 			En(:,qi)	= EnT(1:nBands,qi)
+			ck(1:nG,1:nBands,qi)	= ctemp(1:nG,1:nBands,qi)
 		end do
 		write(*,*)			"[solveHam]: copied eigenvalues"
 		write(*,*)			"[solveHam]: found ", countBandsSubZero(EnT)," bands at the gamma point beneath zero"
@@ -111,22 +112,22 @@ module potWellModel
 
 		q(:)	= qpts(:,qi)
 
-		!!!$OMP PARALLEL DO SCHEDULE(DYNAMIC) COLLAPSE(2) DEFAULT(SHARED) FIRSTPRIVATE(q) PRIVATE(j, i, kgi, kgj, onSite)
+		!$OMP PARALLEL DO SCHEDULE(DYNAMIC) DEFAULT(SHARED) FIRSTPRIVATE(q) PRIVATE(j, i, kgi, kgj, onSite)
 		do j = 1, nG
 			do i = 1, nG
 				kgi(:) 	= q(:) + Gvec(:,i)
 				kgj(:)	= q(:) + Gvec(:,j)
-				if( norm2(kgi) < Gcut .and. norm2(kgj) < Gcut ) then
+				!if( norm2(kgi) < Gcut .and. norm2(kgj) < Gcut ) then
 					if(i == j )	then	
 						onSite	= 0.5_dp * 	dot_product(kgi,kgi)
 						Hmat(i,j)	=	V(i,j)	+	onSite
 					else
 						Hmat(i,j)	=	V(i,j)
 					end if
-				end if
+				!end if
 			end do
 		end do
-		!!!$OMP END PARALLEL DO
+		!$OMP END PARALLEL DO
 
 		!
 		if(debugHam) then
@@ -135,7 +136,6 @@ module potWellModel
 				!call printMat(nG, Hmat)
 			end if
 		end if
-
 
 		return
 	end subroutine
@@ -164,8 +164,8 @@ module potWellModel
 		real(dp)				::  xL, yL, xR, yR, dGx, dGy
 		!
 		Vconst 	= dcmplx(0.0_dp)
-		dGx		= Gvec(1,j) - Gvec(1,i)
-		dGy		= Gvec(2,j) - Gvec(2,i)
+		dGx		= Gvec(1,j) - Gvec(1,i) 
+		dGy		= Gvec(2,j) - Gvec(2,i) 
 		!
 		do at = 1, nAt
 			Vpot	=	dcmplx(atPot(at))
@@ -198,8 +198,8 @@ module potWellModel
 		real(dp)				::  xL, yL, xR, yR, dGx, dGy, dV, fact
 		!
 		Vdesc 	= dcmplx(0.0_dp)
-		dGx		= Gvec(1,j) - Gvec(1,i)
-		dGy		= Gvec(2,j) - Gvec(2,i)
+		dGx		= Gvec(1,j) - Gvec(1,i) 
+		dGy		= Gvec(2,j) - Gvec(2,i) 
 		!
 		do at = 1, nAt
 			Vpot=	dcmplx(atPot(at))
