@@ -5,9 +5,9 @@ module sysPara
 	implicit none
 	private
 	public :: 	readInp, insideAt, getRindex, getRleftX, getRrightX, getRleftY, getRrightY,& 
-				getKindex, getGammaPoint, getPot, &
+				getKindex, getGammaPoint, getPot,getGindex, &
 				dim, aX, aY, vol, nAt, relXpos, relYpos, atRx, atRy, atPot, dVpot, &
-				nG, nGdim, nG0, Gcut, nQ, nQx, nQy, nKx, nKy, nK, nSC, nSCx, nSCy, nR, nRx, nRy, R0,  dx, dy, dqx, dqy, dkx, dky, &
+				nG, nGdim, nG0, Gcut, nSolve, nQ, nQx, nQy, nKx, nKy, nK, nSC, nSCx, nSCy, nR, nRx, nRy, R0,  dx, dy, dqx, dqy, dkx, dky, &
 				gaugeSwitch, nBands, nWfs, connSwitch,  &
 				Gvec, atPos, atR, qpts, rpts, Rcell, kpts, trialOrbVAL, trialOrbSw, Zion, &
 				Bext, &
@@ -15,7 +15,7 @@ module sysPara
 
 
 	!
-	integer  										:: 	dim=2, nAt=0, nG, nGdim=16, nG0,  nQx=1, nQy=1,nQ , nSCx=1, nSCy=1,& 
+	integer  										:: 	dim=2, nAt=0, nG, nGdim=16, nSolve=20, nG0,  nQx=1, nQy=1,nQ , nSCx=1, nSCy=1,& 
 														nKx=1, nKy=1, nK, connSwitch=0, &
 														nRx=10, nRy=10, nR, R0=1, nBands=1,nWfs=1, nSC, gaugeSwitch, trialOrbSw
 	real(dp) 										::	aX=0.0_dp, aY=0.0_dp,vol=0.0_dp, Gcut=2*PI_dp, thres,& 
@@ -61,6 +61,7 @@ module sysPara
 		![numerics]
 		call CFG_add_get(my_cfg,	"numerics%nGdim"    ,	nGdim	    ,	"amount of G_n used"					)
 		call CFG_add_get(my_cfg,	"numerics%Gcut"		,	Gcut	    ,	"k space cut of parameter"				)
+		call CFG_add_get(my_cfg,	"numerics%nSolve"	,	nSolve	    ,	"number of eigenstates to find"			)
 		call CFG_add_get(my_cfg,	"numerics%nQx"     	,	nQx      	,	"amount of k points used"				)
 		call CFG_add_get(my_cfg,	"numerics%nQy"     	,	nQy      	,	"amount of k points used"				)
 		call CFG_add_get(my_cfg,	"numerics%nSCx"     ,	nSCx   		,	"#			supercells "				)
@@ -345,9 +346,9 @@ module sysPara
 		real(dp)	:: rxMin, ryMin
 		!
 		rxMin	=  -real(nSCx,dp) * aX / 2.0_dp
-		dx		= real(nSCx,dp) * aX / real(nRx,dp)
+		dx		= real(nSCx,dp) * aX / real(nRx-1,dp)
 		ryMin	= -real(nSCy,dp) * aX / 2.0_dp
-		dy		= real(nSCy,dp) * aY / real(nRy,dp)
+		dy		= real(nSCy,dp) * aY / real(nRy-1,dp)
 		!
 		do rIy = 1, nRy
 			do rIx = 1, nRx
@@ -363,7 +364,7 @@ module sysPara
 
 	subroutine popGvec()
 		!populates the G vector (basis vector)
-		integer		:: i, ix, iy, nxMin, nyMin
+		integer		:: i, ix, iy
 		real(dp)	:: thres, b1(2), b2(2), a1(2), a2(2)
 		!
 		thres	= 1e-15_dp
@@ -394,6 +395,23 @@ module sysPara
 		return
 	end subroutine
 
+
+	integer function getGindex(gxi, gyi)
+		integer,	intent(in)		:: gxi, gyi
+		integer						:: gx, gy
+		!
+		!KEEP INSIDE G ARRAY
+		gx = mod(gxi,nGdim)
+		gy = mod(gyi,nGdim)
+		!
+		if( gx == 0) gx = nGdim
+		if( gy == 0) gy = nGdim
+		!
+		!
+		getGindex	= (gy-1) * nGdim + gx
+		!
+		return
+	end function
 
 
 	subroutine testG(a1, a2, b1, b2)
