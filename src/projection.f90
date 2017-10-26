@@ -37,8 +37,7 @@ module projection
 		real(dp),		allocatable		:: EnP(:,:)	
 		complex(dp)	,	allocatable		:: loBwf(:,:), gnr(:,:), A(:,:), Ham(:,:), tmp(:,:)
 		
-		complex(dp)						:: phase
-		integer							:: qi, xi, n, m, R
+		integer							:: qi, n, m
 		!
 		allocate(	loBwf(nR,nWfs)		)
 		allocate(	gnr(nR,nWfs)		)
@@ -52,7 +51,11 @@ module projection
 		end if
 		!
 		!
-		call genTrialOrb(gnr)
+
+		if( doProjNUM) then
+			call genTrialOrb(gnr)
+			write(*,*)	"[projectUnk]: generated trial orbitals"
+		end if
 		!
 		!PROJECT
 		do qi = 1, nQ
@@ -136,8 +139,7 @@ module projection
 !privat:
 	subroutine genTrialOrb(gnr)
 		complex(dp),	intent(out)	:: gnr(:,:)       !gnr( nR, nWfs)	
-		integer						:: n, ri, at, gammaP
-		real(dp)					:: drX(2), drY(2)
+		integer						:: n, ri, gammaP
 		!
 		if(nWfs > nBands) then
 			write(*,*)"[genTrialOrb]: warning, nWfs larger then nBands! No propper subspace..."
@@ -299,7 +301,7 @@ module projection
 		integer,		intent(in)	:: qi, m, at
 		complex(dp),	intent(in)	:: ckH(:,:)
 		complex(dp)					:: num1, num2, denom
-		real(dp)					:: kappa, xL, xR, yL, yR, Gx, Gy, kG
+		real(dp)					:: kappa, xL, xR, yL, yR, Gx, Gy
 		integer						:: gi
 		!
 		kappa	= PI_dp / (2.0_dp*atR(1,at))
@@ -343,7 +345,7 @@ module projection
 		integer,		intent(in)	:: qi, m, at
 		complex(dp),	intent(in)	:: ckH(:,:)
 		complex(dp)					:: num1, num2, denom
-		real(dp)					:: kappa, xL, xR, yL, yR, Gx, Gy, kG
+		real(dp)					:: kappa, xL, xR, yL, yR, Gx, Gy
 		integer						:: gi
 		!
 		kappa	= PI_dp / (2.0_dp*atR(1,at))
@@ -386,7 +388,7 @@ module projection
 		integer,		intent(in)	:: qi, m, at
 		complex(dp),	intent(in)	:: ckH(:,:)
 		complex(dp)					:: num1, num2, denom
-		real(dp)					:: kappa, xL, xR, yL, yR, Gx, Gy, kG
+		real(dp)					:: kappa, xL, xR, yL, yR, Gx, Gy
 		integer						:: gi
 		!
 		kappa	= PI_dp / (2.0_dp*atR(1,at))
@@ -437,7 +439,6 @@ module projection
 		complex(dp),	intent(in)	:: ckH(:,:), gnr(:,:) 
 		complex(dp),	intent(out)	:: A(:,:) !A(nBands,nWfs)
 		complex(dp),	allocatable	:: psi(:), basVec(:)
-		complex(dp)					:: phase
 		integer						:: m,n, xi
 		!
 		allocate(	basVec(nG)	)
