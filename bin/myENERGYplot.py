@@ -30,13 +30,13 @@ rawData		= np.fromfile(f2,dtype='float64',count=-1)
 f2.close()
 
 
-f5			= open("rawData/EnInterP.dat",'rb') #rb = Read Binary
-rawInterP	= np.fromfile(f5,dtype='float64',count=-1)
-f5.close()
+#f5			= open("rawData/EnInterP.dat",'rb') #rb = Read Binary
+#rawInterP	= np.fromfile(f5,dtype='float64',count=-1)
+#f5.close()
 
-f6			= open("rawData/EnPei.dat",'rb') #rb = Read Binary
-rawENpei	= np.fromfile(f6,dtype='float64',count=-1)
-f6.close()
+#f6			= open("rawData/EnPei.dat",'rb') #rb = Read Binary
+#rawENpei	= np.fromfile(f6,dtype='float64',count=-1)
+#f6.close()
 
 f4			= open("rawData/sysPara.dat",'rb')
 rawSysP 	= np.fromfile(f4,dtype='int32',count=-1)
@@ -83,8 +83,12 @@ if( nQx != nQy):
 qpts	= np.reshape(	qpts		,	(nQ,2)		)
 kpts	= np.reshape(	kpts		,	(nK,2)		)
 En		= np.reshape(	rawData		,	(nQ,nG)		)    
+
+rawInterP= np.ones(nK*nWfs)
+rawENpei = np.ones(nK*nWfs)
 EI 		= np.reshape(	rawInterP	,	(nK,nWfs)	)
 EnP 	= np.reshape(	rawENpei	,	(nK,nWfs)	)
+
 
 #print(EW)
 
