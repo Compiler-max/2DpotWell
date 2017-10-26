@@ -1,5 +1,6 @@
 module output
 	!module contains several routines for printing and writing data
+	use omp_lib
 	use mathematics,	only:	dp, PI_dp
 	use blochWf,		only:	calcBasis
 	use sysPara 
@@ -112,6 +113,7 @@ module output
 		write(300) nK
 		write(300) nKx
 		write(300) nKy
+		write(300) nSolve
 		close(300)
 		!
 		!CELL INFO
@@ -182,14 +184,14 @@ module output
 		real(dp),		allocatable		:: buffer(:,:,:), bufferW(:,:,:)
 		integer							:: qi, ri
 		!
-		allocate( basVec(nG)		)
 		allocate( unk(nR,nBands,nQ)	)
 		allocate( unkW(nR,nWfs,nQ)	)
-		allocate( buffer(nR,nBands,nQ))
-		allocate( bufferW(nR,nBands,nQ))
-
+		write(*,*)"[writeCkASunk]: allocated arrays "
 		!
 		!CALCULATE UNKs on real space grid
+		!$OMP PARALLEL DEFAULT(SHARED) PRIVATE(qi, ri, basVec ) 
+		allocate(	basVec(nG)		)
+		!$OMP DO SCHEDULE(STATIC) COLLAPSE(2) 
 		do qi = 1, nQ
 			do ri = 1, nR
 				call calcBasis(qi, ri, basVec)
@@ -197,29 +199,30 @@ module output
 				unkW(ri,:,qi)= matmul(basVec, ckW(:,:,qi)	)
 			end do
 		end do
+		!$OMP END DO
+		!$OMP END PARALLEL
+		write(*,*)"[writeCkASunk]: calculated unks on real space grid"
 		!
 		!WRITE RESULTS
 		!UNK
-		buffer	= dreal(unk)
 		open(unit=400,file='rawData/unkR.dat',form='unformatted',access='stream',action='write')
-		write(400)	buffer
-		close(400)
-		!
-		buffer	= dimag(unk)
 		open(unit=405,file='rawData/unkI.dat',form='unformatted',access='stream',action='write')
-		write(405)	buffer
-		close(405)
-		!
-		!UNK (W)
-		bufferW	= dreal(unkW)
 		open(unit=410,file='rawData/ROTunkR.dat',form='unformatted',access='stream',action='write')
-		write(410)	bufferW
-		close(410)
-		!
-		bufferW	= dimag(unkW)
 		open(unit=415,file='rawData/ROTunkI.dat',form='unformatted',access='stream',action='write')
-		write(415)	bufferW
+		do qi = 1, nQ
+			write(400) dreal(unk(:,:,qi))
+			write(405) dimag(unk(:,:,qi))
+			!
+			write(410) dreal(unkW(:,:,qi))
+			write(415) dimag(unkW(:,:,qi))
+			!buffer(:,:,qi)	= dreal(unk(:,:,qi))
+		end do
+		close(400)
+		close(405)
+		close(410)
 		close(415)
+		!
+		write(*,*)"[writeCkASunk]: wrote all files"
 		!
 		!
 		return

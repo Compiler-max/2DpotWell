@@ -29,12 +29,12 @@ module potWellModel
 																				!unkW(nR	,	nWfs,  nKpts	)
 																				!veloBwf(nR,nK,2*nG)
 		real(dp),		intent(out)		::	En(:,:)																	
-		complex(dp),	allocatable		::	Hmat(:,:) , ctemp(:,:,:)
+		complex(dp),	allocatable		::	Hmat(:,:) , ctemp(:,:)
 		real(dp),		allocatable		::	EnT(:,:)
 		integer							:: 	qi, found
 		!
 		allocate(	Hmat(	nG,	nG		)			)
-		allocate(	ctemp(	nG,	nSolve, qi	)			)
+		allocate(	ctemp(	nG,	nSolve	)			)
 		allocate(	EnT(	nG, nQ	)			)	
 		!
 		!
@@ -56,6 +56,8 @@ module potWellModel
 
 			!new
 			call eigSolver2(Hmat,EnT(:,qi), ctemp, found)!a, w ,z, m
+			En(:,qi)	= EnT(1:nBands,qi)
+			ck(1:nG,1:nBands,qi)	= ctemp(1:nG,1:nBands)
 			!DEBUG TESTS
 			if(found /= nSolve )write(*,*)"[solveHam]: only found ",found," bands of required ",nSolve
 			if(nBands > found) write(*,*)"[solveHam]: warning did not found required amount of bands"
@@ -68,11 +70,11 @@ module potWellModel
 		!
 		!COPY & WRITE ENERGIES/BWFs
 		do qi = 1, size(En,2)
-			En(:,qi)	= EnT(1:nBands,qi)
-			ck(1:nG,1:nBands,qi)	= ctemp(1:nG,1:nBands,qi)
+			
+			
 		end do
 		write(*,*)			"[solveHam]: copied eigenvalues"
-		write(*,*)			"[solveHam]: found ", countBandsSubZero(EnT)," bands at the gamma point beneath zero"
+		write(*,*)			"[solveHam]: found ", countBandsSubZero(EnT(1:nSolve,:))," bands at the gamma point beneath zero"
 		call writeEnAndCK(EnT, ck)
 		!
 		!
@@ -249,7 +251,7 @@ module potWellModel
 		!
 		cnt	= 0
 		gammaP	= getGammaPoint()
-		do n = 1, nG
+		do n = 1, size(EnT,1)
 			if( EnT(n,gammaP) < 0.0_dp )	then
 				cnt	= cnt + 1
 			end if

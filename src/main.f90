@@ -143,6 +143,7 @@ program main
 	write(*,*)"[main]: ...wrote mesh info"
 	if( writeBin )	then
 		call writeMeshBin()
+		write(*,*)"[main]: ...wrote mesh bin"
 		!call writeUNKs(unkW)
 		call writeCkASunk(ck, ckW)
 		write(*,*)"[main]: ...wrote binary files for meshes and unks"

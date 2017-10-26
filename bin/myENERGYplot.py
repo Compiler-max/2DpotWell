@@ -57,6 +57,7 @@ nSCy		= rawSysP[11]
 nK			= rawSysP[12]
 nKx			= rawSysP[13]
 nKy			= rawSysP[14]
+nSolve		= rawSysP[15]
 
 
 f5			= open("rawData/cellInfo.dat",'rb')
@@ -113,7 +114,7 @@ fig, ax = plt.subplots(1,1)
 n 		= 0
 #BLOCH STATES
 #for each n go along k point path once
-for n in range(0,nG):
+for n in range(0,nSolve):
 	#X to G
 	offs	= 0
 	for i in range(0,nQx):	
