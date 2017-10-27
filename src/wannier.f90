@@ -121,7 +121,7 @@ module wannier
 		complex(dp), 	intent(in)  	:: ckW(:,:,:) ! ckW(nG, nWfs, nQ)
 		complex(dp), 	intent(inout) 	:: wnF(:,:,:) ! wnF( 	nR, nSC, nWfs		)	
 		complex(dp),	allocatable		:: basVec(:)
-		integer 						:: Ri, xi, qi
+		integer 						:: Ri, xi, qi, gMax
 		complex(dp)						:: phase
 		real(dp)						:: nQreal
 		!
@@ -129,17 +129,18 @@ module wannier
 		!
 		nQreal	= real(nQ,dp)
 		wnF		= dcmplx(0.0_dp)
-		!$OMP PARALLEL DEFAULT(SHARED) PRIVATE(Ri, xi, qi, phase, basVec ) 
+		!$OMP PARALLEL DEFAULT(SHARED) PRIVATE(Ri, xi, qi, phase, basVec, gMax ) 
 		allocate(	basVec(nG)		)
 		!$OMP DO SCHEDULE(STATIC) COLLAPSE(1) 
 		do Ri = 1, nSC
 			do qi = 1 , nQ
+				gMax	= nGq(qi)
 				do xi = 1, nR
 					call calcBasis(qi, xi, basVec)
 					phase			= myExp( -1.0_dp *	dot_product( qpts(:,qi) ,  Rcell(:,Ri) ) )	
 					phase			= phase 	/ ( dsqrt(real(nSC,dp)) )
 					!phase			= phase		/ dsqrt( vol )
-					wnF(xi,Ri,:)	= wnF(xi,Ri,:) + phase * matmul( basVec, ckW(:,:,qi)	)
+					wnF(xi,Ri,:)	= wnF(xi,Ri,:) + phase * matmul( basVec(1:gMax), ckW(1:gMax,:,qi)	)
 				end do
 			end do
 		end do
