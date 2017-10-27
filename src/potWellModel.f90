@@ -34,7 +34,7 @@ module potWellModel
 		integer							:: 	qi, found
 		!
 		allocate(	Hmat(	nG,	nG		)			)
-		allocate(	ctemp(	nG,	nSolve	)			)
+		allocate(	ctemp(	nG,	nSolve	)			) !could be smaller, just for testing resized
 		allocate(	EnT(	nG, nQ	)			)	
 		!
 		!
@@ -75,7 +75,7 @@ module potWellModel
 		end do
 		write(*,*)			"[solveHam]: copied eigenvalues"
 		write(*,*)			"[solveHam]: found ", countBandsSubZero(EnT(1:nSolve,:))," bands at the gamma point beneath zero"
-		call writeEnAndCK(EnT, ck)
+		!call writeEnAndCK(EnT, ck)
 		!
 		!
 		!
@@ -114,7 +114,7 @@ module potWellModel
 
 		q(:)	= qpts(:,qi)
 
-		!$OMP PARALLEL DO SCHEDULE(DYNAMIC) DEFAULT(SHARED) FIRSTPRIVATE(q) PRIVATE(j, i, kgi, kgj, onSite)
+		!!!!$OMP PARALLEL DO SCHEDULE(DYNAMIC) DEFAULT(SHARED) FIRSTPRIVATE(q) PRIVATE(j, i, kgi, kgj, onSite)
 		do j = 1, nG
 			do i = 1, nG
 				kgi(:) 	= q(:) + Gvec(:,i)
@@ -129,7 +129,7 @@ module potWellModel
 				!end if
 			end do
 		end do
-		!$OMP END PARALLEL DO
+		!!!$OMP END PARALLEL DO
 
 		!
 		if(debugHam) then
