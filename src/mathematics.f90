@@ -200,8 +200,8 @@ module mathematics
          subroutine eigSolver2(a, w ,z, m)
     	!https://software.intel.com/en-us/mkl-developer-reference-fortran-heevr#6ADF761A-127A-4C9B-9A2A-1A8AA4602CE1
     	complex(dp),	intent(inout)	:: a(:,:)
-    	complex(dp),	intent(out)		:: z(:,:)
     	real(dp),		intent(out)		:: w(:)
+    	complex(dp),	intent(out)		:: z(:,:)
     	integer,		intent(out)		:: m
     	character*1	 					:: jobz, range, uplo
     	integer							:: n, lda, il, iu, ldz, lwork, lrwork, liwork,  info 
@@ -219,7 +219,7 @@ module mathematics
     	vu  	= 0.0_dp
     	il		= 1
     	iu		= size(z,2)
-    	abstol	= 1e-15_dp
+    	abstol	= 1e-5_dp
     	ldz		= n
     	lwork	= 2*n
     	lrwork	= 24*n
@@ -227,10 +227,11 @@ module mathematics
     	if( size(z,1)/= ldz ) write(*,*)"[eigSolver2]: z array has wrong size"
     	if( size(w)/= n) write(*,*)"[eigSolver2]; w array has wrong size"
     	!
+    	allocate( isuppz(2*iu)	)
     	allocate(  work(lwork)	)
-    	allocate( rwork(lwork)	)
+    	allocate( rwork(lrwork)	)
     	allocate( iwork(liwork)	)	
-    	allocate( isuppz(2*n)	)
+    	
     	!
     	call zheevr(jobz, range, uplo, n, a, lda, vl, vu, il, iu, abstol, m, w, z, ldz, isuppz, work, lwork, rwork, lrwork, iwork, liwork, info)
     	!
