@@ -7,9 +7,11 @@ module sysPara
 	public :: 	readInp, insideAt, getRindex, getRleftX, getRrightX, getRleftY, getRrightY,& 
 				getKindex, getGammaPoint, getPot,getGindex, &
 				dim, aX, aY, vol, nAt, relXpos, relYpos, atRx, atRy, atPot, dVpot, &
-				nG, nGdim, nG0, Gcut, nSolve, nQ, nQx, nQy, nKx, nKy, nK, nSC, nSCx, nSCy, nR, nRx, nRy, R0,  dx, dy, dqx, dqy, dkx, dky, &
+				nG, nGq, nG0, Gcut, Gvec, Gtest, nSolve, &
+				nQ, nQx, nQy, nKx, nKy, nK, nSC, nSCx, nSCy, R0, dqx, dqy, dkx, dky, &
+				nR, nRx, nRy,  dx, dy, &
 				gaugeSwitch, nBands, nWfs, connSwitch,  &
-				Gvec, atPos, atR, qpts, rpts, Rcell, kpts, trialOrbVAL, trialOrbSw, Zion, &
+				atPos, atR, qpts, rpts, Rcell, kpts, trialOrbVAL, trialOrbSw, Zion, &
 				Bext, &
 				debugProj, debugHam, debugWann, doSolveHam, doVdesc, doProj, doProjNUM, doBerry, doWanni, doNiu, doPei, doGaugBack, writeBin
 
@@ -20,8 +22,10 @@ module sysPara
 														nRx=10, nRy=10, nR, R0=1, nBands=1,nWfs=1, nSC, gaugeSwitch, trialOrbSw
 	real(dp) 										::	aX=0.0_dp, aY=0.0_dp,vol=0.0_dp, Gcut=2*PI_dp, thres,& 
 														dx, dy, dqx, dqy, dkx, dky, B0, Bext(3)											
+	integer,	allocatable,	dimension(:)		::	nGq
 	real(dp),	allocatable,	dimension(:)		::	relXpos, relYpos, atRx, atRy, atPot, dVpot, trialOrbVAL, Zion
-	real(dp),	allocatable,	dimension(:,:)		::	Gvec, atPos, atR, qpts, rpts, Rcell, kpts 
+	real(dp),	allocatable,	dimension(:,:)		::	Gtest , atPos, atR, qpts, rpts, Rcell, kpts 
+	real(dp),	allocatable,	dimension(:,:,:)	::	Gvec
 	logical											::	debugHam, debugWann, debugProj, &
 														doSolveHam, doVdesc , doProj, doProjNUM, &
 														doBerry, doWanni, doNiu, doPei, doGaugBack, &
@@ -101,8 +105,12 @@ module sysPara
 		call CFG_add_get(my_cfg,	"perturbation%Bext"	,	Bext		,	"vector of ext. magnetic field"			)
 
 		
+
+
+
 		dim = 	2
-		nG	=	nGdim**2 !makes sure that bove dimensions get equal basis vectors
+		nGdim = getTestGridSize()
+		nG	= nGdim**2
 		vol	=	aX 		* 	aY
 		nR 	= 	nRx 	*	nRy
 		nQ 	= 	nQx 	*	nQy
@@ -110,8 +118,13 @@ module sysPara
 		nK =	nKx		*	nKy
 		Bext=	B0 		* 	Bext
 
+
+
+
 		!basis
-		allocate(	Gvec(dim,nG)		)
+		allocate(	Gtest(	dim,	nG				)		)
+		allocate(	nGq(					nQ		)		)
+		allocate(	Gvec(	dim,	nG ,	nQ		)		)
 		!atoms
 		allocate(	relXpos(nAt)		)
 		allocate(	relYpos(nAt)		)
@@ -144,7 +157,7 @@ module sysPara
 		call setAcc(thres)
 		call kmeshGen()
 		call rmeshGen()
-		call popGvec()
+		call popGtest()
 		call popAtPos()
 		call popAtR()
 		call calcRcell()
@@ -152,6 +165,21 @@ module sysPara
 
 		return
 	end subroutine
+
+
+	integer function getTestGridSize()
+		integer				:: nGrid
+		!
+		nGrid = ceiling( 	dmax1(aX,aY)*Gcut/PI_dp 	+	dsqrt(2.0_dp)		)
+		!
+		!make sure Grid is symmetric
+		if(mod(nGrid,2)==0) nGrid = nGrid + 1 
+		!
+		getTestGridSize = nGrid
+		!
+		return
+	end function
+
 
 
 	logical function insideAt(at, r)
@@ -362,8 +390,12 @@ module sysPara
 	end subroutine
 
 
-	subroutine popGvec()
-		!populates the G vector (basis vector)
+
+
+
+
+	subroutine popGtest()
+	!populates the G vector (basis vector)
 		integer		:: i, ix, iy
 		real(dp)	:: thres, b1(2), b2(2), a1(2), a2(2)
 		!
@@ -386,7 +418,7 @@ module sysPara
 		do ix = 1, nGdim
 			do iy = 1, nGdim
 				i	= (iy-1) * nGdim + ix
-				Gvec(:,i)	= (ix-1-nGdim/2) * b1(:) + (iy-1-nGdim/2) * b2(:)
+				Gtest(:,i)	= (ix-1-nGdim/2) * b1(:) + (iy-1-nGdim/2) * b2(:)
 			end do
 		end do
 
@@ -394,6 +426,10 @@ module sysPara
 		!
 		return
 	end subroutine
+
+
+
+
 
 
 	integer function getGindex(gxi, gyi)

@@ -59,10 +59,10 @@ module output
 
 		!
 		!G VECTOR
-		write(100,*)"*******************G VECTOR MESH******************************"
+		write(100,*)"*******************G VECTOR  test MESH******************************"
 		write(100,*)"nG0=",nG0
 		do i = 1, nG
-			write(100,'(a,i4,a,f15.7,a,f15.7,a)')				"G(",i,") = (", Gvec(1,i) , ", ", Gvec(2,i) , ")"
+			write(100,'(a,i4,a,f15.7,a,f15.7,a)')				"G(",i,") = (", Gtest(1,i) , ", ", Gtest(2,i) , ")"
 		end do
 		!!
 		!K MESH
@@ -204,21 +204,22 @@ module output
 	subroutine writeCkASunk(ck, ckW)
 		complex(dp),	intent(in)		:: ck(:,:,:), ckW(:,:,:)
 		complex(dp),	allocatable		:: basVec(:), unk(:,:,:), unkW(:,:,:)
-		integer							:: qi, ri, stat
+		integer							:: qi, ri, stat, Gmax
 		!
 		allocate( unk(nR,nBands,nQ)	)
 		allocate( unkW(nR,nWfs,nQ)	)
 		write(*,*)"[writeCkASunk]: allocated arrays "
 		!
 		!CALCULATE UNKs on real space grid
-		!$OMP PARALLEL DEFAULT(SHARED) PRIVATE(qi, ri, basVec ) 
+		!$OMP PARALLEL DEFAULT(SHARED) PRIVATE(qi, ri, basVec, Gmax ) 
 		allocate(	basVec(nG)		)
-		!$OMP DO SCHEDULE(STATIC) COLLAPSE(2) 
+		!$OMP DO SCHEDULE(STATIC) COLLAPSE(1) 
 		do qi = 1, nQ
+			Gmax	= nGq(qi)
 			do ri = 1, nR
 				call calcBasis(qi, ri, basVec)
-				unk(ri,:,qi) = matmul(basVec, ck(:,:,qi)	)
-				unkW(ri,:,qi)= matmul(basVec, ckW(:,:,qi)	)
+				unk(ri,:,qi) = matmul(basVec(1:Gmax),  ck(1:Gmax,:,qi)	)
+				unkW(ri,:,qi)= matmul(basVec(1:Gmax), ckW(1:Gmax,:,qi)	)
 			end do
 		end do
 		!$OMP END DO

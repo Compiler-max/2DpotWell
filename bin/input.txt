@@ -16,7 +16,7 @@
 
 [numerics]
     nGdim       = 49
-    Gcut        = 2000.0
+    Gcut        = 2.0
     nSolve      = 10        
     nQx         = 4   
     nQy         = 4
@@ -27,7 +27,7 @@
     thres       = 0.1
 
 [methods]
-    doSolveHam  = f
+    doSolveHam  = t
     doVdesc     = f
     doProj      = t
     doProjNUM   = f

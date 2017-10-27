@@ -7,7 +7,7 @@ module blochWf
 	implicit none
 
 	private
-	public	::	genBwfVelo, genUnk, testNormUNK, calcBasis
+	public	::	genBwfVelo, genUnk, calcBasis
 
 
 	contains
@@ -76,60 +76,6 @@ module blochWf
 	end subroutine
 
 
-	logical function testNormUNK(unk)
-		complex(dp),	intent(in)		:: unk(:,:,:)
-		integer							:: q1, q2, m, n, ri, fcount, cnt
-		complex(dp),	allocatable		:: f(:)
-		complex(dp)						:: oLap, lphase, rphase
-		logical							:: isNorm
-		!
-		fcount	= 0
-
-		!!!!$OMP PARALLEL DEFAULT(SHARED) PRIVATE(q1, q2, m, n, ri, f, oLap, lphase, rphase) REDUCTION(.AND.:isNorm) REDUCTION(+:fcount, cnt)
-		allocate( f(size(unk,1)) 	)
-		!!!!$OMP DO COLLAPSE(3), SCHEDULE(DYNAMIC,nG/2) 
-		do q2 = 1, size(unk,3)
-			!do q1 = 1, size(unk,3)
-				do m = 1, size(unk,2) 
-					do n = 1, size(unk,2)
-						!INTEGRATE
-						f	= dcmplx(0.0_dp)
-						do ri = 1, size(unk,1)
-							lphase	= myExp( dot_product( qpts(:,q2), rpts(:,ri))	)
-							rphase	= myExp( dot_product( qpts(:,q2), rpts(:,ri))	)
-							f(ri)	= dconjg( lphase * unk(ri,m,q2) 	)	* rphase * unk(ri,n,q2)
-						end do
-						oLap	= nIntegrate(nR, nRx,nRy, dx,dy, f)
-						!write(*,'(a,i2,a,i2,a,i3,a,i3,a,e10.3,a,e10.3)')	"[testNormal]: n=",n,",m=",m,", q1=",q1,", q2=",q2," oLap =",dreal(oLap),"+i*",dimag(oLap)
-						!ADJUST IF NONE ZERO
-						if( n==m 	) then
-							!write(*,'(a,i3,a,i3,a,i3,a,i3,a,f10.6,a,e10.3)')	"[testNormal]: n=",n,",m=",m,", q1=",q1,", q2=",q2," oLap =",dreal(oLap),"+i*",dimag(oLap)
-							oLap = oLap - dcmplx(1.0_dp)
-						end if
-						!CHECK CONDITION
-						if( abs(oLap) > acc ) then
-							isNorm	= .false.
-							fcount	= fcount + 1
-							write(*,'(a,i2,a,i2,a,i3,a,i3,a,e10.3,a,e10.3)')	"[testNormal]: n=",n,",m=",m,", q1=",q1,", q2=",q2," oLap =",dreal(oLap),"+i*",dimag(oLap)
-						else
-							isNorm	= .true.
-						end if
-						cnt = cnt + 1
-					end do
-				end do
-			!end do
-		end do
-		!!!$OMP END DO
-		!!!!$OMP END PARALLEL
-
-		!
-		testNormUNK	= isNorm
-		write(*,'(a,i8,a,i12,a)')	"[testNormUNK]: ",fcount," of ",cnt," tests of unk normalization failed"
-		!
-		return
-	end function
-
-
 
 
 !privat
@@ -139,18 +85,11 @@ module blochWf
 		!	the cutoff enforces a symmetric base at each k point
 		integer,	 intent(in)		:: qi, ri
 		complex(dp), intent(out)	:: basVec(:)
-		real(dp)				 	:: k(2)
-		integer 				 	::	i 
+		integer 				 	:: i 
 		!
-		do i =1, nG
-			k(:) = qpts(:,qi) + Gvec(:,i)
-			!
-			if( 0.5_dp*dot_product(k,k) < Gcut ) then
-				basVec(i) 		= myExp( dot_product( k(:), rpts(:,ri) )		)  !/ dsqrt(vol)
-			else
-				!write(*,*)	"[calcBasis]: set i=",i,"to zero"
-				basVec(i) 		= dcmplx( 0.0_dp )
-			end if
+		basVec	= 0.0_dp
+		do i =1, nGq(qi)
+			basVec(i) 		= myExp( dot_product( Gvec(:,i,qi), rpts(:,ri) )		)  !/ dsqrt(vol)
 		end do
 		!
 		!

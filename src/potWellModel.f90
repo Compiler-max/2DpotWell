@@ -5,7 +5,7 @@ module potWellModel
 	use mathematics,	only:	dp, PI_dp,i_dp, machineP, myExp, myLeviCivita, &
 								eigSolver, eigSolver2, nIntegrate, isUnit, isHermitian
 	use sysPara
-	use blochWf,		only:	genBwfVelo, testNormUNK							
+	use blochWf,		only:	genBwfVelo					
 	use output,			only:	printMat, 	writeEnAndCK
 	implicit none	
 	
@@ -31,7 +31,7 @@ module potWellModel
 		real(dp),		intent(out)		::	En(:,:)																	
 		complex(dp),	allocatable		::	Hmat(:,:) , ctemp(:,:)
 		real(dp),		allocatable		::	EnT(:,:)
-		integer							:: 	qi, found
+		integer							:: 	qi, found, Gmax
 		!
 		allocate(	Hmat(	nG,	nG		)			)
 		allocate(	ctemp(	nG,	nSolve	)			) !could be smaller, just for testing resized
@@ -47,6 +47,10 @@ module potWellModel
 		do qi = 1, nQ
 			!
 			!ELECTRONIC STRUCTURE
+			call setUpBasis(qi)
+			Gmax 	= nGq(qi)
+			if( Gmax < nSolve ) write(*,*)"[solveHam]: cutoff to small to get ",nSolve," bands! only get",Gmax," basis functions"
+			
 
 			call populateH(qi, Hmat) 	!omp
 			
@@ -55,7 +59,7 @@ module potWellModel
 			!ck(1:nG,1:nBands,qi)	= Hmat(1:nG,1:nBands)
 
 			!new
-			call eigSolver2(Hmat,EnT(:,qi), ctemp, found)!a, w ,z, m
+			call eigSolver2(Hmat(1:Gmax,1:Gmax),EnT(1:Gmax,qi), ctemp(1:Gmax,:), found)!a, w ,z, m
 			
 			ck(1:nG,1:nBands,qi)	= ctemp(1:nG,1:nBands)
 			!DEBUG TESTS
@@ -96,6 +100,31 @@ module potWellModel
 
 
 !private:
+	!BASIS SETUP
+	subroutine setUpBasis(qi)
+		integer,	intent(in)		:: qi
+		integer						:: gi
+		real(dp)					:: kg(2)
+		!
+		nGq(qi)	= 0
+		do gi = 1, nG
+			kg(:)	= qpts(:,qi) + Gtest(:,gi)
+			if( norm2(kg) < Gcut ) then
+				nGq(qi) = nGq(qi) + 1
+				Gvec(:,nGq(qi),qi) = kg(:)
+			end if
+		end do
+		!
+		if(nGq(qi) > nG) write(*,'(a,i4,a,i6)')	"[setUpBasis]: warning, somehow counted more basis functions at qi=",qi," limit nG=",nG	
+		write(*,'(a,i6,a,i4)')	"[setUpBasis]: using ",nGq(qi), "basis functions at qi=",qi
+		!
+		!
+		return
+	end subroutine
+
+
+
+
 	!POPULATION OF H MATRIX
 	subroutine populateH(qi, Hmat)
 		!populates the Hamiltonian matrix by adding 
@@ -104,7 +133,6 @@ module potWellModel
 		!and checks if the resulting matrix is still hermitian( for debugging)
 		integer,		intent(in)	:: qi
 		complex(dp), intent(inout) 	:: Hmat(:,:)
-		real(dp)					:: kgi(2), kgj(2), q(2)
 		complex(dp)					:: onSite
 		integer						:: i, j
 		!init to zero
@@ -112,24 +140,21 @@ module potWellModel
 		!
 		!GET CUTOFF
 
-		q(:)	= qpts(:,qi)
+	
 
-		!$OMP PARALLEL DO SCHEDULE(DYNAMIC,nG/8) DEFAULT(SHARED) FIRSTPRIVATE(q) PRIVATE(j, i, kgi, kgj, onSite)
-		do j = 1, nG
-			do i = 1, nG
-				kgi(:) 	= q(:) + Gvec(:,i)
-				kgj(:)	= q(:) + Gvec(:,j)
-				!if( norm2(kgi) < Gcut .and. norm2(kgj) < Gcut ) then
+		!!!$OMP PARALLEL DO SCHEDULE(DYNAMIC,nG/8) DEFAULT(SHARED) FIRSTPRIVATE(q) PRIVATE(j, i, kgi, kgj, onSite)
+		do j = 1, nGq(qi)
+			do i = 1, nGq(qi)
 					if(i == j )	then	
-						onSite	= 0.5_dp * 	dot_product(kgi,kgi)
-						Hmat(i,j)	=	V(i,j)	+	onSite
+						onSite	= 0.5_dp * 	dot_product(Gvec(:,i,qi),Gvec(:,i,qi))
+						Hmat(i,j)	=	V(qi, i,j)	+	onSite
 					else
-						Hmat(i,j)	=	V(i,j)
+						Hmat(i,j)	=	V(qi, i,j)
 					end if
 				!end if
 			end do
 		end do
-		!$OMP END PARALLEL DO
+		!!!$OMP END PARALLEL DO
 
 		!
 		if(debugHam) then
@@ -142,14 +167,14 @@ module potWellModel
 		return
 	end subroutine
 
-	complex(dp)	function V(i,j)
-		integer,	intent(in)	::	i, j
+	complex(dp)	function V(qi, i,j)
+		integer,	intent(in)	::	qi, i, j
 		!
 		V	= dcmplx(0.0_dp)
 		if( doVdesc ) then
-			V = Vdesc(i,j)
+			V = Vdesc(qi, i,j)
 		else
-			V = Vconst(i,j)
+			V = Vconst(qi, i,j)
 		end if
 		!
 		!
@@ -157,17 +182,17 @@ module potWellModel
 	end function
 
 
-	complex(dp) function Vconst(i,j)
+	complex(dp) function Vconst(qi, i,j)
 		!calc potential matrix elements
 		!the integrals were solved analytical and are hard coded in this function
-		integer,	intent(in)	::	i, j
+		integer,	intent(in)	::	qi, i, j
 		integer					::	at
 		complex(dp)				::	Vpot
 		real(dp)				::  xL, yL, xR, yR, dGx, dGy
 		!
 		Vconst 	= dcmplx(0.0_dp)
-		dGx		= Gvec(1,j) - Gvec(1,i) 
-		dGy		= Gvec(2,j) - Gvec(2,i) 
+		dGx		= Gvec(1,j,qi) - Gvec(1,i,qi) 
+		dGy		= Gvec(2,j,qi) - Gvec(2,i,qi) 
 		!
 		do at = 1, nAt
 			Vpot	=	dcmplx(atPot(at))
@@ -191,17 +216,17 @@ module potWellModel
 	end function
 
 
-	complex(dp) function Vdesc(i,j)
+	complex(dp) function Vdesc(qi, i,j)
 		!potential integration for a well linear descending in x direction
 		!it starts from V0 at xL till V0-dV at xR
-		integer,	intent(in)	::	i, j
+		integer,	intent(in)	::	qi, i, j
 		integer					::	at
 		complex(dp)				::	Vpot
 		real(dp)				::  xL, yL, xR, yR, dGx, dGy, dV, fact
 		!
 		Vdesc 	= dcmplx(0.0_dp)
-		dGx		= Gvec(1,j) - Gvec(1,i) 
-		dGy		= Gvec(2,j) - Gvec(2,i) 
+		dGx		= Gvec(1,j,qi) - Gvec(1,i,qi) 
+		dGy		= Gvec(2,j,qi) - Gvec(2,i,qi) 
 		!
 		do at = 1, nAt
 			Vpot=	dcmplx(atPot(at))

@@ -6,7 +6,7 @@ module projection
 	use mathematics, 	only: 	dp, PI_dp, i_dp, acc, machineP,&
 								myExp, nIntegrate, eigSolver,  mySVD, myMatInvSqrt, isUnit, isIdentity, isHermitian
 	use sysPara
-	use blochWf,		only:	calcBasis, genUnk, testNormUNK
+	use blochWf,		only:	calcBasis, genUnk
 	use output,			only:	writeInterpBands
 	implicit none	
 	
@@ -312,10 +312,10 @@ module projection
 		yR		= atPos(2,at) + atR(2,at)
 		!
 		g1Int 	= dcmplx(0.0_dp)
-		do gi = 1, nG
+		do gi = 1, nGq(qi)
 			!
-			Gx 		= qpts(1,qi) + Gvec(1,gi)
-			Gy		= qpts(2,qi) + Gvec(2,gi)
+			Gx 		= Gvec(1,gi,qi)
+			Gy		= Gvec(2,gi,qi)
 			!
 			num1 = dcmplx(0.0_dp)
 			num2 = dcmplx(0.0_dp)
@@ -356,10 +356,10 @@ module projection
 		yR		= atPos(2,at) + atR(2,at)
 		!
 		g2Int 	= dcmplx(0.0_dp)
-		do gi = 1, nG
+		do gi = 1, nGq(qi)
 			!
-			Gx 		= qpts(1,qi) + Gvec(1,gi)
-			Gy		= qpts(2,qi) + Gvec(2,gi)
+			Gx 		= Gvec(1,gi,qi)
+			Gy		= Gvec(2,gi,qi)
 			!
 			num1 = dcmplx(0.0_dp)
 			num2 = dcmplx(0.0_dp)
@@ -399,10 +399,10 @@ module projection
 		yR		= atPos(2,at) + atR(2,at)
 		!
 		g3Int 	= dcmplx(0.0_dp)
-		do gi = 1, nG
+		do gi = 1, nGq(qi)
 			!
-			Gx 		= qpts(1,qi) + Gvec(1,gi)
-			Gy		= qpts(2,qi) + Gvec(2,gi)
+			Gx 		= Gvec(1,gi,qi)
+			Gy		= Gvec(2,gi,qi)
 			!
 			num1 = dcmplx(0.0_dp)
 			num2 = dcmplx(0.0_dp)
