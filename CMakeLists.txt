@@ -29,13 +29,13 @@ if (Fortran_COMPILER_NAME MATCHES "gfortran.*")
 elseif (Fortran_COMPILER_NAME MATCHES "ifort.*")
   # ifort (untested)
   	#set (CMAKE_Fortran_FLAGS "-mkl -qopenmp -g -check all -fpe0 -warn -traceback -debug extended")
-  	set (CMAKE_Fortran_FLAGS "-mkl -O3 -qopenmp")
+  	set (CMAKE_Fortran_FLAGS "-mkl -g -heap-arrays")
 endif (Fortran_COMPILER_NAME MATCHES "gfortran.*")
 
 
 #set (CMAKE_Fortran_FLAGS "-mkl -O3 -g -Wall -qopenmp")
 #linker flags
-set(COVERAGE_LINK_FLAGS "-mkl -g  -qopenmp")
+set(COVERAGE_LINK_FLAGS "-mkl -g  -heap-arrays ")
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${COVERAGE_LINK_FLAGS}")
 
 # generate executable and link library
