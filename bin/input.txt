@@ -15,27 +15,27 @@
     Zion        = 1.00
 
 [numerics]
-    nGdim       = 39
+    nGdim       = 49
     Gcut        = 2000.0
-    nSolve      = 30        
+    nSolve      = 10        
     nQx         = 4   
     nQy         = 4
     nSCx        = 4 
     nSCy        = 4
-    nRx         = 81   
-    nRy         = 81
+    nRx         = 41   
+    nRy         = 41
     thres       = 0.1
 
 [methods]
-    doSolveHam  = t
+    doSolveHam  = f
     doVdesc     = f
-    doProj      = f
+    doProj      = t
     doProjNUM   = f
     doGaugBack  = f
-    doBerry     = f
+    doBerry     = t
     doWanni     = f
-    doNiu       = t
-    doPei       = t
+    doNiu       = f
+    doPei       = f
 
 [output]
     writeBin    = t

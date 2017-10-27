@@ -43,7 +43,7 @@ module potWellModel
 		end if
 		!
 		!
-		!MPI scatter : unk, EnT
+		!MPI scatter : ck(:,:,qi), EnT(:,qi)
 		do qi = 1, nQ
 			!
 			!ELECTRONIC STRUCTURE
@@ -56,7 +56,7 @@ module potWellModel
 
 			!new
 			call eigSolver2(Hmat,EnT(:,qi), ctemp, found)!a, w ,z, m
-			En(:,qi)	= EnT(1:nBands,qi)
+			
 			ck(1:nG,1:nBands,qi)	= ctemp(1:nG,1:nBands)
 			!DEBUG TESTS
 			if(found /= nSolve )write(*,*)"[solveHam]: only found ",found," bands of required ",nSolve
@@ -66,16 +66,16 @@ module potWellModel
 			write(*,*)"[solveHam]: done for qi=",qi
 			!
 		end do
+		!MPI gather, ck(:,:,qi), EnT(:,qi)
 		!
 		!
 		!COPY & WRITE ENERGIES/BWFs
 		do qi = 1, size(En,2)
-			
-			
+			En(:,qi)	= EnT(1:nBands,qi)
 		end do
 		write(*,*)			"[solveHam]: copied eigenvalues"
 		write(*,*)			"[solveHam]: found ", countBandsSubZero(EnT(1:nSolve,:))," bands at the gamma point beneath zero"
-		!call writeEnAndCK(EnT, ck)
+		call writeEnAndCK(EnT, ck)
 		!
 		!
 		!
@@ -114,7 +114,7 @@ module potWellModel
 
 		q(:)	= qpts(:,qi)
 
-		!!!!$OMP PARALLEL DO SCHEDULE(DYNAMIC) DEFAULT(SHARED) FIRSTPRIVATE(q) PRIVATE(j, i, kgi, kgj, onSite)
+		!$OMP PARALLEL DO SCHEDULE(DYNAMIC,nG/8) DEFAULT(SHARED) FIRSTPRIVATE(q) PRIVATE(j, i, kgi, kgj, onSite)
 		do j = 1, nG
 			do i = 1, nG
 				kgi(:) 	= q(:) + Gvec(:,i)
@@ -129,7 +129,7 @@ module potWellModel
 				!end if
 			end do
 		end do
-		!!!$OMP END PARALLEL DO
+		!$OMP END PARALLEL DO
 
 		!
 		if(debugHam) then

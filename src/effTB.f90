@@ -1,5 +1,5 @@
 module effTB
-use omp_lib
+	use omp_lib
 	use mathematics,	only:	dp, PI_dp, i_dp, acc, machineP, myExp, myLeviCivita, nIntegrate, isHermitian
 	use sysPara
 
@@ -143,6 +143,7 @@ use omp_lib
 		!
 		write(*,'(a,f6.3,a,f6.3)')	"[calcConnOnCoarse]: dqx=",dqx," dqy=",dqy
 		!
+		!!!!$OMP PARALLEL DO COLLAPSE(2) DEFAULT(SHARED) PRIVATE(m,n,qx,qy, qxl, qxr, qyl, qyr, qi,one, Mxl, Mxr, Myl, Myr)
 		do m = 1, nWfs
 			do n = 1, nWfs
 				do qx = 1, nQx
@@ -191,6 +192,7 @@ use omp_lib
 				end do
 			end do
 		end do
+		!!!!$OMP END PARALLEL DO
 		!
 		!
 		return
@@ -207,7 +209,6 @@ use omp_lib
 		!
 		integer,		intent(in)		:: n, m, qi, knb
 		complex(dp),	intent(in)		:: ck(:,:,:)  !ck(			nG		,	nBands  	,	nQ	)		
-		complex(dp),	allocatable		:: f(:)
 		integer							:: gi, gj
 		!
 		UNKoverlap	= dcmplx(0.0_dp)

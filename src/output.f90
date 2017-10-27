@@ -62,7 +62,7 @@ module output
 		write(100,*)"*******************G VECTOR MESH******************************"
 		write(100,*)"nG0=",nG0
 		do i = 1, nG
-			write(100,'(a,i4,a,f15.12,a,f15.12,a)')				"G(",i,") = (", Gvec(1,i) , ", ", Gvec(2,i) , ")"
+			write(100,'(a,i4,a,f15.7,a,f15.7,a)')				"G(",i,") = (", Gvec(1,i) , ", ", Gvec(2,i) , ")"
 		end do
 		!!
 		!K MESH
@@ -97,6 +97,9 @@ module output
 
 	subroutine writeMeshBin()
 		!SYS PARA
+		integer				:: stat
+		open(unit=300, iostat=stat, file='rawData/sysPara.dat', status='old')
+		if (stat == 0) close(300, status='delete')
 		open(unit=300,file='rawData/sysPara.dat',form='unformatted',access='stream',action='write')
 		write(300) nAt
 		write(300) nG
@@ -117,6 +120,8 @@ module output
 		close(300)
 		!
 		!CELL INFO
+		open(unit=305, iostat=stat, file='rawData/cellInfo.dat', status='old')
+		if (stat == 0) close(305, status='delete')
 		open(unit=305,file='rawData/cellInfo.dat',form='unformatted',access='stream',action='write')
 		write(305) aX
 		write(305) aY
@@ -124,26 +129,36 @@ module output
 		!
 		!
 		!ATOM INFORMATION
+		open(unit=306, iostat=stat, file='rawData/atPos.dat', status='old')
+		if (stat == 0) close(306, status='delete')
 		open(unit=306,file='rawData/atPos.dat',form='unformatted',access='stream',action='write')
 		write(306) atPos
 		close(306)
 		!
+		open(unit=307, iostat=stat, file='rawData/atR.dat', status='old')
+		if (stat == 0) close(307, status='delete')
 		open(unit=307,file='rawData/atR.dat',form='unformatted',access='stream',action='write')
 		write(307) atR
 		close(307)
 		!
 		!
 		!R MESH
+		open(unit=310, iostat=stat, file='rawData/rpts.dat', status='old')
+		if (stat == 0) close(310, status='delete')
 		open(unit=310,file='rawData/rpts.dat',form='unformatted',access='stream',action='write')
 		write(310) rpts
 		close(310)
 		!
 		!K MESH
+		open(unit=320, iostat=stat, file='rawData/qpts.dat', status='old')
+		if (stat == 0) close(320, status='delete')
 		open(unit=320,file='rawData/qpts.dat',form='unformatted',access='stream',action='write')
 		write(320) qpts
 		close(320)
 		!
 		!K INTERPOLATION
+		open(unit=325, iostat=stat, file='rawData/kpts.dat', status='old')
+		if (stat == 0) close(325, status='delete')
 		open(unit=325,file='rawData/kpts.dat',form='unformatted',access='stream',action='write')
 		write(325) kpts
 		close(325)
@@ -157,23 +172,31 @@ module output
 		real(dp),		intent(in)		:: EnT(:,:)
 		complex(dp),	intent(in)		:: ck(:,:,:)
 		real(dp),		allocatable		:: buffer(:,:,:)
+		integer							:: stat
+		!
 		!
 		allocate(	buffer(	size(ck,1), size(ck,2), size(ck,3)	)		)
 		!
+		open(unit=200, iostat=stat, file='rawData/bandStruct.dat', status='old')
+		if (stat == 0) close(200, status='delete')
 		open(unit=200, file='rawData/bandStruct.dat', form='unformatted', access='stream', action='write')
 		write(200)	EnT
 		close(200)
 		!
+		open(unit=210, iostat=stat, file='rawData/ckR.dat', status='old')
+		if (stat == 0) close(210, status='delete')
 		buffer	= dreal(ck) 
 		open(unit=210, file='rawData/ckR.dat'		, form='unformatted', access='stream', action='write',status='replace') 
 		write(210)	buffer
 		close(210)
 		!
+		open(unit=211, iostat=stat, file='rawData/ckI.dat', status='old')
+		if (stat == 0) close(211, status='delete')
 		buffer	= dimag(ck)
 		open(unit=211, file='rawData/ckI.dat'		, form='unformatted', access='stream', action='write')
 		write(211)	buffer
 		write(*,*)	"[writeEnAndCK]: wrote eigenvalues and eigencoefficients"
-
+		!
 		return
 	end subroutine
 
@@ -181,7 +204,7 @@ module output
 	subroutine writeCkASunk(ck, ckW)
 		complex(dp),	intent(in)		:: ck(:,:,:), ckW(:,:,:)
 		complex(dp),	allocatable		:: basVec(:), unk(:,:,:), unkW(:,:,:)
-		integer							:: qi, ri
+		integer							:: qi, ri, stat
 		!
 		allocate( unk(nR,nBands,nQ)	)
 		allocate( unkW(nR,nWfs,nQ)	)
@@ -204,6 +227,16 @@ module output
 		!
 		!WRITE RESULTS
 		!UNK
+		open(unit=400, iostat=stat, file='rawData/unkR.dat', status='old')
+		if (stat == 0) close(400, status='delete')
+		open(unit=405, iostat=stat, file='rawData/unkI.dat', status='old')
+		if (stat == 0) close(405, status='delete')
+		open(unit=410, iostat=stat, file='rawData/ROTunkR.dat', status='old')
+		if (stat == 0) close(410, status='delete')
+		open(unit=415, iostat=stat, file='rawData/ROTunkI.dat', status='old')
+		if (stat == 0) close(415, status='delete')
+
+
 		open(unit=400,file='rawData/unkR.dat',form='unformatted',access='stream',action='write')
 		open(unit=405,file='rawData/unkI.dat',form='unformatted',access='stream',action='write')
 		open(unit=410,file='rawData/ROTunkR.dat',form='unformatted',access='stream',action='write')
@@ -405,10 +438,10 @@ module output
 		write(600,*) "aX/vol=",aX/vol,"aY/vol=",aY/vol
 
 	
-		write(600,'(a,f12.8,a,f12.8,a,a,f12.8,a,f12.8,a)')	"pWann =  (",  pWann(1)	,	", ",	pWann(2),		"),",& 
+		write(600,'(a,f16.7,a,f16.7,a,a,f16.7,a,f16.7,a)')	"pWann =  (",  pWann(1)	,	", ",	pWann(2),		"),",& 
 												" moded=(",dmod(pWann(1),aX/vol),", ",dmod(pWann(2),aY/vol),")."
 		!
-		write(600,'(a,f12.8,a,f12.8,a,a,f12.8,a,f12.8,a)')	"pBerry=  (",		pBerry(1)	,	", ",	pBerry(2),		"),",& 
+		write(600,'(a,f16.7,a,f16.7,a,a,f16.7,a,f16.7,a)')	"pBerry=  (",		pBerry(1)	,	", ",	pBerry(2),		"),",& 
 												" moded=(",dmod(pBerry(1),aX/vol),", ",dmod(pBerry(2),aY/vol),")."
 		!write(600,'(a,e16.9,a,f16.12,a,f16.12,a)')	"pInt= ",norm2(pInt)," * (", &	
 		!														pInt(1)/norm2(pInt),	", ",	pInt(2)/norm2(pInt),	")"
@@ -429,9 +462,9 @@ module output
 		!write(600,'(a,e16.9,a,f16.12,a,f16.12,a,f16.12,a)')	"pNiu= ",norm2(pNiu)," * (", &	
 		!									pNiu(1)/norm2(pNiu),	", ",	pNiu(2)/norm2(pNiu),", ", pNiu(3)/norm2(pNiu),	")"
 
-		write(600,'(a,f16.8,a,f16.8,a,f16.8,a)')	"pNiu= (", 	pNiu(1),	", ",	pNiu(2),", ", pNiu(3),	")"
+		write(600,'(a,f16.7,a,f16.7,a,f16.7,a)')	"pNiu= (", 	pNiu(1),	", ",	pNiu(2),", ", pNiu(3),	")"
 
-		write(600,'(a,f16.8,a,f16.8,a,f16.8,a)')	"pPei= (", 	pPei(1),	", ",	pPei(2),", ", pPei(3),	")"
+		write(600,'(a,f16.7,a,f16.7,a,f16.7,a)')	"pPei= (", 	pPei(1),	", ",	pPei(2),", ", pPei(3),	")"
 	
 		close(600)
 		!
@@ -466,21 +499,21 @@ module output
 		real,	intent(in)	:: aT,kT,pT,wT,bT,peiT,oT,mastT
 		!
 		print '    ("r&alloc  time spend     = ",f15.7," seconds = ",f15.7,"% of overall time")',& 
-									aT 				, 100*aT		   	/mastT
+									aT 				, 100.0_dp*aT		   	/mastT
 		print '    ("k-solver time spend     = ",f15.7," seconds = ",f15.7,"% of overall time")',& 
-									kT 				, 100*kT		   	/mastT
+									kT 				, 100.0_dp*kT		   	/mastT
 		print '    ("project. time spend     = ",f15.7," seconds = ",f15.7,"% of overall time")',& 
-									pT 				, 100*pT		   	/mastT
+									pT 				, 100.0_dp*pT		   	/mastT
 		print '    ("wannier method          = ",f15.7," seconds = ",f15.7,"% of overall time")',& 
-									wT				, 100*wT		   	/mastT
+									wT				, 100.0_dp*wT		   	/mastT
 		print '    ("berry method            = ",f15.7," seconds = ",f15.7,"% of overall time")',& 
-									bT				, 100*bT		   	/mastT							
-		print '    ("peierls method          = ",f15.7," seconds = ",f15.7,"% of overall time")',& 
-									peiT			, 100*peiT		   	/mastT													
+									bT				, 100.0_dp*bT		   	/mastT							
+		print '    ("peierls method          = ",f16.7," seconds = ",f16.7,"% of overall time")',& 
+									peiT			, 100.0_dp*peiT		   	/mastT													
 		print '    ("writing  time spend     = ",f15.7," seconds = ",f15.7,"% of overall time")',& 
-									oT 				, 100*oT		   	/mastT
+									oT 				, 100.0_dp*oT		   	/mastT
 		print '    ("other    time spend     = ",f15.7," seconds = ",f15.7,"% of overall time")',& 
-									(mastT-aT-kT-pT-wT-bT-oT) 	, 100*(mastT-aT-kT-pT-wT-bT-oT)/mastT
+									(mastT-aT-kT-pT-wT-bT-oT) 	, 100.0_dp*(mastT-aT-kT-pT-wT-bT-oT)/mastT
 		print '    ("overall  time spend     = ",f15.7," seconds.")', mastT
 		!
 		return

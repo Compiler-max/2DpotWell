@@ -121,7 +121,7 @@ module wannier
 		complex(dp), 	intent(in)  	:: ckW(:,:,:) ! ckW(nG, nWfs, nQ)
 		complex(dp), 	intent(inout) 	:: wnF(:,:,:) ! wnF( 	nR, nSC, nWfs		)	
 		complex(dp),	allocatable		:: basVec(:)
-		integer 						:: n, Ri, xi, qi
+		integer 						:: Ri, xi, qi
 		complex(dp)						:: phase
 		real(dp)						:: nQreal
 		!
@@ -131,10 +131,10 @@ module wannier
 		wnF		= dcmplx(0.0_dp)
 		!$OMP PARALLEL DEFAULT(SHARED) PRIVATE(Ri, xi, qi, phase, basVec ) 
 		allocate(	basVec(nG)		)
-		!$OMP DO SCHEDULE(STATIC) COLLAPSE(2) 
+		!$OMP DO SCHEDULE(STATIC) COLLAPSE(1) 
 		do Ri = 1, nSC
-			do xi = 1, nR
-				do qi = 1 , nQ
+			do qi = 1 , nQ
+				do xi = 1, nR
 					call calcBasis(qi, xi, basVec)
 					phase			= myExp( -1.0_dp *	dot_product( qpts(:,qi) ,  Rcell(:,Ri) ) )	
 					phase			= phase 	/ ( dsqrt(real(nSC,dp)) )

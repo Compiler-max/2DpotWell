@@ -4,7 +4,6 @@
 
 
 - plane wave cutoff into new formalism
-	-> here coefficients must be set to zero
 
 
 
