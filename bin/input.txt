@@ -32,8 +32,8 @@
     doProj      = f
     doProjNUM   = f
     doGaugBack  = f
-    doBerry     = t
-    doWanni     = t
+    doBerry     = f
+    doWanni     = f
     doNiu       = f
     doPei       = f
 

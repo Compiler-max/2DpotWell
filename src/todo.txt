@@ -60,3 +60,5 @@ BEYOND:
 CUTOFF BRANCH:
 	- test: if test grid is set up large enough
 	- test: setUpBasis
+	- debug projections: seem to project in wrong unit cell
+	
