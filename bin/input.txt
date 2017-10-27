@@ -16,7 +16,7 @@
 
 [numerics]
     nGdim       = 49
-    Gcut        = 2.0
+    Gcut        = 3.0
     nSolve      = 10        
     nQx         = 4   
     nQy         = 4

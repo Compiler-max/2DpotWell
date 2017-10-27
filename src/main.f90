@@ -129,27 +129,27 @@ program main
 
 
 	!OUTPUT
-	!write(*,*)"*"
-	!write(*,*)"*"
-	!write(*,*)"*"
-	!write(*,*)"*"
-	!write(*,*)"[main]:**************************WRITE OUTPUT*************************"
-	!call cpu_time(T0)
-	!!
-	!call writePolFile(pWann, pBerry, pNiu, pPei )
-	!write(*,*)"[main]: ...wrote polarization txt file"
-	!call writeMeshInfo() 
-	!write(*,*)"[main]: ...wrote mesh info"
-	!if( writeBin )	then
-	!	call writeMeshBin()
-	!	write(*,*)"[main]: ...wrote mesh bin"
-	!	!call writeUNKs(unkW)
-	!	call writeCkASunk(ck, ckW)
-	!	write(*,*)"[main]: ...wrote binary files for meshes and unks"
-	!end if
-	!!
-	!call cpu_time(T1)
-	!oT = T1 - T0
+	write(*,*)"*"
+	write(*,*)"*"
+	write(*,*)"*"
+	write(*,*)"*"
+	write(*,*)"[main]:**************************WRITE OUTPUT*************************"
+	call cpu_time(T0)
+	!
+	call writePolFile(pWann, pBerry, pNiu, pPei )
+	write(*,*)"[main]: ...wrote polarization txt file"
+	call writeMeshInfo() 
+	write(*,*)"[main]: ...wrote mesh info"
+	if( writeBin )	then
+		call writeMeshBin()
+		write(*,*)"[main]: ...wrote mesh bin"
+		!call writeUNKs(unkW)
+		call writeCkASunk(ck, ckW)
+		write(*,*)"[main]: ...wrote binary files for meshes and unks"
+	end if
+	!
+	call cpu_time(T1)
+	oT = T1 - T0
 	
 	
 	!WARNINGS IF GCUT IS TO HIGH
