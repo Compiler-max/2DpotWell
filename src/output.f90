@@ -1,7 +1,7 @@
 module output
 	!module contains several routines for printing and writing data
 	use omp_lib
-	use mathematics,	only:	dp, PI_dp
+	use mathematics,	only:	dp, PI_dp, machineP
 	use blochWf,		only:	calcBasis
 	use sysPara 
 
@@ -181,7 +181,6 @@ module output
 	subroutine writeCkASunk(ck, ckW)
 		complex(dp),	intent(in)		:: ck(:,:,:), ckW(:,:,:)
 		complex(dp),	allocatable		:: basVec(:), unk(:,:,:), unkW(:,:,:)
-		real(dp),		allocatable		:: buffer(:,:,:), bufferW(:,:,:)
 		integer							:: qi, ri
 		!
 		allocate( unk(nR,nBands,nQ)	)
@@ -420,8 +419,12 @@ module output
 		!
 		!
 		write(600,*)"**************PERTURBATION:"
-		write(600,'(a,f16.12,a,f16.12,a,f16.12,a,f16.12,a)')	"Bext= ",norm2(Bext) ," * (", &
+		if( norm2(Bext) > machineP ) then
+			write(600,'(a,f16.12,a,f16.12,a,f16.12,a,f16.12,a)')	"Bext= ",norm2(Bext) ," * (", &
 											Bext(1)/norm2(Bext),	", ",	Bext(2)/norm2(Bext),", ", Bext(3)/norm2(Bext),	")"
+		else
+			write(600,'(a,f16.8,a,f16.8,a,f16.8,a)')	"Bext= (", 	Bext(1),	", ",	Bext(2),", ", Bext(3),	")"
+		end if
 		write(600,*)"*"
 		!write(600,'(a,e16.9,a,f16.12,a,f16.12,a,f16.12,a)')	"pNiu= ",norm2(pNiu)," * (", &	
 		!									pNiu(1)/norm2(pNiu),	", ",	pNiu(2)/norm2(pNiu),", ", pNiu(3)/norm2(pNiu),	")"
