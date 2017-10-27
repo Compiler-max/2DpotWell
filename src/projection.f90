@@ -76,7 +76,7 @@ module projection
 			end if
 			!
 			!ROTATE BLOCH STATES
-			ckW(:,:,qi)	= matmul( ckH(:,:,qi) , Uq(:,:,qi)	 ) !	
+			ckW(1:nGq(qi),:,qi)	= matmul( ckH(1:nGq(qi),:,qi) , Uq(:,:,qi)	 ) !	
 
 			if( debugProj  ) then
 				!if( .not. isUnit(ckW(:,:,qi))	)	write(*,*) "[projectUNK]: ckW not a unitary matrix at qi=",qi

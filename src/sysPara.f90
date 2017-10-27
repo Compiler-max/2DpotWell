@@ -323,15 +323,15 @@ module sysPara
 
 
 !privat:
-	subroutine kmeshGen()
+		subroutine kmeshGen()
 		!generates the (coarse) k point mesh for solving electronic structure
 		integer		:: qIx, qIy, qI
 		real(dp)	:: qxMin, qyMin
 		!
 		qxMin	= -1.0_dp * PI_dp * aX 	/ 		vol
-		dqx		=  2.0_dp * PI_dp * aX  /	(vol * nQx)
+		dqx		=  2.0_dp * PI_dp * aX  /	(vol * (nQx-1.0_dp))
 		qyMin	= -1.0_dp * PI_dp * aY	/		vol
-		dqy		=  2.0_dp * PI_dp * aY	/	(vol * nQy)
+		dqy		=  2.0_dp * PI_dp * aY	/	(vol * (nQy-1.0_dp))
 		!
 		do qIy = 1, nQy
 			do qIx = 1, nQx
@@ -351,9 +351,9 @@ module sysPara
 		real(dp)	:: kxMin, kyMin
 		!
 		kxMin	= -1.0_dp * PI_dp * aX / vol
-		dkx		=  2.0_dp * PI_dp * aX / (vol * nKx)
+		dkx		=  2.0_dp * PI_dp * aX / (vol * (nKx-1.0_dp))
 		kyMin	= -1.0_dp * PI_dp * aY / vol
-		dky		=  2.0_dp * PI_dp * aY / (vol* nKy)
+		dky		=  2.0_dp * PI_dp * aY / (vol* (nKy-1.0_dp))
 		!
 		do kIy = 1, nKy
 			do kIx = 1, nKx

@@ -75,37 +75,37 @@ program main
 
 
 	!PROJECTIONS
-	!write(*,*)"*"
-	!write(*,*)"*"
-	!write(*,*)"*"
-	!write(*,*)"*"
-	!write(*,*)"[main]:**************************PROJECT STATES *************************"
-	!call cpu_time(T0)
-	!!
-	!call projectUnk(ck, ckW, Uq)
-	!!
-	!call cpu_time(T1)
-	!write(*,*)"[main]: done with projections."
-	!pT = T1-T0
+	write(*,*)"*"
+	write(*,*)"*"
+	write(*,*)"*"
+	write(*,*)"*"
+	write(*,*)"[main]:**************************PROJECT STATES *************************"
+	call cpu_time(T0)
+	!
+	call projectUnk(ck, ckW, Uq)
+	!
+	call cpu_time(T1)
+	write(*,*)"[main]: done with projections."
+	pT = T1-T0
 
 
 	!REAL SPACE METHOD
-	!write(*,*)"*"
-	!write(*,*)"*"
-	!write(*,*)"*"
-	!write(*,*)"*"
-	!call cpu_time(T0)
-	!if( doWanni ) then
-	!	write(*,*)	"[main]:**************************WANNIER FUNCTION METHOD*************************"
-	!	!
-	!	call wannMethod(ckW, pWann)
-	!	!
-	!	write(*,*)	"[main]: done with center polarization calc"
-	!else
-	!	write(*,*)	"[main]: wannier method disabled"
-	!end if	
-	!call cpu_time(T1)
-	!wT 	= T1 - T0
+	write(*,*)"*"
+	write(*,*)"*"
+	write(*,*)"*"
+	write(*,*)"*"
+	call cpu_time(T0)
+	if( doWanni ) then
+		write(*,*)	"[main]:**************************WANNIER FUNCTION METHOD*************************"
+		!
+		call wannMethod(ckW, pWann)
+		!
+		write(*,*)	"[main]: done with center polarization calc"
+	else
+		write(*,*)	"[main]: wannier method disabled"
+	end if	
+	call cpu_time(T1)
+	wT 	= T1 - T0
 
 
 
