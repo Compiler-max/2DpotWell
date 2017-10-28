@@ -32,6 +32,7 @@ module wannier
 
 
 
+
 !public:
 	subroutine wannMethod(ckW,  pWann)
 		complex(dp),	intent(in)		:: ckW(:,:,:)		!	unk(	nR 	,	nWfs	, nQ	)
@@ -176,7 +177,7 @@ module wannier
 
 
 
-	!HELPERS for centers and spread:
+!MATRIX ELEMENTS
 	subroutine wXw(R1,R2,n,m, wnF, res)
 		!positional operator expectation value
 		integer,		intent(in)		:: R1, R2, n, m
@@ -288,7 +289,7 @@ module wannier
 
 
 
-	!DEBUGGING:
+!DEBUGGING:
 	integer function isNormal(wnF)
 		!checks if Wannier functions fullfill
 		!	<Rn|R'm> = \delta(R,R') \delta(n,m)
