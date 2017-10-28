@@ -459,8 +459,6 @@ module projection
 					A(m,n)	= A(m,n) + psi(m) * gnr(xi,n)
 				end do 
 			end do
-			!phase	= myExp( 	dot_product( qpts(:,qi), rpts(:,xi))		)				
-			!f(xi)	= dconjg(	phase * unk(xi,m) / dsqrt(real(nSC,dp))  ) * gnr(xi,n)
 		end do
 		!NORMALIZE REAL SPACE INTEGRATION
 		A	= A / real(nR,dp)
@@ -543,48 +541,6 @@ module projection
 
 
 
-	subroutine compareUNKs(unk,unkP)
-		complex(dp),	intent(in)		:: unk(:,:,:), unkP(:,:,:)
-		integer							:: ri, n, qi, fCount, tCount
-		real(dp)						:: avg
-		!
-		avg		= 0.0_dp
-		fCount 	= 0
-		tCount	= 0
-		!
-		do qi = 1, size(unkP,3)
-			do n = 1, size(unkP,2)
-				do ri = 1, size(unkP,1)
-					if( abs( unkP(ri,n,qi)-unk(ri,n,qi)) > acc 	) then
-						fCount 	= fCount + 1
-						avg 	= avg + abs( unkP(ri,n,qi)-unk(ri,n,qi) )
-					end if
-					tCount = tCount +1
-				end do
-			end do
-		end do
-		!
-		avg = avg / real(fCount,dp)
-		write(*,*)"[compareUNKs]: comparisson of unks before and after unks where projected with Identity mat"
-		write(*,'(a,i8,a,i12,a,f10.8)')"[compareUNKs]: ", fCount, " of ", tCount, " tests failed, average difference =",avg
-
-
-		return
-	end subroutine
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -653,63 +609,6 @@ module projection
 !	!end subroutine
 !
 
-	!logical function isOrthonorm(loBwf)
-	!	!cheks wether loBwf is orthonormal by calculating the overlap matrix elements
-	!	!	<psi_n,k|psi_n,k'> = nSC * \delta(n,m)
-	!	!	WARNING: DOES NOT CHECK ORTHONORMALIZATION BETWEEN K POINTS
-	!	complex(dp),	intent(in)		:: lobWf(:,:)   !lobWf(nR,nWfs)
-	!	complex(dp),	allocatable		:: f(:)
-	!	complex(dp)						:: oLap
-	!	
-	!	integer							:: n, m, ri
-	!	logical							:: realist, imaginist
-	!	allocate( f(nR)		)
-	!	!
-	!	isOrthonorm = .true.
-	!	n 			= 1
-	!	!
-	!	do  while(n <= nWfs .and. isOrthonorm) 
-	!		!DIAGONAL ELEMENTS
-	!		!
-	!		!
-	!		!PREPARE INTEGRATION ARRAY
-	!		do ri = 1, nR
-	!			f(ri) = dconjg( lobWf(ri,n) ) * lobWf(ri,n)
-	!		end do
-	!		oLap	= nIntegrate(nR, nRx, nRy, dx, dy, f)
-	!		oLap	= oLap / dcmplx( nSC	)
-	!		!CHECK CONDITIONS
-	!		realist 	= abs(			abs(dreal(oLap))		-		1.0_dp		) 	> acc
-	!		imaginist	= abs(			dimag(oLap)								)	> acc
-	!		if( realist .or. imaginist ) then
-	!			write(*,'(a,i2,a,f15.10,a,f15.10)')"[isOrthonorm]: overlap(n,n=",n,") = ",dreal(oLap),"+i*",dimag(oLap)
-	!			isOrthonorm = .false.
-	!		end if
-	!		!
-	!		!
-	!		!OFF DIAGONAL
-	!		m = 1
-	!		do while(m <= nWfs	.and. isOrthonorm)
-	!			if(n /= m) then
-	!				!PREPARE INTEGRATION ARRAY
-	!				do ri = 1, nR
-	!					f(ri) = dconjg( lobWf(ri,n) ) * lobWf(ri,m)
-	!				end do
-	!				oLap 	= nIntegrate(nR, nRx, nRy, dx, dy, f)
-	!				oLap	= oLap / dcmplx( nSC	)
-	!				!CHECK CONDITION
-	!				if(abs(oLap) > acc) then
-	!					write(*,'(a,i2,a,i2,a,f15.10,a,f15.10)')"[isOrthonorm]: overlap(",n,",",m,") = ",dreal(oLap),"+i*",dimag(oLap)
-	!					isOrthonorm = .false.
-	!				end if
-	!			end if
-	!			m = m +1
-	!		end do
-	!		n = n + 1
-	!	end do
-	!	!
-	!	return
-	!end function
 		
 
 
