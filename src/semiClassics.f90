@@ -97,13 +97,6 @@ module semiClassics
 
 
 
-	!subroutine	addF1(ki, Fmat)
-	!	integer,		intent(in)		:: ki
-	!	complex(dp),	intent(inout)	:: Fmat(:,:)
-	!	
-	!	return
-	!end
-
 
 	subroutine	addF2(n0,ki, Velo ,En, Fmat)
 		!

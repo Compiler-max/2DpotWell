@@ -7,7 +7,7 @@ module blochWf
 	implicit none
 
 	private
-	public	::	genBwfVelo, genUnk, calcBasis
+	public	::	calcBasis
 
 
 	contains
@@ -19,6 +19,26 @@ module blochWf
 
 
 !public
+	subroutine calcBasis(qi, ri, basVec)
+		!calculates the basis vectors e^i(k+G).r
+		!	if |k+G| is larger then the cutoff the basis vector is set to zero
+		!	the cutoff enforces a symmetric base at each k point
+		integer,	 intent(in)		:: qi, ri
+		complex(dp), intent(out)	:: basVec(:)
+		integer 				 	:: i 
+		!
+		basVec	= 0.0_dp
+		do i =1, nGq(qi)
+			basVec(i) 		= myExp( dot_product( Gvec(:,i,qi), rpts(:,ri) )		)  !/ dsqrt(vol)
+		end do
+		!
+		!
+		return
+	end subroutine
+
+
+
+
 	subroutine genBwfVelo(qi,basCoeff, unk)
 		!generates the bloch wavefunctions, with  the basCoeff from eigSolver, using
 		!	call zgemm(transa, transb, m, n, k, alpha, a	  , lda, b		, ldb, beta, c , ldc)
@@ -55,49 +75,10 @@ module blochWf
 
 
 
-	subroutine genUnk(qi, bWf, unk)
-		! generates the lattice periodic part from given bloch wave functions
-		integer,		intent(in)		:: qi
-		complex(dp),	intent(in)		:: bWf(:,:) !lobWf(	nR, nWfs)
-		complex(dp),	intent(out)		:: unk(:,:)   !unk(	nR, nWfs)
-		integer							:: xi, n
-		complex(dp)						:: phase
-		!
-		!$OMP PARALLEL DO SCHEDULE(STATIC) COLLAPSE(2) DEFAULT(SHARED) PRIVATE(n, xi, phase) 
-		do n = 1, nWfs
-			do xi = 1, nR
-				phase		 = myExp( -1.0_dp 	*	 dot_product( qpts(:,qi) , rpts(:,xi)	) 			)
-				unk(xi,n) = phase * dsqrt(real(nSC,dp))* bWf(xi,n)
-			end do
-		end do
-		!$OMP END PARALLEL DO
-		!
-		return
-	end subroutine
-
 
 
 
 !privat
-	subroutine calcBasis(qi, ri, basVec)
-		!calculates the basis vectors e^i(k+G).r
-		!	if |k+G| is larger then the cutoff the basis vector is set to zero
-		!	the cutoff enforces a symmetric base at each k point
-		integer,	 intent(in)		:: qi, ri
-		complex(dp), intent(out)	:: basVec(:)
-		integer 				 	:: i 
-		!
-		basVec	= 0.0_dp
-		do i =1, nGq(qi)
-			basVec(i) 		= myExp( dot_product( Gvec(:,i,qi), rpts(:,ri) )		)  !/ dsqrt(vol)
-		end do
-		!
-		!
-		return
-	end subroutine
-
-
-
 	subroutine testNormalBwf(qi, bwf)
 		integer,		intent(in)		:: qi
 		complex(dp),	intent(in)		:: bwf(:,:)
@@ -127,128 +108,16 @@ module blochWf
 		return
 	end subroutine
 
+
+
+
+
 end module blochWf 
 
 
 
 
 
-
-
-
-
-
-	!logical function testNormBWF(bwf)
-	!	complex(dp),	intent(in)		:: bwf(:,:,:)
-	!	integer							:: q1, q2, m, n, ri, fcount, cnt
-	!	complex(dp),	allocatable		:: f(:)
-	!	complex(dp)						:: oLap, lphase, rphase
-	!	logical							:: isNorm
-	!	!
-	!	fcount	= 0
-!
-!	!	!$OMP PARALLEL DEFAULT(SHARED) PRIVATE(q1, q2, m, n, ri, f, oLap, lphase, rphase) REDUCTION(.AND.:isNorm) REDUCTION(+:fcount, cnt)
-!	!	allocate( f(nR) 	)
-!	!	!$OMP DO COLLAPSE(4), SCHEDULE(STATIC) 
-!	!	do q2 = 1, nQ
-!	!		do q1 = 1, nQ
-!	!			do m = 1, nWfs
-!	!				do n = 1, nWfs
-!	!					!INTEGRATE
-!	!					do ri = 1, nR
-!	!						lphase	= myExp( dot_product( qpts(:,q1), rpts(:,ri))	)
-!	!						rphase	= myExp( dot_product( qpts(:,q2), rpts(:,ri))	)
-!	!						f(ri)	= dconjg( lphase * unk(ri,m,q1) 	)	* rphase * unk(ri,n,q2)
-!	!					end do
-!	!					oLap	= nIntegrate(nR, nRx,nRy, dx,dy, f)
-!	!					!ADJUST IF NONE ZERO
-!	!					!if( n==m .and. q1==q2	) then
-!	!					!	oLap = oLap - dcmplx(nSC)
-!	!					!end if
-!	!					!CHECK CONDITION
-!	!					if( abs(oLap) > acc ) then
-!	!						isNorm	= .false.
-!	!						fcount	= fcount + 1
-!	!						write(*,'(a,i2,a,i2,a,i3,a,i3,a,e10.3,a,e10.3)')	"[testNormal]: n=",n,",m=",m,", q1=",q1,", q2=",q2," oLap =",dreal(oLap),"+i*",dimag(oLap)
-!	!					else
-!	!						isNorm	= .true.
-!	!					end if
-!	!					cnt = cnt + 1
-!	!				end do
-!	!			end do
-!	!		end do
-!	!	end do
-!	!	!$OMP END DO
-!	!	deallocate(	f	)
-!	!	!$OMP END PARALLEL
-!
-!	!	!
-!	!	testNormUNK	= isNorm
-!	!	if( .not. testNormUNK) then
-!	!		write(*,'(a,i8,a,i8,a)')	"[testNormUNK]: ",fcount," of ",cnt," tests of unk normalization failed"
-!	!	end if
-!	!	!
-!	!	return
-	!end function
-
-
-
-
-
-
-	!subroutine testNormal(bwf)
-	!	! <Y_nk1|Y_mk2> = N * \delta_n,m * \delta_k1,k2
-	!	complex(dp),	intent(in)		:: bwf(:,:,:)
-	!	complex(dp),	allocatable		:: f(:)
-	!	integer							:: ri, q1,q2, n,m, count, tot
-	!	complex(dp)						:: oLap
-	!	real(dp)						:: avg
-	!	!
-	!	allocate(	f(nR)	)
-	!	!
-	!	count	= 0
-	!	avg		= 0.0_dp
-	!	tot		= 0
-	!	!
-	!	do m = 1, nWfs
-	!		do n = 1, nWfs
-	!			do q1 = 1, nQ
-	!				!do q2 = 1, nQ
-	!					!FILL INTEGRATION ARRAY
-	!					do ri = 1, nR
-	!						f(ri)	= dconjg(bwf(ri,q1,n)) * bwf(ri,q1,m)
-	!					end do
-	!					oLap	= nIntegrate(nR, nRx,nRy, dx,dy, f)
-	!					!CHECK CONDITION
-	!					if( dimag(oLap) > acc ) then
-	!						count	= count + 1
-	!						avg		= avg	+ abs(dreal(oLap)-nSC)
-	!					else
-	!						if(n==m .and. q1==q2) then
-	!							if(abs(dreal(oLap)-nSC) > acc )then
-	!								count	= count + 1
-	!								avg		= avg	+ abs(dreal(oLap)-nSC)
-	!							end if
-	!						else
-	!							if(abs(dreal(oLap)) > acc )then
-	!								count	= count + 1
-	!								avg		= avg	+ abs(dreal(oLap)-nSC)
-	!							end if
-	!						end if
-	!					end if
-	!					!
-	!					!
-	!					tot	= tot + 1
-	!				!end do
-	!			end do
-	!		end do
-	!	end do
-!
-!	!	avg	= avg / real(tot,dp)
-!	!	write(*,*)"[testNormal]: found ",count," points of ",tot," not normalized bwfs, avg diff=",avg
-!
-!	!	return
-	!end subroutine
 
 
 
