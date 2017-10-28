@@ -439,18 +439,19 @@ module projection
 		complex(dp),	intent(in)	:: ckH(:,:), gnr(:,:) 
 		complex(dp),	intent(out)	:: A(:,:) !A(nBands,nWfs)
 		complex(dp),	allocatable	:: psi(:), basVec(:)
-		integer						:: m,n, xi
+		integer						:: m,n, xi, gMax
 		!
 		allocate(	basVec(nG)	)
 		allocate(	psi(nBands)	)
 		!
+		gMax = nGq(qi)
 		!
 		!INTEGRATION OVER REAL SPACE
 		A = dcmplx(0.0_dp)
 		do xi = 1, nR
 			!GET BASIS VECTOR
 			call calcBasis(qi,xi, basVec)
-			psi(:)	= matmul( basVec, ckH ) / dsqrt(vol)
+			psi(:)	= matmul( basVec(1:gMax), ckH(1:gMax,1:nBands) ) / dsqrt(vol)
 			psi(:)	= dconjg(psi)
 			!CALC OVERLAP AT CURRENT GRID POINT
 			do n = 1, nWfs
