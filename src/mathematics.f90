@@ -219,7 +219,7 @@ module mathematics
     	vu  	= 0.0_dp
     	il		= 1
     	iu		= size(z,2)
-    	abstol	= 1e-5_dp
+    	abstol	= 1e-15_dp
     	ldz		= n
     	lwork	= 2*n
     	lrwork	= 24*n
