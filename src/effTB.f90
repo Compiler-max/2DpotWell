@@ -177,9 +177,12 @@ module effTB
 						Myl	= UNKoverlap(	n,		m, 		qi		, 	qyl		,	Gyl		, ck	)
 						Myr	= UNKoverlap(	n,		m, 		qi		, 	qyr		,	zero	, ck	)
 
-						if(		 n==m 	) then		!.and.			 abs(one-dcmplx(1.0_dp)) > acc ) then
-							write(*,'(a,i2,a,f6.3,a,f6.3)') "[calcConnOnCoarse]: n=m=",n," one=",dreal(one),"+i*",dimag(one)
-						else
+						if(		 n==m .and. abs(abs(one)-1.0_dp) > acc 	) then		!.and.			 abs(one-dcmplx(1.0_dp)) > acc ) then
+							write(*,*)"[calcConnOnCoarse]: normalization issue detected"
+							write(*,'(a,i2,a,f6.3,a,f6.3)') "[calcConnOnCoarse]: warning n=m=",n," one=",dreal(one),"+i*",dimag(one)
+							
+						else if( n/=m .and. abs(one) > acc ) then
+							write(*,*)"[calcConnOnCoarse]: normalization issue detected"
 							write(*,'(a,f10.8,a,f10.8)') "[calcConnOnCoarse]:  zero=",dreal(one),"+i*",dimag(one)
 						end if
 
@@ -224,6 +227,7 @@ module effTB
 		UNKoverlap	= dcmplx(0.0_dp)
 		cnt	= 0
 		tot	= 0
+
 
 		do gi = 1, nGq(qi)
 			do gj = 1, nGq(knb)
