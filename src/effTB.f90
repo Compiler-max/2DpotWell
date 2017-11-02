@@ -172,9 +172,9 @@ module effTB
 						!
 						!OVERLAP TO NEAREST NEIGHBOURS
 						one	= UNKoverlap(	n,		m,		qi		, 	qi		,	zero	, ck	)
-						Mxl	= UNKoverlap(	n,		m, 		qi		,	qxl 	,	zero		, ck	) 
+						Mxl	= UNKoverlap(	n,		m, 		qi		,	qxl 	,	Gxl		, ck	) 
 						Mxr	= UNKoverlap(	n,		m, 		qi		,	qxr		,	zero	, ck	)
-						Myl	= UNKoverlap(	n,		m, 		qi		, 	qyl		,	zero	, ck	)
+						Myl	= UNKoverlap(	n,		m, 		qi		, 	qyl		,	Gyl		, ck	)
 						Myr	= UNKoverlap(	n,		m, 		qi		, 	qyr		,	zero	, ck	)
 
 						if(		 n==m 	) then		!.and.			 abs(one-dcmplx(1.0_dp)) > acc ) then
