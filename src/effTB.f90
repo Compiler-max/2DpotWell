@@ -180,7 +180,7 @@ module effTB
 						if(		 n==m 	) then		!.and.			 abs(one-dcmplx(1.0_dp)) > acc ) then
 							write(*,'(a,i2,a,f6.3,a,f6.3)') "[calcConnOnCoarse]: n=m=",n," one=",dreal(one),"+i*",dimag(one)
 						else
-							write(*,'(a,f10.8,a,f10.8)') "[calcConnOnCoarse]:  one=",dreal(one),"+i*",dimag(one)
+							write(*,'(a,f10.8,a,f10.8)') "[calcConnOnCoarse]:  zero=",dreal(one),"+i*",dimag(one)
 						end if
 
 
