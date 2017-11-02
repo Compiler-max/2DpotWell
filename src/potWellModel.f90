@@ -47,7 +47,7 @@ module potWellModel
 			!
 			!ELECTRONIC STRUCTURE
 			call setUpBasis(qi)
-			
+			Gmax 	= nGq(qi)
 			
 
 			call populateH(qi, Hmat) 	!omp
@@ -64,7 +64,6 @@ module potWellModel
 			if( debugHam ) then
 				if(found /= nSolve )write(*,*)"[solveHam]: only found ",found," bands of required ",nSolve
 				if(nBands > found) write(*,*)"[solveHam]: warning did not found required amount of bands"
-				Gmax 	= nGq(qi)
 				if( Gmax < nSolve ) write(*,*)"[solveHam]: cutoff to small to get ",nSolve," bands! only get",Gmax," basis functions"
 			end if
 			!
