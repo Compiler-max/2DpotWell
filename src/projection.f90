@@ -6,7 +6,7 @@ module projection
 	use mathematics, 	only: 	dp, PI_dp, i_dp, acc, machineP,&
 								myExp, nIntegrate, eigSolver,  mySVD, myMatInvSqrt, isUnit, isIdentity, isHermitian
 	use sysPara
-	use blochWf,		only:	calcBasis, genUnk
+	use blochWf,		only:	calcBasis
 	use output,			only:	writeInterpBands
 	implicit none	
 	

@@ -4,9 +4,8 @@ module potWellModel
 	use omp_lib
 	use mathematics,	only:	dp, PI_dp,i_dp, machineP, myExp, myLeviCivita, &
 								eigSolver, eigSolver2, nIntegrate, isUnit, isHermitian
-	use sysPara
-	use blochWf,		only:	genBwfVelo					
-	use output,			only:	printMat, 	writeEnAndCK
+	use sysPara				
+	use output,			only:	writeEnAndCK
 	implicit none	
 	
 	private
@@ -160,7 +159,6 @@ module potWellModel
 		if(debugHam) then
 			if ( .not.	isHermitian(Hmat)	) then
 				write(*,*)"[populateH]: Hamiltonian matrix is not Hermitian :"
-				!call printMat(nG, Hmat)
 			end if
 		end if
 

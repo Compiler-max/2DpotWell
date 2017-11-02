@@ -110,21 +110,21 @@ program main
 
 
 	!K SPACE METHOD
-	!write(*,*)"*"
-	!write(*,*)"*"
-	!write(*,*)"*"
-	!write(*,*)"*"
-	!call cpu_time(T0)
-	!if ( doBerry ) then
-	!	write(*,*)"[main]:**************************WAVEFUNCTION METHOD*************************"
-	!	call berryMethod(ckW, En, Uq, pBerry, pNiu, pPei)
-	!	write(*,*)"[main]: done with wavefunction method "
-	!	write(*,'(a,f12.8,a,f12.8,a)')	"[main]: calculated zero order pBerry=(",pBerry(1),", ",pBerry(2),")."
-	!else
-	!	write(*,*)"[main]: berry method disabled"
-	!end if
-	!call cpu_time(T1)
-	!bT	= T1 - T0
+	write(*,*)"*"
+	write(*,*)"*"
+	write(*,*)"*"
+	write(*,*)"*"
+	call cpu_time(T0)
+	if ( doBerry ) then
+		write(*,*)"[main]:**************************WAVEFUNCTION METHOD*************************"
+		call berryMethod(ckW, En, Uq, pBerry, pNiu, pPei)
+		write(*,*)"[main]: done with wavefunction method "
+		write(*,'(a,f12.8,a,f12.8,a)')	"[main]: calculated zero order pBerry=(",pBerry(1),", ",pBerry(2),")."
+	else
+		write(*,*)"[main]: berry method disabled"
+	end if
+	call cpu_time(T1)
+	bT	= T1 - T0
 	
 
 

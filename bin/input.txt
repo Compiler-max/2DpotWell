@@ -10,13 +10,13 @@
     relYpos     = 0.50 0.50
     atRx        = 1.00 1.00
     atRy        = 1.00 1.00
-    atPot       = -3.0 -4.0
+    atPot       = -3.0 -5.0
     dVpot       = 0.00 0.00
     Zion        = 1.00 1.00
 
 [numerics]
     nGdim       = 49
-    Gcut        = 4.0
+    Gcut        = 3.0
     nSolve      = 10        
     nQx         = 8   
     nQy         = 8
@@ -32,8 +32,8 @@
     doProj      = t
     doProjNUM   = f
     doGaugBack  = f
-    doBerry     = f
-    doWanni     = t
+    doBerry     = t
+    doWanni     = f
     doNiu       = f
     doPei       = f
 

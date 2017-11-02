@@ -99,7 +99,7 @@ module effTB
 		complex(dp),	intent(out)		:: A(:,:,:,:)			
 		complex(dp)						:: Mxl, Mxr, Myl, Myr, one
 		integer							:: n, m, Z, qi, qx, qy, qxl, qxr, qyl, qyr, found, tot, al, be
-		real(dp)						:: wbx,wby, bxl(2), bxr(2), byl(2), byr(2),dmax, avg, delta
+		real(dp)						:: wbx,wby, bxl(2), bxr(2), byl(2), byr(2),dmax, avg, delta, Gxl(2), Gyl(2), zero(2)
 		!
 		A 		= dcmplx(0.0_dp)
 		Z 		= 4	!amount of nearest neighbours( 2 for 2D cubic unit cell)
@@ -162,12 +162,20 @@ module effTB
 						qyr	= getKindex(qx,qyr)
 						!call testNeighB(qi, qxl, qxr, qyl, qyr)
 						!
+						!SHIFT NEIGHBOURS BACK TO FIRST BZ
+						Gxl(:)	= 0.0_dp
+						Gyl(:)	= 0.0_dp
+						zero(:)	= 0.0_dp
+						if( qx == 1 ) Gxl(1)	= - PI_dp / aX
+						if( qy == 1 ) Gyl(2)	= - PI_dp / aY
+
+						!
 						!OVERLAP TO NEAREST NEIGHBOURS
-						one	= UNKoverlap(	n,		m,		qi		, 	qi		, ck	)
-						Mxl	= UNKoverlap(	n,		m, 		qi		,	qxl 	, ck	) 
-						Mxr	= UNKoverlap(	n,		m, 		qi		,	qxr		, ck	)
-						Myl	= UNKoverlap(	n,		m, 		qi		, 	qyl		, ck	)
-						Myr	= UNKoverlap(	n,		m, 		qi		, 	qyr		, ck	)
+						one	= UNKoverlap(	n,		m,		qi		, 	qi		,	zero	, ck	)
+						Mxl	= UNKoverlap(	n,		m, 		qi		,	qxl 	,	zero		, ck	) 
+						Mxr	= UNKoverlap(	n,		m, 		qi		,	qxr		,	zero	, ck	)
+						Myl	= UNKoverlap(	n,		m, 		qi		, 	qyl		,	zero	, ck	)
+						Myr	= UNKoverlap(	n,		m, 		qi		, 	qyr		,	zero	, ck	)
 
 						if(		 n==m 	) then		!.and.			 abs(one-dcmplx(1.0_dp)) > acc ) then
 							write(*,'(a,i2,a,f6.3,a,f6.3)') "[calcConnOnCoarse]: n=m=",n," one=",dreal(one),"+i*",dimag(one)
@@ -202,25 +210,33 @@ module effTB
 
 
 
-	complex(dp) function UNKoverlap(n, m, qi, knb, ck)
+	complex(dp) function UNKoverlap(n, m, qi, knb, gShift, ck)
 		!HELPER for calcConn
 		!calculates the overlap between unk at qi and at a neigbhouring k point knb
 		!	integration only over the first unit cell
 		!
 		integer,		intent(in)		:: n, m, qi, knb
+		real(dp),		intent(in)		:: gShift(2)
 		complex(dp),	intent(in)		:: ck(:,:,:)  !ck(			nG		,	nBands  	,	nQ	)		
-		integer							:: gi, gj
+		integer							:: gi, gj, cnt, tot
+		real(dp)						:: delta(2)
 		!
 		UNKoverlap	= dcmplx(0.0_dp)
-		
-		do gi = 1, nG
-			do gj = 1, nG
-				UNKoverlap	= UNKoverlap +  dconjg( ck(gi,n,qi) ) * ck(gj,m,knb) 
+		cnt	= 0
+		tot	= 0
+
+		do gi = 1, nGq(qi)
+			do gj = 1, nGq(knb)
+				delta(:)	= Gvec(:,gi,qi) - qpts(:,qi) -  ( Gvec(:,gj,knb) - qpts(:,knb) - gShift(:) )
+				if( norm2(delta) < machineP )	then
+					UNKoverlap	= UNKoverlap +  dconjg( ck(gi,n,qi) ) * ck(gj,m,knb) 
+					cnt = cnt + 1
+				end if
+				tot = tot + 1
 			end do
 		end do
-
-		!UNKoverlap = dot_product( ck(:,n,qi) , ck(:,m,knb)	)
 		!
+		write(*,*)	"[UNKoverlap]: delta was fullfilled ",cnt," times of ",tot," checks" 
 		!
 		return
 	end function
