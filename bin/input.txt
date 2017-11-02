@@ -10,14 +10,14 @@
     relYpos     = 0.50 0.50
     atRx        = 1.00 1.00
     atRy        = 1.00 1.00
-    atPot       = -3.0 -5.0
+    atPot       = -3.0 -4.0
     dVpot       = 0.00 0.00
     Zion        = 1.00 1.00
 
 [numerics]
     nGdim       = 49
-    Gcut        = 3.0
-    nSolve      = 10        
+    Gcut        = 6.0
+    nSolve      = 8        
     nQx         = 8   
     nQy         = 8
     nSCx        = 8 
@@ -34,7 +34,7 @@
     doGaugBack  = f
     doBerry     = t
     doWanni     = f
-    doNiu       = f
+    doNiu       = t
     doPei       = f
 
 [output]
@@ -54,8 +54,8 @@
     trialOrbSw  = 0
     trialOrbVAL = 1.0 1.0
     R0          = 11
-    nKx         = 5
-    nKy         = 5
+    nKx         = 8
+    nKy         = 8
     connSwitch  = 1
     gaugeBack   = 0
   

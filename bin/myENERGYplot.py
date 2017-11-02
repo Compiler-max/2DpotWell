@@ -30,9 +30,9 @@ rawData		= np.fromfile(f2,dtype='float64',count=-1)
 f2.close()
 
 
-#f5			= open("rawData/EnInterP.dat",'rb') #rb = Read Binary
-#rawInterP	= np.fromfile(f5,dtype='float64',count=-1)
-#f5.close()
+f5			= open("rawData/EnInterP.dat",'rb') #rb = Read Binary
+rawInterP	= np.fromfile(f5,dtype='float64',count=-1)
+f5.close()
 
 #f6			= open("rawData/EnPei.dat",'rb') #rb = Read Binary
 #rawENpei	= np.fromfile(f6,dtype='float64',count=-1)
@@ -85,7 +85,7 @@ qpts	= np.reshape(	qpts		,	(nQ,2)		)
 kpts	= np.reshape(	kpts		,	(nK,2)		)
 En		= np.reshape(	rawData		,	(nQ,nG)		)    
 
-rawInterP= np.ones(nK*nWfs)
+#rawInterP= np.ones(nK*nWfs)
 rawENpei = np.ones(nK*nWfs)
 EI 		= np.reshape(	rawInterP	,	(nK,nWfs)	)
 EnP 	= np.reshape(	rawENpei	,	(nK,nWfs)	)
@@ -168,7 +168,7 @@ for n in range(0,nWfs):
 		EIPlot[offs+i]	= EI[ibar,n]
 		EnpPlot[offs+i] = EnP[ibar,n]
 	ax.plot(kPlot,EIPlot,marker='+',color='r',linewidth=0.4)
-	ax.plot(kPlot,EIPlot,marker='+',color='g',linewidth=0.3)
+	ax.plot(kPlot,EnpPlot,marker='+',color='g',linewidth=0.3)
 
 
 

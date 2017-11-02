@@ -100,7 +100,7 @@ module wannInterp
 		FW	= dcmplx(0.0_dp)
 		!
 		do R = 1, nSC
-			phase			= myExp(	dot_product(kpts(:,ki),Rcell(:,R))	)   / dsqrt(real(nQ,dp) )
+			phase			= myExp(	dot_product(kpts(:,ki),Rcell(:,R))	)   / dsqrt(real(nSC,dp) )
 			!HAM
 			HW(:,:)		= HW(:,:) 		+ phase		 					* tHopp(:,:,R)
 			!HAM DERIVATIVE
