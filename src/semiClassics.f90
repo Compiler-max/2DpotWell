@@ -128,6 +128,7 @@ module semiClassics
 									!MATRIX
 									Fmat(i,j) 	= Fmat(i,j) +  myLeviCivita(j,k,l) * dreal(	Vtmp ) / eDiff	
 									if(abs(dimag(Vtmp)) > acc ) write(*,*)	"[addF2]: non vanishing imag part detected:",dimag(Vtmp)
+									if( eDiff < machineP ) write(*,*) "[addF2]: warning vanishing ediff"
 									!write(*,'(a,e10.3,a,e10.3)')"[addF2]: |Vtmp|=",abs(Vtmp), "eDiff=",eDiff
 								end if
 							end do
@@ -174,6 +175,7 @@ module semiClassics
 								!MATRIX
 								Fmat(i,j) 	= Fmat(i,j) -  myLeviCivita(j,k,l) * dreal(		Vtmp / dcmplx(eDiff)	)
 								if(abs(dimag(Vtmp)) > acc ) write(*,*)	"[addF3]: non vanishing imag part detected",dimag(Vtmp)
+								if( eDiff < machineP ) write(*,*) "[addF3]: warning vanishing ediff"
 								!write(*,'(a,e10.3,a,e10.3)')"[addF3]: |Vtmp|=",abs(Vtmp), "eDiff=",eDiff
 							end if
 						end do
