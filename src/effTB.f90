@@ -166,8 +166,8 @@ module effTB
 						Gxl(:)	= 0.0_dp
 						Gyl(:)	= 0.0_dp
 						zero(:)	= 0.0_dp
-						if( qx == 1 ) Gxl(1)	= - PI_dp / aX
-						if( qy == 1 ) Gyl(2)	= - PI_dp / aY
+						if( qx == 1 ) Gxl(1)	= - 2.0_dp * PI_dp / aX
+						if( qy == 1 ) Gyl(2)	= - 2.0_dp * PI_dp / aY
 
 						write(*,*)"*"
 						write(*,*)"*"
@@ -251,8 +251,9 @@ module effTB
 			end do
 		end do
 		!
-		if( cnt > nGq(qi)	)	write(*,'(a,i8,a,i8)')	"[UNKoverlap]: warning, used ",cnt," where nGmax(qi)=",nGq(qi)
-		if( cnt < nGq(qi) / 2.0_dp)	write(*,'(a,i8,a,i8)')	"[UNKoverlap]: warning, used  only",cnt," where nGmax(qi)=",nGq(qi)
+		write(*,'(a,i8,a,i8)')	"[UNKoverlap]: used ",cnt," where nGmax(qi)=",nGq(qi)
+		!if( cnt > nGq(qi)	)	write(*,'(a,i8,a,i8)')	"[UNKoverlap]: warning, used ",cnt," where nGmax(qi)=",nGq(qi)
+		!if( cnt < nGq(qi) / 2.0_dp)	write(*,'(a,i8,a,i8)')	"[UNKoverlap]: warning, used  only",cnt," where nGmax(qi)=",nGq(qi)
 		!
 		return
 	end function
