@@ -251,9 +251,9 @@ module effTB
 			end do
 		end do
 		!
-		write(*,'(a,i8,a,i8)')	"[UNKoverlap]: used ",cnt," where nGmax(qi)=",nGq(qi)
-		!if( cnt > nGq(qi)	)	write(*,'(a,i8,a,i8)')	"[UNKoverlap]: warning, used ",cnt," where nGmax(qi)=",nGq(qi)
-		!if( cnt < nGq(qi) / 2.0_dp)	write(*,'(a,i8,a,i8)')	"[UNKoverlap]: warning, used  only",cnt," where nGmax(qi)=",nGq(qi)
+		!write(*,'(a,i8,a,i8)')	"[UNKoverlap]: used ",cnt," where nGmax(qi)=",nGq(qi)
+		if( cnt > nGq(qi)	)	write(*,'(a,i8,a,i8)')	"[UNKoverlap]: warning, used ",cnt," where nGmax(qi)=",nGq(qi)
+		if( cnt < nGq(qi) / 2.0_dp)	write(*,'(a,i8,a,i8)')	"[UNKoverlap]: warning, used  only",cnt," where nGmax(qi)=",nGq(qi)
 		!
 		return
 	end function
