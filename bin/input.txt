@@ -5,35 +5,35 @@
     aY          = 10
 
 [atoms]
-    nAt         = 2       
-    relXpos     = 0.25 0.75     
-    relYpos     = 0.50 0.50
+    nAt         = 2      
+    relXpos     = 0.20 0.80    
+    relYpos     = 0.00 0.00
     atRx        = 1.00 1.00
     atRy        = 1.00 1.00
-    atPot       = -3.0 -4.0
+    atPot       = -3.00 -3.10
     dVpot       = 0.00 0.00
     Zion        = 1.00 1.00
 
 [numerics]
     nGdim       = 49
-    Gcut        = 6.0
-    nSolve      = 8        
-    nQx         = 8   
-    nQy         = 8
-    nSCx        = 8 
-    nSCy        = 8
-    nRx         = 81   
-    nRy         = 81
+    Gcut        = 7.0
+    nSolve      = 10        
+    nQx         = 4   
+    nQy         = 4
+    nSCx        = 4 
+    nSCy        = 4
+    nRx         = 41   
+    nRy         = 41
     thres       = 0.1
 
 [methods]
     doSolveHam  = t
     doVdesc     = f
-    doProj      = t
+    doProj      = f
     doProjNUM   = f
     doGaugBack  = f
     doBerry     = t
-    doWanni     = f
+    doWanni     = t
     doNiu       = t
     doPei       = f
 
@@ -54,15 +54,15 @@
     trialOrbSw  = 0
     trialOrbVAL = 1.0 1.0
     R0          = 11
-    nKx         = 8
-    nKy         = 8
+    nKx         = 64
+    nKy         = 64
     connSwitch  = 1
     gaugeBack   = 0
   
 
 
 [perturbation]
-    B0          = 0.0               #hbar/(e*a0**2)
+    B0          = 1.0               #hbar/(e*a0**2)
     Bext        = 0.0 0.0 1.0
 
 

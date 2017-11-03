@@ -10,7 +10,7 @@ module output
 	private
 
 	public ::	writeMeshInfo, writeMeshBin, writeEnAndCK, writeCkASunk, writeConnCurv, writeWannFiles, writePolFile, &
-				printMat, printTiming , writePeierls,  writeInterpBands, writeEnH, printBasisInfo
+				printMat, printTiming , writePeierls,  writeInterpBands, writeEnH, printBasisInfo, writeVeloH
 
 
 	interface printMat
@@ -258,6 +258,29 @@ module output
 		write(*,*)"[writeCkASunk]: wrote all files"
 		!
 		!
+		return
+	end subroutine
+
+
+
+	subroutine writeVeloH(velo)
+		complex(dp),	intent(in)		:: velo(:,:,:,:) !veloK(3		, 	nWfs	,	nWfs	,	nK		)
+		integer		qi, n, m
+
+		open(unit=800,file='velocities.txt',action='write')
+		write(800,*)"*******************velocities******************************"
+		do qi = 1, size(velo,4)
+			write(800,*)"*"
+			write(800,*)"*"
+			write(800,*)" qi=",qi
+			do m = 1, size(velo,3)
+				do n = 1, size(velo,2)
+					!ToDo
+					!write(800,*)  "n=",n," m=",m," v=",dreal(veloH)
+				end do
+			end do
+		end do
+
 		return
 	end subroutine
 

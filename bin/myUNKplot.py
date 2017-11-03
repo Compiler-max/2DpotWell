@@ -20,11 +20,11 @@ f1	 		= open("rawData/rpts.dat",'rb') #rb = Read Binary
 rpts 		= np.fromfile(f1,dtype='float64',count=-1)
 f1.close()
 
-f2			= open("rawData/unkR.dat",'rb') #rb = Read Binary
+f2			= open("rawData/ROTunkR.dat",'rb') #rb = Read Binary
 rawDataR	= np.fromfile(f2,dtype='float64',count=-1)
 f2.close()
 
-f3			= open("rawData/unkI.dat",'rb') #rb = Read Binary
+f3			= open("rawData/ROTunkI.dat",'rb') #rb = Read Binary
 rawDataI	= np.fromfile(f3,dtype='float64',count=-1)
 f3.close()
 
@@ -69,8 +69,8 @@ rpts	= np.reshape(rpts,(nR,2))
 atPos	= np.reshape(atPos,(nAt,2))
 
 qpts	= np.reshape(qpts,(nQ,2))
-unkR	= np.reshape(rawDataR,(nQ, 3 , nR))  #	unk(		nR		, 	nK		, nWfs	)		
-unkI	= np.reshape(rawDataI,(nQ, 3 , nR))
+unkR	= np.reshape(rawDataR,(nQ, nWfs , nR))  #	unk(		nR		, 	nK		, nWfs	)		
+unkI	= np.reshape(rawDataI,(nQ, nWfs , nR))
 unk		= unkR**2 + unkI**2
 
 
@@ -140,8 +140,8 @@ for n in range(6):
 	
 	plt.title('n='+str(n))
 		
-	ax.set_xlim([0,2*aX])
-	ax.set_ylim([0,2*aY])
+	#ax.set_xlim([0,2*aX])
+	#ax.set_ylim([0,2*aY])
 
 	plt.show()
 

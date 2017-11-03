@@ -95,7 +95,7 @@ for n in range(nWfs):
 #
 
 #2D HEATMAP
-R = 11				#unit cell
+R = 10				#unit cell
 n = 0				#state			
 
 colorMap 	= 'magma'
@@ -117,14 +117,30 @@ for n in range(nWfs):
 
 
 	#plot atoms
-	for at in range(nAt):
-		print(atPos[at,1])
-		ax.plot(2*aX+atPos[at,0],2*aX+atPos[at,1],marker='+',color='white')
-		ax.plot([2*aX+atPos[at,0]-1,2*aX+atPos[at,0]-1]	, [2*aX+atPos[at,1]-1, 2*aX+atPos[at,1]+1],color=atColor,linewidth=0.2)
-		ax.plot([2*aX+atPos[at,0]+1,2*aX+atPos[at,0]+1]	, [2*aX+atPos[at,1]-1, 2*aX+atPos[at,1]+1],color=atColor,linewidth=0.2)
-		ax.plot([2*aX+atPos[at,0]-1,2*aX+atPos[at,0]+1]	, [2*aX+atPos[at,1]-1, 2*aX+atPos[at,1]-1],color=atColor,linewidth=0.2)
-		ax.plot([2*aX+atPos[at,0]-1,2*aX+atPos[at,0]+1]	, [2*aX+atPos[at,1]+1, 2*aX+atPos[at,1]+1],color=atColor,linewidth=0.2)
+	#for at in range(nAt):
+	#	print(atPos[at,1])
+	#	ax.plot(2*aX+atPos[at,0],2*aX+atPos[at,1],marker='+',color='white')
+	#	ax.plot([2*aX+atPos[at,0]-1,2*aX+atPos[at,0]-1]	, [2*aX+atPos[at,1]-1, 2*aX+atPos[at,1]+1],color=atColor,linewidth=0.2)
+	#	ax.plot([2*aX+atPos[at,0]+1,2*aX+atPos[at,0]+1]	, [2*aX+atPos[at,1]-1, 2*aX+atPos[at,1]+1],color=atColor,linewidth=0.2)
+	#	ax.plot([2*aX+atPos[at,0]-1,2*aX+atPos[at,0]+1]	, [2*aX+atPos[at,1]-1, 2*aX+atPos[at,1]-1],color=atColor,linewidth=0.2)
+	#	ax.plot([2*aX+atPos[at,0]-1,2*aX+atPos[at,0]+1]	, [2*aX+atPos[at,1]+1, 2*aX+atPos[at,1]+1],color=atColor,linewidth=0.2)
 	
+	at = 0
+	print(atPos[at,1])
+	ax.plot(2*aX+atPos[at,0],2*aX+atPos[at,1],marker='+',color='white')
+	ax.plot([2*aX+atPos[at,0]-1,2*aX+atPos[at,0]-1]	, [2*aX+atPos[at,1]-1, 2*aX+atPos[at,1]+1],color=atColor,linewidth=0.2)
+	ax.plot([2*aX+atPos[at,0]+1,2*aX+atPos[at,0]+1]	, [2*aX+atPos[at,1]-1, 2*aX+atPos[at,1]+1],color=atColor,linewidth=0.2)
+	ax.plot([2*aX+atPos[at,0]-1,2*aX+atPos[at,0]+1]	, [2*aX+atPos[at,1]-1, 2*aX+atPos[at,1]-1],color=atColor,linewidth=0.2)
+	ax.plot([2*aX+atPos[at,0]-1,2*aX+atPos[at,0]+1]	, [2*aX+atPos[at,1]+1, 2*aX+atPos[at,1]+1],color=atColor,linewidth=0.2)
+
+	at = 1
+	print(atPos[at,1])
+	ax.plot(2*aX+atPos[at,0]-aX,2*aX+atPos[at,1],marker='+',color='white')
+	ax.plot([2*aX+atPos[at,0]-1-aX,2*aX+atPos[at,0]-1-aX]	, [2*aX+atPos[at,1]-1, 2*aX+atPos[at,1]+1],color=atColor,linewidth=0.2)
+	ax.plot([2*aX+atPos[at,0]+1-aX,2*aX+atPos[at,0]+1-aX]	, [2*aX+atPos[at,1]-1, 2*aX+atPos[at,1]+1],color=atColor,linewidth=0.2)
+	ax.plot([2*aX+atPos[at,0]-1-aX,2*aX+atPos[at,0]+1-aX]	, [2*aX+atPos[at,1]-1, 2*aX+atPos[at,1]-1],color=atColor,linewidth=0.2)
+	ax.plot([2*aX+atPos[at,0]-1-aX,2*aX+atPos[at,0]+1-aX]	, [2*aX+atPos[at,1]+1, 2*aX+atPos[at,1]+1],color=atColor,linewidth=0.2)
+
 	xticks 		= np.arange(0,aX*(nKx+1),  aX	)		
 	xtickLabel	= np.arange(int(0),int(nKx+1)  )
 	yticks 		= np.arange(0,aY*(nKy+1),  aY	)		
