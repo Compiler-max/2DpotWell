@@ -143,7 +143,7 @@ module effTB
 		!
 		write(*,'(a,f6.3,a,f6.3)')	"[calcConnOnCoarse]: dqx=",dqx," dqy=",dqy
 		!
-		!$OMP PARALLEL DO COLLAPSE(2) DEFAULT(SHARED) PRIVATE(m,n,qx,qy, qxl, qxr, qyl, qyr, qi,one, Mxl, Mxr, Myl, Myr, Gxl, Gyl, zero)
+		!!$OMP PARALLEL DO COLLAPSE(2) DEFAULT(SHARED) PRIVATE(m,n,qx,qy, qxl, qxr, qyl, qyr, qi,one, Mxl, Mxr, Myl, Myr, Gxl, Gyl, zero)
 		do m = 1, nWfs
 			do n = 1, nWfs
 				do qx = 1, nQx
@@ -169,8 +169,17 @@ module effTB
 						if( qx == 1 ) Gxl(1)	= - PI_dp / aX
 						if( qy == 1 ) Gyl(2)	= - PI_dp / aY
 
-						write(*,*)"[calcConnOnCoarse]: q=(",qpts(1,qi),", ",qpts(2,qi),") Gxl=",Gxl(1),", ",Gxl(2),")."
-						write(*,*)"[calcConnOnCoarse]: q=(",qpts(1,qi),", ",qpts(2,qi),") Gyl=",Gyl(1),", ",Gyl(2),")."
+						write(*,*)"*"
+						write(*,*)"*"
+						write(*,*)"*"
+						write(*,'(a,f6.3,a,f6.3,a)')	"[calcConnOnCoarse]: q_i=(",qpts(1,qi) ,", ",qpts(2,qi) ,")"
+						write(*,'(a,f6.3,a,f6.3,a)')	"[calcConnOnCoarse]: qxl=(",qpts(1,qxl),", ",qpts(2,qxl),")"
+						write(*,'(a,f6.3,a,f6.3,a)')	"[calcConnOnCoarse]: qxr=(",qpts(1,qxr),", ",qpts(2,qxr),")"
+						write(*,'(a,f6.3,a,f6.3,a)')	"[calcConnOnCoarse]: qyl=(",qpts(1,qyl),", ",qpts(2,qyl),")"
+						write(*,'(a,f6.3,a,f6.3,a)')	"[calcConnOnCoarse]: qyr=(",qpts(1,qyr),", ",qpts(2,qyr),")"
+						write(*,*)"*"
+						write(*,'(a,f6.3,a,f6.3,a)')"[calcConnOnCoarse]:  Gxl=",Gxl(1),", ",Gxl(2),")."
+						write(*,'(a,f6.3,a,f6.3,a)')"[calcConnOnCoarse]:  Gyl=",Gyl(1),", ",Gyl(2),")."
 						!
 						!OVERLAP TO NEAREST NEIGHBOURS
 						one	= UNKoverlap(	n,		m,		qi		, 	qi		,	zero	, ck	)
@@ -205,7 +214,7 @@ module effTB
 				end do
 			end do
 		end do
-		!$OMP END PARALLEL DO
+		!!$OMP END PARALLEL DO
 		!
 		!
 		return
@@ -233,7 +242,7 @@ module effTB
 
 		do gi = 1, nGq(qi)
 			do gj = 1, nGq(knb)
-				delta(:)	= Gvec(:,gi,qi) - qpts(:,qi) -  ( Gvec(:,gj,knb) - qpts(:,knb) - gShift(:) )
+				delta(:)	=  ( Gvec(:,gi,qi)-qpts(:,qi) ) 	-  		( Gvec(:,gj,knb)-qpts(:,knb)-gShift(:) )
 				if( norm2(delta) < machineP )	then
 					UNKoverlap	= UNKoverlap +  dconjg( ck(gi,n,qi) ) * ck(gj,m,knb) 
 					cnt = cnt + 1
@@ -243,9 +252,28 @@ module effTB
 		end do
 		!
 		if( cnt > nGq(qi)	)	write(*,'(a,i8,a,i8)')	"[UNKoverlap]: warning, used ",cnt," where nGmax(qi)=",nGq(qi)
+		if( cnt < nGq(qi) / 2.0_dp)	write(*,'(a,i8,a,i8)')	"[UNKoverlap]: warning, used  only",cnt," where nGmax(qi)=",nGq(qi)
 		!
 		return
 	end function
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
