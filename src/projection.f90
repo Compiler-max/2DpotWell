@@ -311,6 +311,10 @@ module projection
 		yL		= atPos(2,at) - atR(2,at)
 		yR		= atPos(2,at) + atR(2,at)
 		!
+		!if( at==2 ) then
+		!	xL = xL - aX
+		!	xR = xR - aX
+		!end if
 		g1Int 	= dcmplx(0.0_dp)
 		do gi = 1, nGq(qi)
 			!
@@ -355,6 +359,10 @@ module projection
 		yL		= atPos(2,at) - atR(2,at)
 		yR		= atPos(2,at) + atR(2,at)
 		!
+		if( at==2 ) then
+			xL = xL - aX
+			xR = xR - aX
+		end if
 		g2Int 	= dcmplx(0.0_dp)
 		do gi = 1, nGq(qi)
 			!
@@ -397,6 +405,10 @@ module projection
 		xR		= atPos(1,at) + atR(1,at)
 		yL		= atPos(2,at) - atR(2,at)
 		yR		= atPos(2,at) + atR(2,at)
+		if( at==2 ) then
+			xL = xL - aX
+			xR = xR - aX
+		end if
 		!
 		g3Int 	= dcmplx(0.0_dp)
 		do gi = 1, nGq(qi)
