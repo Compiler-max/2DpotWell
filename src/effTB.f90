@@ -169,6 +169,8 @@ module effTB
 						if( qx == 1 ) Gxl(1)	= - PI_dp / aX
 						if( qy == 1 ) Gyl(2)	= - PI_dp / aY
 
+						write(*,*)"[calcConnOnCoarse]: q=(",qpts(1,qi),", ",qpts(2,qi),") Gxl=",Gxl(1),", ",Gxl(2),")."
+						write(*,*)"[calcConnOnCoarse]: q=(",qpts(1,qi),", ",qpts(2,qi),") Gyl=",Gyl(1),", ",Gyl(2),")."
 						!
 						!OVERLAP TO NEAREST NEIGHBOURS
 						one	= UNKoverlap(	n,		m,		qi		, 	qi		,	zero	, ck	)
