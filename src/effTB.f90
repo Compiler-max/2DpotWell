@@ -99,7 +99,8 @@ module effTB
 		complex(dp),	intent(out)		:: A(:,:,:,:)			
 		complex(dp)						:: Mxl, Mxr, Myl, Myr, one
 		integer							:: n, m, Z, qi, qx, qy, qxl, qxr, qyl, qyr, found, tot, al, be
-		real(dp)						:: wbx,wby, bxl(2), bxr(2), byl(2), byr(2),dmax, avg, delta, Gxl(2), Gyl(2), zero(2)
+		real(dp)						:: wbx,wby, bxl(2), bxr(2), byl(2), byr(2),dmax, avg, delta, &
+											Gxl(2), Gyl(2), Gxr(2), Gyr(2), zero(2)
 		!
 		A 		= dcmplx(0.0_dp)
 		Z 		= 4	!amount of nearest neighbours( 2 for 2D cubic unit cell)
@@ -143,7 +144,8 @@ module effTB
 		!
 		write(*,'(a,f6.3,a,f6.3)')	"[calcConnOnCoarse]: dqx=",dqx," dqy=",dqy
 		!
-		!$OMP PARALLEL DO COLLAPSE(2) DEFAULT(SHARED) PRIVATE(m,n,qx,qy, qxl, qxr, qyl, qyr, qi,one, Mxl, Mxr, Myl, Myr, Gxl, Gyl, zero)
+		!!!$OMP PARALLEL DO COLLAPSE(2) DEFAULT(SHARED) &
+		!!!$OMP& PRIVATE(m,n,qx,qy, qxl, qxr, qyl, qyr, qi,one, Mxl, Mxr, Myl, Myr, Gxl, Gxr, Gyl, Gyr, zero)
 		do m = 1, nWfs
 			do n = 1, nWfs
 				do qx = 1, nQx
@@ -164,29 +166,35 @@ module effTB
 						!
 						!SHIFT NEIGHBOURS BACK TO FIRST BZ
 						Gxl(:)	= 0.0_dp
+						Gxr(:)	= 0.0_dp
 						Gyl(:)	= 0.0_dp
+						Gyr(:)	= 0.0_dp
 						zero(:)	= 0.0_dp
-						if( qx == 1 ) Gxl(1)	= - 2.0_dp * PI_dp / aX
-						if( qy == 1 ) Gyl(2)	= - 2.0_dp * PI_dp / aY
+						if( qx == 1 ) 	Gxl(1)	= - 2.0_dp * PI_dp / aX
+						if( qx == nQx)	Gxr(1)	= + 2.0_dp * PI_dp / aX
+						if( qy == 1 ) 	Gyl(2)	= - 2.0_dp * PI_dp / aY
+						if( qy == nQy)	Gyr(2)	= + 2.0_dp * PI_dp / aY
 
-						!write(*,*)"*"
-						!write(*,*)"*"
-						!write(*,*)"*"
-						!write(*,'(a,f6.3,a,f6.3,a)')	"[calcConnOnCoarse]: q_i=(",qpts(1,qi) ,", ",qpts(2,qi) ,")"
-						!write(*,'(a,f6.3,a,f6.3,a)')	"[calcConnOnCoarse]: qxl=(",qpts(1,qxl),", ",qpts(2,qxl),")"
-						!write(*,'(a,f6.3,a,f6.3,a)')	"[calcConnOnCoarse]: qxr=(",qpts(1,qxr),", ",qpts(2,qxr),")"
-						!write(*,'(a,f6.3,a,f6.3,a)')	"[calcConnOnCoarse]: qyl=(",qpts(1,qyl),", ",qpts(2,qyl),")"
-						!write(*,'(a,f6.3,a,f6.3,a)')	"[calcConnOnCoarse]: qyr=(",qpts(1,qyr),", ",qpts(2,qyr),")"
-						!write(*,*)"*"
-						!write(*,'(a,f6.3,a,f6.3,a)')"[calcConnOnCoarse]:  Gxl=",Gxl(1),", ",Gxl(2),")."
-						!write(*,'(a,f6.3,a,f6.3,a)')"[calcConnOnCoarse]:  Gyl=",Gyl(1),", ",Gyl(2),")."
+						write(*,*)"*"
+						write(*,*)"*"
+						write(*,*)"*"
+						write(*,'(a,f6.3,a,f6.3,a)')	"[calcConnOnCoarse]: q_i=(",qpts(1,qi) ,", ",qpts(2,qi) ,")"
+						write(*,'(a,f6.3,a,f6.3,a)')	"[calcConnOnCoarse]: qxl=(",qpts(1,qxl),", ",qpts(2,qxl),")"
+						write(*,'(a,f6.3,a,f6.3,a)')	"[calcConnOnCoarse]: qxr=(",qpts(1,qxr),", ",qpts(2,qxr),")"
+						write(*,'(a,f6.3,a,f6.3,a)')	"[calcConnOnCoarse]: qyl=(",qpts(1,qyl),", ",qpts(2,qyl),")"
+						write(*,'(a,f6.3,a,f6.3,a)')	"[calcConnOnCoarse]: qyr=(",qpts(1,qyr),", ",qpts(2,qyr),")"
+						write(*,*)"*"
+						write(*,'(a,f6.3,a,f6.3,a)')"[calcConnOnCoarse]:  Gxl=",Gxl(1),", ",Gxl(2),")."
+						write(*,'(a,f6.3,a,f6.3,a)')"[calcConnOnCoarse]:  Gxr=",Gxr(1),", ",Gxr(2),")."
+						write(*,'(a,f6.3,a,f6.3,a)')"[calcConnOnCoarse]:  Gyl=",Gyl(1),", ",Gyl(2),")."
+						write(*,'(a,f6.3,a,f6.3,a)')"[calcConnOnCoarse]:  Gyr=",Gyr(1),", ",Gyr(2),")."
 						!
 						!OVERLAP TO NEAREST NEIGHBOURS
 						one	= UNKoverlap(	n,		m,		qi		, 	qi		,	zero	, ck	)
 						Mxl	= UNKoverlap(	n,		m, 		qi		,	qxl 	,	Gxl		, ck	) 
-						Mxr	= UNKoverlap(	n,		m, 		qi		,	qxr		,	zero	, ck	)
+						Mxr	= UNKoverlap(	n,		m, 		qi		,	qxr		,	Gxr		, ck	)
 						Myl	= UNKoverlap(	n,		m, 		qi		, 	qyl		,	Gyl		, ck	)
-						Myr	= UNKoverlap(	n,		m, 		qi		, 	qyr		,	zero	, ck	)
+						Myr	= UNKoverlap(	n,		m, 		qi		, 	qyr		,	Gyr		, ck	)
 
 						if(		 n==m .and. abs(abs(one)-1.0_dp) > acc 	) then		!.and.			 abs(one-dcmplx(1.0_dp)) > acc ) then
 							write(*,*)"[calcConnOnCoarse]: normalization issue detected"
@@ -199,22 +207,22 @@ module effTB
 
 
 						!FD SUM OVER NEAREST NEIGHBOURS
-						A(1:2,n,m, qi) = A(1:2,n,m, qi) + i_dp * wbx * bxl(1:2) * ( Mxl - one )
-						A(1:2,n,m, qi) = A(1:2,n,m, qi) + i_dp * wbx * bxr(1:2) * ( Mxr - one )
-						A(1:2,n,m, qi) = A(1:2,n,m, qi) + i_dp * wby * byl(1:2) * ( Myl - one )
-						A(1:2,n,m, qi) = A(1:2,n,m, qi) + i_dp * wby * byr(1:2) * ( Myr - one )
+						!A(1:2,n,m, qi) = A(1:2,n,m, qi) + i_dp * wbx * bxl(1:2) * ( Mxl - one )
+						!A(1:2,n,m, qi) = A(1:2,n,m, qi) + i_dp * wbx * bxr(1:2) * ( Mxr - one )
+						!A(1:2,n,m, qi) = A(1:2,n,m, qi) + i_dp * wby * byl(1:2) * ( Myl - one )
+						!A(1:2,n,m, qi) = A(1:2,n,m, qi) + i_dp * wby * byr(1:2) * ( Myr - one )
 
 
-						!A(1:2,n,m, qi) = A(1:2,n,m, qi) - wbx * bxl(1:2) * dimag( zlog( Mxl ) )
-						!A(1:2,n,m, qi) = A(1:2,n,m, qi) - wbx * bxr(1:2) * dimag( zlog( Mxr ) )
-						!A(1:2,n,m, qi) = A(1:2,n,m, qi) - wby * byl(1:2) * dimag( zlog( Myl ) )
-						!A(1:2,n,m, qi) = A(1:2,n,m, qi) - wby * byr(1:2) * dimag( zlog( Myr ) )
+						A(1:2,n,m, qi) = A(1:2,n,m, qi) - wbx * bxl(1:2) * dimag( zlog( Mxl ) )
+						A(1:2,n,m, qi) = A(1:2,n,m, qi) - wbx * bxr(1:2) * dimag( zlog( Mxr ) )
+						A(1:2,n,m, qi) = A(1:2,n,m, qi) - wby * byl(1:2) * dimag( zlog( Myl ) )
+						A(1:2,n,m, qi) = A(1:2,n,m, qi) - wby * byr(1:2) * dimag( zlog( Myr ) )
 						
 					end do
 				end do
 			end do
 		end do
-		!$OMP END PARALLEL DO
+		!!!$OMP END PARALLEL DO
 		!
 		!
 		return

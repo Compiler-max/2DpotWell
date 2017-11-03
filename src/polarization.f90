@@ -29,23 +29,25 @@ module polarization
 		!
 		!ATOM LIKE
 		do n = 1,size(wCent,2)
-			cent(1) = dmod(wCent(1,n),aX) !get current center by projection into first unit cell
-			cent(2)	= dmod(wCent(2,n),aY)
-			!
-			!SINGLE ATOM
-			if( nAt == 1 ) then
-				cent(:)	= cent(:) - atPos(:,1)		!calc center w.r.t. atom center
-			!DOUBLE ATOM
-			else if( nAt == 2 ) then
-				if( mod(n,2)== 0 ) then
-					cent(:)	= cent(:) - atPos(:,2)
-				else	
-					cent(:)	= cent(:) - atPos(:,1)
-				end if
-			!DEFAULT
-			else
-				write(*,*)	"[calcPolWannCent]: to many atoms in unit cell!"
-			end if
+			!cent(1) = dmod(wCent(1,n),aX) !get current center by projection into first unit cell
+			!cent(2)	= dmod(wCent(2,n),aY)
+			!!
+			!!SINGLE ATOM
+			!if( nAt == 1 ) then
+			!	cent(:)	= cent(:) - atPos(:,1)		!calc center w.r.t. atom center
+			!!DOUBLE ATOM
+			!else if( nAt == 2 ) then
+			!	if( mod(n,2)== 0 ) then
+			!		cent(:)	= cent(:) - atPos(:,2)
+			!	else	
+			!		cent(:)	= cent(:) - atPos(:,1)
+			!	end if
+			!!DEFAULT
+			!else
+			!	write(*,*)	"[calcPolWannCent]: to many atoms in unit cell!"
+			!end if
+
+			cent(:) = wCent(:,n)
 			
 			!if( mod(n,2) == 0 ) then
 			!	cent(:) = cent(:) - atPos(:,2)
@@ -113,7 +115,7 @@ module polarization
 			do qi = 1, size(A,4)
 				val(1:2)	= val(1:2) + A(1:2,n,n,qi) / real(size(A,4),dp)
 			end do
-			write(*,'(a,i3,a,f8.4,a,f8.4,a)')	"[calcPolViaA]: n=",n,"dreal(p_n)=",dreal(val(1)),",",dreal(val(2)),")."
+			write(*,'(a,i3,a,f8.4,a,f8.4,a)')	"[calcPolViaA]: n=",n,"p_n=",dreal(val(1)),",",dreal(val(2)),")."
 
 			if( abs(dimag(val(1))) > acc .or. abs(dimag(val(2))) > acc	) then
 				write(*,*)	"[calcPolViaA]: found non zero imaginary contribution from band n=",n 

@@ -63,8 +63,11 @@ module projection
 				Uq(:,:,qi)	= dcmplx(0.0_dp)
 				call calcAmat(qi,ckH(:,:,qi) ,gnr, A) 
 				call calcUmat(A, Uq(:,:,qi))
+				!ROTATE BLOCH STATES
+				ckW(:,:,qi)	= matmul( ckH(:,:,qi) , Uq(:,:,qi)	 ) !	
 			else
 				write(*,*)	"[projectUNK]: projection disabled, U= Identity"
+				
 				Uq(:,:,qi) = dcmplx(0.0_dp)
 				do n = 1, size(Uq,1)
 					do m = 1, size(Uq,2)
@@ -73,10 +76,10 @@ module projection
 						end if
 					end do
 				end do
+				ckW(:,:,qi) = ckH(:,:,qi)
 			end if
 			!
-			!ROTATE BLOCH STATES
-			ckW(:,:,qi)	= matmul( ckH(:,:,qi) , Uq(:,:,qi)	 ) !	
+			
 
 			if( debugProj  ) then
 				!if( .not. isUnit(ckW(:,:,qi))	)	write(*,*) "[projectUNK]: ckW not a unitary matrix at qi=",qi
@@ -359,10 +362,10 @@ module projection
 		yL		= atPos(2,at) - atR(2,at)
 		yR		= atPos(2,at) + atR(2,at)
 		!
-		if( at==2 ) then
-			xL = xL - aX
-			xR = xR - aX
-		end if
+		!if( at==2 ) then
+		!	xL = xL - aX
+		!	xR = xR - aX
+		!end if
 		g2Int 	= dcmplx(0.0_dp)
 		do gi = 1, nGq(qi)
 			!
@@ -405,10 +408,10 @@ module projection
 		xR		= atPos(1,at) + atR(1,at)
 		yL		= atPos(2,at) - atR(2,at)
 		yR		= atPos(2,at) + atR(2,at)
-		if( at==2 ) then
-			xL = xL - aX
-			xR = xR - aX
-		end if
+		!if( at==2 ) then
+		!	xL = xL - aX
+		!	xR = xR - aX
+		!end if
 		!
 		g3Int 	= dcmplx(0.0_dp)
 		do gi = 1, nGq(qi)

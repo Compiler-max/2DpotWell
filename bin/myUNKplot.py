@@ -140,8 +140,8 @@ for n in range(6):
 	
 	plt.title('n='+str(n))
 		
-	#ax.set_xlim([0,2*aX])
-	#ax.set_ylim([0,2*aY])
+	ax.set_xlim([0,4*aX])
+	ax.set_ylim([0,4*aY])
 
 	plt.show()
 

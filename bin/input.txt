@@ -6,11 +6,11 @@
 
 [atoms]
     nAt         = 2      
-    relXpos     = 0.20 0.80    
+    relXpos     = 0.00 0.40    
     relYpos     = 0.00 0.00
     atRx        = 1.00 1.00
     atRy        = 1.00 1.00
-    atPot       = -3.00 -3.10
+    atPot       = -3.00 -4.00
     dVpot       = 0.00 0.00
     Zion        = 1.00 1.00
 
@@ -29,7 +29,7 @@
 [methods]
     doSolveHam  = t
     doVdesc     = f
-    doProj      = t
+    doProj      = f
     doProjNUM   = f
     doGaugBack  = f
     doBerry     = t
@@ -54,8 +54,8 @@
     trialOrbSw  = 0
     trialOrbVAL = 1.0 1.0
     R0          = 11
-    nKx         = 64
-    nKy         = 64
+    nKx         = 4
+    nKy         = 4
     connSwitch  = 1
     gaugeBack   = 0
   
