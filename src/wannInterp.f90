@@ -46,7 +46,8 @@ module wannInterp
 				!VELOCITIES
 				do m = 1, nWfs
 					do n = 1, nWfs
-						veloH(1:2,n,m,ki)	= HaW(1:2,n,m) !- i_dp * ( EnH(m,ki)-EnH(n,ki) ) * AW(1:2,n,m) 
+						if( n==m ) veloH(1:2,n,m,ki)	= HaW(1:2,n,m)
+						if( n/=m ) veloH(1:2,n,m,ki)	= - i_dp * ( EnH(m,ki)-EnH(n,ki) ) * AconnH(1:2,n,m,ki) 
 					end do
 				end do
 				!CURVATURE
@@ -252,7 +253,8 @@ module wannInterp
 		!
 		do m = 1, nWfs
 			do n = 1, nWfs
-				veloH(1:2,n,m)	= HaW(1:2,n,m) - i_dp * dcmplx(	EnH(m) - EnH(n)		) * AW(1:2,n,m)
+				if( n==m ) veloH(1:2,n,m)	= HaW(1:2,n,m)
+				if( n/=m ) veloH(1:2,n,m)	= - i_dp * dcmplx(	EnH(m) - EnH(n)		) * AW(1:2,n,m)
 			end do
 		end do
 		!
