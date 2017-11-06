@@ -7,7 +7,7 @@
 [atoms]
     nAt         = 2      
     relXpos     = 0.30 0.70    
-    relYpos     = 0.00 0.00
+    relYpos     = 0.50 0.50
     atRx        = 0.90 0.90
     atRy        = 0.90 0.90
     atPot       = -3.00 -3.50

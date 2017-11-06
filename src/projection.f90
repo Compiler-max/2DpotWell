@@ -374,7 +374,7 @@ module projection
 		!
 		!TRIAL ORBITAL:
 		kappa	= PI_dp / (2.0_dp*atR(1,at))
-		if( atR(1,at) /= atR(2,at) ) write(*,*)"[g1Int]: warning analytic projection can not handle non cubic wells"
+		if( atR(1,at) /= atR(2,at) ) write(*,*)"[g2Int]: warning analytic projection can not handle non cubic wells"
 		xc		= atPos(1,at) - atR(1,at)
 		yc		= atPos(2,at) - atR(2,at)
 		xL 		= atPos(1,at) - atR(1,at) 
@@ -484,7 +484,7 @@ module projection
 			!
 			!
 			if( abs(denom) < machineP) then
-				write(*,'(a,i4,a,f8.4,a,f8.4a,f8.4)') "[g2Int]: warning zero denom at qi=",qi," Gx=",Gx,"Gy=",Gy,"denom=",denom
+				write(*,'(a,i4,a,f8.4,a,f8.4a,f8.4)') "[g3Int]: warning zero denom at qi=",qi," Gx=",Gx,"Gy=",Gy,"denom=",denom
 				denom 	= 1e-5_dp
 			end if
 			!
