@@ -22,30 +22,30 @@ module polarization
 		real(dp), intent(in)	:: wCent(:,:)
 		real(dp), intent(out)	:: pE(2)
 		integer 				:: n
-		real(dp) 				:: cent(2), bondC(2)
+		real(dp) 				:: cent(2)
 		!
-		
 		pE	 	= 0.0_dp
 		!
 		!ATOM LIKE
 		do n = 1,size(wCent,2)
 			!cent(1) = dmod(wCent(1,n),aX) !get current center by projection into first unit cell
 			!cent(2)	= dmod(wCent(2,n),aY)
+			cent(:)	= wCent(:,n)
 			!!
 			!!SINGLE ATOM
-			!if( nAt == 1 ) then
-			!	cent(:)	= cent(:) - atPos(:,1)		!calc center w.r.t. atom center
-			!!DOUBLE ATOM
-			!else if( nAt == 2 ) then
-			!	if( mod(n,2)== 0 ) then
-			!		cent(:)	= cent(:) - atPos(:,2)
-			!	else	
-			!		cent(:)	= cent(:) - atPos(:,1)
-			!	end if
-			!!DEFAULT
-			!else
-			!	write(*,*)	"[calcPolWannCent]: to many atoms in unit cell!"
-			!end if
+			if( nAt == 1 ) then
+				cent(:)	= cent(:) - atPos(:,1)		!calc center w.r.t. atom center
+			!DOUBLE ATOM
+			else if( nAt == 2 ) then
+				if( mod(n,2)== 0 ) then
+					cent(:)	= cent(:) - atPos(:,2)
+				else	
+					cent(:)	= cent(:) - atPos(:,1)
+				end if
+			!DEFAULT
+			else
+				write(*,*)	"[calcPolWannCent]: to many atoms in unit cell!"
+			end if
 
 			cent(:) = wCent(:,n)
 			
@@ -98,7 +98,7 @@ module polarization
 		complex(dp),		intent(in)		:: A(:,:,:,:)			!A(2,	 nWfs, nWfs, nQ	)	
 		real(dp),			intent(out)		:: pElA(:)
 		complex(dp)	,		allocatable		:: val(:)
-		real(dp)							:: machine, bondC(2)
+		real(dp)							:: machine
 		integer								:: n, qi
 		!
 		allocate(	val( size(A,1) )	)
