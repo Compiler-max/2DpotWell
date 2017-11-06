@@ -2,7 +2,6 @@
 
 
 
-- projections Gx Gy equal zero distungish
 - velocity output file
 
 
