@@ -1,30 +1,21 @@
 
-	- urlaub eintragen (shiff + weihnachten)
 
 
 
-- plane wave cutoff into new formalism
+- projections Gx Gy equal zero distungish
+- velocity output file
 
 
 
 
 
 
-
--	peierls sub neu machen: mit real space hamiltonian arbeiten, expandieren in basis der null order wannier funktionen
+PEIERLS:
 -	debug peierls for zero magnetic field solution should be same as zero pBerry!!!
 -	shift currently one even though field is applied!!!
 
 
 
-- projections analytisch (projectUNK/calcAmat)
-		-> am besten mit einem switch für analytisch, numerisch zum vergleich!!!
-
-
-- connection mit neuem formalismus (TBviaKspace/CalcConnOnCoarse/UNKoverlap )
-
-
-- write unks for peierls
 
 
 
@@ -33,17 +24,9 @@
 		
 
 
-- 	symmetric case project onto 6 and 3 wannier functions compare
-		-> with good converged system
-
--	modell system with fully y symmetric wannier functions
-
 
 
 -	velocity calculation how to
-
-
--	test linear descending well: why isnt the same as constant well for zero slope?
 
 
 
@@ -55,8 +38,3 @@ BEYOND:
 	- yuriy also mentioned playing around with non collinearity, talk to frank about that again
 		-> maybe only do that in FLEUR	
 
-	
-
-CUTOFF BRANCH:
-	- test: if test grid is set up large enough
-	- test: setUpBasis

@@ -303,42 +303,56 @@ module projection
 	complex(dp) function g1Int(qi,m, at,ckH)
 		integer,		intent(in)	:: qi, m, at
 		complex(dp),	intent(in)	:: ckH(:,:)
-		complex(dp)					:: num1, num2, denom
-		real(dp)					:: kappa, xL, xR, yL, yR, Gx, Gy
+		complex(dp)					:: num1, num2
+		real(dp)					:: kappa, xL, xR, yL, yR, Gx, Gy, denom
 		integer						:: gi
 		!
-		kappa	= PI_dp / (2.0_dp*atR(1,at))
+		!TRIAL ORBITAL:
+		kappa	= PI_dp / ( 2.0_dp * atR(1,at) )
 		if( atR(1,at) /= atR(2,at) ) write(*,*)"[g1Int]: warning analytic projection can not handle non cubic wells"
 		xL 		= atPos(1,at) - atR(1,at) 
 		xR		= atPos(1,at) + atR(1,at)
 		yL		= atPos(2,at) - atR(2,at)
 		yR		= atPos(2,at) + atR(2,at)
 		!
-		!if( at==2 ) then
-		!	xL = xL - aX
-		!	xR = xR - aX
-		!end if
+		!SUMMATION OVER G:
 		g1Int 	= dcmplx(0.0_dp)
 		do gi = 1, nGq(qi)
-			!
 			Gx 		= Gvec(1,gi,qi)
 			Gy		= Gvec(2,gi,qi)
 			!
-			num1 = dcmplx(0.0_dp)
-			num2 = dcmplx(0.0_dp)
-			denom	= machineP			
+			if( 	abs(Gx) < machineP 	.and.	 abs(Gy) < machineP 	) then
+				num1	= dcos(xL*kappa) - dcos(xR*kappa)
+				num2	= dcos(yL*kappa) - dcos(yR*kappa)
+				denom	= kappa**2
 			!
-			!if( abs(dsqrt(Gx**2+Gy**2)) < Gcut) then
-				!
-				num1 	= num1 - myExp(-Gx*xL) * (		 kappa*dcos(xL*kappa)	+ 	i_dp * Gx * dsin(xL*Kappa) 		)
-				num1 	= num1 + myExp(-Gx*xR) * (		 kappa*dcos(xR*kappa)	+	i_dp * Gx * dsin(xR*Kappa)		)
-				!
-				num2 	= num2 + myExp(Gy*yL) * (		 kappa*dcos(yR*kappa)	+	i_dp * Gy * dsin(yR*kappa)		) 
-				num2 	= num2 - myExp(Gy*yR) * (	     kappa*dcos(yL*kappa)	+	i_dp * Gy * dsin(yL*kappa)		)
-				!
-				denom	= denom + myExp(Gy*(yL+yR)) * (Gy**2-kappa**2) * (Gx**2-kappa**2)
-				!  
-			!end if
+			else if( abs(Gy) < machineP ) then
+				num1	= 	myExp(-Gx*(xL+xR)) 	* 	( 			dcos(yL*kappa) - 				dcos(yR*kappa)	)
+				num2	= 			myExp(Gx*xR)* 	( kappa * 	dcos(xL*kappa) + i_dp * Gx * 	dsin(xL*kappa)	)
+				num2	= num2  - 	myExp(Gx*xL)* 	( kappa *	dcos(xR*kappa) + i_dp * Gx *	dsin(xR*kappa)	)
+				denom	= kappa * ( kappa**2 - Gx**2)
+			!
+			else if( abs(Gx) < machineP) then
+				num1	= 	myExp(-Gy*(yL+yR))	*	(			dcos(xL*kappa) -				dcos(xR*kappa)	)
+				num2	=		-	myExp(Gy*yR)*	( kappa *	dcos(yL*kappa) + i_dp * Gy *	dsin(yL*kappa)	)
+				num2	= num2  +	myExp(Gy*yL)*	( kappa *	dcos(yR*kappa) + i_dp * Gy *	dsin(yR*kappa)	)
+				denom	= kappa * ( Gy**2 - kappa**2 )
+			!
+			else
+				num1 	=    	- myExp(-Gx*xL)	* 	( kappa *	dcos(xL*kappa)	+ 	i_dp * Gx * dsin(xL*Kappa) 	)
+				num1 	= num1  + myExp(-Gx*xR) * 	( kappa * 	dcos(xR*kappa)	+	i_dp * Gx * dsin(xR*Kappa)	)
+				num2 	= 		  myExp(Gy*yL) 	* 	( kappa *	dcos(yR*kappa)	+	i_dp * Gy * dsin(yR*kappa)	) 
+				num2 	= num2  - myExp(Gy*yR) 	* 	( kappa *	dcos(yL*kappa)	+	i_dp * Gy * dsin(yL*kappa)	)
+				denom	= myExp(Gy*(yL+yR)) * (Gy**2-kappa**2) * (Gx**2-kappa**2)
+			!
+			end if
+			!
+			!
+			if( abs(denom) < machineP) then
+				write(*,'(a,i4,a,f8.4,a,f8.4a,f8.4)') "[g1Int]: warning found zero denominator at qi=",qi," Gx=",Gx,"Gy=",Gy,"denom=",denom
+				denom 	= 1e-5_dp
+			end if
+			!
 			!
 			g1Int = g1Int + dconjg(ckH(gi,m)) * num1 * num2 / (dsqrt(vol) * denom)
 		end do
@@ -361,11 +375,6 @@ module projection
 		xR		= atPos(1,at) + atR(1,at)
 		yL		= atPos(2,at) - atR(2,at)
 		yR		= atPos(2,at) + atR(2,at)
-		!
-		!if( at==2 ) then
-		!	xL = xL - aX
-		!	xR = xR - aX
-		!end if
 		g2Int 	= dcmplx(0.0_dp)
 		do gi = 1, nGq(qi)
 			!
@@ -408,11 +417,6 @@ module projection
 		xR		= atPos(1,at) + atR(1,at)
 		yL		= atPos(2,at) - atR(2,at)
 		yR		= atPos(2,at) + atR(2,at)
-		!if( at==2 ) then
-		!	xL = xL - aX
-		!	xR = xR - aX
-		!end if
-		!
 		g3Int 	= dcmplx(0.0_dp)
 		do gi = 1, nGq(qi)
 			!

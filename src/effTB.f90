@@ -144,8 +144,8 @@ module effTB
 		!
 		write(*,'(a,f6.3,a,f6.3)')	"[calcConnOnCoarse]: dqx=",dqx," dqy=",dqy
 		!
-		!$OMP PARALLEL DO COLLAPSE(2) DEFAULT(SHARED) &
-		!$OMP& PRIVATE(m,n,qx,qy, qxl, qxr, qyl, qyr, qi,one, Mxl, Mxr, Myl, Myr, Gxl, Gxr, Gyl, Gyr, zero)
+		!!!$OMP PARALLEL DO COLLAPSE(2) DEFAULT(SHARED) &
+		!!!$OMP& PRIVATE(m,n,qx,qy, qxl, qxr, qyl, qyr, qi,one, Mxl, Mxr, Myl, Myr, Gxl, Gxr, Gyl, Gyr, zero)
 		do m = 1, nWfs
 			do n = 1, nWfs
 				do qx = 1, nQx
@@ -222,7 +222,7 @@ module effTB
 				end do
 			end do
 		end do
-		!$OMP END PARALLEL DO
+		!!!!$OMP END PARALLEL DO
 		!
 		!
 		return

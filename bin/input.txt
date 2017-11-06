@@ -6,17 +6,17 @@
 
 [atoms]
     nAt         = 2      
-    relXpos     = 0.00 0.40    
+    relXpos     = 0.30 0.70    
     relYpos     = 0.00 0.00
-    atRx        = 1.00 1.00
-    atRy        = 1.00 1.00
-    atPot       = -3.00 -4.00
+    atRx        = 0.90 0.90
+    atRy        = 0.90 0.90
+    atPot       = -3.00 -3.50
     dVpot       = 0.00 0.00
     Zion        = 1.00 1.00
 
 [numerics]
     nGdim       = 49
-    Gcut        = 5.0
+    Gcut        = 12.0
     nSolve      = 10        
     nQx         = 4   
     nQy         = 4
@@ -29,7 +29,7 @@
 [methods]
     doSolveHam  = t
     doVdesc     = f
-    doProj      = f
+    doProj      = t
     doProjNUM   = f
     doGaugBack  = f
     doBerry     = t
