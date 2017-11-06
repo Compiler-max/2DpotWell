@@ -379,8 +379,8 @@ module projection
 		yc		= atPos(2,at) - atR(2,at)
 		xL 		= atPos(1,at) - atR(1,at) 
 		xR		= atPos(1,at) + atR(1,at)
-		yL		= atPos(2,at) - atR(2,at)
-		yR		= atPos(2,at) + atR(2,at)
+		yL		= atPos(2,at) - 2.0_dp * atR(2,at)
+		yR		= atPos(2,at) + 2.0_dp * atR(2,at)
 		!
 		!SUMMATION OVER G:
 		g2Int 	= dcmplx(0.0_dp)
@@ -440,8 +440,8 @@ module projection
 		if( atR(1,at) /= atR(2,at) ) write(*,*)"[g3Int]: warning analytic projection can not handle non cubic wells"
 		xc		= atPos(1,at) - atR(1,at)
 		yc		= atPos(2,at) - atR(2,at)
-		xL 		= atPos(1,at) - atR(1,at) 
-		xR		= atPos(1,at) + atR(1,at)
+		xL 		= atPos(1,at) - 2.0_dp * atR(1,at) 
+		xR		= atPos(1,at) + 2.0_dp * atR(1,at)
 		yL		= atPos(2,at) - atR(2,at)
 		yR		= atPos(2,at) + atR(2,at)
 		g3Int 	= dcmplx(0.0_dp)
