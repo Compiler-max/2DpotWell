@@ -277,13 +277,13 @@ module output
 				do n = 1, size(velo,2)
 					!x component
 					write(800,'(a,i3,a,i3,a,f8.4,a,f8.4)')  "n=",n," m=",m,&
-										" v_x=",dreal(veloH(1,n,m,qi)),"+i*",dimag(veloH(1,n,m,qi))
+										" v_x=",dreal(velo(1,n,m,qi)),"+i*",dimag(velo(1,n,m,qi))
 					!y component
 					write(800,'(a,i3,a,i3,a,f8.4,a,f8.4)')  "n=",n," m=",m,&
-										" v_y=",dreal(veloH(2,n,m,qi)),"+i*",dimag(veloH(2,n,m,qi))
+										" v_y=",dreal(velo(2,n,m,qi)),"+i*",dimag(velo(2,n,m,qi))
 					!z component
 					write(800,'(a,i3,a,i3,a,f8.4,a,f8.4)')  "n=",n," m=",m,&
-										" v_z=",dreal(veloH(3,n,m,qi)),"+i*",dimag(veloH(3,n,m,qi))
+										" v_z=",dreal(velo(3,n,m,qi)),"+i*",dimag(velo(3,n,m,qi))
 				end do
 			end do
 		end do
