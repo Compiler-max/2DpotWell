@@ -303,8 +303,8 @@ module projection
 	complex(dp) function g1Int(qi,m, at,ckH)
 		integer,		intent(in)	:: qi, m, at
 		complex(dp),	intent(in)	:: ckH(:,:)
-		complex(dp)					:: num1, num2
-		real(dp)					:: kappa, xL, xR, yL, yR, Gx, Gy, denom, xc, yc
+		complex(dp)					:: num1, num2, denom
+		real(dp)					:: kappa, xL, xR, yL, yR, Gx, Gy, xc, yc
 		integer						:: gi
 		!
 		!TRIAL ORBITAL:

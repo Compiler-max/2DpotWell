@@ -8,22 +8,22 @@
     nAt         = 2      
     relXpos     = 0.30 0.70    
     relYpos     = 0.50 0.50
-    atRx        = 0.90 0.90
-    atRy        = 0.90 0.90
+    atRx        = 1.01 1.01
+    atRy        = 1.01 1.01
     atPot       = -3.00 -3.50
     dVpot       = 0.00 0.00
     Zion        = 1.00 1.00
 
 [numerics]
     nGdim       = 49
-    Gcut        = 12.0
+    Gcut        = 11.0
     nSolve      = 10        
     nQx         = 4   
     nQy         = 4
     nSCx        = 4 
     nSCy        = 4
-    nRx         = 41   
-    nRy         = 41
+    nRx         = 81   
+    nRy         = 81
     thres       = 0.1
 
 [methods]
@@ -32,7 +32,7 @@
     doProj      = t
     doProjNUM   = f
     doGaugBack  = f
-    doBerry     = t
+    doBerry     = f
     doWanni     = t
     doNiu       = t
     doPei       = f
