@@ -332,7 +332,7 @@ module wannier
 						end if
 						!TEST CONDITION
 						if(  abs(oLap) > acc) then
-							write(*,'(a,i2,a,i2,a,i2,a,i2,a,f6.4)')	"[isNormal]: sc1=",sc1,", sc2=",sc2,", n=",n,", m=",m,": oLap=",oLap
+							write(*,'(a,i2,a,i2,a,i2,a,i2,a,f9.4)')	"[isNormal]: sc1=",sc1,", sc2=",sc2,", n=",n,", m=",m,": oLap=",oLap
 							isNormal	= isNormal + 1
 							avg	= avg + oLap
 							if( oLap > dmax) then
@@ -347,7 +347,7 @@ module wannier
 		!!!!$OMP END DO
 		!!!!$OMP END PARALLEL
 		avg	= avg / real(isNormal,dp)
-		write(*,'(a,i5,a,i8,a,f16.12,a,f16.12)')	"[isNormal]: ",isNormal," of ",tot, &
+		write(*,'(a,i5,a,i8,a,f16.7,a,f16.7)')	"[isNormal]: ",isNormal," of ",tot, &
 													" are not properly normalized. dmax=",dmax," avg diff=",avg 
 		!											
 		!
