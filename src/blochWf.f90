@@ -79,35 +79,6 @@ module blochWf
 
 
 !privat
-	subroutine testNormalBwf(qi, bwf)
-		integer,		intent(in)		:: qi
-		complex(dp),	intent(in)		:: bwf(:,:)
-		complex(dp),	allocatable		:: f(:)
-		integer							:: n, xi,yi,ri, cnt
-		complex(dp)						:: oLap
-		!
-		allocate(	f(100)	)
-		write(*,*)"[testNormalBwf]: qi=",qi
-		do n = 1, nG
-			!INTEGRATE
-			cnt = 1
-			do xi = 1, 10
-				do yi = 1, 10
-					ri		= getRindex(xi,yi)
-					f(cnt)	= dconjg( bwf(ri,n) ) * bwf(ri,n)
-					cnt		= cnt + 1
-				end do
-			end do
-			oLap	= nIntegrate(100, 10, 10, 0.1_dp, 0.1_dp, f)
-			!CONDITION
-			!
-			write(*,'(a,i3,a,f6.4a,f6.4,a)')"[testNormalBwf]: n=",n,", oLap=(",dreal(oLap),"+i*",dimag(oLap),")."		
-			!write(*,'(a,i3,a,f6.4a,f6.4,a)')"[testNormalBwf]: n=",n,", nSC*oLap=(",nSC*dreal(oLap),"+i*",nSC*dimag(oLap),")."			
-		end do
-
-		return
-	end subroutine
-
 
 
 
