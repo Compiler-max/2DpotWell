@@ -59,6 +59,7 @@ module berry
 		if(doNiu) then
 			write(*,*)	"[berrryMethod]: now calc first order pol"
 			call calcFirstOrdP(FcurvK, AconnK, veloK, EnK, pNiu)
+			write(*,'(a,f8.4,a,f8.4,a,f8.4,a)')	"[berryMethod]: pNiu=(",pNiu(1),", ",pNiu(2),", ",pNiu(3),")."
 		end if
 
 
@@ -66,6 +67,7 @@ module berry
 		if(doPei) then
 			write(*,*)	"[berrryMethod]: now calc first order pol via peierls sub."
 			call peierlsMethod(ckW, tHopp, pPei)
+			write(*,'(a,f8.4,a,f8.4,a,f8.4,a)')	"[berryMethod]: pPei=(",pPei(1),", ",pPei(2),", ",pPei(3),")."
 		end if
 
 		
