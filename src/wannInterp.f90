@@ -90,7 +90,8 @@ module wannInterp
 			do m = 1, nWfs
 				do n = 1, nWfs
 					do gi = 1 , nGq(ki)
-						veloH(1:2,n,m,ki) = veloH(1:2,n,m,ki) +  vol * dconjg(ckW(gi,n,ki)) *  ckW(gi,m,ki) * i_dp * Gvec(1:2,gi,ki)
+						veloH(1:2,n,m,ki) = veloH(1:2,n,m,ki) &
+											+  dcmplx(vol) * dconjg(ckW(gi,n,ki)) *  ckW(gi,m,ki) * i_dp * Gvec(1:2,gi,ki)
 					end do
 				end do
 			end do

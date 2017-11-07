@@ -16,7 +16,7 @@
 
 [numerics]
     nGdim       = 49
-    Gcut        = 11.0
+    Gcut        = 8.0
     nSolve      = 10        
     nQx         = 4   
     nQy         = 4
@@ -31,7 +31,7 @@
     doVdesc     = f
     doProj      = t
     doProjNUM   = f
-    doGaugBack  = t
+    doGaugBack  = f
     doBerry     = t
     doWanni     = f
     doVeloNUM   = f
