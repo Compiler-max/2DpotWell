@@ -20,10 +20,10 @@ module berry
 
 
 !public
-	subroutine berryMethod(ckW, EnQ, Uq, pBerry, pNiu, pPei)
+	subroutine berryMethod(ckW, EnQ, Uq, pBerry, pNiuF2, pNiuF3, pPei)
 		complex(dp),	intent(in)		:: ckW(:,:,:), Uq(:,:,:)
 		real(dp),		intent(in)		:: EnQ(:,:)
-		real(dp),		intent(out)		:: pBerry(2), pNiu(3), pPei(3)
+		real(dp),		intent(out)		:: pBerry(2), pNiuF2(3), pNiuF3(3), pPei(3)
 		real(dp),		allocatable		:: EnK(:,:)
 		complex(dp),	allocatable		:: AconnK(:,:,:,:), FcurvK(:,:,:,:), veloK(:,:,:,:) , tHopp(:,:,:), rHopp(:,:,:,:) 
 		!
@@ -58,8 +58,9 @@ module berry
 		!1st ORDER SEMICLASSICS
 		if(doNiu) then
 			write(*,*)	"[berrryMethod]: now calc first order pol"
-			call calcFirstOrdP(FcurvK, AconnK, veloK, EnK, pNiu)
-			write(*,'(a,f8.4,a,f8.4,a,f8.4,a)')	"[berryMethod]: pNiu=(",pNiu(1),", ",pNiu(2),", ",pNiu(3),")."
+			call calcFirstOrdP(FcurvK, AconnK, veloK, EnK, pNiuF2, pNiuF3)
+			write(*,'(a,f8.4,a,f8.4,a,f8.4,a)')	"[berryMethod]: pNiuF2=(",pNiuF2(1),", ",pNiuF2(2),", ",pNiuF2(3),")."
+			write(*,'(a,f8.4,a,f8.4,a,f8.4,a)')	"[berryMethod]: pNiuF3=(",pNiuF3(1),", ",pNiuF3(2),", ",pNiuF3(3),")."
 		end if
 
 

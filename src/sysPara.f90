@@ -12,7 +12,7 @@ module sysPara
 				nR, nRx, nRy,  dx, dy, &
 				gaugeSwitch, nBands, nWfs, connSwitch,  &
 				atPos, atR, qpts, rpts, Rcell, kpts, trialOrbVAL, trialOrbSw, Zion, &
-				Bext, &
+				Bext, prefactF3, &
 				debugProj, debugHam, debugWann, doSolveHam, doVdesc, doProj, doProjNUM, &
 				doBerry, doWanni, doVeloNUM, doNiu, doPei, doGaugBack, writeBin
 
@@ -22,7 +22,7 @@ module sysPara
 														nKx=1, nKy=1, nK, connSwitch=0, &
 														nRx=10, nRy=10, nR, R0=1, nBands=1,nWfs=1, nSC, gaugeSwitch, trialOrbSw
 	real(dp) 										::	aX=0.0_dp, aY=0.0_dp,vol=0.0_dp, Gcut=2*PI_dp, thres,& 
-														dx, dy, dqx, dqy, dkx, dky, B0, Bext(3)											
+														dx, dy, dqx, dqy, dkx, dky, B0, Bext(3)	, prefactF3										
 	integer,	allocatable,	dimension(:)		::	nGq
 	real(dp),	allocatable,	dimension(:)		::	relXpos, relYpos, atRx, atRy, atPot, dVpot, trialOrbVAL, Zion
 	real(dp),	allocatable,	dimension(:,:)		::	Gtest , atPos, atR, qpts, rpts, Rcell, kpts 
@@ -106,7 +106,8 @@ module sysPara
 		call CFG_add_get(my_cfg,	"perturbation%B0"	,	B0			,	"scaling fact. of ext. magnetic field"	)
 		call CFG_add_get(my_cfg,	"perturbation%Bext"	,	Bext		,	"vector of ext. magnetic field"			)
 
-		
+		![semiclassics]
+		call CFG_add_get(my_cfg,	"semiclassics%prefactF3"	,	prefactF3,	"real prefactor for F3 "			)
 
 
 

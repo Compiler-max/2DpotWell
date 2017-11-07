@@ -59,11 +59,14 @@
     nKy         = 4
     connSwitch  = 1
     gaugeBack   = 0
+
+[semiclassics]
+    prefactF3   = 1.0
   
 
 
 [perturbation]
-    B0          = 1.0               #hbar/(e*a0**2)
+    B0          = 1.0               #hbar/(e*a0**2) = 2.35 * 10**5  T
     Bext        = 0.0 0.0 1.0
 
 

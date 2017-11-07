@@ -19,7 +19,7 @@ program main
 
     complex(dp),	allocatable,	dimension(:,:,:)	:: 	ck, ckW, Uq
     real(dp),		allocatable,	dimension(:,:)		:: 	En
-    real(dp) 											:: 	pWann(2), pBerry(2), pNiu(3), pPei(3)
+    real(dp) 											:: 	pWann(2), pBerry(2), pNiuF2(3), pNiuF3(3), pPei(3)
     real												:: 	mastT0, mastT1, mastT, T0, T1, &
     															aT,kT,wT, oT, bT, peiT, pT
     
@@ -97,7 +97,7 @@ program main
 	call cpu_time(T0)
 	if ( doBerry ) then
 		write(*,*)"[main]:**************************WAVEFUNCTION METHOD*************************"
-		call berryMethod(ckW, En, Uq, pBerry, pNiu, pPei)
+		call berryMethod(ckW, En, Uq, pBerry, pNiuF2, pNiuF3, pPei)
 		write(*,*)"[main]: done with wavefunction method "
 		write(*,'(a,f12.8,a,f12.8,a)')	"[main]: calculated zero order pBerry=(",pBerry(1),", ",pBerry(2),")."
 	else
@@ -140,7 +140,7 @@ program main
 	write(*,*)"[main]:**************************WRITE OUTPUT*************************"
 	call cpu_time(T0)
 	!
-	call writePolFile(pWann, pBerry, pNiu, pPei )
+	call writePolFile(pWann, pBerry, pNiuF2, pNiuF3, pPei )
 	write(*,*)"[main]: ...wrote polarization txt file"
 	call writeMeshInfo() 
 	write(*,*)"[main]: ...wrote mesh info"

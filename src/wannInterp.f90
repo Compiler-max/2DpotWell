@@ -18,7 +18,7 @@ module wannInterp
 		complex(dp),	intent(out)		:: AconnH(:,:,:,:), FcurvH(:,:,:,:)
 		complex(dp),	intent(out)		:: veloH(:,:,:,:)
 		complex(dp),	allocatable		:: U(:,:), HW(:,:), HaW(:,:,:), AW(:,:,:), FW(:,:,:,:)
-		integer							:: ki, n, m, a, b
+		integer							:: ki, a, b
 		!
 		allocate(	U(				nWfs, 	nWfs			)		)
 		allocate(	HW(				nWfs, 	nWfs			)		)

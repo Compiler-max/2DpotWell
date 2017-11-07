@@ -3,7 +3,7 @@ module semiClassics
 	!	to the polariztion induced by a perturbive magnetic field
 	! 	see Niu PRL 112, 166601 (2014)
 	use mathematics,	only:	dp, PI_dp, i_dp, machineP, acc, myExp, myLeviCivita
-	use sysPara,		only:	Bext
+	use sysPara,		only:	Bext, prefactF3
 
 	implicit none
 
@@ -24,31 +24,36 @@ module semiClassics
 !public
 
 
-	subroutine	calcFirstOrdP(Fcurv, Aconn, Velo, En, p1)
+	subroutine	calcFirstOrdP(Fcurv, Aconn, Velo, En, p1F2, p1F3)
 		!calculates the first order polarization p1 according to
 		!	P'= -int_dk [0.5 (Curv.Velo)*B_ext + a']
 		complex(dp),	intent(in)		::	Fcurv(:,:,:,:), Aconn(:,:,:,:)	!Fcurv(3,nWfs, nQ)
 		complex(dp),	intent(inout)	:: 	Velo(:,:,:,:)		!	 Velo(3, nWfs,nWfs, nQ)	
 		real(dp),		intent(in)		::	En(:,:)				!	En(			nWfs, nQ)						
-		real(dp),		intent(out)		:: 	p1(3)
-		complex(dp), 	allocatable		::	f(:,:)
-		complex(dp)						::	pn(3)
-		complex(dp)						:: 	Fmat(3,3)
+		real(dp),		intent(out)		:: 	p1F2(3), p1F3(3)
+		complex(dp), 	allocatable		::	fF2(:,:), fF3(:,:)
+		complex(dp)						::	pnF2(3), pnF3(3)
+		complex(dp)						:: 	F2(3,3), F3(3,3)
 		real(dp)						:: 	densCorr(3)
 		integer							:: 	n, ki, nSize, kSize
 		!
 		nSize	= size(Velo,3)
 		kSize	= size(Velo,4)
-		allocate(	f(3,kSize )		)
+		allocate(	fF2(3,kSize )		)
+		allocate(	fF3(3,ksize	)		)
+		!
+		!
 		if(		kSize /= size(En,2)		) then
 			write(*,*)"[calcFirstOrdP]: WARNING Energy and velocities live on different k meshes!"
 		end if
 		!
 		!
 		write(*,*)"[calcFirstOrdP]: start calculating P' via semiclassic approach"
-		p1 = 0.0_dp
+		p1F2 = 0.0_dp
+		p1F3 = 0.0_dp
 		do n = 1, nSize
-			f 	= dcmplx(0.0_dp)
+			fF2	= dcmplx(0.0_dp)
+			fF3	= dcmplx(0.0_dp)
 			!FILL INTEGRATION ARRAY
 			do ki = 1, kSize
 				!PHASE SPACE DENSITY CORRECTION
@@ -58,23 +63,30 @@ module semiClassics
 					write(*,*)	"[calcFirstOrdP]: warning the densCorr is none zero, norm2(densCorr)",norm2(densCorr)
 				end if
 				!POSITIONAL SHIFT
-				Fmat	= dcmplx(0.0_dp)
-				call calcFmat(n,ki,Velo,En, Fmat)
-				f(:,ki)	= f(:,ki) + matmul(Fmat, Bext) 
+				F2	= dcmplx(0.0_dp)
+				F3	= dcmplx(0.0_dp)
+				call addF2(n,ki,Velo,En, F2)
+				call addF3(n,ki,Velo,En, F3)
+
+				
+				fF2(:,ki)	= fF2(:,ki) + matmul(F2, Bext) 
+				fF3(:,ki)	= fF3(:,ki) + matmul(F3, Bext)
 			end do
 			!INTEGRATE over k-space
-			pn	= dcmplx(0.0_dp)
+			pnF2	= dcmplx(0.0_dp)
+			pnF3	= dcmplx(0.0_dp)
 			do ki = 1, kSize
-				pn = pn + f(:,ki)  / kSize
+				pnF2	= pnF2 + fF2(:,ki)  / kSize
+				pnF3	= pnF3 + fF3(:,ki)	/ kSize
 			end do
-			if( norm2(dimag(pn)) > acc	) write(*,*)"[calcFirstOrdP]: found complex pol. contribution from band n=",n 
 			!SUM OVER n
-			p1 = p1 + dreal(pn)
+			p1F2 = p1F2 + dreal(pnF2)
+			p1F3 = p1F3 + dreal(pnF3)
+			!DEBUG
+			if( norm2(dimag(pnF2)) > acc	) write(*,*)"[calcFirstOrdP]: F2 found complex pol. contribution from band n=",n 
+			if( norm2(dimag(pnF3)) > acc	) write(*,*)"[calcFirstOrdP]: F3 found complex pol. contribution from band n=",n 
 		end do
 		!
-		!
-		!NORMALIZE
-		p1 = p1  !	?!
 		!
 		return
 	end subroutine
@@ -174,7 +186,7 @@ module semiClassics
 								!ENERGIES
 								eDiff		= ( 	En(nZero,ki) - En(n,ki)	 )**3 	
 								!MATRIX
-								Fmat(i,j) 	= Fmat(i,j) -  myLeviCivita(j,k,l) *	Vtmp / dcmplx(eDiff)
+								Fmat(i,j) 	= Fmat(i,j) + prefactF3 * myLeviCivita(j,k,l) *	Vtmp / dcmplx(eDiff)
 								!if(abs(dimag(Vtmp)) > acc ) write(*,*)	"[addF3]: non vanishing imag part detected",dimag(Vtmp)
 								if( abs(eDiff) < machineP ) write(*,*) "[addF3]: warning vanishing eDiff=",eDiff
 								!write(*,'(a,e10.3,a,e10.3)')"[addF3]: |Vtmp|=",abs(Vtmp), "eDiff=",eDiff
