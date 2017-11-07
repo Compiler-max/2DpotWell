@@ -43,7 +43,7 @@ module berry
 		write(*,*)	"[berryMethod]: set up effective tight binding model (k-Space method)"
 
 		!INTERPOLATE CONN,CURV, VELO
-		call DoWannInterpol(rHopp, tHopp, EnK, AconnK, FcurvK, veloK)
+		call DoWannInterpol(ckW, rHopp, tHopp, EnK, AconnK, FcurvK, veloK)
 		write(*,*)	"[berrryMethod]: interpolation done"
 
 		

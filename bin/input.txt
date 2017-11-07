@@ -34,6 +34,7 @@
     doGaugBack  = t
     doBerry     = t
     doWanni     = f
+    doVeloNUM   = f
     doNiu       = t
     doPei       = f
 

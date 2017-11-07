@@ -12,8 +12,8 @@ module wannInterp
 	contains
 
 !public
-	subroutine DoWannInterpol(rHopp, tHopp, EnH, AconnH, FcurvH, veloH)
-		complex(dp),	intent(in)		:: rHopp(:,:,:,:), tHopp(:,:,:)
+	subroutine DoWannInterpol(ckW, rHopp, tHopp, EnH, AconnH, FcurvH, veloH)
+		complex(dp),	intent(in)		:: ckW(:,:,:), rHopp(:,:,:,:), tHopp(:,:,:)
 		real(dp),		intent(out)		:: EnH(:,:)
 		complex(dp),	intent(out)		:: AconnH(:,:,:,:), FcurvH(:,:,:,:)
 		complex(dp),	intent(out)		:: veloH(:,:,:,:)
@@ -44,12 +44,7 @@ module wannInterp
 				!CONNECTION
 				AconnH(1:2,:,:,ki) 		= AW(1:2,:,:)
 				!VELOCITIES
-				do m = 1, nWfs
-					do n = 1, nWfs
-						if( n==m ) veloH(1:2,n,m,ki)	= HaW(1:2,n,m)
-						if( n/=m ) veloH(1:2,n,m,ki)	= - i_dp * ( EnH(m,ki)-EnH(n,ki) ) * AconnH(1:2,n,m,ki) 
-					end do
-				end do
+				call calcVeloNOIntP(ki, ckW, HaW, EnH, AconnH, veloH)
 				!CURVATURE
 				FcurvH(1:2,:,:,ki)		= dcmplx(0.0_dp)
 				do b = 1, 2
@@ -72,12 +67,37 @@ module wannInterp
 
 
 
+	subroutine calcVeloNOIntP(ki, ckW, HaW, EnH, AconnH, veloH)
+		integer,		intent(in)		:: ki
+		complex(dp),	intent(in)		:: ckW(:,:,:), HaW(:,:,:), AconnH(:,:,:,:)
+		real(dp),		intent(in)		:: EnH(:,:) 
+		complex(dp),	intent(out)		:: veloH(:,:,:,:)
+		integer							:: n,m, gi
 
+		!TB approach
+		if( doVeloNUM ) then
+			if(ki==1)	write(*,*)"[calcVeloNOIntP]: velocities are calculated via TB approach"
+			do m = 1, nWfs
+				do n = 1, nWfs
+					if( n==m ) veloH(1:2,n,m,ki)	= HaW(1:2,n,m)
+					if( n/=m ) veloH(1:2,n,m,ki)	= - i_dp * ( EnH(m,ki)-EnH(n,ki) ) * AconnH(1:2,n,m,ki) 
+				end do
+			end do
+		!ANALYTIC APPROACH
+		else	
+			if(ki==1)	write(*,*)"[calcVeloNOIntP]: velocities are calculated analytically"
+			if( nK /= nQ) write(*,*)"[calcVeloNOIntP]: warning analytic approach does not support different k mesh spacing"
+			do m = 1, nWfs
+				do n = 1, nWfs
+					do gi = 1 , nGq(ki)
+						veloH(1:2,n,m,ki) = veloH(1:2,n,m,ki) +  vol * dconjg(ckW(gi,n,ki)) *  ckW(gi,m,ki) * i_dp * Gvec(1:2,gi,ki)
+					end do
+				end do
+			end do
+		end if
 
-
-
-
-
+		return
+	end subroutine
 
 
 

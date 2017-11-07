@@ -13,7 +13,8 @@ module sysPara
 				gaugeSwitch, nBands, nWfs, connSwitch,  &
 				atPos, atR, qpts, rpts, Rcell, kpts, trialOrbVAL, trialOrbSw, Zion, &
 				Bext, &
-				debugProj, debugHam, debugWann, doSolveHam, doVdesc, doProj, doProjNUM, doBerry, doWanni, doNiu, doPei, doGaugBack, writeBin
+				debugProj, debugHam, debugWann, doSolveHam, doVdesc, doProj, doProjNUM, &
+				doBerry, doWanni, doVeloNUM, doNiu, doPei, doGaugBack, writeBin
 
 
 	!
@@ -28,7 +29,7 @@ module sysPara
 	real(dp),	allocatable,	dimension(:,:,:)	::	Gvec
 	logical											::	debugHam, debugWann, debugProj, &
 														doSolveHam, doVdesc , doProj, doProjNUM, &
-														doBerry, doWanni, doNiu, doPei, doGaugBack, &
+														doBerry, doWanni, doVeloNUM, doNiu, doPei, doGaugBack, &
 														writeBin
 
 
@@ -81,6 +82,7 @@ module sysPara
 		call CFG_add_get(my_cfg,	"methods%doProjNUM"	,	doProjNUM	,	"switch on/off 	projections onto trial"	)
 		call CFG_add_get(my_cfg,	"methods%doBerry"	,	doBerry		,	"switch on/off 	berry( unk) method "	)
 		call CFG_add_get(my_cfg,	"methods%doWanni"	,	doWanni		,	"switch on/off 	wannier( wnf ) method"	)
+		call CFG_add_get(my_cfg,	"methods%doVeloNUM"	,	doVeloNUM	,	"if true tb velocities, else analyitcal")
 		call CFG_add_get(my_cfg,	"methods%doNiu"		,	doNiu		,	"switch for nius first order pol"		)
 		call CFG_add_get(my_cfg,	"methods%doPei"		,	doPei		,	"switch for  peierls first order pol"	)
 		call CFG_add_get(my_cfg,	"methods%doGaugBack",	doGaugBack	,	"switch for trafo: Wann to Ham gauge"	)
