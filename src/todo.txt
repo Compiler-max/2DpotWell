@@ -1,12 +1,7 @@
-- velocities:
-	analytic calculation
+ 
+- remove wannier interpolation, only coarse mesh calculation
 
 
-
-
-NIU:
-	- calc F matrix as complex matrix
-	- only check if resulting pol is real
 
 
 
