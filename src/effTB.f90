@@ -202,7 +202,7 @@ module effTB
 							
 						else if( n/=m .and. abs(one) > acc ) then
 							write(*,*)"[calcConnOnCoarse]: normalization issue detected"
-							write(*,'(a,f10.8,a,f10.8)') "[calcConnOnCoarse]:  zero=",dreal(one),"+i*",dimag(one)
+							write(*,'(a,f15.6,a,f15.6)') "[calcConnOnCoarse]:  zero=",dreal(one),"+i*",dimag(one)
 						end if
 
 
