@@ -32,8 +32,8 @@ module semiClassics
 		real(dp),		intent(in)		::	En(:,:)				!	En(			nWfs, nQ)						
 		real(dp),		intent(out)		:: 	p1(3)
 		complex(dp), 	allocatable		::	f(:,:)
-		real(dp)						::	pn(3)
-		real(dp)						:: 	Fmat(3,3)
+		complex(dp)						::	pn(3)
+		complex(dp)						:: 	Fmat(3,3)
 		real(dp)						:: 	densCorr(3)
 		integer							:: 	n, ki, nSize, kSize
 		!
@@ -58,17 +58,18 @@ module semiClassics
 					write(*,*)	"[calcFirstOrdP]: warning the densCorr is none zero, norm2(densCorr)",norm2(densCorr)
 				end if
 				!POSITIONAL SHIFT
-				Fmat	= 0.0_dp
+				Fmat	= dcmplx(0.0_dp)
 				call calcFmat(n,ki,Velo,En, Fmat)
 				f(:,ki)	= f(:,ki) + matmul(Fmat, Bext) 
 			end do
 			!INTEGRATE over k-space
-			pn	= 0.0_dp
+			pn	= dcmplx(0.0_dp)
 			do ki = 1, kSize
 				pn = pn + f(:,ki)  / kSize
 			end do
+			if( norm2(dimag(pn)) > acc	) write(*,*)"[calcFirstOrdP]: found complex pol. contribution from band n=",n 
 			!SUM OVER n
-			p1 = p1 + pn
+			p1 = p1 + dreal(pn)
 		end do
 		!
 		!
@@ -86,9 +87,9 @@ module semiClassics
 		integer,		intent(in)		:: nZero, ki
 		complex(dp),	intent(in)		:: Velo(:,:,:,:)  !V(3,nWfs,nWfs,nK)
 		real(dp),		intent(in)		:: En(:,:)			!En(nK nWfs)
-		real(dp),		intent(out)		:: Fmat(:,:)
+		complex(dp),	intent(out)		:: Fmat(:,:)
 		!
-		Fmat = 0.0_dp		
+		Fmat = dcmplx(0.0_dp)		
 		call addF2(nZero, ki, Velo, En, Fmat)
 		call addF3(nZero, ki, Velo, En, Fmat)
 		!
@@ -105,7 +106,7 @@ module semiClassics
 		integer,		intent(in)		:: nZero, ki
 		complex(dp),	intent(in)		:: Velo(:,:,:,:)  !V(3,nK,nWfs,nWfs)
 		real(dp),		intent(in)		:: En(:,:)			!	En(	nK, nWfs)	
-		real(dp),		intent(out)		:: Fmat(:,:)
+		complex(dp),	intent(out)		:: Fmat(:,:)
 		complex(dp)						:: Vtmp
 		real(dp)						:: eDiff
 		integer							:: i, j, k, l, n,m, nSize, kSize
@@ -126,8 +127,8 @@ module semiClassics
 									!ENERGIES
 									eDiff		= ( 	En(nZero,ki) - En(n,ki)	 )**2 	* 	 ( 	En(nZero,ki) - En(m,ki)	)
 									!MATRIX
-									Fmat(i,j) 	= Fmat(i,j) +  myLeviCivita(j,k,l) * dreal(	Vtmp ) / eDiff	
-									if(abs(dimag(Vtmp)) > acc ) write(*,*)	"[addF2]: non vanishing imag part detected:",dimag(Vtmp)
+									Fmat(i,j) 	= Fmat(i,j) +  myLeviCivita(j,k,l) * 	Vtmp  / dcmplx(eDiff)	
+									!if(abs(dimag(Vtmp)) > acc ) write(*,*)	"[addF2]: non vanishing imag part detected:",dimag(Vtmp)
 									if( abs(eDiff) < machineP ) write(*,*) "[addF2]: warning vanishing eDiff=",eDiff
 									!write(*,'(a,e10.3,a,e10.3)')"[addF2]: |Vtmp|=",abs(Vtmp), "eDiff=",eDiff
 								end if
@@ -154,7 +155,7 @@ module semiClassics
 		integer,		intent(in)		:: nZero, ki
 		complex(dp),	intent(in)		:: Velo(:,:,:,:)  	!Velo(		3		,	nK		,nWfs, nwFs)
 		real(dp),		intent(in)		:: En(:,:)			!En(	nK	,	nWfs)
-		real(dp),		intent(out)		:: Fmat(:,:)
+		complex(dp),	intent(out)		:: Fmat(:,:)
 		complex(dp)						:: Vtmp
 		real(dp)						:: eDiff
 		integer							:: i, j, k, l, n, nSize
@@ -173,8 +174,8 @@ module semiClassics
 								!ENERGIES
 								eDiff		= ( 	En(nZero,ki) - En(n,ki)	 )**3 	
 								!MATRIX
-								Fmat(i,j) 	= Fmat(i,j) -  myLeviCivita(j,k,l) * dreal(		Vtmp / dcmplx(eDiff)	)
-								if(abs(dimag(Vtmp)) > acc ) write(*,*)	"[addF3]: non vanishing imag part detected",dimag(Vtmp)
+								Fmat(i,j) 	= Fmat(i,j) -  myLeviCivita(j,k,l) *	Vtmp / dcmplx(eDiff)
+								!if(abs(dimag(Vtmp)) > acc ) write(*,*)	"[addF3]: non vanishing imag part detected",dimag(Vtmp)
 								if( abs(eDiff) < machineP ) write(*,*) "[addF3]: warning vanishing eDiff=",eDiff
 								!write(*,'(a,e10.3,a,e10.3)')"[addF3]: |Vtmp|=",abs(Vtmp), "eDiff=",eDiff
 							end if
