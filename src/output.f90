@@ -501,10 +501,10 @@ module output
 		!write(600,'(a,e16.9,a,f16.12,a,f16.12,a,f16.12,a)')	"pNiu= ",norm2(pNiu)," * (", &	
 		!									pNiu(1)/norm2(pNiu),	", ",	pNiu(2)/norm2(pNiu),", ", pNiu(3)/norm2(pNiu),	")"
 
-		write(600,'(a,f16.7,a,f16.7,a,f16.7,a)')	"pNiu= (", 	pNiu(1),	", ",	pNiu(2),", ", pNiu(3),	")"
-
-		write(600,'(a,f16.7,a,f16.7,a,f16.7,a)')	"pPei= (", 	pPei(1),	", ",	pPei(2),", ", pPei(3),	")"
-	
+		write(600,'(a,f16.7,a,f16.7,a,f16.7,a,a,f16.7,a,f16.7,a)')	"pNiu= (", 	pNiu(1),	", ",	pNiu(2),", ", pNiu(3),	")",&
+														" moded=(",dmod(pNiu(1),aX/vol),", ",dmod(pNiu(2),aY/vol),")."
+		write(600,'(a,f16.7,a,f16.7,a,f16.7,a,a,f16.7,a,f16.7,a)')	"pPei= (", 	pPei(1),	", ",	pPei(2),", ", pPei(3),	")",&
+																" moded=(",dmod(pPei(1),aX/vol),", ",dmod(pPei(2),aY/vol),")."
 		close(600)
 		!
 		!
