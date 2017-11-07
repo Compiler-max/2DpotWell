@@ -1,15 +1,18 @@
+- velocities:
+	analytic calculation
 
 
 
 
-- velocity output file
-
-
-
+NIU:
+	- calc F matrix as complex matrix
+	- only check if resulting pol is real
 
 
 
 PEIERLS:
+-	needs at least an own calcConnOnCoarse since in UNKoverlaps, the basis coefficients 
+	only go up to nWfs
 -	debug peierls for zero magnetic field solution should be same as zero pBerry!!!
 -	shift currently one even though field is applied!!!
 
@@ -24,8 +27,6 @@ PEIERLS:
 
 
 
-
--	velocity calculation how to
 
 
 

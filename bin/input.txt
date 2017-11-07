@@ -29,7 +29,7 @@
 [methods]
     doSolveHam  = t
     doVdesc     = f
-    doProj      = f
+    doProj      = t
     doProjNUM   = f
     doGaugBack  = t
     doBerry     = t
