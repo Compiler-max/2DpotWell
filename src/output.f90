@@ -273,15 +273,23 @@ module output
 			write(800,*)"*"
 			write(800,*)"*"
 			write(800,*)" qi=",qi
+			!x component
 			do m = 1, size(velo,3)
 				do n = 1, size(velo,2)
-					!x component
 					write(800,'(a,i3,a,i3,a,f8.4,a,f8.4)')  "n=",n," m=",m,&
 										" v_x=",dreal(velo(1,n,m,qi)),"+i*",dimag(velo(1,n,m,qi))
-					!y component
+				end do
+			end do
+			!y component
+			do m = 1, size(velo,3)
+				do n = 1, size(velo,2)
 					write(800,'(a,i3,a,i3,a,f8.4,a,f8.4)')  "n=",n," m=",m,&
 										" v_y=",dreal(velo(2,n,m,qi)),"+i*",dimag(velo(2,n,m,qi))
-					!z component
+				end do
+			end do
+			!z component
+			do m = 1, size(velo,3)
+				do n = 1, size(velo,2)
 					write(800,'(a,i3,a,i3,a,f8.4,a,f8.4)')  "n=",n," m=",m,&
 										" v_z=",dreal(velo(3,n,m,qi)),"+i*",dimag(velo(3,n,m,qi))
 				end do
