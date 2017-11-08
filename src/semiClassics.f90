@@ -3,7 +3,7 @@ module semiClassics
 	!	to the polariztion induced by a perturbive magnetic field
 	! 	see Niu PRL 112, 166601 (2014)
 	use mathematics,	only:	dp, PI_dp, i_dp, machineP, acc, myExp, myLeviCivita
-	use sysPara,		only:	Bext, prefactF3
+	use sysPara,		only:	Bext, prefactF3, atPos, nAt
 
 	implicit none
 
@@ -79,6 +79,25 @@ module semiClassics
 				pnF2	= pnF2 + fF2(:,ki)  / kSize
 				pnF3	= pnF3 + fF3(:,ki)	/ kSize
 			end do
+			!!SINGLE ATOM
+			if( nAt == 1 ) then
+				pnF2(:)	= pnF2(:) - atPos(:,1)		!calc center w.r.t. atom center
+				pnF3(:)	= pnF3(:) - atPos(:,1)
+			!DOUBLE ATOM
+			else if( nAt == 2 ) then
+				if( mod(n,2)== 0 ) then
+					pnF2(:)	= pnF2(:) - atPos(:,2)
+					pnF3(:)	= pnF3(:) - atPos(:,2)
+				else	
+					pnF2(:)	= pnF2(:) - atPos(:,1)
+					pnF3(:)	= pnF3(:) - atPos(:,1)
+				end if
+			end if
+			!write to standard out
+			write(*,'(a,i3,a,f8.4,a,f8.4,a,f8.4,a)')	"[calcFirstOrdP]: pNiuF2(n=", n,") =(" ,dreal(pnF2(1)),&
+																		", ",dreal(pnF2(2)),", ", dreal(pnF2(3)),")."
+			write(*,'(a,i3,a,f8.4,a,f8.4,a,f8.4,a)')	"[calcFirstOrdP]: pNiuF3(n=", n,") =(" ,dreal(pnF3(1)),&
+																		", ",dreal(pnF3(2)),", ", dreal(pnF3(3)),")."
 			!SUM OVER n
 			p1F2 = p1F2 + dreal(pnF2)
 			p1F3 = p1F3 + dreal(pnF3)
