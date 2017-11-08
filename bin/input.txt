@@ -7,7 +7,7 @@
 [atoms]
     nAt         = 2      
     relXpos     = 0.30 0.70    
-    relYpos     = 0.50 0.50
+    relYpos     = 0.00 0.00
     atRx        = 1.01 1.01
     atRy        = 1.01 1.01
     atPot       = -3.00 -3.50
@@ -16,7 +16,7 @@
 
 [numerics]
     nGdim       = 49
-    Gcut        = 8.0
+    Gcut        = 20.0
     nSolve      = 10        
     nQx         = 4   
     nQy         = 4
@@ -29,7 +29,7 @@
 [methods]
     doSolveHam  = t
     doVdesc     = f
-    doProj      = f
+    doProj      = t
     doProjNUM   = f
     doGaugBack  = f
     doBerry     = t
@@ -66,7 +66,7 @@
 
 
 [perturbation]
-    B0          = 1.0               #hbar/(e*a0**2) = 2.35 * 10**5  T
+    B0          = 0.5               #hbar/(e*a0**2) = 2.35 * 10**5  T
     Bext        = 0.0 0.0 1.0
 
 

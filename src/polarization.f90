@@ -128,19 +128,13 @@ module polarization
 			end if
 			!DEFAULT
 			write(*,'(a,i3,a,f8.4,a,f8.4,a)')	"[calcPolViaA]: n=",n,"p_n=",dreal(val(1)),",",dreal(val(2)),")."
+			pelA(:)	= pElA(:) + dreal(val(:)) 
 
 			if( abs(dimag(val(1))) > acc .or. abs(dimag(val(2))) > acc	) then
 				write(*,*)	"[calcPolViaA]: found non zero imaginary contribution from band n=",n 
 			end if
-			!relative to bond center
-			!if( mod(n,2) == 0 ) then
-			!	val(:) = val(:) - atPos(:,2)
-			!else
-			!	val(:) = val(:) - atPos(:,1)
-			!end if
-
-			pelA(:)	= pElA(:) + dreal(val(:)) 
-			write(*,'(a,i3,a,f8.4,a,f8.4,a)')	"[calcPolViaA]: n=",n,"dreal(p)=",pElA(1),",",pElA(2),")."
+			
+			
 		end do
 		
 

@@ -64,7 +64,10 @@ module projection
 				call calcAmat(qi,ckH(:,:,qi) ,gnr, A) 
 				call calcUmat(A, Uq(:,:,qi))
 				!ROTATE BLOCH STATES
-				ckW(:,:,qi)	= matmul( ckH(:,:,qi) , Uq(:,:,qi)	 ) !			
+				do gi = 1, nGq(qi)
+					ckW(gi,:,qi)	= matmul( ckH(gi,:,qi), Uq(:,:,qi))
+				end do
+				!ckW(:,:,qi)	= matmul( ckH(:,:,qi) , Uq(:,:,qi)	 ) !			
 				!do n = 1, nWfs
 				!	do m = 1, nWfs
 				!		do gi = 1, nGq(qi)

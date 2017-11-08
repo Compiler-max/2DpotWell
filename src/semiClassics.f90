@@ -79,20 +79,20 @@ module semiClassics
 				pnF2	= pnF2 + fF2(:,ki)  / kSize
 				pnF3	= pnF3 + fF3(:,ki)	/ kSize
 			end do
-			!!SINGLE ATOM
-			if( nAt == 1 ) then
-				pnF2(:)	= pnF2(:) - atPos(:,1)		!calc center w.r.t. atom center
-				pnF3(:)	= pnF3(:) - atPos(:,1)
-			!DOUBLE ATOM
-			else if( nAt == 2 ) then
-				if( mod(n,2)== 0 ) then
-					pnF2(:)	= pnF2(:) - atPos(:,2)
-					pnF3(:)	= pnF3(:) - atPos(:,2)
-				else	
-					pnF2(:)	= pnF2(:) - atPos(:,1)
-					pnF3(:)	= pnF3(:) - atPos(:,1)
-				end if
-			end if
+			!!!SINGLE ATOM
+			!if( nAt == 1 ) then
+			!	pnF2(:)	= pnF2(:) - atPos(:,1)		!calc center w.r.t. atom center
+			!	pnF3(:)	= pnF3(:) - atPos(:,1)
+			!!DOUBLE ATOM
+			!else if( nAt == 2 ) then
+			!	if( mod(n,2)== 0 ) then
+			!		pnF2(:)	= pnF2(:) - atPos(:,2)
+			!		pnF3(:)	= pnF3(:) - atPos(:,2)
+			!	else	
+			!		pnF2(:)	= pnF2(:) - atPos(:,1)
+			!		pnF3(:)	= pnF3(:) - atPos(:,1)
+			!	end if
+			!end if
 			!write to standard out
 			write(*,'(a,i3,a,f8.4,a,f8.4,a,f8.4,a)')	"[calcFirstOrdP]: pNiuF2(n=", n,") =(" ,dreal(pnF2(1)),&
 																		", ",dreal(pnF2(2)),", ", dreal(pnF2(3)),")."

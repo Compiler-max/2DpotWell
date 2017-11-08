@@ -45,7 +45,7 @@ module peierls
 		!
 		!DO PEIERLS SUBSTITUTION
 		do R = 1, nSC
-			shft			= 1.0_dp!shift(R0,R)
+			shft			= shift(R0,R)
 			tshift(:,:,R)	= tHopp(:,:,R) * shft
 			write(*,'(a,i3,a,f10.4)')	"[peierlsMethod]: R=",R," shift=",shft
 		end do
@@ -120,8 +120,8 @@ module peierls
 		!			= -0.5 cross_p[rMin,B].(rMax - rMin)
 		integer,		intent(in)		:: ri, rj
 		real(dp)						:: rMin(2), rMax(2), rU(3), rL(3), integrateA
-		rMin		= Rcell(:,ri)
-		rMax		= Rcell(:,rj)
+		rMin(:)		= Rcell(:,ri)
+		rMax(:)		= Rcell(:,rj)
 		rU(1:2)		= rMax(1:2)
 		rU(3)		= 0.0_dp
 		rL(1:2)		= rMin(1:2)
