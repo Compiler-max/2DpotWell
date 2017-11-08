@@ -503,6 +503,7 @@ module output
 
 		write(600,*)"**************FIRST ORDER POL:"
 		!NIU
+		write(600,'(a,f16.8)') "F3 prefactor = ",prefactF3
 		write(600,'(a,f16.7,a,f16.7,a,f16.7,a,a,f16.7,a,f16.7,a)')	"pNiuF2= (", 	pNiuF2(1),	", ",	pNiuF2(2),", ", pNiuF2(3),	")",&
 														" moded=(",dmod(pNiuF2(1),aX/vol),", ",dmod(pNiuF2(2),aY/vol),")."
 		!

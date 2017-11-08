@@ -1,7 +1,4 @@
- 
-- remove wannier interpolation, only coarse mesh calculation
-
-
+- bad honnef email aktionen
 
 
 
@@ -12,8 +9,9 @@ PEIERLS:
 -	shift currently one even though field is applied!!!
 
 
-
-
+play around
+	- calcHtmp: swith U and Udag
+	- projection: line 71 calculation of shifted coefficients
 
 
 - convergence tests:
@@ -21,11 +19,13 @@ PEIERLS:
 		
 
 
+- remove wannier interpolation, only coarse mesh calculation
 
 
 
 
 - 	niu debug plus/minus for Fmatrix 
+-	velocities - if not matching with peierls, try introduce volume prefactor to veloctities
 
 
 BEYOND:

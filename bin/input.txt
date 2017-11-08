@@ -36,7 +36,7 @@
     doWanni     = f
     doVeloNUM   = f
     doNiu       = t
-    doPei       = f
+    doPei       = t
 
 [output]
     writeBin    = t
@@ -44,7 +44,7 @@
 
 [debug]
     debugHam    = f
-    debugProj   = f
+    debugProj   = t
     debugWann   = f
 
 

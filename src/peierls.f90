@@ -27,20 +27,20 @@ module peierls
 		real(dp),		intent(out)		:: pPei(3)
 		complex(dp),	allocatable		:: Hp(:,:), ckP(:,:,:),Up(:,:,:), tshift(:,:,:), AconnP(:,:,:,:)
 		real(dp),		allocatable		:: EnP(:,:)
-		integer							:: R, ki, ri
+		integer							:: R, qi, n, m, gi
 		complex(dp)						:: phase
 		real(dp)						:: shft
 		!
 		allocate(			Hp(			nWfs	,	nWfs				)			)
-		allocate(			ckP(		nWfs	,	nWfs	,	nK		)			)
+		allocate(			ckP(		nG		,	nWfs	,	nQ		)			)
 		allocate(			tshift(		nWfs	, 	nWfs	,	nSc		)			)
-		allocate(			EnP(					nWfs	,	nK		)			)
-		allocate(			Up(			nWfs	,	nWfs	, 	nK		)			)
-		allocate(			AconnP(3,	nWfs	,	nWfs	,	nK		)			)
+		allocate(			EnP(					nWfs	,	nQ		)			)
+		allocate(			Up(			nWfs	,	nWfs	, 	nQ		)			)
+		allocate(			AconnP(3,	nWfs	,	nWfs	,	nQ		)			)
 		!
 		pPei	= 0.0_dp
 		write(*,*)	"[peierlsMethod]: start with peierls sub"
-
+		if( nQ /= nK ) 	write(*,*) "[peierlsMethod]: warning abinit k mesh and interpolation k mesh have to be the same"
 		
 		!
 		!DO PEIERLS SUBSTITUTION
@@ -53,18 +53,23 @@ module peierls
 
 		
 		!ELECTRONIC STRUCTURE
-		do ki = 1, nK
+		do qi = 1, nQ
 			!SET UP HAMILTONIAN
 			Hp	= dcmplx(0.0_dp)
 			do R = 1, nSC
-				phase	= myExp( dot_product(kpts(:,ki),Rcell(:,R))	) / dsqrt(real(nSC,dp))
+				phase	= myExp( dot_product(qpts(:,qi),Rcell(:,R))	) / dsqrt(real(nSC,dp))
 				Hp(:,:)	= Hp(:,:) + phase * tshift(:,:,R)
 			end do
 			!SOLVE HAM	
-			call eigSolver(Hp(:,:),EnP(:,ki))
+			call eigSolver(Hp(:,:),EnP(:,qi))
 			!
-			ckP(:,:,ki)	= HP(:,:)
-			if( .not. isUnit(ckP(:,:,ki))	) write(*,*) "[peierlsMethod]: ckP not unitary at ki=",ki
+			if( .not. isUnit(Hp)	) write(*,*) "[peierlsMethod]: ckP not unitary at qi=",qi
+			!
+			ckP(:,:,qi)	= dcmplx(0.0_dp)
+			!
+			do gi = 1, nGq(qi)
+				ckP(gi,:,qi)	= matmul(Hp(:,:), ck(gi,:,qi))
+			end do
 		end do
 
 

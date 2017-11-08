@@ -132,9 +132,12 @@ module mathematics
 		allocate(	work(  lwork ) 				)
 		allocate(	rwork(  rworkS  )			)
 		!
-		jobu 	= 'A' !calculate all rows/columns in U matrix
-		jobvt	= 'A' !calculate all rows/columns in V matrix
+		jobu 	= 'S' !calculate all rows/columns in U matrix
+		jobvt	= 'S' !calculate all rows/columns in V matrix
 		A = Mat
+		!
+		U = dcmplx(0.0_dp)
+		Vt= dcmplx(0.0_dp)
 
 		!all zgesvd(jobu, jobvt, m, n, a, lda, s, u, ldu, vt, ldvt, work, lwork, rwork, info)
 		call zgesvd(jobu, jobvt, m, n, A, lda, s, U, ldu, Vt, ldvt, work, lwork, rwork, info)

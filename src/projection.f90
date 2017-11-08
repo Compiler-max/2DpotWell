@@ -37,7 +37,7 @@ module projection
 		real(dp),		allocatable		:: EnP(:,:)	
 		complex(dp)	,	allocatable		:: loBwf(:,:), gnr(:,:), A(:,:), Ham(:,:), tmp(:,:)
 		
-		integer							:: qi, n, m
+		integer							:: qi, n, m, gi
 		!
 		allocate(	loBwf(nR,nWfs)		)
 		allocate(	gnr(nR,nWfs)		)
@@ -64,7 +64,14 @@ module projection
 				call calcAmat(qi,ckH(:,:,qi) ,gnr, A) 
 				call calcUmat(A, Uq(:,:,qi))
 				!ROTATE BLOCH STATES
-				ckW(:,:,qi)	= matmul( ckH(:,:,qi) , Uq(:,:,qi)	 ) !	
+				!ckW(:,:,qi)	= matmul( ckH(:,:,qi) , Uq(:,:,qi)	 ) !			
+				do n = 1, nWfs
+					do m = 1, nWfs
+						do gi = 1, nGq(qi)
+							ckW(gi,n,qi)	= ckW(gi,n,qi) + ckH(gi,m,qi) * Uq(m,n,qi)
+						end do
+					end do
+				end do
 			else
 				write(*,*)	"[projectUNK]: projection disabled, U= Identity"
 				
@@ -573,31 +580,34 @@ module projection
 		call mySVD(A,Z,d,V)
 		!
 		!CALC U
-		!tmp=matmul(I,V)
-		transa	= 'n'
-		transb	= 'n'
-		alpha	= dcmplx(1.0_dp)
-		beta	= dcmplx(0.0_dp)
-		m		= size(I,1)
-		n		= size(V,2)
-		k		= size(I,2)
-		lda		= m
-		ldb		= k
-		ldc		= m
-		call zgemm(transa, transb, m, n, k, alpha, I, lda, V, ldb, beta, TMP, ldc)
+		tmp=matmul(I,V)
+		U=matmul(Z,tmp)
+
+		!calc U with mkl
+		!transa	= 'n'
+		!transb	= 'n'
+		!alpha	= dcmplx(1.0_dp)
+		!beta	= dcmplx(0.0_dp)
+		!m		= size(I,1)
+		!n		= size(V,2)
+		!k		= size(I,2)
+		!lda		= m
+		!ldb		= k
+		!ldc		= m
+		!call zgemm(transa, transb, m, n, k, alpha, I, lda, V, ldb, beta, TMP, ldc)
 		!
-		!U=matmul(Z,tmp)
-		transa	= 'n'
-		transb	= 'n'
-		alpha	= dcmplx(1.0_dp)
-		beta	= dcmplx(0.0_dp)
-		m		= size(Z,1)
-		n		= size(TMP,2)
-		k		= size(Z,2)
-		lda		= m
-		ldb		= k
-		ldc		= m
-		call zgemm(transa, transb, m, n, k, alpha, Z, lda, TMP, ldb, beta, U, ldc)
+		
+		!transa	= 'n'
+		!transb	= 'n'
+		!alpha	= dcmplx(1.0_dp)
+		!beta	= dcmplx(0.0_dp)
+		!m		= size(Z,1)
+		!n		= size(TMP,2)
+		!k		= size(Z,2)
+		!lda		= m
+		!ldb		= k
+		!ldc		= m
+		!call zgemm(transa, transb, m, n, k, alpha, Z, lda, TMP, ldb, beta, U, ldc)
 		!
 		!
 		return

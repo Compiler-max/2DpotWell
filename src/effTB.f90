@@ -57,10 +57,11 @@ module effTB
 		real(dp),		intent(in)		:: EnQ(:,:)
 		complex(dp),	intent(in)		:: Uq(:,:,:)
 		complex(dp),	intent(out)		:: Htmp(:,:,:)
-		complex(dp),	allocatable		:: Udag(:,:), U(:,:), Ediag(:,:)
+		complex(dp),	allocatable		:: Udag(:,:), U(:,:), Ediag(:,:), tmp(:,:)
 		integer							:: qi, n
 		!
 		allocate(	U(		nWfs, nwfs	)		)
+		allocate(	tmp(	nWfs, nWfs	)		)
 		allocate(	Udag(	nWfs, nwfs	)		)
 		allocate(	Ediag(	nWfs, nWfs	)		)
 		Htmp	= dcmplx(0.0_dp)
@@ -74,8 +75,8 @@ module effTB
 			do n = 1, nWfs
 				Ediag(n,n)	= EnQ(n,qi)
 			end do
-			Htmp(:,:,qi)	= matmul(	Ediag	, 	U				)
-			Htmp(:,:,qi)	= matmul( 	Udag	, 	Htmp(:,:,qi) 	)
+			tmp				= matmul(	Ediag	, 	U		)
+			Htmp(:,:,qi)	= matmul( 	Udag		, 	tmp		)
 			!
 			if( .not. isHermitian(Htmp(:,:,qi)) ) 	then
 				write(*,'(a,i3)')	"[TBviaKspace]: generated H matrix is not hermitian, at qi=",qi
