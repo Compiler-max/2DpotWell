@@ -75,8 +75,8 @@ module effTB
 			do n = 1, nWfs
 				Ediag(n,n)	= EnQ(n,qi)
 			end do
-			tmp				= matmul(	Ediag	, 	U		)
-			Htmp(:,:,qi)	= matmul( 	Udag		, 	tmp		)
+			tmp				= matmul(	Ediag	, 	Udag		)
+			Htmp(:,:,qi)	= matmul( 	U		, 	tmp		)
 			!
 			if( .not. isHermitian(Htmp(:,:,qi)) ) 	then
 				write(*,'(a,i3)')	"[TBviaKspace]: generated H matrix is not hermitian, at qi=",qi
@@ -145,8 +145,8 @@ module effTB
 		!
 		write(*,'(a,f6.3,a,f6.3)')	"[calcConnOnCoarse]: dqx=",dqx," dqy=",dqy
 		!
-		!$OMP PARALLEL DO COLLAPSE(3) DEFAULT(SHARED) SCHEDULE(STATIC) &
-		!$OMP& PRIVATE(m,n,qx,qy, qxl, qxr, qyl, qyr, qi,one, Mxl, Mxr, Myl, Myr, Gxl, Gxr, Gyl, Gyr, zero)
+		!!!$OMP PARALLEL DO COLLAPSE(3) DEFAULT(SHARED) SCHEDULE(STATIC) &
+		!!!$OMP& PRIVATE(m,n,qx,qy, qxl, qxr, qyl, qyr, qi,one, Mxl, Mxr, Myl, Myr, Gxl, Gxr, Gyl, Gyr, zero)
 		do m = 1, nWfs
 			do n = 1, nWfs
 				do qx = 1, nQx
@@ -223,7 +223,7 @@ module effTB
 				end do
 			end do
 		end do
-		!$OMP END PARALLEL DO
+		!!!$OMP END PARALLEL DO
 		!
 		!
 		return

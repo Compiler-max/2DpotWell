@@ -64,14 +64,14 @@ module projection
 				call calcAmat(qi,ckH(:,:,qi) ,gnr, A) 
 				call calcUmat(A, Uq(:,:,qi))
 				!ROTATE BLOCH STATES
-				!ckW(:,:,qi)	= matmul( ckH(:,:,qi) , Uq(:,:,qi)	 ) !			
-				do n = 1, nWfs
-					do m = 1, nWfs
-						do gi = 1, nGq(qi)
-							ckW(gi,n,qi)	= ckW(gi,n,qi) + ckH(gi,m,qi) * Uq(m,n,qi)
-						end do
-					end do
-				end do
+				ckW(:,:,qi)	= matmul( ckH(:,:,qi) , Uq(:,:,qi)	 ) !			
+				!do n = 1, nWfs
+				!	do m = 1, nWfs
+				!		do gi = 1, nGq(qi)
+				!			ckW(gi,n,qi)	= ckW(gi,n,qi) + ckH(gi,m,qi) * Uq(m,n,qi)
+				!		end do
+				!	end do
+				!end do
 			else
 				write(*,*)	"[projectUNK]: projection disabled, U= Identity"
 				
