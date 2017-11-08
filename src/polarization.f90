@@ -115,6 +115,18 @@ module polarization
 			do qi = 1, size(A,4)
 				val(1:2)	= val(1:2) + A(1:2,n,n,qi) / real(size(A,4),dp)
 			end do
+			!!SINGLE ATOM
+			if( nAt == 1 ) then
+				val(:)	= val(:) - atPos(:,1)		!calc center w.r.t. atom center
+			!DOUBLE ATOM
+			else if( nAt == 2 ) then
+				if( mod(n,2)== 0 ) then
+					val(:)	= val(:) - atPos(:,2)
+				else	
+					val(:)	= val(:) - atPos(:,1)
+				end if
+			end if
+			!DEFAULT
 			write(*,'(a,i3,a,f8.4,a,f8.4,a)')	"[calcPolViaA]: n=",n,"p_n=",dreal(val(1)),",",dreal(val(2)),")."
 
 			if( abs(dimag(val(1))) > acc .or. abs(dimag(val(2))) > acc	) then
