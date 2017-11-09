@@ -6,7 +6,8 @@ module mathematics
 	private
 
 
-	public :: dp, PI_dp, i_dp, acc, setAcc, machineP, myExp, Cangle, myLeviCivita, nIntegrate, crossP,& 
+	public :: 	dp, PI_dp, i_dp, acc, aUtoAngstrm, aUtoEv, setAcc, machineP, & 
+				myExp, Cangle, myLeviCivita, nIntegrate, crossP,& 
 				isUnit, isIdentity, isHermitian, mySVD, eigSolver, eigSolver2, myMatInvSqrt, rotMat, myCommutat
 
 
@@ -22,17 +23,19 @@ module mathematics
 
 
 	!for clean double precision convention through the code
-	integer, 	parameter 	:: dp 		= kind(0.d0)
-	real(dp), 	parameter	:: machineP = 1e-15_dp
-	real(dp)				:: acc		= 1e-14_dp
+	integer, 		parameter 	:: dp 			= kind(0.d0)
+	real(dp), 		parameter	:: machineP 	= 1e-15_dp
+	real(dp)					:: acc			= 1e-14_dp
 	
 	!mathematical constants
-	real(dp), 		parameter :: PI_dp = 4 * datan (1.0_dp)
-	complex(dp),	parameter :: i_dp = dcmplx(0.0_dp, 1.0_dp)
+	real(dp), 		parameter 	:: PI_dp 		= 4 * datan (1.0_dp)
+	complex(dp),	parameter 	:: i_dp 		= dcmplx(0.0_dp, 1.0_dp)
 
 
 
 	!physical constants
+	real(dp),		parameter 	:: aUtoAngstrm 	= 0.52917721092_dp
+	real(dp),		parameter 	:: aUtoEv	 	= 27.211385_dp
 
 	contains
 

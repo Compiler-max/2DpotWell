@@ -2,6 +2,25 @@
 
 
 
+w90:
+	write_tb = true   -> lattice vectors, Hamiltonian & position operator will be written to seedname_tb.dat [units: Angs, eV]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 PEIERLS:
 -	needs at least an own calcConnOnCoarse since in UNKoverlaps, the basis coefficients 
 	only go up to nWfs

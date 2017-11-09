@@ -6,7 +6,7 @@ program main
 	use sysPara
 	use input,			only:		filesExist, readHam 
 	use potWellModel, 	only: 		solveHam
-	use projection,		only:		projectUnk
+	use w90Interface,	only:		w90Interf
 	use wannier,	 	only: 		wannMethod	
 	use berry,			only:		berryMethod
 
@@ -71,60 +71,65 @@ program main
 	write(*,*)"[main]: done solving Schroedinger eq."
 	kT = T1-T0
 	
-
-
+	!W90
+	write(*,*)"*"
+	write(*,*)"*"
+	write(*,*)"*"
+	write(*,*)"*"
+	write(*,*)"[main]:**************************WANNIER 90*************************"
+	call w90Interf(ck,En)
 
 	!PROJECTIONS
-	write(*,*)"*"
-	write(*,*)"*"
-	write(*,*)"*"
-	write(*,*)"*"
-	write(*,*)"[main]:**************************PROJECT STATES *************************"
-	call cpu_time(T0)
-	!
-	call projectUnk(ck, ckW, Uq)
-	!
-	call cpu_time(T1)
-	write(*,*)"[main]: done with projections."
-	pT = T1-T0
+	!write(*,*)"*"
+	!write(*,*)"*"
+	!write(*,*)"*"
+	!write(*,*)"*"
+	!write(*,*)"[main]:**************************PROJECT STATES *************************"
+	!call cpu_time(T0)
+	!!
+	!call projectUnk(ck, ckW, Uq)
+	!!
+	!call cpu_time(T1)
+	!write(*,*)"[main]: done with projections."
+	!pT = T1-T0
 
 
 	!K SPACE METHOD
-	write(*,*)"*"
-	write(*,*)"*"
-	write(*,*)"*"
-	write(*,*)"*"
-	call cpu_time(T0)
-	if ( doBerry ) then
-		write(*,*)"[main]:**************************WAVEFUNCTION METHOD*************************"
-		call berryMethod(ckW, En, Uq, pBerry, pNiuF2, pNiuF3, pPei)
-		write(*,*)"[main]: done with wavefunction method "
-		write(*,'(a,f12.8,a,f12.8,a)')	"[main]: calculated zero order pBerry=(",pBerry(1),", ",pBerry(2),")."
-	else
-		write(*,*)"[main]: berry method disabled"
-	end if
-	call cpu_time(T1)
-	bT	= T1 - T0
+	!write(*,*)"*"
+	!write(*,*)"*"
+	!write(*,*)"*"
+	!write(*,*)"*"
+	!call cpu_time(T0)
+	!if ( doBerry ) then
+	!	write(*,*)"[main]:**************************WAVEFUNCTION METHOD*************************"
+	!	call berryMethod(ckW, En, Uq, pBerry, pNiuF2, pNiuF3, pPei)
+	!	write(*,*)"[main]: done with wavefunction method "
+	!	write(*,'(a,f12.8,a,f12.8,a)')	"[main]: calculated zero order pBerry=(",pBerry(1),", ",pBerry(2),")."
+	!else
+	!	write(*,*)"[main]: berry method disabled"
+	!end if
+	!call cpu_time(T1)
+	!bT	= T1 - T0
 
 
 
 	!REAL SPACE METHOD
-	write(*,*)"*"
-	write(*,*)"*"
-	write(*,*)"*"
-	write(*,*)"*"
-	call cpu_time(T0)
-	if( doWanni ) then
-		write(*,*)	"[main]:**************************WANNIER FUNCTION METHOD*************************"
-		!
-		call wannMethod(ckW, pWann)
-		!
-		write(*,*)	"[main]: done with center polarization calc"
-	else
-		write(*,*)	"[main]: wannier method disabled"
-	end if	
-	call cpu_time(T1)
-	wT 	= T1 - T0
+	!write(*,*)"*"
+	!write(*,*)"*"
+	!write(*,*)"*"
+	!write(*,*)"*"
+	!call cpu_time(T0)
+	!if( doWanni ) then
+	!	write(*,*)	"[main]:**************************WANNIER FUNCTION METHOD*************************"
+	!	!
+	!	call wannMethod(ckW, pWann)
+	!	!
+	!	write(*,*)	"[main]: done with center polarization calc"
+	!else
+	!	write(*,*)	"[main]: wannier method disabled"
+	!end if	
+	!call cpu_time(T1)
+	!wT 	= T1 - T0
 
 
 
@@ -133,27 +138,27 @@ program main
 
 
 	!OUTPUT
-	write(*,*)"*"
-	write(*,*)"*"
-	write(*,*)"*"
-	write(*,*)"*"
-	write(*,*)"[main]:**************************WRITE OUTPUT*************************"
-	call cpu_time(T0)
-	!
-	call writePolFile(pWann, pBerry, pNiuF2, pNiuF3, pPei )
-	write(*,*)"[main]: ...wrote polarization txt file"
-	call writeMeshInfo() 
-	write(*,*)"[main]: ...wrote mesh info"
-	if( writeBin )	then
-		call writeMeshBin()
-		write(*,*)"[main]: ...wrote mesh bin"
-		!call writeUNKs(unkW)
-		call writeCkASunk(ck, ckW)
-		write(*,*)"[main]: ...wrote binary files for meshes and unks"
-	end if
-	!
-	call cpu_time(T1)
-	oT = T1 - T0
+	!write(*,*)"*"
+	!write(*,*)"*"
+	!write(*,*)"*"
+	!write(*,*)"*"
+	!write(*,*)"[main]:**************************WRITE OUTPUT*************************"
+	!call cpu_time(T0)
+	!!
+	!call writePolFile(pWann, pBerry, pNiuF2, pNiuF3, pPei )
+	!write(*,*)"[main]: ...wrote polarization txt file"
+	!call writeMeshInfo() 
+	!write(*,*)"[main]: ...wrote mesh info"
+	!if( writeBin )	then
+	!	call writeMeshBin()
+	!	write(*,*)"[main]: ...wrote mesh bin"
+	!	!call writeUNKs(unkW)
+	!	call writeCkASunk(ck, ckW)
+	!	write(*,*)"[main]: ...wrote binary files for meshes and unks"
+	!end if
+	!!
+	!call cpu_time(T1)
+	!oT = T1 - T0
 	
 	
 	!WARNINGS IF GCUT IS TO HIGH
