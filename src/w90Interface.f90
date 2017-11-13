@@ -2,26 +2,24 @@ module w90Interface
 
 	use mathematics,	only:	dp, PI_dp, i_dp, machineP, aUtoAngstrm, aUtoEv, myExp
 	use sysPara
+	use projection,		only:	calcAmatANA
 
 	implicit none
 
 	private
-	public ::					w90Interf
+	public ::					w90Interf, seed_name
 
 	character(len=3)					:: 	seed_name
 	character(len=20),	allocatable		:: 	atom_symbols(:)
 	logical								:: 	gamma_only, spinors
-	logical,			allocatable		::	lwindow(:,:)
 	integer								:: 	mp_grid(3), num_kpts, num_bands_tot, num_atoms, num_nnmax, &
 											nntot, num_bands, num_wann
 	integer,			allocatable		:: 	nnlist(:,:), nncell(:,:,:), proj_l(:), proj_m(:), &
 											proj_radial(:), exclude_bands(:), proj_s(:)
 	real(dp)							:: 	real_lattice(3,3), recip_lattice(3,3)
-	real(dp),			allocatable		:: 	kpt_latt(:,:), atoms_cart(:,:), eigenvalues(:,:), &
-											proj_site(:,:), proj_z(:,:), proj_x(:,:), proj_zona(:), proj_s_qaxis(:,:),&
-											wann_centres(:,:), wann_spreads(:), spread(:)
-	complex(dp),		allocatable		::	M_matrix(:,:,:,:), M_matrix_orig(:,:,:,:), &	
-											A_matrix(:,:,:), U_matrix(:,:,:), U_matrix_opt(:,:,:)									
+	real(dp),			allocatable		:: 	kpt_latt(:,:), atoms_cart(:,:), &
+											proj_site(:,:), proj_z(:,:), proj_x(:,:), proj_zona(:), proj_s_qaxis(:,:)
+		
 
 
 	contains
@@ -33,7 +31,8 @@ module w90Interface
 	subroutine w90Interf(ck, En)
 		complex(dp),	intent(in)		:: ck(:,:,:)	
 		real(dp),		intent(in)		:: En(:,:)
-
+		!
+		seed_name	= seedName
 		call writeW90input()
 
 		write(*,*)	"[w90Interf]: wrote w90 input file"
@@ -41,28 +40,20 @@ module w90Interface
 		write(*,*)	"[w90Interf]: done with w90 setup"
 		write(*,*)	"[w90Interf]: will use num_bands= ",num_bands, " bands"
 		write(*,*)	"[w90Interf]: to gen   num_wann=  ",num_wann, " wnfs"
-
-		allocate(	eigenvalues(							num_bands		,	num_kpts	)		)
-		allocate(	M_matrix(		num_bands	,	num_bands	,	nntot	,	num_kpts	)		)
-		allocate(	M_matrix_orig(	num_bands	,	num_bands	,	nntot	,	num_kpts	)		)
-		allocate(	A_matrix(		num_bands	,			num_wann		,	num_kpts	)		)
-		allocate(	U_matrix(		num_wann	,			num_wann		,	num_kpts	)		)
-		allocate(	U_matrix_opt(	num_wann	,			num_wann		,	num_kpts	)		)
-		allocate(	lwindow(		num_bands								,	num_kpts	)		)
-		allocate(	wann_centres(	3			,			num_wann						)		)
-		allocate(	wann_spreads(							num_wann						)		)
-		allocate(	spread(									num_wann						)		)
+		write(*,*)	"[w90Interf]: start preparing wannierisation"
+		
 
 		call w90prepEigVal(En)
 		call w90prepMmat(ck)
 		call w90prepAmat(ck)
+		call writeW90inputPost()
 		write(*,*)	"[w90Interf]: done preparing wannierization input matrices"
 
-		call wannier_run(seed_name,mp_grid,num_kpts,real_lattice,recip_lattice, &
-							kpt_latt,num_bands,num_wann,nntot,num_atoms,atom_symbols, &
-							atoms_cart,gamma_only,M_matrix_orig,A_matrix,eigenvalues, &
-							U_matrix,U_matrix_opt,lwindow,wann_centres,wann_spreads, &
-							spread)
+		!call wannier_run(seed_name,mp_grid,num_kpts,real_lattice,recip_lattice, &
+		!					kpt_latt,num_bands,num_wann,nntot,num_atoms,atom_symbols, &
+		!					atoms_cart,gamma_only,M_matrix_orig,A_matrix,eigenvalues, &
+		!					U_matrix,U_matrix_opt,lwindow,wann_centres,wann_spreads, &
+		!					spread)
 
 
 	end subroutine
@@ -76,9 +67,8 @@ module w90Interface
 !prviate
 	subroutine writeW90input()
 		integer				:: stat
-		integer				:: nw90it
+		integer				:: qx, qy, qi, qxl, qxr, qyl, qyr, Gxl(3), Gxr(3), Gyl(3), Gyr(3)
 		!
-		nw90it = 100
 		seed_name			= 'wf1'
 		!
 		!Delete old input file
@@ -97,25 +87,68 @@ module w90Interface
 		write(100,*)	'num_wann  = ',nWfs
 		write(100,*)	'num_bands = ',nBands
 		write(100,*)	'mp_grid   = ', mp_grid(1) , ' ', mp_grid(2), ' ', mp_grid(3)
-		write(100,*)	'num_iter  = ', nW90it
-		write(100,*)	''
+		write(100,*)	
+		!
+
+
+		!write(100,*)	'shell_list = ',1
+		!
+		!k points
+		!write(100,*)"begin kpoints"
+        !do qi=1,nQ
+        !    write(100,*)qpts(:,qi),0.0_dp
+        !end do
+        !write(100,*)"end kpoints"
+        !write(100,*)
+
+		! k point neighbours
+		write(100,*)	'postproc_setup = .true.'
+		write(100,*)	'begin nnkpts'
+		!get neighbours and write to file
+		do qx = 1, nQx
+			do qy = 1, nQy
+				qxl	= getLeft( qx,nQx)
+				qxr	= getRight(qx,nQx)
+				qyl	= getLeft(  qy,nQy)
+				qyr = getRight( qy,nQy)
+				!
+				!GET GRID POSITION OF NEIGHBOURS
+				qi	= getkindex(qx,qy)
+				qxl	= getkindex(qxl,qy)
+				qxr	= getkindex(qxr,qy)
+				qyl	= getkindex(qx,qyl)
+				qyr	= getkindex(qx,qyr)
+				!
+				!SHIFT NEIGHBOURS BACK TO FIRST BZ
+				Gxl(:)	= 0.0_dp
+				Gxr(:)	= 0.0_dp
+				Gyl(:)	= 0.0_dp
+				Gyr(:)	= 0.0_dp
+				if( qx == 1 ) 	Gxl(1)	= - 1
+				if( qx == nQx)	Gxr(1)	= + 1
+				if( qy == 1 ) 	Gyl(2)	= - 1
+				if( qy == nQy)	Gyr(2)	= + 1
+				!
+				write(100,*)	qi,' ',qxl,' ',Gxl(1),' ',Gxl(2),' ', Gxl(3)
+				write(100,*)	qi,' ',qxr,' ',Gxr(1),' ',Gxr(2),' ', Gxr(3)
+				write(100,*)	qi,' ',qyl,' ',Gyl(1),' ',Gyl(2),' ', Gyl(3)
+				write(100,*)	qi,' ',qyr,' ',Gyr(1),' ',Gyr(2),' ', Gyr(3)
+				!
+			end do 
+		end do
+		write(100,*)	'end nnkpts'
+		write(100,*)
 		!
 		!PROJECTIONS
 		write(100,*)	'Begin Projections'
-		write(100,*)	'H: l=0;l=1,mr=1;l=1,mr=2'
+		!write(100,*)	'H: l=',0,';l=',1,',mr=',1,';l=',1,',mr=',2
+		write(100,*)	'H: l=0;l=1,mr=1,2'
+		
+		!write(100,*)	'He: l=0;l=1,mr=1,2'
 		write(100,*)	'End Projections'
-
+		write(100,*)
 		!
-		!write(100,*)	'begin unit_cell_cart'
-		!write(100,*)	'bohr'
-		!write(100,*)	real_lattice(1,1), ' ', real_lattice(1,2), ' ', real_lattice(1,3)	
-		!write(100,*)	real_lattice(2,1), ' ', real_lattice(2,2), ' ', real_lattice(2,3)	
-		!write(100,*)	real_lattice(3,1), ' ', real_lattice(3,2), ' ', real_lattice(3,3)		
-		!write(100,*)	'end unit_cell_cart'
 		!
-		!JOBS
-		write(100,*)	'write_tb = true'
-
 		close(100)
 		return
 	end subroutine
@@ -124,7 +157,7 @@ module w90Interface
 
 
 	subroutine w90setup()
-		integer							:: at, n
+		integer							:: at, n, qi, nn
 		!
 		!general info
 		gamma_only			= .false.
@@ -141,12 +174,12 @@ module w90Interface
 		real_lattice		= 0.0_dp
 		real_lattice(1,1)	= aX * aUtoAngstrm 
 		real_lattice(2,2)	= aY * aUtoAngstrm
-		real_lattice(3,3)	= 10.0_dp * (aX * aY) * aUtoAngstrm
+		real_lattice(3,3)	= aX * aY * aUtoAngstrm
 		!reciprocal cell
 		recip_lattice		= 0.0_dp
-		recip_lattice(1,1)	= 2.0_dp * PI_dp / ( aX 				* aUtoAngstrm )		
-		recip_lattice(2,2)	= 2.0_dp * PI_dp / ( aY 				* aUtoAngstrm )  
-		recip_lattice(3,3)	= 2.0_dp * PI_dp / (real_lattice(3,3) 	* aUtoAngstrm )
+		recip_lattice(1,1)	= 2.0_dp * PI_dp / real_lattice(1,1) 	
+		recip_lattice(2,2)	= 2.0_dp * PI_dp / real_lattice(2,2)
+		recip_lattice(3,3)	= 2.0_dp * PI_dp / real_lattice(3,3) 		
 		!atoms
 		num_bands_tot		= nBands
 		num_atoms			= nAt
@@ -171,7 +204,7 @@ module w90Interface
 		!fill atom related arrays
 		do	at = 1, num_atoms
 			atom_symbols(at)	= 'H'
-			atoms_cart(1:2,at)	= atPos(1:2,at)
+			atoms_cart(1:2,at)	= atPos(1:2,at)*aUtoAngstrm
 			atoms_cart(3,at)	= 0.0_dp
 		end do
 		!kpt lattice (fractional co-ordinates relative to the reciprocal lattice vectors)
@@ -190,9 +223,82 @@ module w90Interface
 		do n = 1, num_bands_tot
 			if( exclude_bands(n) /= 0) write(*,'(a,i4,a,i4)')"[w90setup]: warning exclude_bands(",n,")=",exclude_bands(n)
 		end do
+		!
+		do qi = 1, num_kpts
+			do nn = 1, nntot
+				write(*,*)	'qi=',qi,' nn=',nn,' nnlist(qi,nn)=',nnlist(qi,nn)
+			end do
+		end do
 		!			
 		return
 	end subroutine
+
+
+
+	subroutine writeW90inputPost()
+		integer				:: qi, at
+		!
+		!create new
+		open(unit=100,file=seed_name//'.win',action='write',access='stream',form='formatted', status='replace')
+		!
+		!BASIC INFO
+		write(100,*)	'num_wann  = ',nWfs
+		write(100,*)	'mp_grid   = ', mp_grid(1) , ' ', mp_grid(2), ' ', mp_grid(3)
+		write(100,*)	'num_iter  = ', nW90it
+		write(100,*)	
+		write(100,*)	'shell_list =',3
+		write(100,*)	'skip_b1_tests = .true.'
+		write(100,*)	
+		!
+		!real lattice
+		write(100,*)	'begin unit_cell_cart'
+		write(100,*)	'ang'
+		write(100,*)	real_lattice(1,1), ' ', real_lattice(1,2), ' ', real_lattice(1,3)	
+		write(100,*)	real_lattice(2,1), ' ', real_lattice(2,2), ' ', real_lattice(2,3)	
+		write(100,*)	real_lattice(3,1), ' ', real_lattice(3,2), ' ', real_lattice(3,3)		
+		write(100,*)	'end unit_cell_cart'
+		write(100,*)	
+		!
+		!atom cart
+		write(100,*)	'begin atoms_cart'
+		write(100,*)	'ang'
+			do at = 1, num_atoms
+				write(100,*) atom_symbols(at), atoms_cart(:,at)
+			end do
+		write(100,*)	'end atoms_cart'
+		write(100,*)
+		!
+		!k points
+		write(100,*)"begin kpoints"
+        do qi=1,num_kpts
+            write(100,*)	kpt_latt(:,qi)
+        end do
+        write(100,*)"end kpoints"
+        write(100,*)
+        !
+        !PROJECTIONS
+		write(100,*)	'Begin Projections'
+		write(100,*)	'H: l=0;l=1,mr=1,2'	
+		write(100,*)	'End Projections'
+		write(100,*)
+		!
+		!JOBS for TB basis
+		write(100,*)	'write_hr = .true.'
+		write(100,*)	'write_u_matrices = .true.'
+		write(100,*)	'write_rmn = .true.'
+		write(100,*)	'write_xyz = .true.'
+		write(100,*)	'write_tb = .true.'
+		write(100,*)	
+		!
+		!PLOTTING JOBS
+		!write(100,*)	'wannier_plot = .true.'
+		!write(100,*)	'wannier_plot_supercell =', nSCx, ' ', nSCy, ' ',1
+		write(100,*)	
+
+		close(100)
+		return
+	end subroutine
+
 
 
 
@@ -201,15 +307,23 @@ module w90Interface
 		!convert eigenvalues from atomic units to eV
 		real(dp),		intent(in)		:: En(:,:)
 		integer							:: qi, n
+		real(dp),		allocatable		:: eigenvalues(:,:)
+		!
+		allocate(	eigenvalues( num_bands,	num_kpts	)	)
 		!
 		if(	size(En,1) /= num_bands	) write(*,*)"[w90prepEigVal]: warning En has wrong numbers of bands"
 		if(	size(En,2) /= num_kpts 	) write(*,*)"[w90prepEigVal]: warning En has wrong numbers of kpts"
 		!
+		!fill new file
+		open(unit=110,file=seed_name//'.eig',action='write',access='stream',form='formatted', status='replace')
 		do qi = 1, num_kpts
 			do n = 1, num_bands
 				eigenvalues(n,qi)	= En(n,qi) * aUtoEv
+				write(110,*)	n, ' ', qi, ' ', eigenvalues(n,qi)
 			end do
 		end do
+		close(110)
+		!
 		!
 		return
 	end subroutine
@@ -224,20 +338,24 @@ module w90Interface
 		complex(dp),	intent(in)		:: ck(:,:,:) 	 !ck(			nG		,	nBands  	,	nQ	)	
 		integer							:: qi, nn, n, m
 		complex(dp)						:: oLap
+		complex(dp),	allocatable		:: M_matrix(:,:,:,:)
 		real(dp)						:: gShift(2)
+		!
+		allocate(	M_matrix(		num_bands	,	num_bands	,	nntot	,	num_kpts	)		)
 		!
 		if(	size(ck,2)/= num_bands ) write(*,*)"[w90prepEigVal]: waring ab initio exp. coefficients have wrong number of bands"
 		if(	size(ck,3)/= num_kpts )  write(*,*)"[w90prepEigVal]: waring ab initio exp. coefficients have wrong numbers of kpts"
 		!
+		!SETUP THE MATRIX
 		M_matrix	= dcmplx(0.0_dp)
-		!
 		do qi = 1, num_kpts
 			do nn = 1, nntot
 				do m = 1 , num_bands
 					do n = 1, num_bands
 						!calc overlap of unks
 						if( nncell(3,qi,nn)/= 0 ) then
-							oLap	= dcmplx(0.0_dp)
+							oLap	= dcmplx(1.0_dp-5)
+							write(*,*)	"[w90prepMmat]: WARNING nearest neighbours in z direction used!"
 							if(qi==1 .and. m==1 .and. n==1 ) write(*,*)	"[w90prepMmat]: oLap set to zero for nn=",nn
 						else
 							gShift(1)			= nncell(1,qi,nn) * 2.0_dp * PI_dp / aX
@@ -251,7 +369,25 @@ module w90Interface
 				end do
 			end do
 		end do
-
+		!
+		!WRITE TO FILE
+		open(unit=120,file=seed_name//'.mmn',action='write',access='stream',form='formatted', status='replace')
+		write(120,*)	'overlap matrix'
+		write(120,*)	num_bands, ' ', num_kpts, ' ', nntot	
+		!
+		do qi = 1, num_kpts
+			do nn = 1, nntot
+				write(120,*)	qi,' ',nnlist(qi,nn),' ',nncell(1,qi,nn),' ',nncell(2,qi,nn),' ', nncell(3,qi,nn)
+				do n = 1, num_bands
+					do m = 1, num_bands
+						write(120,*)	dreal(M_matrix(m,n,nn,qi)), ' ', dimag(M_matrix(m,n,nn,qi))
+					end do
+				end do
+				
+			end do
+		end do
+		close(120)	
+		!
 		return
 	end subroutine
 
@@ -293,285 +429,37 @@ module w90Interface
 	
 
 
+	
 
 
-!A_MATRIX ROUTINES
-	subroutine w90prepAmat(ck)
-		complex(dp),	intent(in)		:: ck(:,:,:) 	 !ck(			nG		,	nBands  	,	nQ	)
-		integer							:: qi	
+	integer function getLeft(i,N)
+		!HELPER for calcConn
+		!gets left (lower) neighbour, using the periodicity at boundary
 		!
-		if(	size(ck,2)/= num_bands )	write(*,*)"[w90prepAmat]: waring ab initio exp. coefficients have wrong number of bands"
-		if(	size(ck,3)/= num_kpts )  	write(*,*)"[w90prepAmat]: waring ab initio exp. coefficients have wrong numbers of kpts"
-		if(	num_wann/nAt > 3) 			write(*,*)"[w90prepAmat]: can not handle more then 3 wfs per atom at the moment"
-		!
-		A_matrix	= dcmplx(0.0_dp)
-		do qi = 1, nQ
-			call calcAmatANA(qi,ck(:,:,qi), A_matrix(:,:,qi))
-		end do
-		!
-		return 
-	end subroutine
-
-
-		subroutine calcAmatANA(qi,ckH, A)
-		!analytic projection with hard coded integrals
-		!	projection onto sin**2, sin cos, cos sin
-		integer,		intent(in)	:: qi
-		complex(dp),	intent(in)	:: ckH(:,:)
-		complex(dp),	intent(out)	:: A(:,:) !A(nBands,nWfs)
-		integer						:: n, m
-		!
-		A	= dcmplx(0.0_dp)
-		!reminder: use dconjg on ckH
-		!
-		!
-		!SINGLE ATOM
-		if( nAt == 1 ) then
-			do n = 1, nWfs
-				do m = 1, nBands
-					select case( n )
-					case(1)
-						A(m,n)	= g1Int(qi,m,1, ckH)
-					case(2)
-						A(m,n)	= g2Int(qi,m,1, ckH)
-					case(3)
-						A(m,n)	= g3Int(qi,m,1, ckH)
-					case default
-						write(*,*)"[calcAmatANA]: Warning hit default in single atom switch"
-						A(m,n)	= dcmplx(0.0_dp)
-					end select
-				end do
-			end do
-		!DUAL ATOMS
-		else if( nAt == 2 ) then
-			do n = 1, nWfs
-				do m = 1, nBands
-					select case( n )
-					case(1)
-						A(m,n)	= g1Int(qi,m,1,ckH)
-					case(2)
-						A(m,n)	= g1Int(qi,m,2,ckH)
-					case(3)
-						A(m,n)	= g2Int(qi,m,1,ckH)
-					case(4)
-						A(m,n)	= g2Int(qi,m,2,ckH)
-					case(5)
-						A(m,n)	= g3Int(qi,m,1,ckH)
-					case(6)
-						A(m,n)	= g3Int(qi,m,2,ckH)
-					case default
-						write(*,*)"[calcAmatANA]: Warning hit default in dual atom switch"
-						A(m,n)	= dcmplx(0.0_dp)
-					end select
-				end do
-			end do
-		!FALLBACK
+		integer,	intent(in)	:: i,N
+		if(i.eq.1) then
+			getLeft = N
 		else
-			write(*,*)	"[calcAmatANA]: more then two atoms per unit cell. I can only handle two tough"
-		end if 
-		
-
-		!
-		return
-	end subroutine
-
-
-	complex(dp) function g1Int(qi,m, at,ckH)
-		integer,		intent(in)	:: qi, m, at
-		complex(dp),	intent(in)	:: ckH(:,:)
-		complex(dp)					:: num1, num2, denom
-		real(dp)					:: kappa, xL, xR, yL, yR, Gx, Gy, xc, yc
-		integer						:: gi
-		!
-		!TRIAL ORBITAL:
-		kappa	= PI_dp / ( 2.0_dp * atR(1,at) )
-		if( atR(1,at) /= atR(2,at) ) write(*,*)"[g1Int]: warning analytic projection can not handle non cubic wells"
-		xc		= atPos(1,at) - atR(1,at)
-		yc		= atPos(2,at) - atR(2,at)
-		xL 		= atPos(1,at) - atR(1,at) 
-		xR		= atPos(1,at) + atR(1,at)
-		yL		= atPos(2,at) - atR(2,at)
-		yR		= atPos(2,at) + atR(2,at)
-		!
-		!SUMMATION OVER G:
-		g1Int 	= dcmplx(0.0_dp)
-		do gi = 1, nGq(qi)
-			Gx 		= Gvec(1,gi,qi)
-			Gy		= Gvec(2,gi,qi)
-			!
-			!
-			if( 	abs(Gx) < machineP 	.and.	 abs(Gy) < machineP 	) then
-				num1	= dcos((xL-xc)*kappa) - dcos((xR-xc)*kappa)
-				num2	= dcos((yL-yc)*kappa) - dcos((yR-yc)*kappa)
-				denom	= kappa**2
-			!
-			else if( abs(Gy) < machineP ) then
-				num1	= 	myExp(-Gx*(xL+xR)) 	* 	( 			dcos((yL-yc)*kappa) - 				dcos((yR-yc)*kappa)	)
-				num2	= 			myExp(Gx*xR)* 	( kappa * 	dcos((xL-xc)*kappa) + i_dp * Gx * 	dsin((xL-xc)*kappa)	)
-				num2	= num2  - 	myExp(Gx*xL)* 	( kappa *	dcos((xR-xc)*kappa) + i_dp * Gx *	dsin((xR-xc)*kappa)	)
-				denom	= kappa * ( kappa**2 - Gx**2)
-			!
-			else if( abs(Gx) < machineP) then
-				num1	= 	myExp(-Gy*(yL+yR))	*	(			dcos((xL-xc)*kappa) -				dcos((xR-xc)*kappa)	)
-				num2	=		-	myExp(Gy*yR)*	( kappa *	dcos((yL-yc)*kappa) + i_dp * Gy *	dsin((yL-yc)*kappa)	)
-				num2	= num2  +	myExp(Gy*yL)*	( kappa *	dcos((yR-yc)*kappa) + i_dp * Gy *	dsin((yR-yc)*kappa)	)
-				denom	= kappa * ( Gy**2 - kappa**2 )
-			!
-			else
-				num1 	=    	- myExp(-Gx*xL)	* 	( kappa *	dcos((xL-xc)*kappa)	+ 	i_dp * Gx * dsin((xL-xc)*Kappa) )
-				num1 	= num1  + myExp(-Gx*xR) * 	( kappa * 	dcos((xR-xc)*kappa)	+	i_dp * Gx * dsin((xR-xc)*Kappa)	)
-				num2 	= 		  myExp(Gy*yL) 	* 	( kappa *	dcos((yR-yc)*kappa)	+	i_dp * Gy * dsin((yR-yc)*kappa)	) 
-				num2 	= num2  - myExp(Gy*yR) 	* 	( kappa *	dcos((yL-yc)*kappa)	+	i_dp * Gy * dsin((yL-yc)*kappa)	)
-				denom	= myExp(Gy*(yL+yR)) * (Gy**2-kappa**2) * (Gx**2-kappa**2)
-			!
-			end if
-			!
-			!
-			if( abs(denom) < machineP) then
-				write(*,'(a,i4,a,f8.4,a,f8.4a,f8.4)') "[g1Int]: warning zero denom at qi=",qi," Gx=",Gx,"Gy=",Gy,"denom=",denom
-				denom 	= 1e-5_dp
-			end if
-			!
-			!
-			g1Int = g1Int + dconjg(ckH(gi,m)) * num1 * num2 / (dsqrt(vol) * denom)
-		end do
-		!
+			getLeft = i-1
+		end if
 		!
 		return
 	end function
 
 
-	complex(dp) function g2Int(qi,m, at,ckH)
-		integer,		intent(in)	:: qi, m, at
-		complex(dp),	intent(in)	:: ckH(:,:)
-		complex(dp)					:: num1, num2, denom
-		real(dp)					:: kappa, xL, xR, yL, yR, Gx, Gy, xc, yc
-		integer						:: gi
+	integer function getRight(i,N)
+		!HELPER for calcConn
+		!gets right (upper) neighbour, using the periodicity at boundary
 		!
-		!TRIAL ORBITAL:
-		kappa	= PI_dp / (2.0_dp*atR(1,at))
-		if( atR(1,at) /= atR(2,at) ) write(*,*)"[g2Int]: warning analytic projection can not handle non cubic wells"
-		xc		= atPos(1,at) - atR(1,at)
-		yc		= atPos(2,at) - atR(2,at)
-		xL 		= atPos(1,at) - atR(1,at) 
-		xR		= atPos(1,at) + atR(1,at)
-		yL		= atPos(2,at) - 2.0_dp * atR(2,at)
-		yR		= atPos(2,at) + 2.0_dp * atR(2,at)
-		!
-		!SUMMATION OVER G:
-		g2Int 	= dcmplx(0.0_dp)
-		do gi = 1, nGq(qi)
-			!
-			Gx 		= Gvec(1,gi,qi)
-			Gy		= Gvec(2,gi,qi)
-			!
-			!
-			if( abs(Gx) < machineP .and. abs(Gy) < machineP ) then
-				num1	= -  ( 	dcos((xL-xc)*kappa) - dcos((xR-xc)*kappa) )
-				num2	= 	   	dsin((yL-yc)*kappa) - dsin((yR-yc)*kappa)
-				denom	= 	kappa**2
-			!
-			else if( abs(Gy) < machineP ) then
-				num1	=		  myExp(-Gx*(xL+xR))*	(			dsin((yL-yc)*kappa) - 				dsin((yR-yc)*kappa)	)
-				num2	= 		- myExp(-Gx*xR)		*  	( kappa *	dcos((xL-xc)*kappa) +	i_dp * Gx * dsin((xL-xc)*kappa)	)
-				num2	= num2 	+ myExp(Gx*xL)		*	( kappa *	dcos((xR-xc)*kappa) +	i_dp * Gx * dsin((xR-xc)*kappa)	)
-				denom	= kappa * ( kappa**2 - Gx**2 )
-			!
-			else if( abs(Gx) < machineP ) then
-				num1	= 		  myExp(-Gy*(yL+yR))*	(			dcos((xL-xc)*kappa) -				dcos((xR-xc)*kappa)	)
-				num2	=		  myExp(Gy*yR)		*	( kappa *	dsin((yL-yc)*kappa) -	i_dp * Gy * dcos((yL-yc)*kappa)	)
-				num2	= num2 	+ myExp(Gy*yL)		*	(-kappa *	dsin((yR-yc)*kappa) +	i_dp * Gy * dcos((yR-yc)*kappa)	)
-				denom	= kappa * ( Gy**2 - kappa**2 )
-			!
-			else  
-				num1 	=		- myExp(-Gx*xL)		* 	( kappa*	dcos((xL-xc)*kappa) + 	i_dp * Gx * dsin((xL-xc)*Kappa)	)
-				num1 	= num1	+ myExp(-Gx*xR)		* 	( kappa*	dcos((xR-xc)*kappa) +	i_dp * Gx * dsin((xR-xc)*Kappa)	)
-				num2 	=		+ myExp(Gy*yR) 		* 	( kappa*	dsin((yL-yc)*kappa) -	i_dp * Gy * dcos((yL-yc)*kappa)	)
-				num2 	= num2	+ myExp(Gy*yL) 		* 	(-kappa* 	dsin((yR-yc)*kappa) +	i_dp * Gy *	dcos((yR-yc)*kappa)	) 
-				denom	=		+ myExp(Gy*(yL+yR)) * (Gy**2-kappa**2) * (Gx**2-kappa**2)  
-			end if
-			!
-			!
-			if( abs(denom) < machineP) then
-				write(*,'(a,i4,a,f8.4,a,f8.4a,f8.4)') "[g2Int]: warning zero denom at qi=",qi," Gx=",Gx,"Gy=",Gy,"denom=",denom
-				denom 	= 1e-5_dp
-			end if
-			!
-			!
-			g2Int = g2Int + dconjg(ckH(gi,m)) * num1 * num2 / (dsqrt(vol) * denom)
-		end do
-		!
+		integer,	intent(in)	:: i,N
+		if(i.eq.N) then
+			getRight = 1
+		else
+			getRight = i+1
+		end if
 		!
 		return
 	end function
-
-	complex(dp) function g3Int(qi,m, at,ckH)
-		integer,		intent(in)	:: qi, m, at
-		complex(dp),	intent(in)	:: ckH(:,:)
-		complex(dp)					:: num1, num2, denom
-		real(dp)					:: kappa, xL, xR, yL, yR, Gx, Gy, xc, yc
-		integer						:: gi
-		!
-		kappa	= PI_dp / (2.0_dp*atR(1,at))
-		if( atR(1,at) /= atR(2,at) ) write(*,*)"[g3Int]: warning analytic projection can not handle non cubic wells"
-		xc		= atPos(1,at) - atR(1,at)
-		yc		= atPos(2,at) - atR(2,at)
-		xL 		= atPos(1,at) - 2.0_dp * atR(1,at) 
-		xR		= atPos(1,at) + 2.0_dp * atR(1,at)
-		yL		= atPos(2,at) - atR(2,at)
-		yR		= atPos(2,at) + atR(2,at)
-		g3Int 	= dcmplx(0.0_dp)
-		do gi = 1, nGq(qi)
-			!
-			Gx 		= Gvec(1,gi,qi)
-			Gy		= Gvec(2,gi,qi)
-			!
-			!
-			if( abs(Gx) < machineP .and. abs(Gy) < machineP ) then
-				num1	= - ( 	dcos((yL-yc)*kappa) - dcos((yR-yc)*kappa) 	)
-				num2	= 		dsin((xL-xc)*kappa) - dsin((xR-xc)*kappa)
-				denom	= kappa**2
-			!
-			else if( abs(Gy) < machineP ) then
-				num1	= 		  myExp(-Gx*(xL+xR))*	( 			dcos((yL-yc)*kappa) - 				dcos((yR-yc)*kappa) )
-				num2	= 		  myExp(Gx*xR)		*	(-kappa* 	dsin((xL-xc)*kappa) + 	i_dp * Gx * dcos((xL-xc)*kappa)	)
-				num2	= num2	+ myExp(Gx*xL)		*	( kappa*	dsin((xR-xc)*kappa) - 	i_dp * Gx * dcos((xR-xc)*kappa)	)
-				denom	= kappa * ( kappa**2 - Gx**2)
-			!
-			else if( abs(Gx) < machineP ) then
-				num1	= 		  myExp(-Gy*(yL+yR))*	(			dsin((xR-xc)*kappa) -				dsin((xL-xc)*kappa)	)
-				num2	=		- myExp(Gy*yR)		*	( kappa*	dcos((yL-yc)*kappa) +	i_dp * Gy * dsin((yL-yc)*kappa)	)
-				num2	= num2	+ myExp(Gy*yL)		*	( kappa*	dcos((yR-yc)*kappa) +	i_dp * Gy * dsin((yR-yc)*kappa)	)
-				denom	= kappa * ( Gy**2 - kappa**2 )
-			!		 		
-			else
-				!ToDo: revisit
-				num1	=  		- i_dp * myExp(Gx*xR) * Gx 		* dcos((xL-xc)*kappa)
-				num1	= num1 	+ i_dp * myExp(Gx*xL) * Gx 		* dcos((xR-xc)*kappa)
-				num1	= num1 	+ 	    myExp(Gx*xR) * kappa 	* dsin((xL-xc)*kappa)
-				num1	= num1 	- 		myExp(Gx*xL) * kappa	* dsin((xR-xc)*kappa)
-				!
-				num2	=  		- 		myExp(Gy*yR) *  ( kappa	* dcos((yL-yc)*kappa) + i_dp * Gy * dsin((yL-yc)*kappa) )
-				num2	= num2 +		myExp(Gy*yL) * 	( kappa * dcos((yR-yc)*kappa) + i_dp * Gy * dsin((yR-yc)*kappa) )
-				!
-				denom	=  + myExp( Gx*(xL+xR) + Gy*(yL+yR) )	* (Gy**2-kappa**2) * (kappa**2-Gx**2)
-				!  
-			end if
-			!
-			!
-			if( abs(denom) < machineP) then
-				write(*,'(a,i4,a,f8.4,a,f8.4a,f8.4)') "[g3Int]: warning zero denom at qi=",qi," Gx=",Gx,"Gy=",Gy,"denom=",denom
-				denom 	= 1e-5_dp
-			end if
-			!
-			!
-			g3Int = g3Int + dconjg(ckH(gi,m)) * num1 * num2 / (dsqrt(vol) * denom)
-		end do
-		!
-		!
-		return
-	end function
-
 
 
 
@@ -588,9 +476,38 @@ module w90Interface
 
 
 
+!A_MATRIX ROUTINES
+	subroutine w90prepAmat(ck)
+		complex(dp),	intent(in)		:: ck(:,:,:) 	 !ck(			nG		,	nBands  	,	nQ	)
+		integer							:: qi, n, m
+		complex(dp),	allocatable		:: A_matrix(:,:,:)
+		!
+		allocate(	A_matrix(	num_bands	,		num_wann	,	num_kpts	)	)
+		!
+		if(	size(ck,2)/= num_bands )	write(*,*)"[w90prepAmat]: waring ab initio exp. coefficients have wrong number of bands"
+		if(	size(ck,3)/= num_kpts )  	write(*,*)"[w90prepAmat]: waring ab initio exp. coefficients have wrong numbers of kpts"
+		if(	num_wann/nAt > 3) 			write(*,*)"[w90prepAmat]: can not handle more then 3 wfs per atom at the moment"
+		!
+		!MATRIX SETUP
+		A_matrix	= dcmplx(0.0_dp)
+		do qi = 1, nQ
+			call calcAmatANA(qi,ck(:,:,qi), A_matrix(:,:,qi))
+		end do
+		!
+		!WRITE TO FILE
+		open(unit=120,file=seed_name//'.amn',action='write',access='stream',form='formatted', status='replace')
+		write(120,*)	'overlap matrix'
+		write(120,*)	num_bands, ' ', num_kpts, ' ', num_wann
+		do qi = 1, num_kpts
+			do n = 1, num_wann
+				do m = 1, num_bands	
+					write(120,*)	m, ' ', n, ' ', ' ', qi, ' ', dreal(A_matrix(m,n,qi)), ' ', dimag(A_matrix(m,n,qi))
+				end do
+			end do
+		end do
 
-
-
+		return 
+	end subroutine
 
 
 

@@ -27,8 +27,7 @@ module semiClassics
 	subroutine	calcFirstOrdP(Fcurv, Aconn, Velo, En, p1F2, p1F3)
 		!calculates the first order polarization p1 according to
 		!	P'= -int_dk [0.5 (Curv.Velo)*B_ext + a']
-		complex(dp),	intent(in)		::	Fcurv(:,:,:,:), Aconn(:,:,:,:)	!Fcurv(3,nWfs, nQ)
-		complex(dp),	intent(inout)	:: 	Velo(:,:,:,:)		!	 Velo(3, nWfs,nWfs, nQ)	
+		complex(dp),	intent(in)		::	Fcurv(:,:,:,:), Aconn(:,:,:,:), Velo(:,:,:,:)	!Fcurv(3,nWfs, nQ)
 		real(dp),		intent(in)		::	En(:,:)				!	En(			nWfs, nQ)						
 		real(dp),		intent(out)		:: 	p1F2(3), p1F3(3)
 		complex(dp), 	allocatable		::	fF2(:,:), fF3(:,:)

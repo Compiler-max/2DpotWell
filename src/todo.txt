@@ -1,9 +1,11 @@
 - bad honnef email aktionen
+- master anmeldung vorbereiten
 
 
 
 w90:
-	write_tb = true   -> lattice vectors, Hamiltonian & position operator will be written to seedname_tb.dat [units: Angs, eV]
+	read in tb matrices
+	write unkp.s for plotting the wannier functions
 
 
 

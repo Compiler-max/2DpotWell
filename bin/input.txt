@@ -16,7 +16,7 @@
 
 [numerics]
     nGdim       = 49
-    Gcut        = 5.0
+    Gcut        = 12.0
     nSolve      = 10        
     nQx         = 4   
     nQy         = 4
@@ -27,7 +27,8 @@
     thres       = 0.1
 
 [methods]
-    doSolveHam  = t
+    doSolveHam  = f
+    doPw90      = t
     doVdesc     = f
     doProj      = t
     doProjNUM   = f
@@ -47,6 +48,9 @@
     debugProj   = t
     debugWann   = f
 
+[w90]
+    seedName    = 'wf1'
+    nw90it      = 300
 
 [wann]
     gaugeSwitch = 0

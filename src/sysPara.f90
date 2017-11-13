@@ -9,26 +9,29 @@ module sysPara
 				dim, aX, aY, vol, nAt, relXpos, relYpos, atRx, atRy, atPot, dVpot, &
 				nG, nGq, nG0, Gcut, Gvec, Gtest, nSolve, &
 				nQ, nQx, nQy, nKx, nKy, nK, nSC, nSCx, nSCy, R0, dqx, dqy, dkx, dky, &
-				nR, nRx, nRy,  dx, dy, &
+				nR, nRx, nRy,  dx, dy,nw90it, &
 				gaugeSwitch, nBands, nWfs, connSwitch,  &
 				atPos, atR, qpts, rpts, Rcell, kpts, trialOrbVAL, trialOrbSw, Zion, &
 				Bext, prefactF3, &
-				debugProj, debugHam, debugWann, doSolveHam, doVdesc, doProj, doProjNUM, &
+				seedName, &
+				debugProj, debugHam, debugWann, doSolveHam, doPw90, doVdesc, doProj, doProjNUM, &
 				doBerry, doWanni, doVeloNUM, doNiu, doPei, doGaugBack, writeBin
 
 
 	!
 	integer  										:: 	dim=2, nAt=0, nG, nGdim=16, nSolve=20, nG0,  nQx=1, nQy=1,nQ , nSCx=1, nSCy=1,& 
 														nKx=1, nKy=1, nK, connSwitch=0, &
+														nw90it, &
 														nRx=10, nRy=10, nR, R0=1, nBands=1,nWfs=1, nSC, gaugeSwitch, trialOrbSw
 	real(dp) 										::	aX=0.0_dp, aY=0.0_dp,vol=0.0_dp, Gcut=2*PI_dp, thres,& 
-														dx, dy, dqx, dqy, dkx, dky, B0, Bext(3)	, prefactF3										
+														dx, dy, dqx, dqy, dkx, dky, B0, Bext(3)	, prefactF3
+	character(len=3)								::	seedName										
 	integer,	allocatable,	dimension(:)		::	nGq
 	real(dp),	allocatable,	dimension(:)		::	relXpos, relYpos, atRx, atRy, atPot, dVpot, trialOrbVAL, Zion
 	real(dp),	allocatable,	dimension(:,:)		::	Gtest , atPos, atR, qpts, rpts, Rcell, kpts 
 	real(dp),	allocatable,	dimension(:,:,:)	::	Gvec
 	logical											::	debugHam, debugWann, debugProj, &
-														doSolveHam, doVdesc , doProj, doProjNUM, &
+														doSolveHam, doPw90, doVdesc , doProj, doProjNUM, &
 														doBerry, doWanni, doVeloNUM, doNiu, doPei, doGaugBack, &
 														writeBin
 
@@ -77,6 +80,7 @@ module sysPara
 		![methods]
 		
 		call CFG_add_get(my_cfg,	"methods%doSolveHam",	doSolveHam	,	"solve electronic structure or read in"	)
+		call CFG_add_get(my_cfg,	"methods%doPw90"	,	doPw90		,	"read in the matrices in wann base	"	)
 		call CFG_add_get(my_cfg,	"methods%doVdesc"	,	doVdesc		,	"switch on/off linear descending pot"	)
 		call CFG_add_get(my_cfg,	"methods%doProj"	,	doProj		,	"switch on/off 	projections onto trial"	)
 		call CFG_add_get(my_cfg,	"methods%doProjNUM"	,	doProjNUM	,	"switch on/off 	projections onto trial"	)
@@ -92,6 +96,10 @@ module sysPara
 		call CFG_add_get(my_cfg,	"debug%debugProj"	, 	debugProj	,	"switch for debuging tests in solveHam"	)
 		call CFG_add_get(my_cfg,	"debug%debugHam"	, 	debugHam	,	"switch for debuging tests in solveHam"	)
 		call CFG_add_get(my_cfg,	"debug%debugWann"	, 	debugWann	,	"switch for debuging in wannier"		)
+		![w90]
+		call CFG_add_get(my_cfg,	"w90%seedName"		, 	 seedName	,	"seedName for wannier files(char len=3)")
+		call CFG_add_get(my_cfg,	"w90%nw90it"		, 	 nw90it		,	"number of iterations for wannnierisat,")
+
 		![wannier]
 		call CFG_add_get(my_cfg,	"wann%gaugeSwitch"	,	gaugeSwitch ,	"switch gauge the basis coeff directly"	)
 		call CFG_add_get(my_cfg,	"wann%nBands"		,	nBands	 	,	"# of bands to project onto trial orbs"	)

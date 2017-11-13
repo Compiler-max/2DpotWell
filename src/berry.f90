@@ -14,43 +14,76 @@ module berry
 
 	private
 	public	::	berryMethod
+
+
+
+	integer								::	num_wann, num_kpts
+	character(len=3)					::	seed_name
+	complex(dp),	allocatable			::	ck(:,:,:), ckW(:,:,:), Uq(:,:,:)
+	real(dp),		allocatable			:: 	EnQ(:,:), krel(:,:)
+
+
+
+
+
+
+
+
 	contains
 
 
 
 
 !public
-	subroutine berryMethod(ckW, EnQ, Uq, pBerry, pNiuF2, pNiuF3, pPei)
-		complex(dp),	intent(in)		:: ckW(:,:,:), Uq(:,:,:)
-		real(dp),		intent(in)		:: EnQ(:,:)
+
+
+
+	subroutine berryMethod(pBerry, pNiuF2, pNiuF3, pPei)
+		!todo
 		real(dp),		intent(out)		:: pBerry(2), pNiuF2(3), pNiuF3(3), pPei(3)
 		real(dp),		allocatable		:: EnK(:,:)
 		complex(dp),	allocatable		:: AconnK(:,:,:,:), FcurvK(:,:,:,:), veloK(:,:,:,:) , tHopp(:,:,:), rHopp(:,:,:,:) 
 		!
+		
+					
+		!
+		write(*,*)	"[berrryMethod]: hello from Berry"
+		!read in basis info
+
+
+		!read in U matrix (yields nQ, nWfs) 
+		call readUmatrix()
+		write(*,*)	"[berrryMethod]: wrote the U matrix from file"
+
 		allocate(			tHopp(					nWfs	, 	nWfs	,	nSc		)			)
 		allocate(			rHopp(		2		,	nWfs	, 	nWfs	, 	nSC		)			)			
 		allocate(			EnK(					nWfs	, 				nK		)			)
 		allocate(			AconnK(		3		, 	nWfs	,	nWfs	,	nK		)			)
 		allocate(			FcurvK(		3		, 	nWfs	, 	nWfs	,	nK		)			)
 		allocate(			veloK(		3		, 	nWfs	,	nWfs	,	nK		)			)
-					
-		!
-		write(*,*)	"[berrryMethod]: hello from Berry"
+
+		allocate(	ck(		nG,	nBands,	nQ		)	)
+		allocate(	ckW(	nG, nWfs,  	nQ		)	)
+		allocate(	EnQ(	nG,			nQ		)	)
+
+		!read in ck, En
 		
 
+		!rotate ck, get ckW
+
 		!SET UP EFFECTIVE TIGHT BINDING MODELL
-		call TBviaKspace(ckW, EnQ, Uq, tHopp, rHopp)
-		write(*,*)	"[berryMethod]: set up effective tight binding model (k-Space method)"
+		!call TBviaKspace(ckW, EnQ, Uq, tHopp, rHopp)
+		!write(*,*)	"[berryMethod]: set up effective tight binding model (k-Space method)"
 
 		!INTERPOLATE CONN,CURV, VELO
-		call DoWannInterpol(ckW, rHopp, tHopp, EnK, AconnK, FcurvK, veloK)
-		write(*,*)	"[berrryMethod]: interpolation done"
+		!call DoWannInterpol(ckW, rHopp, tHopp, EnK, AconnK, FcurvK, veloK)
+		!write(*,*)	"[berrryMethod]: interpolation done"
 
 		
 		
 		!INTEGRATE CONNECTION
-		call calcPolViaA(AconnK,pBerry)
-		write(*,'(a,f12.8,a,f12.8,a)')	"[berrryMethod]: calculated zero order pol=(",pBerry(1),", ",pBerry(2),")."
+		!call calcPolViaA(AconnK,pBerry)
+		!write(*,'(a,f12.8,a,f12.8,a)')	"[berrryMethod]: calculated zero order pol=(",pBerry(1),", ",pBerry(2),")."
 		
 
 
@@ -79,6 +112,41 @@ module berry
 		!
 		!
 		!
+		return
+	end subroutine
+
+
+!private
+	subroutine readUmatrix()
+		integer						:: stat, qi, n, m, dumI(3)
+		real(dp)					:: val(2)
+		!todo
+		seed_name	= seedName
+		!READ U MATRIX
+		open(unit=300,iostat=stat, file=seed_name//'_u.mat', status='old',action='read')
+		if( stat /= 0)	write(*,*)	"[readTB]: warning did not file _u.mat file"
+		read(300,*)
+		read(300,*) dumI(1:3)
+		if( dumI(1) /= nQ ) write(*,*)	"[readTB]: warning num_kpts=",dumI(1)," nQ=",nQ
+		if(	dumI(2)	/= nWfs) write(*,*)	"[readTB]: warning num_wann=",dumI(2)," nWfs=",nWfs
+		num_kpts	= dumI(1)
+		num_wann	= dumI(2)
+		!
+		allocate(	krel(		3,							num_kpts)			)
+		allocate(	Uq(		num_wann,	num_wann,	num_kpts)			)	
+		!
+		do qi = 1,  num_kpts
+			read(300,*)
+			read(300,*) krel(1:3,qi)
+			do n = 1, num_wann
+				do m = 1, num_wann
+					read(300,*)	val(1:2)
+					Uq(m,n,qi)	= dcmplx(val(1))	+	i_dp	*	dcmplx(val(2))
+				end do
+			end do
+		end do
+		close(300)
+
 		return
 	end subroutine
 

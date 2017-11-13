@@ -20,9 +20,9 @@ module polarization
 		!	where e is electron charge, \vec{a} a bravais lattice vector and V0 the volume of the unit cell
 		!	uncertainty is resolved by projecting the wannier centers into the first unit cell at (0,0) 
 		real(dp), intent(in)	:: wCent(:,:)
-		real(dp), intent(out)	:: pE(2)
+		real(dp), intent(out)	:: pE(3)
 		integer 				:: n
-		real(dp) 				:: cent(2)
+		real(dp) 				:: cent(3)
 		!
 		pE	 	= 0.0_dp
 		!
@@ -34,20 +34,19 @@ module polarization
 			!!
 			!!SINGLE ATOM
 			if( nAt == 1 ) then
-				cent(:)	= cent(:) - atPos(:,1)		!calc center w.r.t. atom center
+				cent(1:2)	= cent(1:2) - atPos(1:2,1)		!calc center w.r.t. atom center
 			!DOUBLE ATOM
 			else if( nAt == 2 ) then
 				if( mod(n,2)== 0 ) then
-					cent(:)	= cent(:) - atPos(:,2)
+					cent(1:2)	= cent(1:2) - atPos(1:2,2)
 				else	
-					cent(:)	= cent(:) - atPos(:,1)
+					cent(1:2)	= cent(1:2) - atPos(1:2,1)
 				end if
 			!DEFAULT
 			else
 				write(*,*)	"[calcPolWannCent]: to many atoms in unit cell!"
 			end if
 
-			cent(:) = wCent(:,n)
 			
 			!if( mod(n,2) == 0 ) then
 			!	cent(:) = cent(:) - atPos(:,2)
@@ -90,47 +89,47 @@ module polarization
 
 
 
-	subroutine calcPolViaA(A, pElA)
+	subroutine calcPolViaA(A_mat, pElA)
 		!calculates the polarization by integrating connection over the brillouin zone
 		! r_n 	= <0n|r|0n> 
 		!		=V/(2pi)**2 \integrate_BZ <unk|i \nabla_k|unk>
 		!		=V/(2pi)**2 \integrate_BZ A(k)
-		complex(dp),		intent(in)		:: A(:,:,:,:)			!A(2,	 nWfs, nWfs, nQ	)	
+		complex(dp),		intent(in)		:: A_mat(:,:,:,:)			!A(2,	 nWfs, nWfs, nQ	)	
 		real(dp),			intent(out)		:: pElA(:)
 		complex(dp)	,		allocatable		:: val(:)
 		real(dp)							:: machine
 		integer								:: n, qi
 		!
-		allocate(	val( size(A,1) )	)
+		allocate(	val( size(A_mat,1) )	)
 		val		= dcmplx(0.0_dp)
 		machine	= 1e-15_dp
-		
+		if( size(A_mat,1) /= size(pElA) ) write(*,*)	"[calcPolViaA]: dimension of A_mat and output val dont fit"
 		!
 		!
 		!SUM OVER  STATES
 		pElA	= 0.0_dp
-		do n 	= 1, size(A,2)
+		do n 	= 1, size(A_mat,2)
 			val	= dcmplx(0.0_dp)
 			!INTEGRATE
-			do qi = 1, size(A,4)
-				val(1:2)	= val(1:2) + A(1:2,n,n,qi) / real(size(A,4),dp)
+			do qi = 1, size(A_mat,4)
+				val(:)	= val(:) + A_mat(:,n,n,qi) / real(size(A_mat,4),dp)
 			end do
-			!!SINGLE ATOM
-			if( nAt == 1 ) then
-				val(:)	= val(:) - atPos(:,1)		!calc center w.r.t. atom center
-			!DOUBLE ATOM
-			else if( nAt == 2 ) then
-				if( mod(n,2)== 0 ) then
-					val(:)	= val(:) - atPos(:,2)
-				else	
-					val(:)	= val(:) - atPos(:,1)
-				end if
-			end if
+			!!!SINGLE ATOM
+			!if( nAt == 1 ) then
+			!	val(:)	= val(:) - atPos(:,1)		!calc center w.r.t. atom center
+			!!DOUBLE ATOM
+			!else if( nAt == 2 ) then
+			!	if( mod(n,2)== 0 ) then
+			!		val(1:2)	= val(1:2) - atPos(1:2,2)
+			!	else	
+			!		val(1:2)	= val(1:2) - atPos(1:2,1)
+			!	end if
+			!end if
 			!DEFAULT
 			write(*,'(a,i3,a,f8.4,a,f8.4,a)')	"[calcPolViaA]: n=",n,"p_n=",dreal(val(1)),",",dreal(val(2)),")."
 			pelA(:)	= pElA(:) + dreal(val(:)) 
 
-			if( abs(dimag(val(1))) > acc .or. abs(dimag(val(2))) > acc	) then
+			if( abs(dimag(val(1))) > acc .or. abs(dimag(val(2))) > acc .or. abs(dimag(val(3))) > acc	) then
 				write(*,*)	"[calcPolViaA]: found non zero imaginary contribution from band n=",n 
 			end if
 			

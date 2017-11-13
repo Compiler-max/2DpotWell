@@ -36,7 +36,7 @@ module wannier
 !public:
 	subroutine wannMethod(ckW,  pWann)
 		complex(dp),	intent(in)		:: ckW(:,:,:)		!	unk(	nR 	,	nWfs	, nQ	)
-		real(dp),		intent(out)		:: pWann(2)
+		real(dp),		intent(out)		:: pWann(3)
 		complex(dp),	allocatable		:: wnF(:,:,:)
 		real(dp),		allocatable		:: wCent(:,:), wSprd(:,:)
 		integer							:: normCount

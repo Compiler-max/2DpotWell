@@ -68,7 +68,7 @@ aX			= cellI[0]
 aY			= cellI[1]
 
 
-
+print(str(nG))
 
 def Qind(qx,qy):
 	return int(qy * nQx + qx)
@@ -86,7 +86,7 @@ kpts	= np.reshape(	kpts		,	(nK,2)		)
 En		= np.reshape(	rawData		,	(nQ,nG)		)    
 
 #rawInterP= np.ones(nK*nWfs)
-#rawENpei = np.ones(nK*nWfs)
+rawENpei = np.ones(nK*nWfs)
 EI 		= np.reshape(	rawInterP	,	(nK,nWfs)	)
 EnP 	= np.reshape(	rawENpei	,	(nK,nWfs)	)
 

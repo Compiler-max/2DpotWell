@@ -11,7 +11,7 @@ module projection
 	implicit none	
 	
 	private
-	public ::	projectUnk		
+	public ::	projectUnk, calcAmatANA		
 
 
 
