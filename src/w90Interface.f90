@@ -283,11 +283,9 @@ module w90Interface
 		write(100,*)
 		!
 		!JOBS for TB basis
-		write(100,*)	'write_hr = .true.'
 		write(100,*)	'write_u_matrices = .true.'
-		write(100,*)	'write_rmn = .true.'
-		write(100,*)	'write_xyz = .true.'
 		write(100,*)	'write_tb = .true.'
+		write(100,*)	'write_hr = .true.'
 		write(100,*)	
 		!
 		!PLOTTING JOBS
