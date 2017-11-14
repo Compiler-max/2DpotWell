@@ -23,11 +23,13 @@ bin/**
 *.dat
 *.nb
 *.mod
+*.tar.gz
 *.sh
 **/intelAdvi
 **/CMakeFiles
 *CMakeCache.txt
 **thirdparty/Makefile
+**thirdparty/wannier90
 **thirdparty/cmake_install.cmake
 *Makefile
 *.cmake
