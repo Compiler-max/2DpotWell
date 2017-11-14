@@ -48,24 +48,25 @@ module input
 			buffer	= 0.0_dp
 			open(unit=700, file="./rawData/ckR.dat",form='unformatted',access='stream',action='read')
 				read(700) buffer
-			close(700,status='delete')
+			close(700)
 			ck	= buffer
 			!
 			!UNK IMAG PART
 			buffer	= 0.0_dp
 			open(unit=710, file="./rawData/ckI.dat",form='unformatted',access='stream',action='read')
 				read(710) buffer
-			close(710,status='delete')
+			close(710)
 			ck	= ck + i_dp * buffer
 			!
 			!BAND ENERGIES
 			open(unit=720, file="./rawData/bandStruct.dat",form='unformatted',access='stream',action='read')
 				read(720) eBuff
-			close(720,status='delete')
+			close(720)
 			En(1:nBands,:)	= eBuff(1:nBands,:)
 			!
 			!
-			call writeEnAndCK(eBuff, ck)
+			
+			!call writeEnAndCK(eBuff, ck)
 		else
 			write(*,*)	"[readHam]: could not find all necessary files"
 			ck	= dcmplx(0.0_dp)
