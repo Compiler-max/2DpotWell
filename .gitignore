@@ -29,8 +29,10 @@ bin/**
 **/CMakeFiles
 *CMakeCache.txt
 **thirdparty/Makefile
-**thirdparty/wannier90
-**thirdparty/cmake_install.cmake
+./thirdparty/wannier90
+./thirdparty/quadpack
+./thirdparty/config_fortran
+./thirdparty/cmake_install.cmake
 *Makefile
 *.cmake
 ./intelAdvi
