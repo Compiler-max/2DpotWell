@@ -168,34 +168,34 @@ module output
 	end subroutine
 
 
-	subroutine writeEnAndCK(EnT, ck)
+	subroutine writeEnAndCK(EnT, ck, nGq)
 		real(dp),		intent(in)		:: EnT(:,:)
 		complex(dp),	intent(in)		:: ck(:,:,:)
+		integer,		intent(in)		:: nGq(:)
 		real(dp),		allocatable		:: buffer(:,:,:)
-		integer							:: stat
 		!
 		!
 		allocate(	buffer(	size(ck,1), size(ck,2), size(ck,3)	)		)
 		!
-		open(unit=200, iostat=stat, file='rawData/bandStruct.dat', status='old')
-		if (stat == 0) close(200, status='delete')
-		open(unit=200, file='rawData/bandStruct.dat', form='unformatted', access='stream', action='write')
+		open(unit=200, file='rawData/bandStruct.dat', form='unformatted', access='stream', action='write', status='replace')
 		write(200)	EnT
 		close(200)
 		!
-		open(unit=210, iostat=stat, file='rawData/ckR.dat', status='old')
-		if (stat == 0) close(210, status='delete')
 		buffer	= dreal(ck) 
 		open(unit=210, file='rawData/ckR.dat'		, form='unformatted', access='stream', action='write',status='replace') 
 		write(210)	buffer
 		close(210)
 		!
-		open(unit=211, iostat=stat, file='rawData/ckI.dat', status='old')
-		if (stat == 0) close(211, status='delete')
 		buffer	= dimag(ck)
-		open(unit=211, file='rawData/ckI.dat'		, form='unformatted', access='stream', action='write')
+		open(unit=211, file='rawData/ckI.dat'		, form='unformatted', access='stream', action='write', status='replace')
 		write(211)	buffer
-		write(*,*)	"[writeEnAndCK]: wrote eigenvalues and eigencoefficients"
+		close(211)
+		!
+		open(unit=215, file='rawData/nGq.dat'		, form='unformatted', access='stream', action='write', status='replace')
+		write(215)	nGq
+		close(215)
+
+		write(*,*)	"[writeEnAndCK]: wrote eigenvalues and eigencoefficients and nGq info"
 		!
 		return
 	end subroutine

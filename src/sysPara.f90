@@ -4,7 +4,7 @@ module sysPara
 	use m_config
 	implicit none
 	private
-	public :: 	readInp, insideAt, getRindex, getRleftX, getRrightX, getRleftY, getRrightY,& 
+	public :: 	readInp, setBasis, insideAt, getRindex, getRleftX, getRrightX, getRleftY, getRrightY,& 
 				getKindex, getGammaPoint, getPot,getGindex, &
 				dim, aX, aY, vol, nAt, relXpos, relYpos, atRx, atRy, atPot, dVpot, &
 				nG, nGq, nG0, Gcut, Gvec, Gtest, nSolve, &
@@ -176,6 +176,27 @@ module sysPara
 
 		return
 	end subroutine
+
+
+integer function setBasis()
+	integer				:: stat, qi, gi 
+	open(unit=800, file="./rawData/nGq.dat",form='unformatted',access='stream',action='read',iostat=stat)
+	if( stat==0 ) then
+		read(800)	nGq
+		setBasis	= 0
+		do qi = 1, nQ
+			do gi = 1, nGq(qi)
+				Gvec(:,gi,qi)	= qpts(:,qi) + Gtest(:,gi)
+			end do
+		end do
+	else
+		write(*,*)	"[setBasis]: WARNING could not open nGq file"
+		setBasis	= 1
+	end if
+	close(800)
+	!
+	return
+end function
 
 
 	integer function getTestGridSize()

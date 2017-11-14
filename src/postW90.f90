@@ -62,6 +62,8 @@ module postW90
 				write(*,'(a,f10.5,a,f10.5,a,f10.5,a)')	"[effTBmodel]: pPei=(",pPei(1),", ",pPei(2),", ",pPei(3),")."
 			end if
 			!
+			!output file
+			call writePw90pol( pWann, pConn, pNiuF2, pNiuF3, pPei)
 			!
 		else
 			write(*,*)	"[effTBmodel]: did not find all neccessary input files, skip..."
@@ -340,14 +342,74 @@ module postW90
 				end do
 			end do
 		end do
-
-
-		
-
-
+		!
 		return
 	end subroutine
 
+
+	subroutine writePw90pol( pWann, pConn, pNiuF2, pNiuF3, pPei)
+		real(dp),		intent(in)		::	pWann(3), pConn(3), pNiuF2(3), pNiuF3(3), pPei(3)
+		real(dp)						:: 	pNiu(3)
+
+			open(unit=600,file='pW90pol.txt',action='write')
+		write(600,*)"**************POST W90 POLARIZATION**********************"
+		write(600,*)"*"
+		write(600,*)"*"
+		write(600,*)"*"
+		write(600,*)"*"
+		write(600,*)"**************ZION:"
+		write(600,*) Zion
+		write(600,*)"*"
+		write(600,*)"*"
+		!
+		write(600,*)"**************POL:"
+		write(600,*) "aX/vol=",aX/vol,"aY/vol=",aY/vol
+
+	
+		write(600,'(a,f16.7,a,f16.7,a,f16.7,a,a,f16.7,a,f16.7,a)')	"pWann =  (",  pWann(1)	,	", ",	pWann(2),	", ",pWann(3),	"),",& 
+												" moded=(",dmod(pWann(1),aX/vol),", ",dmod(pWann(2),aY/vol),")."
+		!
+		write(600,'(a,f16.7,a,f16.7,a,f16.7,a,a,f16.7,a,f16.7,a)')	"pBerry=  (",		pConn(1)	,	", ",	pConn(2),	", ",pConn(3),"),",& 
+												" moded=(",dmod(pConn(1),aX/vol),", ",dmod(pConn(2),aY/vol),")."
+		!write(600,'(a,e16.9,a,f16.12,a,f16.12,a)')	"pInt= ",norm2(pInt)," * (", &	
+		!														pInt(1)/norm2(pInt),	", ",	pInt(2)/norm2(pInt),	")"
+		!write(600,'(a,e16.9,a,f16.12,a,f16.12,a)')	"pIon= ",norm2(pIon)," * (", &	
+		!														pIon(1)/norm2(pIon)	,	", ",	pIon(2)/norm2(pIon),	")"
+		!write(600,'(a,e16.9,a,f16.12,a,f16.12,a)')	"pTot= ",norm2(pTot)," * (", &	
+		!														pTot(1)/norm2(pTot),	", ",	pTot(2)/norm2(pTot),	")"
+		!
+		!
+		write(600,*)"**************PERTURBATION:"
+		if( norm2(Bext) > machineP ) then
+			write(600,'(a,f16.12,a,f16.12,a,f16.12,a,f16.12,a)')	"Bext= ",norm2(Bext) ," * (", &
+											Bext(1)/norm2(Bext),	", ",	Bext(2)/norm2(Bext),", ", Bext(3)/norm2(Bext),	")"
+		else
+			write(600,'(a,f16.8,a,f16.8,a,f16.8,a)')	"Bext= (", 	Bext(1),	", ",	Bext(2),", ", Bext(3),	")"
+		end if
+		write(600,*)"*"
+		
+
+		write(600,*)"**************FIRST ORDER POL:"
+		!NIU
+		write(600,'(a,f16.8)') "F3 prefactor = ",prefactF3
+		write(600,'(a,f16.7,a,f16.7,a,f16.7,a,a,f16.7,a,f16.7,a)')	"pNiuF2= (", 	pNiuF2(1),	", ",	pNiuF2(2),", ", pNiuF2(3),	")",&
+														" moded=(",dmod(pNiuF2(1),aX/vol),", ",dmod(pNiuF2(2),aY/vol),")."
+		!
+		write(600,'(a,f16.7,a,f16.7,a,f16.7,a,a,f16.7,a,f16.7,a)')	"pNiuF3= (", 	pNiuF3(1),	", ",	pNiuF3(2),", ", pNiuF3(3),	")",&
+														" moded=(",dmod(pNiuF3(1),aX/vol),", ",dmod(pNiuF3(2),aY/vol),")."
+		!
+		pNiu(:)	= pNiuF2(:) + pNiuF3(:)
+		!												
+		write(600,'(a,f16.7,a,f16.7,a,f16.7,a,a,f16.7,a,f16.7,a)')	"pNiu  = (", 	pNiu(1),	", ",	pNiu(2),", ", pNiu(3),	")",&
+														" moded=(",dmod(pNiu(1),aX/vol),", ",dmod(pNiu(2),aY/vol),")."
+		
+		!PEIERLS													
+		write(600,'(a,f16.7,a,f16.7,a,f16.7,a,a,f16.7,a,f16.7,a)')	"pPei  = (", 	pPei(1),	", ",	pPei(2),", ", pPei(3),	")",&
+																" moded=(",dmod(pPei(1),aX/vol),", ",dmod(pPei(2),aY/vol),")."
+		close(600)
+
+		return
+	end subroutine
 
 
 

@@ -11,6 +11,11 @@ bin/**
 
 **/vTune
 *.o
+*.wout
+*.win
+*.mmn
+*.amn
+*.dat
 *.mod
 *.sh
 **/CMakeFiles

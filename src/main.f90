@@ -8,7 +8,6 @@ program main
 	use potWellModel, 	only: 		solveHam
 	use w90Interface,	only:		w90Interf
 	use postW90,		only:		effTBmodel
-	use wannier,	 	only: 		wannMethod	
 	use berry,			only:		berryMethod
 
 	use output,		 	only:		writeMeshInfo, writeMeshBin, writeCkASunk, writePolFile,& 
@@ -110,21 +109,21 @@ program main
 
 
 	!K SPACE METHOD
-	!call cpu_time(T0)
-	!if ( doBerry ) then
-	!	write(*,*)"*"
-	!	write(*,*)"*"
-	!	write(*,*)"*"
-	!	write(*,*)"*"
-	!	write(*,*)"[main]:**************************WAVEFUNCTION METHOD*************************"
-	!	call berryMethod(pBerry, pNiuF2, pNiuF3, pPei)
-	!	write(*,*)"[main]: done with wavefunction method "
-	!	write(*,'(a,f12.8,a,f12.8,a)')	"[main]: calculated zero order pBerry=(",pBerry(1),", ",pBerry(2),")."
-	!else
-	!	write(*,*)"[main]: berry method disabled"
-	!end if
-	!call cpu_time(T1)
-	!bT	= T1 - T0
+	call cpu_time(T0)
+	if ( doBerry ) then
+		write(*,*)"*"
+		write(*,*)"*"
+		write(*,*)"*"
+		write(*,*)"*"
+		write(*,*)"[main]:**************************WAVEFUNCTION METHOD*************************"
+		call berryMethod(pBerry, pNiuF2, pNiuF3, pPei)
+		write(*,*)"[main]: done with wavefunction method "
+		write(*,'(a,f12.8,a,f12.8,a)')	"[main]: calculated zero order pBerry=(",pBerry(1),", ",pBerry(2),")."
+	else
+		write(*,*)"[main]: berry method disabled"
+	end if
+	call cpu_time(T1)
+	bT	= T1 - T0
 
 
 
@@ -160,14 +159,11 @@ program main
 	write(*,*)"[main]:**************************WRITE OUTPUT*************************"
 	call cpu_time(T0)
 	!
-	call writePolFile(pWann, pBerry, pNiuF2, pNiuF3, pPei )
-	write(*,*)"[main]: ...wrote polarization txt file"
 	call writeMeshInfo() 
 	write(*,*)"[main]: ...wrote mesh info"
 	if( writeBin )	then
 		call writeMeshBin()
 		write(*,*)"[main]: ...wrote mesh bin"
-		!call writeCkASunk(ck, ckW)
 		write(*,*)"[main]: ...wrote binary files for meshes and unks"
 	end if
 	!
