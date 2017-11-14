@@ -4,8 +4,9 @@
 
 
 w90:
-	read in tb matrices
 	write unkp.s for plotting the wannier functions
+	cluster calculation
+	
 
 
 
