@@ -20,12 +20,13 @@ program main
     complex(dp),	allocatable,	dimension(:,:,:)	:: 	ck
     real(dp),		allocatable,	dimension(:,:)		:: 	En    														
     real												:: 	mastT0, mastT1, mastT, T0, T1, &
-    															aT,kT,wT, oT, bT
+    															aT,kT,wT,pwT, oT, bT
     
     !timing zero init
     aT		= 0.0
     kT		= 0.0
     wT		= 0.0
+    pwT		= 0.0
     bT		= 0.0
     oT 		= 0.0
     mastT	= 0.0
@@ -53,9 +54,8 @@ program main
 
 	
 	!ELECTRONIC STRUCTURE
-	call cpu_time(T0)
-	!
 	if( doSolveHam ) then
+		call cpu_time(T0)	
 		allocate(	En(						nBands	, 	nQ		)	)
 		allocate(	ck(			nG		,	nBands  	,	nQ	)	)
 		write(*,*)"*"
@@ -66,7 +66,10 @@ program main
 		write(*,*)	"[main]: start electronic structure calculation now"
 		call solveHam(ck, En)
 		write(*,*)"[main]: done solving Schroedinger eq."
+		call cpu_time(T1)
+		kT = T1-T0
 		!W90
+		call cpu_time(T0)	
 		write(*,*)"*"
 		write(*,*)"*"
 		write(*,*)"*"
@@ -74,10 +77,11 @@ program main
 		write(*,*)"[main]:**************************WANNIER90 SETUP*************************"
 		call w90Interf(ck,En)
 		write(*,*)"[main]: done setting up wannier. please execute wannier90 now"
+		call cpu_time(T1)
+		wT = T1-T0
 	end if
 	!
-	call cpu_time(T1)
-	kT = T1-T0
+	
 	
 	
 	!EFF TB - post w90
@@ -95,7 +99,7 @@ program main
 		write(*,*)"[main]: done with effective tight binding calculations"
 	end if
 	call cpu_time(T1)
-	wT	= T1-T0
+	pwT	= T1-T0
 
 
 	!K SPACE METHOD
@@ -157,7 +161,7 @@ program main
 	write(*,*)"*"
 	write(*,*)"*"
 	write(*,*) '**************TIMING INFORMATION************************'
-	call printTiming(aT,kT,wT,bT,oT,mastT)
+	call printTiming(aT,kT,wT,pwT,bT,oT,mastT)
 	write(*,*)	"[main]: all done, exit"
 	!
 	!

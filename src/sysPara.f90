@@ -11,7 +11,7 @@ module sysPara
 				nQ, nQx, nQy, nKx, nKy, nK, nSC, nSCx, nSCy, dqx, dqy, dkx, dky, &
 				nR, nRx, nRy,  dx, dy,nw90it, shell, &
 				nBands, nWfs,   &
-				atPos, atR, qpts, rpts, Rcell, kpts, Zion, &
+				atPos, atR, qpts, rpts, Rcell, kpts, Zion, recpLatt, &
 				Bext, prefactF3, &
 				seedName, &
 				debugProj, debugHam, debugWann, doSolveHam, doPw90, doVdesc, doProj, doProjNUM, &
@@ -24,11 +24,12 @@ module sysPara
 														nw90it, shell, &
 														nRx=10, nRy=10, nR, nBands=1,nWfs=1, nSC
 	real(dp) 										::	aX=0.0_dp, aY=0.0_dp,vol=0.0_dp, Gcut=2*PI_dp, thres,& 
-														dx, dy, dqx, dqy, dkx, dky, B0, Bext(3)	, prefactF3
+														dx, dy, dqx, dqy, dkx, dky, B0, Bext(3)	, prefactF3, recpLatt(2,2)
 	character(len=3)								::	seedName										
 	integer,	allocatable,	dimension(:)		::	nGq
 	real(dp),	allocatable,	dimension(:)		::	relXpos, relYpos, atRx, atRy, atPot, dVpot, Zion
 	real(dp),	allocatable,	dimension(:,:)		::	Gtest , atPos, atR, qpts, rpts, Rcell, kpts 
+
 	real(dp),	allocatable,	dimension(:,:,:)	::	Gvec
 	logical											::	debugHam, debugWann, debugProj, &
 														doSolveHam, doPw90, doVdesc , doProj, doProjNUM, &
@@ -125,7 +126,9 @@ module sysPara
 		nK =	nKx		*	nKy
 		Bext=	B0 		* 	Bext
 
-
+		recpLatt		= 0.0_dp
+		recpLatt(1,1)	= 2.0_dp * PI_dp * aY / vol
+		recpLatt(2,2)	= 2.0_dp * PI_dp * aX / vol
 
 
 		!basis
@@ -147,7 +150,7 @@ module sysPara
 		allocate(	rpts(dim,nR)		)
 		allocate(	Rcell(dim,nSC)		)
 		allocate(	kpts(dim,nK)		)
-		
+	
 		![atoms]
 		call CFG_add_get(my_cfg,	"atoms%relXpos"		,	relXpos		,	"relative positions in unit cell"		)
 		call CFG_add_get(my_cfg,	"atoms%relYpos"		,	relYpos		,	"relative positions in unit cell"		)
@@ -443,7 +446,7 @@ end function
 		do ix = 1, nGdim
 			do iy = 1, nGdim
 				i	= (iy-1) * nGdim + ix
-				Gtest(:,i)	= (ix-1-nGdim/2) * b1(:) + (iy-1-nGdim/2) * b2(:)
+				Gtest(:,i)	= (ix-1-nGdim/2) * recpLatt(:,1) + (iy-1-nGdim/2) * recpLatt(:,2)
 			end do
 		end do
 
