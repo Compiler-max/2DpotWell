@@ -27,13 +27,13 @@
     thres       = 0.1
 
 [methods]
-    doSolveHam  = f
-    doPw90      = t
+    doSolveHam  = t
+    doPw90      = f
     doVdesc     = f
     doProj      = t
     doProjNUM   = f
     doGaugBack  = f
-    doBerry     = t
+    doBerry     = f
     doWanni     = t
     doVeloNUM   = f
     doNiu       = t
