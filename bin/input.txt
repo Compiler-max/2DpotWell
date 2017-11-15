@@ -45,7 +45,7 @@
 
 [debug]
     debugHam    = f
-    debugProj   = t
+    debugProj   = f
     debugWann   = f
 
 [w90]

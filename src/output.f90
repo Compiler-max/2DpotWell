@@ -300,24 +300,7 @@ module output
 	end subroutine
 
 
-	subroutine writeUNKs(unk)
-		complex(dp),	intent(in)		:: unk(:,:,:)
-		real(dp),		allocatable		:: buffer(:,:,:)
-		!
-		allocate(	buffer(size(unk,1), size(unk,2), size(unk,3))	)
-		!REAL PART
-		buffer	= dreal(unk)
-		open(unit=400,file='rawData/ROTunkR.dat',form='unformatted',access='stream',action='write')
-		write(400)	buffer
-		close(400)
-		!IMAG PART
-		buffer	= dimag(unk)
-		open(unit=405,file='rawData/ROTunkI.dat',form='unformatted',access='stream',action='write')
-		write(405)	buffer
-		close(405)
-		!!
-		return
-	end subroutine
+
 
 
 	subroutine writeConnCurv(Aconn, Fcurv)
