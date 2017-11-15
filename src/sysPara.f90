@@ -9,7 +9,7 @@ module sysPara
 				dim, aX, aY, vol, nAt, relXpos, relYpos, atRx, atRy, atPot, dVpot, &
 				nG, nGq, nG0, Gcut, Gvec, Gtest, nSolve, &
 				nQ, nQx, nQy, nKx, nKy, nK, nSC, nSCx, nSCy, R0, dqx, dqy, dkx, dky, &
-				nR, nRx, nRy,  dx, dy,nw90it, &
+				nR, nRx, nRy,  dx, dy,nw90it, shell, &
 				gaugeSwitch, nBands, nWfs, connSwitch,  &
 				atPos, atR, qpts, rpts, Rcell, kpts, trialOrbVAL, trialOrbSw, Zion, &
 				Bext, prefactF3, &
@@ -21,7 +21,7 @@ module sysPara
 	!
 	integer  										:: 	dim=2, nAt=0, nG, nGdim=16, nSolve=20, nG0,  nQx=1, nQy=1,nQ , nSCx=1, nSCy=1,& 
 														nKx=1, nKy=1, nK, connSwitch=0, &
-														nw90it, &
+														nw90it, shell, &
 														nRx=10, nRy=10, nR, R0=1, nBands=1,nWfs=1, nSC, gaugeSwitch, trialOrbSw
 	real(dp) 										::	aX=0.0_dp, aY=0.0_dp,vol=0.0_dp, Gcut=2*PI_dp, thres,& 
 														dx, dy, dqx, dqy, dkx, dky, B0, Bext(3)	, prefactF3
@@ -98,6 +98,7 @@ module sysPara
 		call CFG_add_get(my_cfg,	"debug%debugWann"	, 	debugWann	,	"switch for debuging in wannier"		)
 		![w90]
 		call CFG_add_get(my_cfg,	"w90%seedName"		, 	 seedName	,	"seedName for wannier files(char len=3)")
+		call CFG_add_get(my_cfg,	"w90%shell"			, 	 shell		,	"manually set the shell to use for FD  ")
 		call CFG_add_get(my_cfg,	"w90%nw90it"		, 	 nw90it		,	"number of iterations for wannnierisat,")
 
 		![wannier]

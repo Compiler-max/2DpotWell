@@ -246,7 +246,7 @@ module w90Interface
 		write(100,*)	'mp_grid   = ', mp_grid(1) , ' ', mp_grid(2), ' ', mp_grid(3)
 		write(100,*)	'num_iter  = ', nW90it
 		write(100,*)	
-		write(100,*)	'shell_list =',3
+		write(100,*)	'shell_list =',shell
 		write(100,*)	'skip_b1_tests = .true.'
 		write(100,*)	
 		!

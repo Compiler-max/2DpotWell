@@ -18,10 +18,10 @@
     nGdim       = 49
     Gcut        = 1.0
     nSolve      = 10        
-    nQx         = 4   
-    nQy         = 4
-    nSCx        = 5 
-    nSCy        = 5
+    nQx         = 8   
+    nQy         = 8
+    nSCx        = 9 
+    nSCy        = 9
     nRx         = 81   
     nRy         = 81
     thres       = 0.1
@@ -50,6 +50,7 @@
 
 [w90]
     seedName    = 'wf1'
+    shell       = 2
     nw90it      = 300
 
 [wann]
@@ -59,8 +60,8 @@
     trialOrbSw  = 0
     trialOrbVAL = 1.0 1.0
     R0          = 11
-    nKx         = 4
-    nKy         = 4
+    nKx         = 8
+    nKy         = 8
     connSwitch  = 1
     gaugeBack   = 0
 
