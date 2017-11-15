@@ -79,20 +79,17 @@ module sysPara
 		call CFG_add_get(my_cfg,	"numerics%nRy"     	,	nRy      	,	"amount of r points used"				)
 		call CFG_add_get(my_cfg,	"numerics%thres"    ,	thres      	,	"threshold for overlap warnings"		)
 		![methods]
-		
 		call CFG_add_get(my_cfg,	"methods%doSolveHam",	doSolveHam	,	"solve electronic structure or read in"	)
-		call CFG_add_get(my_cfg,	"methods%doPw90"	,	doPw90		,	"read in the matrices in wann base	"	)
-		
+		call CFG_add_get(my_cfg,	"methods%doPw90"	,	doPw90		,	"read in the matrices in wann base	"	)	
 		call CFG_add_get(my_cfg,	"methods%doProj"	,	doProj		,	"switch on/off 	projections onto trial"	)
-		call CFG_add_get(my_cfg,	"methods%doProjNUM"	,	doProjNUM	,	"switch on/off 	projections onto trial"	)
-		call CFG_add_get(my_cfg,	"methods%doBerry"	,	doBerry		,	"switch on/off 	berry( unk) method "	)
-		
 		![berry]
 		call CFG_add_get(my_cfg,	"berry%doVeloNUM"	,	doVeloNUM	,	"if true tb velocities, else analyitcal")
 		call CFG_add_get(my_cfg,	"berry%doNiu"		,	doNiu		,	"switch for nius first order pol"		)
 		call CFG_add_get(my_cfg,	"berry%doPei"		,	doPei		,	"switch for  peierls first order pol"	)
 		call CFG_add_get(my_cfg,	"berry%doWanni"		,	doWanni		,	"switch on/off 	wannier( wnf ) method"	)
 		call CFG_add_get(my_cfg,	"berry%doGaugBack"	,	doGaugBack	,	"switch for trafo: Wann to Ham gauge"	)
+		call CFG_add_get(my_cfg,	"methods%doProjNUM"	,	doProjNUM	,	"switch on/off 	projections onto trial"	)
+		call CFG_add_get(my_cfg,	"methods%doBerry"	,	doBerry		,	"switch on/off 	berry( unk) method "	)
 		![output]
 		call CFG_add_get(my_cfg,	"output%writeBin"	,	writeBin	,	"switch for writing binary files"		)
 		![debug]
@@ -103,7 +100,6 @@ module sysPara
 		call CFG_add_get(my_cfg,	"pw90%seedName"		, 	 seedName	,	"seedName for wannier files(char len=3)")
 		call CFG_add_get(my_cfg,	"pw90%shell"		, 	 shell		,	"manually set the shell to use for FD  ")
 		call CFG_add_get(my_cfg,	"pw90%nw90it"		, 	 nw90it		,	"number of iterations for wannnierisat,")
-
 		![wannier]
 		call CFG_add_get(my_cfg,	"wann%gaugeSwitch"	,	gaugeSwitch ,	"switch gauge the basis coeff directly"	)
 		call CFG_add_get(my_cfg,	"wann%nBands"		,	nBands	 	,	"# of bands to project onto trial orbs"	)
@@ -113,11 +109,9 @@ module sysPara
 		call CFG_add_get(my_cfg,	"wann%nKx"			,	nKx			,	"# k x points of interpolation mesh"	)
 		call CFG_add_get(my_cfg,	"wann%nKy"			,	nKy			,	"# k x points of interpolation mesh"	)
 		call CFG_add_get(my_cfg,	"wann%connSwitch"	,	connSwitch	,	"connection via K or via R space"		)
-		
 		![perturbation]
 		call CFG_add_get(my_cfg,	"perturbation%B0"	,	B0			,	"scaling fact. of ext. magnetic field"	)
 		call CFG_add_get(my_cfg,	"perturbation%Bext"	,	Bext		,	"vector of ext. magnetic field"			)
-
 		![semiclassics]
 		call CFG_add_get(my_cfg,	"semiclassics%prefactF3"	,	prefactF3,	"real prefactor for F3 "			)
 

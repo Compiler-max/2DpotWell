@@ -48,13 +48,13 @@ module output
 		!R MESH
 		write(100,*)"*******************R POINT MESH******************************"
 		do i = 1, nR
-			write(100,'(a,i4,a,f15.10,a,f15.10,a)')				"r(",i,") = (", rpts(1,i) ,", ",rpts(2,i)," )"
+			write(100,'(a,i6,a,f15.7,a,f15.7,a)')				"r(",i,") = (", rpts(1,i) ,", ",rpts(2,i)," )"
 		end do		
 		!
 		!R CELL	
 		write(100,*)"*******************RCELL VECTOR******************************"
 		do i = 1, nSC
-			write(100,'(a,i4,a,f15.10,a,f15.10,a)')				"R(",i,") = (", Rcell(1,i) ,", ", Rcell(2,i), " )"
+			write(100,'(a,i6,a,f15.7,a,f15.7,a)')				"R(",i,") = (", Rcell(1,i) ,", ", Rcell(2,i), " )"
 		end do
 
 		!
@@ -62,32 +62,32 @@ module output
 		write(100,*)"*******************G VECTOR  test MESH******************************"
 		write(100,*)"nG0=",nG0
 		do i = 1, nG
-			write(100,'(a,i4,a,f12.4,a,f12.4,a)')				"G(",i,") = (", Gtest(1,i) , ", ", Gtest(2,i) , ")"
+			write(100,'(a,i6,a,f12.4,a,f12.4,a)')				"G(",i,") = (", Gtest(1,i) , ", ", Gtest(2,i) , ")"
 		end do
 		!!
 		!K MESH
 		write(100,*)"*******************K POINT MESH******************************"
 		do i = 1, nQ
-			write(100,'(a,i4,a,f15.12,a,f15.12,a)')				"q(",i,") = (", qpts(1,i) , "," , qpts(2,i), " )"
+			write(100,'(a,i6,a,f15.7,a,f15.7,a)')				"q(",i,") = (", qpts(1,i) , "," , qpts(2,i), " )"
 		end do
 		!!
 		!K 	INTERPOLATION
 		write(100,*)"*******************K INTERPOLATION MESH******************************"
 		do i = 1, nK
-			write(100,'(a,i4,a,f15.12,a,f15.12,a)')				"k(",i,") = (", kpts(1,i) , "," , kpts(2,i), " )"
+			write(100,'(a,i6,a,f15.7,a,f15.7,a)')				"k(",i,") = (", kpts(1,i) , "," , kpts(2,i), " )"
 		end do
 		!!
 		!ATOM POSITION AND RADII
 		write(100,*)"*******************ATOMS******************************"
 		do i = 1, nAt
-			write(100,'(a,i3,a,f8.5,a,f8.5,a,a,f8.5,a,f8.5,a)')	"atom(",i,") at (",atPos(1,i),", ",atPos(2,i),") ",&
+			write(100,'(a,i3,a,f8.3,a,f8.3,a,a,f8.3,a,f8.3,a)')	"atom(",i,") at (",atPos(1,i),", ",atPos(2,i),") ",&
 																"w. rad = (", atR(1,i), ", ", atR(2,i), " )"	
 		end do
 		!
 		!TRIAL ORBITAL HEIGHT
 		write(100,*)"*******************TIRAL ORBITALS******************************"
 		do i = 1, nAt
-			write(100,'(a,i2,a,f15.12)')				"g_trial(",i,") = ", trialOrbVAL(i) 
+			write(100,'(a,i2,a,f15.7)')				"g_trial(",i,") = ", trialOrbVAL(i) 
 		end do
 		!
 		close(100)

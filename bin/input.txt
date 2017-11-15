@@ -23,8 +23,8 @@
     nQy         = 8
     nSCx        = 9 
     nSCy        = 9
-    nRx         = 81   
-    nRy         = 81
+    nRx         = 181   
+    nRy         = 181
     thres       = 0.1
 
 
@@ -37,8 +37,7 @@
     doSolveHam  = t
     doPw90      = f
     doBerry     = f
-    doProj      = t
-    doProjNUM   = f
+
     
 [pw90]
     seedName    = 'wf1'
@@ -51,6 +50,8 @@
     doPei       = t
     doWanni     = t
     doGaugBack  = f
+    doProj      = t
+    doProjNUM   = f
 
 [output]
     writeBin    = t
