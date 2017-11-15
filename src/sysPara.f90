@@ -19,7 +19,7 @@ module sysPara
 
 
 	!
-	integer  										:: 	dim=2, nAt=0, nG, nSolve=20, nG0,  nQx=1, nQy=1,nQ , nSCx=1, nSCy=1,& 
+	integer  										:: 	dim=2, nAt=0, nG, nGdim,nSolve=20, nG0,  nQx=1, nQy=1,nQ , nSCx=1, nSCy=1,& 
 														nKx=1, nKy=1, nK, R0,  &
 														nw90it, shell, &
 														nRx=10, nRy=10, nR, nBands=1,nWfs=1, nSC
