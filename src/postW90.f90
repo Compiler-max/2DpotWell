@@ -29,8 +29,8 @@ module postW90
 	
 
 !public
-	subroutine effTBmodel( pWann, pConn, pNiuF2, pNiuF3, pPei)
-		real(dp),		intent(out)		:: pWann(3), pConn(3), pNiuF2(3), pNiuF3(3), pPei(3)
+	subroutine effTBmodel()
+		real(dp)					:: pWann(3), pConn(3), pNiuF2(3), pNiuF3(3), pPei(3)
 
 		pWann 	= 0.0_dp
 		pConn	= 0.0_dp
@@ -199,8 +199,8 @@ module postW90
 		!1st order pol
 		if( doNiu ) then
 			call calcFirstOrdP(Om_mat,A_mat,v_mat,En_vec,pNiuF2, pNiuF3) !calcFirstOrdP(Fcurv, Aconn, Velo, En, p1F2, p1F3)
-			write(*,'(a,f10.5,a,f10.5,a,f10.5,a)')	"[effTBmodel]: pNiuF2=(",pNiuF2(1),", ",pNiuF2(2),", ",pNiuF2(3),")."
-			write(*,'(a,f10.5,a,f10.5,a,f10.5,a)')	"[effTBmodel]: pNiuF3=(",pNiuF3(1),", ",pNiuF3(2),", ",pNiuF3(3),")."
+			write(*,'(a,f12.5,a,f12.5,a,f12.5,a)')	"[effTBmodel]: pNiuF2=(",pNiuF2(1),", ",pNiuF2(2),", ",pNiuF2(3),")."
+			write(*,'(a,f12.5,a,f12.5,a,f12.5,a)')	"[effTBmodel]: pNiuF3=(",pNiuF3(1),", ",pNiuF3(2),", ",pNiuF3(3),")."
 		end if
 		!1st order peierls
 		if(	doPei ) then

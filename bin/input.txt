@@ -25,20 +25,20 @@
 
 [numerics]
     nGdim       = 49
-    Gcut        = 2.0
-    nSolve      = 10        
-    nQx         = 8   
-    nQy         = 8
-    nSCx        = 9 
-    nSCy        = 9
-    nKx         = 8
-    nKy         = 8                 
-    nRx         = 181   
-    nRy         = 181
+    Gcut        = 10.0
+    nSolve      = 16        
+    nQx         = 4   
+    nQy         = 4
+    nSCx        = 5 
+    nSCy        = 5
+    nKx         = 4
+    nKy         = 4                 
+    nRx         = 51   
+    nRy         = 51
     thres       = 0.1
 
 [methods]
-    doSolveHam  = f
+    doSolveHam  = t
     doPw90      = f
     doBerry     = f
     writeBin    = f

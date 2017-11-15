@@ -341,6 +341,7 @@ module w90Interface
 		!
 		!SETUP THE MATRIX
 		M_matrix	= dcmplx(0.0_dp)
+		!$OMP PARALLEL DO SCHEDULE(STATIC) DEFAULT(SHARED) PRIVATE(qi, nn, m, n, oLap, gShift)
 		do qi = 1, num_kpts
 			do nn = 1, nntot
 				do m = 1 , num_bands
@@ -362,6 +363,7 @@ module w90Interface
 				end do
 			end do
 		end do
+		!$OMP END PARALLEL DO
 		!
 		!WRITE TO FILE
 		open(unit=120,file=seed_name//'.mmn',action='write',access='stream',form='formatted', status='replace')

@@ -17,10 +17,8 @@ program main
 
 	implicit none
 
-    complex(dp),	allocatable,	dimension(:,:,:)	:: 	ck, ckW, Uq
-    real(dp),		allocatable,	dimension(:,:)		:: 	En
-    real(dp) 											:: 	pWann(2), pBerry(2), pNiuF2(3), pNiuF3(3), pPei(3), &
-    														pTBwann(3), pTBconn(3), pTBniuF2(3), pTBniuF3(3), pTBpei(3)
+    complex(dp),	allocatable,	dimension(:,:,:)	:: 	ck
+    real(dp),		allocatable,	dimension(:,:)		:: 	En    														
     real												:: 	mastT0, mastT1, mastT, T0, T1, &
     															aT,kT,wT, oT, bT
     
@@ -37,11 +35,6 @@ program main
     call cpu_time(T0)
 	call readInp()
 	!
-	
-	allocate(			En(						nBands	, 	nQ		)				)
-	allocate(			ck(			nG		,	nBands  	,	nQ	)				)
-	allocate(			ckW(		nG		,	nWfs		,	nQ	)				)
-	allocate(			Uq(			nBands	,	nWfs	, 	nQ		)				)
 	!
 	write(*,*)"[main]:**************************Infos about this run*************************"
 	write(*,*)"[main]: electronic structure mesh nQ=",nQ
@@ -49,7 +42,6 @@ program main
 	write(*,*)"[main]: basis cutoff parameter  Gcut=",Gcut
 	write(*,*)"[main]: basis function   maximum  nG=",nG
 	write(*,*)"[main]: only solve for        nSolve=",nSolve
-	write(*,*)"[main]: real space points per cell  =",nR/nSC
     write(*,*)"[main]: nBands=", nBands
 	write(*,*)"[main]: nWfs  =", nWfs
 	write(*,*)"[main]: w90 seed_name= ", seedName	
@@ -64,6 +56,8 @@ program main
 	call cpu_time(T0)
 	!
 	if( doSolveHam ) then
+		allocate(	En(						nBands	, 	nQ		)	)
+		allocate(	ck(			nG		,	nBands  	,	nQ	)	)
 		write(*,*)"*"
 		write(*,*)"*"
 		write(*,*)"*"
@@ -97,7 +91,7 @@ program main
 		
 
 		write(*,*)	"[main]: start with eff TB model calculations"
-		call effTBmodel(pTBwann, pTBconn, pTBniuF2, pTBniuF3, pTBpei)
+		call effTBmodel()
 		write(*,*)"[main]: done with effective tight binding calculations"
 	end if
 	call cpu_time(T1)
@@ -112,9 +106,8 @@ program main
 		write(*,*)"*"
 		write(*,*)"*"
 		write(*,*)"[main]:**************************WAVEFUNCTION METHOD*************************"
-		call berryMethod(pBerry, pNiuF2, pNiuF3, pPei)
+		call berryMethod()
 		write(*,*)"[main]: done with wavefunction method "
-		write(*,'(a,f12.8,a,f12.8,a)')	"[main]: calculated zero order pBerry=(",pBerry(1),", ",pBerry(2),")."
 	else
 		write(*,*)"[main]: berry method disabled"
 	end if
