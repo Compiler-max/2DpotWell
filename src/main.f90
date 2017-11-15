@@ -24,6 +24,16 @@ program main
     real												:: 	mastT0, mastT1, mastT, T0, T1, &
     															aT,kT,wT, oT, bT, peiT, pT
     
+    !timing zero init
+    aT		= 0.0
+    kT		= 0.0
+    wT		= 0.0
+    oT 		= 0.0
+    bT		= 0.0
+    peiT	= 0.0
+    pT  	= 0.0
+    mastT	= 0.0
+
     !INPUT & ALLOCATION SECTION
     call cpu_time(mastT0)
     call cpu_time(T0)

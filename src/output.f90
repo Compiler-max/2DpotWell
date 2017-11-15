@@ -62,7 +62,7 @@ module output
 		write(100,*)"*******************G VECTOR  test MESH******************************"
 		write(100,*)"nG0=",nG0
 		do i = 1, nG
-			write(100,'(a,i4,a,f15.7,a,f15.7,a)')				"G(",i,") = (", Gtest(1,i) , ", ", Gtest(2,i) , ")"
+			write(100,'(a,i4,a,f12.4,a,f12.4,a)')				"G(",i,") = (", Gtest(1,i) , ", ", Gtest(2,i) , ")"
 		end do
 		!!
 		!K MESH
@@ -550,23 +550,23 @@ module output
 	subroutine printTiming(aT,kT,pT,wT,bT,peiT,oT,mastT)
 		real,	intent(in)	:: aT,kT,pT,wT,bT,peiT,oT,mastT
 		!
-		print '    ("r&alloc  time spend     = ",f15.7," seconds = ",f15.7,"% of overall time")',& 
+		print '    ("r&alloc  time spend     = ",f8.4," seconds = ",f8.4,"% of overall time")',& 
 									aT 				, 100.0_dp*aT		   	/mastT
-		print '    ("k-solver time spend     = ",f15.7," seconds = ",f15.7,"% of overall time")',& 
+		print '    ("k-solver time spend     = ",f8.4," seconds = ",f8.4,"% of overall time")',& 
 									kT 				, 100.0_dp*kT		   	/mastT
-		print '    ("project. time spend     = ",f15.7," seconds = ",f15.7,"% of overall time")',& 
+		print '    ("project. time spend     = ",f8.4," seconds = ",f8.4,"% of overall time")',& 
 									pT 				, 100.0_dp*pT		   	/mastT
-		print '    ("wannier method          = ",f15.7," seconds = ",f15.7,"% of overall time")',& 
+		print '    ("wannier method          = ",f8.4," seconds = ",f8.4,"% of overall time")',& 
 									wT				, 100.0_dp*wT		   	/mastT
-		print '    ("berry method            = ",f15.7," seconds = ",f15.7,"% of overall time")',& 
+		print '    ("berry method            = ",f8.4," seconds = ",f8.4,"% of overall time")',& 
 									bT				, 100.0_dp*bT		   	/mastT							
-		print '    ("peierls method          = ",f16.7," seconds = ",f16.7,"% of overall time")',& 
+		print '    ("peierls method          = ",f8.4," seconds = ",f8.4,"% of overall time")',& 
 									peiT			, 100.0_dp*peiT		   	/mastT													
-		print '    ("writing  time spend     = ",f15.7," seconds = ",f15.7,"% of overall time")',& 
+		print '    ("writing  time spend     = ",f8.4," seconds = ",f8.4,"% of overall time")',& 
 									oT 				, 100.0_dp*oT		   	/mastT
-		print '    ("other    time spend     = ",f15.7," seconds = ",f15.7,"% of overall time")',& 
+		print '    ("other    time spend     = ",f8.4," seconds = ",f8.4,"% of overall time")',& 
 									(mastT-aT-kT-pT-wT-bT-oT) 	, 100.0_dp*(mastT-aT-kT-pT-wT-bT-oT)/mastT
-		print '    ("overall  time spend     = ",f15.7," seconds.")', mastT
+		print '    ("overall  time spend     = ",f8.4," seconds.")', mastT
 		!
 		return
 	end subroutine
