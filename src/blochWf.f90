@@ -1,13 +1,14 @@
 module blochWf
 	!generates bloch and lattice periodidc functions given a basCoeff matrix
 	use omp_lib
-	use mathematics,	only:	dp, PI_dp,i_dp, acc, myExp, myLeviCivita, eigSolver, nIntegrate
+	use mathematics,	only:	dp, PI_dp,i_dp, acc, machineP,& 
+								myExp, myLeviCivita, eigSolver, nIntegrate
 	use sysPara
 
 	implicit none
 
 	private
-	public	::	calcBasis
+	public	::	calcBasis, UNKoverlap
 
 
 	contains
@@ -19,6 +20,39 @@ module blochWf
 
 
 !public
+	complex(dp) function UNKoverlap(n, m, qi, knb, gShift, ck)
+		!calculates the overlap between unk at qi and at a neigbhouring k point knb
+		!
+		integer,		intent(in)		:: n, m, qi, knb
+		real(dp),		intent(in)		:: gShift(2)
+		complex(dp),	intent(in)		:: ck(:,:,:)  !ck(			nG		,	nBands  	,	nQ	)		
+		integer							:: gi, gj, cnt
+		real(dp)						:: delta(2)
+		logical							:: notFound
+		!
+		UNKoverlap	= dcmplx(0.0_dp)
+		cnt	= 0
+		do gi = 1, nGq(qi)
+			notFound 	= .true.
+			gj			= 1
+			do while( gj<= nGq(knb) .and. notFound ) 
+				delta(:)	=  ( Gvec(:,gi,qi)-qpts(:,qi) ) 	-  		( Gvec(:,gj,knb)-qpts(:,knb)-gShift(:) )
+				if( norm2(delta) < machineP )	then
+					UNKoverlap	= UNKoverlap +  dconjg( ck(gi,n,qi) ) * ck(gj,m,knb) 
+					cnt = cnt + 1
+					notFound = .false.
+				end if
+				gj = gj + 1
+			end do
+		end do
+		!
+		if( cnt > nGq(qi)	)	write(*,'(a,i8,a,i8)')	"[UNKoverlap]: warning, used ",cnt," where nGmax(qi)=",nGq(qi)
+		if( cnt < nGq(qi) / 2.0_dp)	write(*,'(a,i8,a,i8)')	"[UNKoverlap]: warning, used  only",cnt," where nGmax(qi)=",nGq(qi)
+		!
+		return
+	end function
+
+
 	subroutine calcBasis(qi, ri, basVec)
 		!calculates the basis vectors e^i(k+G).r
 		!	if |k+G| is larger then the cutoff the basis vector is set to zero
