@@ -27,8 +27,8 @@
     thres       = 0.1
 
 [methods]
-    doSolveHam  = t
-    doPw90      = f
+    doSolveHam  = f
+    doPw90      = t
     doVdesc     = f
     doProj      = t
     doProjNUM   = f

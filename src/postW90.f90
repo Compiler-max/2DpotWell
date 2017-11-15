@@ -69,22 +69,26 @@ module postW90
 
 
 !privat
-	logical function readTBsingle()
-		integer				:: 	stat, cnt, offset, R, n, m, i, mn(2), dumI(3), line15(15)
-		real(dp)			::	real2(2), real6(6)
+	logical function readTBsingle( )
+		integer						:: 	stat, cnt, offset, R, n, m, i, mn(2), dumI(3), line15(15)
+		real(dp)					::	real2(2), real6(6), real3(3)
 		!try opening file
 		open(unit=310, iostat=stat, file=seed_name//'_tb.dat', status='old', action='read' )
 		if( stat /= 0)  then
 			write(*,*) "[readTBsingle]: warning, file _tb.dat not found"
 			readTBsingle 	= .false.
+			recip_latt		= 0.0_dp
 		else
 			readTBsingle	= .true.
 			!
 			read(310,*)
-			!recip lattice
-			read(310,*) recip_latt(1,:)
-			read(310,*)	recip_latt(2,:)
-			read(310,*)	recip_latt(3,:)
+			!recip lattice (read into buffer, avoids compiler warning)
+			read(310,*) 		real3(:)
+			recip_latt(1,:)	= 	real3(:)
+			read(310,*)			real3(:)
+			recip_latt(2,:)	= 	real3(:)
+			read(310,*)			real3(:)
+			recip_latt(3,:)	= 	real3(:)
 			!sys info
 			read(310,*) num_wann
 			read(310,*)	nrpts
@@ -187,8 +191,9 @@ module postW90
 		write(*,'(a,f6.3,a,f6.3,a,f6.3,a)')	"R_real(:,R_null)= (",&
 												R_real(1,R_null),", ",R_real(2,R_null),", ",R_real(3,R_null),")."
 		!0th order pol
+		pWann	= 0.0_dp
 		call calcPolWannCent( wCent, pWann )
-		write(*,'(a,f10.5,a,f10.5,a,f10.5,a)')	"[effTBmodel]: pWann=(",pWann(1),", ",pWann(2),", ",pWann(3),")."
+		write(*,'(a,f10.4,a,f10.4,a,f10.4,a)')	"[effTBmodel]: pWann=(",pWann(1),", ",pWann(2),", ",pWann(3),")."
 		call calcPolViaA(A_mat, pConn)
 		write(*,'(a,f10.5,a,f10.5,a,f10.5,a)')	"[effTBmodel]: pConn=(",pConn(1),", ",pConn(2),", ",pConn(3),")."
 		!1st order pol

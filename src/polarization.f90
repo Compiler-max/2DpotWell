@@ -30,7 +30,7 @@ module polarization
 		do n = 1,size(wCent,2)
 			!cent(1) = dmod(wCent(1,n),aX) !get current center by projection into first unit cell
 			!cent(2)	= dmod(wCent(2,n),aY)
-			cent(1:2)	= wCent(1:2,n)
+			cent(1:3)	= wCent(1:3,n)
 			!!
 			!!SINGLE ATOM
 			if( nAt == 1 ) then
