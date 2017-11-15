@@ -224,11 +224,12 @@ module w90Interface
 			if( exclude_bands(n) /= 0) write(*,'(a,i4,a,i4)')"[w90setup]: warning exclude_bands(",n,")=",exclude_bands(n)
 		end do
 		!
-		do qi = 1, num_kpts
-			do nn = 1, nntot
-				write(*,*)	'qi=',qi,' nn=',nn,' nnlist(qi,nn)=',nnlist(qi,nn)
-			end do
-		end do
+		!!OUTPUT NEAREST NEIGHBOUR LIST
+		!do qi = 1, num_kpts
+		!	do nn = 1, nntot
+		!		write(*,*)	'qi=',qi,' nn=',nn,' nnlist(qi,nn)=',nnlist(qi,nn)
+		!	end do
+		!end do
 		!			
 		return
 	end subroutine

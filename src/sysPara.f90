@@ -65,6 +65,7 @@ module sysPara
 		call CFG_add_get(my_cfg,	"unitCell%aX"      	,	aX  	   	,	"length of unit cell in agnstroem"		)
 		call CFG_add_get(my_cfg,	"unitCell%aY"      	,	aY  	   	,	"length of unit cell in agnstroem"		)
 		![atoms]
+		call CFG_add_get(my_cfg,	"atoms%doVdesc"		,	doVdesc		,	"switch on/off linear descending pot"	)
 		call CFG_add_get(my_cfg,	"atoms%nAt"			,	nAt			,	"number of atoms per unit cell"			)
 		![numerics]
 		call CFG_add_get(my_cfg,	"numerics%nGdim"    ,	nGdim	    ,	"amount of G_n used"					)
@@ -81,15 +82,17 @@ module sysPara
 		
 		call CFG_add_get(my_cfg,	"methods%doSolveHam",	doSolveHam	,	"solve electronic structure or read in"	)
 		call CFG_add_get(my_cfg,	"methods%doPw90"	,	doPw90		,	"read in the matrices in wann base	"	)
-		call CFG_add_get(my_cfg,	"methods%doVdesc"	,	doVdesc		,	"switch on/off linear descending pot"	)
+		
 		call CFG_add_get(my_cfg,	"methods%doProj"	,	doProj		,	"switch on/off 	projections onto trial"	)
 		call CFG_add_get(my_cfg,	"methods%doProjNUM"	,	doProjNUM	,	"switch on/off 	projections onto trial"	)
 		call CFG_add_get(my_cfg,	"methods%doBerry"	,	doBerry		,	"switch on/off 	berry( unk) method "	)
-		call CFG_add_get(my_cfg,	"methods%doWanni"	,	doWanni		,	"switch on/off 	wannier( wnf ) method"	)
-		call CFG_add_get(my_cfg,	"methods%doVeloNUM"	,	doVeloNUM	,	"if true tb velocities, else analyitcal")
-		call CFG_add_get(my_cfg,	"methods%doNiu"		,	doNiu		,	"switch for nius first order pol"		)
-		call CFG_add_get(my_cfg,	"methods%doPei"		,	doPei		,	"switch for  peierls first order pol"	)
-		call CFG_add_get(my_cfg,	"methods%doGaugBack",	doGaugBack	,	"switch for trafo: Wann to Ham gauge"	)
+		
+		![berry]
+		call CFG_add_get(my_cfg,	"berry%doVeloNUM"	,	doVeloNUM	,	"if true tb velocities, else analyitcal")
+		call CFG_add_get(my_cfg,	"berry%doNiu"		,	doNiu		,	"switch for nius first order pol"		)
+		call CFG_add_get(my_cfg,	"berry%doPei"		,	doPei		,	"switch for  peierls first order pol"	)
+		call CFG_add_get(my_cfg,	"berry%doWanni"		,	doWanni		,	"switch on/off 	wannier( wnf ) method"	)
+		call CFG_add_get(my_cfg,	"berry%doGaugBack"	,	doGaugBack	,	"switch for trafo: Wann to Ham gauge"	)
 		![output]
 		call CFG_add_get(my_cfg,	"output%writeBin"	,	writeBin	,	"switch for writing binary files"		)
 		![debug]
@@ -97,9 +100,9 @@ module sysPara
 		call CFG_add_get(my_cfg,	"debug%debugHam"	, 	debugHam	,	"switch for debuging tests in solveHam"	)
 		call CFG_add_get(my_cfg,	"debug%debugWann"	, 	debugWann	,	"switch for debuging in wannier"		)
 		![w90]
-		call CFG_add_get(my_cfg,	"w90%seedName"		, 	 seedName	,	"seedName for wannier files(char len=3)")
-		call CFG_add_get(my_cfg,	"w90%shell"			, 	 shell		,	"manually set the shell to use for FD  ")
-		call CFG_add_get(my_cfg,	"w90%nw90it"		, 	 nw90it		,	"number of iterations for wannnierisat,")
+		call CFG_add_get(my_cfg,	"pw90%seedName"		, 	 seedName	,	"seedName for wannier files(char len=3)")
+		call CFG_add_get(my_cfg,	"pw90%shell"		, 	 shell		,	"manually set the shell to use for FD  ")
+		call CFG_add_get(my_cfg,	"pw90%nw90it"		, 	 nw90it		,	"number of iterations for wannnierisat,")
 
 		![wannier]
 		call CFG_add_get(my_cfg,	"wann%gaugeSwitch"	,	gaugeSwitch ,	"switch gauge the basis coeff directly"	)
