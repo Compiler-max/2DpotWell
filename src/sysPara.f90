@@ -7,11 +7,11 @@ module sysPara
 	public :: 	readInp, setBasis, insideAt, getRindex, getRleftX, getRrightX, getRleftY, getRrightY,& 
 				getKindex, getGammaPoint, getPot,getGindex, &
 				dim, aX, aY, vol, nAt, relXpos, relYpos, atRx, atRy, atPot, dVpot, &
-				nG, nGq, nG0, Gcut, Gvec, Gtest, nSolve, &
-				nQ, nQx, nQy, nKx, nKy, nK, nSC, nSCx, nSCy, R0, dqx, dqy, dkx, dky, &
+				nG, nGq, nG0, Gcut, Gvec, Gtest, R0, nSolve, &
+				nQ, nQx, nQy, nKx, nKy, nK, nSC, nSCx, nSCy, dqx, dqy, dkx, dky, &
 				nR, nRx, nRy,  dx, dy,nw90it, shell, &
-				gaugeSwitch, nBands, nWfs, connSwitch,  &
-				atPos, atR, qpts, rpts, Rcell, kpts, trialOrbVAL, trialOrbSw, Zion, &
+				nBands, nWfs,   &
+				atPos, atR, qpts, rpts, Rcell, kpts, Zion, &
 				Bext, prefactF3, &
 				seedName, &
 				debugProj, debugHam, debugWann, doSolveHam, doPw90, doVdesc, doProj, doProjNUM, &
@@ -20,14 +20,14 @@ module sysPara
 
 	!
 	integer  										:: 	dim=2, nAt=0, nG, nGdim=16, nSolve=20, nG0,  nQx=1, nQy=1,nQ , nSCx=1, nSCy=1,& 
-														nKx=1, nKy=1, nK, connSwitch=0, &
+														nKx=1, nKy=1, nK, R0,  &
 														nw90it, shell, &
-														nRx=10, nRy=10, nR, R0=1, nBands=1,nWfs=1, nSC, gaugeSwitch, trialOrbSw
+														nRx=10, nRy=10, nR, nBands=1,nWfs=1, nSC
 	real(dp) 										::	aX=0.0_dp, aY=0.0_dp,vol=0.0_dp, Gcut=2*PI_dp, thres,& 
 														dx, dy, dqx, dqy, dkx, dky, B0, Bext(3)	, prefactF3
 	character(len=3)								::	seedName										
 	integer,	allocatable,	dimension(:)		::	nGq
-	real(dp),	allocatable,	dimension(:)		::	relXpos, relYpos, atRx, atRy, atPot, dVpot, trialOrbVAL, Zion
+	real(dp),	allocatable,	dimension(:)		::	relXpos, relYpos, atRx, atRy, atPot, dVpot, Zion
 	real(dp),	allocatable,	dimension(:,:)		::	Gtest , atPos, atR, qpts, rpts, Rcell, kpts 
 	real(dp),	allocatable,	dimension(:,:,:)	::	Gvec
 	logical											::	debugHam, debugWann, debugProj, &
@@ -67,6 +67,12 @@ module sysPara
 		![atoms]
 		call CFG_add_get(my_cfg,	"atoms%doVdesc"		,	doVdesc		,	"switch on/off linear descending pot"	)
 		call CFG_add_get(my_cfg,	"atoms%nAt"			,	nAt			,	"number of atoms per unit cell"			)
+		![wann]
+		call CFG_add_get(my_cfg,	"wann%nBands"		,	nBands	 	,	"# of bands to project onto trial orbs"	)
+		call CFG_add_get(my_cfg,	"wann%nWfs"			,	nWfs	 	,	"# wannier functions to generate"		)
+		![perturbation]
+		call CFG_add_get(my_cfg,	"perturbation%B0"	,	B0			,	"scaling fact. of ext. magnetic field"	)
+		call CFG_add_get(my_cfg,	"perturbation%Bext"	,	Bext		,	"vector of ext. magnetic field"			)
 		![numerics]
 		call CFG_add_get(my_cfg,	"numerics%nGdim"    ,	nGdim	    ,	"amount of G_n used"					)
 		call CFG_add_get(my_cfg,	"numerics%Gcut"		,	Gcut	    ,	"k space cut of parameter"				)
@@ -75,6 +81,8 @@ module sysPara
 		call CFG_add_get(my_cfg,	"numerics%nQy"     	,	nQy      	,	"amount of k points used"				)
 		call CFG_add_get(my_cfg,	"numerics%nSCx"     ,	nSCx   		,	"#			supercells "				)
 		call CFG_add_get(my_cfg,	"numerics%nSCy"     ,	nSCy   		,	"#			supercells "				)
+		call CFG_add_get(my_cfg,	"numerics%nKx"		,	nKx			,	"# k x points of interpolation mesh"	)
+		call CFG_add_get(my_cfg,	"numerics%nKy"		,	nKy			,	"# k x points of interpolation mesh"	)
 		call CFG_add_get(my_cfg,	"numerics%nRx"     	,	nRx      	,	"amount of r points used"				)
 		call CFG_add_get(my_cfg,	"numerics%nRy"     	,	nRy      	,	"amount of r points used"				)
 		call CFG_add_get(my_cfg,	"numerics%thres"    ,	thres      	,	"threshold for overlap warnings"		)
@@ -82,6 +90,11 @@ module sysPara
 		call CFG_add_get(my_cfg,	"methods%doSolveHam",	doSolveHam	,	"solve electronic structure or read in"	)
 		call CFG_add_get(my_cfg,	"methods%doPw90"	,	doPw90		,	"read in the matrices in wann base	"	)	
 		call CFG_add_get(my_cfg,	"methods%doProj"	,	doProj		,	"switch on/off 	projections onto trial"	)
+		call CFG_add_get(my_cfg,	"methods%writeBin"	,	writeBin	,	"switch for writing binary files"		)
+		![pw90]
+		call CFG_add_get(my_cfg,	"pw90%seedName"		, 	 seedName	,	"seedName for wannier files(char len=3)")
+		call CFG_add_get(my_cfg,	"pw90%shell"		, 	 shell		,	"manually set the shell to use for FD  ")
+		call CFG_add_get(my_cfg,	"pw90%nw90it"		, 	 nw90it		,	"number of iterations for wannnierisat,")
 		![berry]
 		call CFG_add_get(my_cfg,	"berry%doVeloNUM"	,	doVeloNUM	,	"if true tb velocities, else analyitcal")
 		call CFG_add_get(my_cfg,	"berry%doNiu"		,	doNiu		,	"switch for nius first order pol"		)
@@ -90,30 +103,15 @@ module sysPara
 		call CFG_add_get(my_cfg,	"berry%doGaugBack"	,	doGaugBack	,	"switch for trafo: Wann to Ham gauge"	)
 		call CFG_add_get(my_cfg,	"methods%doProjNUM"	,	doProjNUM	,	"switch on/off 	projections onto trial"	)
 		call CFG_add_get(my_cfg,	"methods%doBerry"	,	doBerry		,	"switch on/off 	berry( unk) method "	)
-		![output]
-		call CFG_add_get(my_cfg,	"output%writeBin"	,	writeBin	,	"switch for writing binary files"		)
+		![semiclassics]
+		call CFG_add_get(my_cfg,	"semiclassics%prefactF3"	,	prefactF3,	"real prefactor for F3 "			)
 		![debug]
 		call CFG_add_get(my_cfg,	"debug%debugProj"	, 	debugProj	,	"switch for debuging tests in solveHam"	)
 		call CFG_add_get(my_cfg,	"debug%debugHam"	, 	debugHam	,	"switch for debuging tests in solveHam"	)
 		call CFG_add_get(my_cfg,	"debug%debugWann"	, 	debugWann	,	"switch for debuging in wannier"		)
-		![w90]
-		call CFG_add_get(my_cfg,	"pw90%seedName"		, 	 seedName	,	"seedName for wannier files(char len=3)")
-		call CFG_add_get(my_cfg,	"pw90%shell"		, 	 shell		,	"manually set the shell to use for FD  ")
-		call CFG_add_get(my_cfg,	"pw90%nw90it"		, 	 nw90it		,	"number of iterations for wannnierisat,")
-		![wannier]
-		call CFG_add_get(my_cfg,	"wann%gaugeSwitch"	,	gaugeSwitch ,	"switch gauge the basis coeff directly"	)
-		call CFG_add_get(my_cfg,	"wann%nBands"		,	nBands	 	,	"# of bands to project onto trial orbs"	)
-		call CFG_add_get(my_cfg,	"wann%nWfs"			,	nWfs	 	,	"# wannier functions to generate"		)
-		call CFG_add_get(my_cfg,	"wann%trialOrbSw"	,	trialOrbSw	,	"switch different trial orbitals"		)
-		call CFG_add_get(my_cfg,	"wann%R0"			,	R0			,	"home unit cell used for wann cent calc")
-		call CFG_add_get(my_cfg,	"wann%nKx"			,	nKx			,	"# k x points of interpolation mesh"	)
-		call CFG_add_get(my_cfg,	"wann%nKy"			,	nKy			,	"# k x points of interpolation mesh"	)
-		call CFG_add_get(my_cfg,	"wann%connSwitch"	,	connSwitch	,	"connection via K or via R space"		)
-		![perturbation]
-		call CFG_add_get(my_cfg,	"perturbation%B0"	,	B0			,	"scaling fact. of ext. magnetic field"	)
-		call CFG_add_get(my_cfg,	"perturbation%Bext"	,	Bext		,	"vector of ext. magnetic field"			)
-		![semiclassics]
-		call CFG_add_get(my_cfg,	"semiclassics%prefactF3"	,	prefactF3,	"real prefactor for F3 "			)
+		
+		
+		
 
 
 
@@ -143,7 +141,6 @@ module sysPara
 		allocate(	dVpot(nAt)			)
 		allocate(	atPos(dim,nAt)		)
 		allocate(	atR(dim,nAt) 		)
-		allocate(	trialOrbVAL(nAt)	)
 		allocate(	Zion(nAt)			)
 		!meshes
 		allocate(	qpts(dim,nQ)		)
@@ -159,8 +156,6 @@ module sysPara
 		call CFG_add_get(my_cfg,	"atoms%atPot"		,	atPot		,	"potential depth in hartree"			)
 		call CFG_add_get(my_cfg,	"atoms%dVpot"		,	dVpot		,	"potential gradient"					)
 		call CFG_add_get(my_cfg,	"atoms%Zion"		,	Zion		,	"effective charge of the ions"			)
-		![wann]
-		call CFG_add_get(my_cfg,	"wann%trialOrbVAL"	,	trialOrbVAL	,	"weight of trial orbital for each atom"	)
 
 		!calculate desired quantities from input: aLatt,kpts,rpts(aLatt),gVec
 		call setAcc(thres)
@@ -535,6 +530,7 @@ end function
 	subroutine calcRcell()
 		integer		:: nI, nJ, n
 		!
+		R0 = 1
 		do nJ = 1, nSCy
 			do nI = 1, nSCx
 				n = (nJ-1) * nSCx + nI  !rI	=	(rIy-1) * nRy + rIx

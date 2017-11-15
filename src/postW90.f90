@@ -260,7 +260,7 @@ module postW90
 			U_mat(:,:,ki)	= H_mat(:,:,ki)
 			call eigSolver(U_mat(:,:,ki),	En_vec(:,ki))
 		end do
-		call writeInterpBands(En_vec)
+		if( writeBin ) call writeInterpBands(En_vec)
 		!
 		!CURVATURE TO MATRIX
 		do ki = 1, nK

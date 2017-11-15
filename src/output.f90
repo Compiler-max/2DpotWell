@@ -84,11 +84,6 @@ module output
 																"w. rad = (", atR(1,i), ", ", atR(2,i), " )"	
 		end do
 		!
-		!TRIAL ORBITAL HEIGHT
-		write(100,*)"*******************TIRAL ORBITALS******************************"
-		do i = 1, nAt
-			write(100,'(a,i2,a,f15.7)')				"g_trial(",i,") = ", trialOrbVAL(i) 
-		end do
 		!
 		close(100)
 		return
