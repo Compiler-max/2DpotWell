@@ -162,9 +162,10 @@ module sysPara
 
 		!calculate desired quantities from input: aLatt,kpts,rpts(aLatt),gVec
 		call setAcc(thres)
-		call kmeshGen()
+		call qmeshGen()
 		call rmeshGen()
 		call popGtest()
+		call popGvec()
 		call popAtPos()
 		call popAtR()
 		call calcRcell()
@@ -351,7 +352,7 @@ end function
 
 
 !privat:
-	subroutine kmeshGen()
+	subroutine qmeshGen()
 		!generates the (coarse) k point mesh for solving electronic structure
 		integer		:: qIx, qIy, qI
 		real(dp)	:: qxMin, qyMin
@@ -451,6 +452,32 @@ end function
 		end do
 
 
+		!
+		return
+	end subroutine
+
+
+
+	subroutine popGvec()
+		integer						:: qi, gi
+		real(dp)					:: kg(2)
+		!
+		do qi = 1, nQ
+			nGq(qi)	= 0
+			do gi = 1, nG
+				kg(:)	= qpts(:,qi) + Gtest(:,gi)
+				if( norm2(kg) < Gcut ) then
+					nGq(qi) = nGq(qi) + 1
+					Gvec(:,nGq(qi),qi) = kg(:)
+				end if
+			end do
+			!DEBUG INFO
+			if(nGq(qi) > nG) write(*,'(a,i4,a,i6)')	"[popGvec]: warning, somehow counted more basis functions at qi=",qi," limit nG=",nG	
+			write(*,'(a,i6,a,i4)')	"[popGvec]: using ",nGq(qi), "basis functions at qi=",qi	
+		end do
+		!
+	
+		!
 		!
 		return
 	end subroutine

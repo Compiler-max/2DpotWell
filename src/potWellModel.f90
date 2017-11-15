@@ -24,42 +24,36 @@ module potWellModel
 		!solves Hamiltonian at each k point
 		!also generates the Wannier functions on the fly (sum over all k)
 		complex(dp),	intent(out)		::	ck(:,:,:)
-																				!wnF( nR	, nSupC,	nWfs	)	
-																				!unkW(nR	,	nWfs,  nKpts	)
-																				!veloBwf(nR,nK,2*nG)
-		real(dp),		intent(out)		::	En(:,:)																	
+		real(dp),		intent(out)		::	En(:,:)	
+		!																
 		complex(dp),	allocatable		::	Hmat(:,:) , ctemp(:,:)
-		real(dp),		allocatable		::	EnT(:,:)
+		real(dp),		allocatable		::	EnT(:), EnTq(:,:)
 		integer							:: 	qi, found, Gmax
-		!
-		allocate(	Hmat(	nG,	nG		)			)
-		allocate(	ctemp(	nG,	nSolve	)			) !could be smaller, just for testing resized
-		allocate(	EnT(	nG, nQ	)			)	
 		!
 		!
 		if(debugHam) then
 			write(*,*)	"[solveHam]: debugging ON. Will do additional tests of the results"
 		end if
 		!
+		allocate(	EnTq(	nG, nQ		)			)
 		!
-		!MPI scatter : ck(:,:,qi), EnT(:,qi)
+		!
+		!$OMP PARALLEL	DEFAULT(SHARED)	PRIVATE(Hmat, ctemp,EnT, qi, found, Gmax)
+		allocate(	Hmat(	nG,	nG		)			)
+		allocate(	ctemp(	nG, nSolve	)			)
+		allocate(	EnT(	nG			)			)	
+		!$OMP DO SCHEDULE(STATIC) 
 		do qi = 1, nQ
 			!
-			!ELECTRONIC STRUCTURE
-			call setUpBasis(qi)
-			Gmax 	= nGq(qi)
-			
-
+			!SETUP HAM
 			call populateH(qi, Hmat) 	!omp
-			
-			!old
-			!call eigSolver(Hmat, EnT(:,qi))	!mkl
-			!ck(1:nG,1:nBands,qi)	= Hmat(1:nG,1:nBands)
-
-			!new
-			call eigSolver2(Hmat(1:Gmax,1:Gmax),EnT(1:Gmax,qi), ctemp(1:Gmax,:), found)!a, w ,z, m
-			
+			!
+			!SOLVE HAM
+			Gmax 	= nGq(qi)
+			call eigSolver2(Hmat(1:Gmax,1:Gmax),EnT(1:Gmax), ctemp(1:Gmax,:), found)!a, w ,z, m
+			!COPY INTO TARGET ARRAYS
 			ck(1:nG,1:nBands,qi)	= ctemp(1:nG,1:nBands)
+			EnTq(:,qi)	= EnT(:)
 			!DEBUG TESTS
 			if( debugHam ) then
 				if(found /= nSolve )write(*,*)"[solveHam]: only found ",found," bands of required ",nSolve
@@ -71,16 +65,18 @@ module potWellModel
 			write(*,*)"[solveHam]: done for qi=",qi
 			!
 		end do
-		!MPI gather, ck(:,:,qi), EnT(:,qi)
+		!$OMP END DO
+		!$OMP END PARALLEL
 		!
+
 		!
 		!COPY & WRITE ENERGIES/BWFs
-		do qi = 1, size(En,2)
-			En(:,qi)	= EnT(1:nBands,qi)
+		do qi = 1, nQ
+				En(:,qi)	= EnTq(1:nBands,qi)	
 		end do
 		write(*,*)			"[solveHam]: copied eigenvalues"
-		write(*,*)			"[solveHam]: found ", countBandsSubZero(EnT(1:nSolve,:))," bands at the gamma point beneath zero"
-		call writeEnAndCK(EnT, ck, nGq)
+		write(*,*)			"[solveHam]: found ", countBandsSubZero(EnTq(1:nSolve,:))," bands at the gamma point beneath zero"
+		call writeEnAndCK(EnTq, ck, nGq)
 		!
 		!
 		!
@@ -101,31 +97,6 @@ module potWellModel
 
 
 !private:
-	!BASIS SETUP
-	subroutine setUpBasis(qi)
-		integer,	intent(in)		:: qi
-		integer						:: gi
-		real(dp)					:: kg(2)
-		!
-		nGq(qi)	= 0
-		do gi = 1, nG
-			kg(:)	= qpts(:,qi) + Gtest(:,gi)
-			if( norm2(kg) < Gcut ) then
-				nGq(qi) = nGq(qi) + 1
-				Gvec(:,nGq(qi),qi) = kg(:)
-			end if
-		end do
-		!
-		if(nGq(qi) > nG) write(*,'(a,i4,a,i6)')	"[setUpBasis]: warning, somehow counted more basis functions at qi=",qi," limit nG=",nG	
-		write(*,'(a,i6,a,i4)')	"[setUpBasis]: using ",nGq(qi), "basis functions at qi=",qi
-		!
-		!
-		return
-	end subroutine
-
-
-
-
 	!POPULATION OF H MATRIX
 	subroutine populateH(qi, Hmat)
 		!populates the Hamiltonian matrix by adding 
