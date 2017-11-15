@@ -24,7 +24,6 @@
     Bext        = 0.0 0.0 1.0  
 
 [numerics]
-    nGdim       = 49
     Gcut        = 15.0
     nSolve      = 16        
     nQx         = 4   

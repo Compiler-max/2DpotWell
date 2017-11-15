@@ -5,7 +5,7 @@ module sysPara
 	implicit none
 	private
 	public :: 	readInp, setBasis, insideAt, getRindex, getRleftX, getRrightX, getRleftY, getRrightY,& 
-				getKindex, getGammaPoint, getPot,getGindex, &
+				getKindex, getGammaPoint, getPot, &
 				dim, aX, aY, vol, nAt, relXpos, relYpos, atRx, atRy, atPot, dVpot, &
 				nG, nGq, nG0, Gcut, Gvec, Gtest, R0, nSolve, &
 				nQ, nQx, nQy, nKx, nKy, nK, nSC, nSCx, nSCy, dqx, dqy, dkx, dky, &
@@ -19,7 +19,7 @@ module sysPara
 
 
 	!
-	integer  										:: 	dim=2, nAt=0, nG, nGdim=16, nSolve=20, nG0,  nQx=1, nQy=1,nQ , nSCx=1, nSCy=1,& 
+	integer  										:: 	dim=2, nAt=0, nG, nSolve=20, nG0,  nQx=1, nQy=1,nQ , nSCx=1, nSCy=1,& 
 														nKx=1, nKy=1, nK, R0,  &
 														nw90it, shell, &
 														nRx=10, nRy=10, nR, nBands=1,nWfs=1, nSC
@@ -75,7 +75,6 @@ module sysPara
 		call CFG_add_get(my_cfg,	"perturbation%B0"	,	B0			,	"scaling fact. of ext. magnetic field"	)
 		call CFG_add_get(my_cfg,	"perturbation%Bext"	,	Bext		,	"vector of ext. magnetic field"			)
 		![numerics]
-		call CFG_add_get(my_cfg,	"numerics%nGdim"    ,	nGdim	    ,	"amount of G_n used"					)
 		call CFG_add_get(my_cfg,	"numerics%Gcut"		,	Gcut	    ,	"k space cut of parameter"				)
 		call CFG_add_get(my_cfg,	"numerics%nSolve"	,	nSolve	    ,	"number of eigenstates to find"			)
 		call CFG_add_get(my_cfg,	"numerics%nQx"     	,	nQx      	,	"amount of k points used"				)
@@ -473,7 +472,7 @@ end function
 			end do
 			!DEBUG INFO
 			if(nGq(qi) > nG) write(*,'(a,i4,a,i6)')	"[popGvec]: warning, somehow counted more basis functions at qi=",qi," limit nG=",nG	
-			write(*,'(a,i6,a,i4)')	"[popGvec]: using ",nGq(qi), "basis functions at qi=",qi	
+			!write(*,'(a,i6,a,i4)')	"[popGvec]: using ",nGq(qi), "basis functions at qi=",qi	
 		end do
 		!
 	
@@ -483,26 +482,6 @@ end function
 	end subroutine
 
 
-
-
-
-
-	integer function getGindex(gxi, gyi)
-		integer,	intent(in)		:: gxi, gyi
-		integer						:: gx, gy
-		!
-		!KEEP INSIDE G ARRAY
-		gx = mod(gxi,nGdim)
-		gy = mod(gyi,nGdim)
-		!
-		if( gx == 0) gx = nGdim
-		if( gy == 0) gy = nGdim
-		!
-		!
-		getGindex	= (gy-1) * nGdim + gx
-		!
-		return
-	end function
 
 
 	subroutine testG(a1, a2, b1, b2)
