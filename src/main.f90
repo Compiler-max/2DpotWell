@@ -22,16 +22,14 @@ program main
     real(dp) 											:: 	pWann(2), pBerry(2), pNiuF2(3), pNiuF3(3), pPei(3), &
     														pTBwann(3), pTBconn(3), pTBniuF2(3), pTBniuF3(3), pTBpei(3)
     real												:: 	mastT0, mastT1, mastT, T0, T1, &
-    															aT,kT,wT, oT, bT, peiT, pT
+    															aT,kT,wT, oT, bT
     
     !timing zero init
     aT		= 0.0
     kT		= 0.0
     wT		= 0.0
-    oT 		= 0.0
     bT		= 0.0
-    peiT	= 0.0
-    pT  	= 0.0
+    oT 		= 0.0
     mastT	= 0.0
 
     !INPUT & ALLOCATION SECTION
@@ -89,6 +87,7 @@ program main
 	
 	
 	!EFF TB - post w90
+	call cpu_time(T0)
 	if(	doPw90 ) then
 		write(*,*)"*"
 		write(*,*)"*"
@@ -101,21 +100,8 @@ program main
 		call effTBmodel(pTBwann, pTBconn, pTBniuF2, pTBniuF3, pTBpei)
 		write(*,*)"[main]: done with effective tight binding calculations"
 	end if
-
-
-	!PROJECTIONS
-	!write(*,*)"*"
-	!write(*,*)"*"
-	!write(*,*)"*"
-	!write(*,*)"*"
-	!write(*,*)"[main]:**************************PROJECT STATES *************************"
-	!call cpu_time(T0)
-	!!
-	!call projectUnk(ck, ckW, Uq)
-	!!
-	!call cpu_time(T1)
-	!write(*,*)"[main]: done with projections."
-	!pT = T1-T0
+	call cpu_time(T1)
+	wT	= T1-T0
 
 
 	!K SPACE METHOD
@@ -134,28 +120,6 @@ program main
 	end if
 	call cpu_time(T1)
 	bT	= T1 - T0
-
-
-
-	!REAL SPACE METHOD
-	!write(*,*)"*"
-	!write(*,*)"*"
-	!write(*,*)"*"
-	!write(*,*)"*"
-	!call cpu_time(T0)
-	!if( doWanni ) then
-	!	write(*,*)	"[main]:**************************WANNIER FUNCTION METHOD*************************"
-	!	!
-	!	call wannMethod(ckW, pWann)
-	!	!
-	!	write(*,*)	"[main]: done with center polarization calc"
-	!else
-	!	write(*,*)	"[main]: wannier method disabled"
-	!end if	
-	!call cpu_time(T1)
-	!wT 	= T1 - T0
-
-
 
 	
 	
@@ -200,7 +164,7 @@ program main
 	write(*,*)"*"
 	write(*,*)"*"
 	write(*,*) '**************TIMING INFORMATION************************'
-	call printTiming(aT, kT, pT, wT, bT,peiT, oT, mastT)
+	call printTiming(aT,kT,wT,bT,oT,mastT)
 	write(*,*)	"[main]: all done, exit"
 	!
 	!

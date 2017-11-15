@@ -526,25 +526,21 @@ module output
 
 
 
-	subroutine printTiming(aT,kT,pT,wT,bT,peiT,oT,mastT)
-		real,	intent(in)	:: aT,kT,pT,wT,bT,peiT,oT,mastT
+	subroutine printTiming(aT,kT,wT,bT,oT,mastT)
+		real,	intent(in)	:: aT,kT,wT,bT,oT,mastT
 		!
 		print '    ("r&alloc  time spend     = ",f8.4," seconds = ",f8.4,"% of overall time")',& 
 									aT 				, 100.0_dp*aT		   	/mastT
 		print '    ("k-solver time spend     = ",f8.4," seconds = ",f8.4,"% of overall time")',& 
 									kT 				, 100.0_dp*kT		   	/mastT
-		print '    ("project. time spend     = ",f8.4," seconds = ",f8.4,"% of overall time")',& 
-									pT 				, 100.0_dp*pT		   	/mastT
-		print '    ("wannier method          = ",f8.4," seconds = ",f8.4,"% of overall time")',& 
+		print '    ("post w90 - eff TB       = ",f8.4," seconds = ",f8.4,"% of overall time")',& 
 									wT				, 100.0_dp*wT		   	/mastT
 		print '    ("berry method            = ",f8.4," seconds = ",f8.4,"% of overall time")',& 
-									bT				, 100.0_dp*bT		   	/mastT							
-		print '    ("peierls method          = ",f8.4," seconds = ",f8.4,"% of overall time")',& 
-									peiT			, 100.0_dp*peiT		   	/mastT													
+									bT				, 100.0_dp*bT		   	/mastT														
 		print '    ("writing  time spend     = ",f8.4," seconds = ",f8.4,"% of overall time")',& 
 									oT 				, 100.0_dp*oT		   	/mastT
 		print '    ("other    time spend     = ",f8.4," seconds = ",f8.4,"% of overall time")',& 
-									(mastT-aT-kT-pT-wT-bT-oT) 	, 100.0_dp*(mastT-aT-kT-pT-wT-bT-oT)/mastT
+									(mastT-aT-kT-wT-bT-oT) 	, 100.0_dp*(mastT-aT-kT-wT-bT-oT)/mastT
 		print '    ("overall  time spend     = ",f8.4," seconds.")', mastT
 		!
 		return

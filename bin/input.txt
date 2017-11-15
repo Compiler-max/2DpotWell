@@ -33,14 +33,14 @@
     nSCy        = 9
     nKx         = 8
     nKy         = 8                 
-    nRx         = 11   
-    nRy         = 11
+    nRx         = 181   
+    nRy         = 181
     thres       = 0.1
 
 [methods]
     doSolveHam  = f
     doPw90      = f
-    doBerry     = t
+    doBerry     = f
     writeBin    = f
 
 [pw90]
