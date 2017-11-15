@@ -16,24 +16,24 @@
 
 [numerics]
     nGdim       = 49
-    Gcut        = 5.0
+    Gcut        = 1.0
     nSolve      = 10        
     nQx         = 4   
     nQy         = 4
-    nSCx        = 4 
-    nSCy        = 4
+    nSCx        = 5 
+    nSCy        = 5
     nRx         = 81   
     nRy         = 81
     thres       = 0.1
 
 [methods]
-    doSolveHam  = f
-    doPw90      = t
+    doSolveHam  = t
+    doPw90      = f
     doVdesc     = f
     doProj      = t
     doProjNUM   = f
     doGaugBack  = f
-    doBerry     = t
+    doBerry     = f
     doWanni     = t
     doVeloNUM   = f
     doNiu       = t
