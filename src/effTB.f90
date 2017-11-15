@@ -238,27 +238,30 @@ module effTB
 		!calculates the overlap between unk at qi and at a neigbhouring k point knb
 		!	integration only over the first unit cell
 		!
-		integer,		intent(in)		:: n, m, qi, knb
-		real(dp),		intent(in)		:: gShift(2)
-		complex(dp),	intent(in)		:: ck(:,:,:)  !ck(			nG		,	nBands  	,	nQ	)		
-		integer							:: gi, gj, cnt, tot
-		real(dp)						:: delta(2)
+		integer,		intent(in)		:: 	n, m, qi, knb
+		real(dp),		intent(in)		:: 	gShift(2)
+		complex(dp),	intent(in)		:: 	ck(:,:,:)  !ck(			nG		,	nBands  	,	nQ	)		
+		integer							:: 	gi, gj, cnt
+		real(dp)						:: 	delta(2)
+		logical							::	notFound
+		!
 		!
 		UNKoverlap	= dcmplx(0.0_dp)
 		cnt	= 0
-		tot	= 0
-
-
 		do gi = 1, nGq(qi)
-			do gj = 1, nGq(knb)
+			notFound 	= .true.
+			gj			= 1
+			do while( gj<= nGq(knb) .and. notFound ) 
 				delta(:)	=  ( Gvec(:,gi,qi)-qpts(:,qi) ) 	-  		( Gvec(:,gj,knb)-qpts(:,knb)-gShift(:) )
 				if( norm2(delta) < machineP )	then
 					UNKoverlap	= UNKoverlap +  dconjg( ck(gi,n,qi) ) * ck(gj,m,knb) 
 					cnt = cnt + 1
+					notFound = .false.
 				end if
-				tot = tot + 1
+				gj = gj + 1
 			end do
 		end do
+		!
 		!
 		!write(*,'(a,i8,a,i8)')	"[UNKoverlap]: used ",cnt," where nGmax(qi)=",nGq(qi)
 		if( cnt > nGq(qi)	)	write(*,'(a,i8,a,i8)')	"[UNKoverlap]: warning, used ",cnt," where nGmax(qi)=",nGq(qi)
