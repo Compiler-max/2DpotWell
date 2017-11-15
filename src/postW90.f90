@@ -359,7 +359,7 @@ module postW90
 		!
 		open(unit=600,file='pW90pol.txt',action='write')
 		write(600,*)"**************POST W90 POLARIZATION**********************"
-		write(600,*)"*"
+		write(600,*)"via effective tight binding model"
 		write(600,*)"*"
 		write(600,*)"*"
 		write(600,*)"*"

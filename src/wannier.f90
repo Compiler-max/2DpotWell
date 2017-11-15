@@ -42,8 +42,8 @@ module wannier
 		integer							:: normCount
 		!
 		allocate(			wnF( 		nR		, 	nSC		, nWfs		)				)
-		allocate(			wCent(		2		, 	nWfs				)				)
-		allocate(			wSprd(		2		, 	nWfs				)				)
+		allocate(			wCent(		3		, 	nWfs				)				)
+		allocate(			wSprd(		3		, 	nWfs				)				)
 
 		!
 		!Generate Wannier functions and calc polarization from wannier centers
@@ -86,7 +86,7 @@ module wannier
 		complex(dp),	intent(in)		:: wnf(:,:,:)
 		complex(dp),	intent(out)		:: tHopp(:,:,:), rHopp(:,:,:,:) !tHopp(nWfs,nWfs,nSC)
 		integer							:: n,m, R
-		real(dp)						:: wRw(2)
+		real(dp)						:: wRw(3)
 		!
 		write(*,*)"[calcHopping]: hello"
 		do R = 1, nSC
@@ -167,7 +167,7 @@ module wannier
 		complex(dp), intent(in)  	:: wnF(:,:,:) !wnF(nRpts,nSupC,nWfs)
 		real(dp)   , intent(out) 	:: xc(:,:), sprd(:,:)
 		integer					 	:: n
-		real(dp)					:: tmp(2)
+		real(dp)					:: tmp(3)
 		!
 		write(*,'(a,i2,a,f10.5,a,f10.5,a)')"[calcWcent]: using R(",R0,")= (",Rcell(1,R0),", ",Rcell(2,R0),") as home unit cell"
 		do n = 1, nWfs
@@ -188,7 +188,7 @@ module wannier
 		!positional operator expectation value
 		integer,		intent(in)		:: R1, R2, n, m
 		complex(dp),	intent(in)		:: wnF(:,:,:)	 !wnF( nRpts, nSupC,		nWfs)
-		real(dp),		intent(out)		:: res(2)		
+		real(dp),		intent(out)		:: res(3)		
 		real(dp), 		allocatable	 	:: fx(:),fy(:)
 		integer 				 		:: xi
 		!
@@ -206,6 +206,7 @@ module wannier
 		!call nIntegrate(nIntSwitch, dx, f	, wXw	)
 		res(1)		= nIntegrate(nR, nRx, nRy, dx, dy, fx)
 		res(2)		= nIntegrate(nR, nRx, nRy, dx, dy, fy)
+		res(3)		= 0.0_dp
 		!
 		!write(*,*)"[wXw]: scaling with ",1.0_dp/norm
 		!wXw = wXw  /norm
@@ -217,7 +218,7 @@ module wannier
 		!positional operator squared, expectation value
 		integer,		intent(in)	:: R1, R2, n, m
 		complex(dp),	intent(in)	:: wnF(:,:,:)
-		real(dp),		intent(out)	:: res(2)	
+		real(dp),		intent(out)	:: res(3)	
 		real(dp), allocatable	 	:: fx(:),fy(:)
 		integer 				 	:: xi
 		!
@@ -230,6 +231,7 @@ module wannier
 		!
 		res(1)	= nIntegrate(nR, nRx, nRy, dx, dy, fx)
 		res(2)	= nIntegrate(nR, nRx, nRy, dx, dy, fy)
+		res(3)		= 0.0_dp
 		!call nIntegrate(nIntSwitch, dx, fn	, norm	)
 		!write(*,*)"[wXXw]: scaling with ",1.0_dp/norm
 		!wXXw = wXXw  / norm

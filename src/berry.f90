@@ -101,8 +101,8 @@ module berry
 		if(doNiu) then
 			write(*,*)	"[berrryMethod]: now calc first order pol"
 			call calcFirstOrdP(FcurvK, AconnK, veloK, EnK, pNiuF2, pNiuF3)
-			write(*,'(a,f8.4,a,f8.4,a,f8.4,a)')	"[berryMethod]: pNiuF2=(",pNiuF2(1),", ",pNiuF2(2),", ",pNiuF2(3),")."
-			write(*,'(a,f8.4,a,f8.4,a,f8.4,a)')	"[berryMethod]: pNiuF3=(",pNiuF3(1),", ",pNiuF3(2),", ",pNiuF3(3),")."
+			write(*,'(a,f9.4,a,f9.4,a,f9.4,a)')	"[berryMethod]: pNiuF2=(",pNiuF2(1),", ",pNiuF2(2),", ",pNiuF2(3),")."
+			write(*,'(a,f9.4,a,f9.4,a,f9.4,a)')	"[berryMethod]: pNiuF3=(",pNiuF3(1),", ",pNiuF3(2),", ",pNiuF3(3),")."
 		end if
 
 

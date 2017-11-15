@@ -75,8 +75,8 @@ module semiClassics
 			pnF2	= dcmplx(0.0_dp)
 			pnF3	= dcmplx(0.0_dp)
 			do ki = 1, kSize
-				pnF2	= pnF2 + fF2(:,ki)  / kSize
-				pnF3	= pnF3 + fF3(:,ki)	/ kSize
+				pnF2	= pnF2 + fF2(:,ki)  / dcmplx(kSize)
+				pnF3	= pnF3 + fF3(:,ki)	/ dcmplx(kSize)
 			end do
 			!!!SINGLE ATOM
 			!if( nAt == 1 ) then
@@ -93,9 +93,9 @@ module semiClassics
 			!	end if
 			!end if
 			!write to standard out
-			write(*,'(a,i3,a,f8.4,a,f8.4,a,f8.4,a)')	"[calcFirstOrdP]: pNiuF2(n=", n,") =(" ,dreal(pnF2(1)),&
+			write(*,'(a,i3,a,f9.4,a,f9.4,a,f9.4,a)')	"[calcFirstOrdP]: pNiuF2(n=", n,") =(" ,dreal(pnF2(1)),&
 																		", ",dreal(pnF2(2)),", ", dreal(pnF2(3)),")."
-			write(*,'(a,i3,a,f8.4,a,f8.4,a,f8.4,a)')	"[calcFirstOrdP]: pNiuF3(n=", n,") =(" ,dreal(pnF3(1)),&
+			write(*,'(a,i3,a,f9.4,a,f9.4,a,f9.4,a)')	"[calcFirstOrdP]: pNiuF3(n=", n,") =(" ,dreal(pnF3(1)),&
 																		", ",dreal(pnF3(2)),", ", dreal(pnF3(3)),")."
 			!SUM OVER n
 			p1F2 = p1F2 + dreal(pnF2)
