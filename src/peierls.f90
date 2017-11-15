@@ -2,7 +2,7 @@ module peierls
 	use mathematics,	only:	dp, PI_dp, i_dp, myExp, crossP, nIntegrate, eigSolver, isUnit
 	use sysPara
 	use projection,		only:	projectUnk
-	!use effTB,			only:	calcConnOnCoarse
+	use effTB,			only:	calcConnOnCoarse
 	use wannInterp,		only:	DoWannInterpol
 	use	polarization,	only:	calcPolViaA
 	use output,			only:	writePeierls
@@ -27,7 +27,7 @@ module peierls
 		real(dp),		intent(out)		:: pPei(3)
 		complex(dp),	allocatable		:: Hp(:,:), ckP(:,:,:),Up(:,:,:), tshift(:,:,:), AconnP(:,:,:,:)
 		real(dp),		allocatable		:: EnP(:,:)
-		integer							:: R, qi, n, m, gi
+		integer							:: R, qi, gi
 		complex(dp)						:: phase
 		real(dp)						:: shft
 		!
@@ -68,7 +68,7 @@ module peierls
 			ckP(:,:,qi)	= dcmplx(0.0_dp)
 			!
 			do gi = 1, nGq(qi)
-				ckP(gi,:,qi)	= matmul(Hp(:,:), ck(gi,:,qi))
+				ckP(gi,:,qi)	= matmul( ck(gi,:,qi), Hp(:,:))
 			end do
 		end do
 
@@ -78,7 +78,7 @@ module peierls
 
 		!GENERATE CONNECTION
 		AconnP	= dcmplx(0.0_dp)
-		!call calcConnOnCoarse(ckP, AconnP) 
+		call calcConnOnCoarse(ckP, AconnP) 
 
 
 		!CALC POL
