@@ -405,9 +405,9 @@ end function
 		integer		:: rIx, rIy, rI
 		real(dp)	:: rxMin, ryMin
 		!
-		rxMin	=  -real(nSCx,dp) * aX / 2.0_dp
+		rxMin	=  -real(nSCx-1,dp) * aX / 2.0_dp
 		dx		= real(nSCx,dp) * aX / real(nRx-1,dp)
-		ryMin	= -real(nSCy,dp) * aX / 2.0_dp
+		ryMin	= -real(nSCy-1,dp) * aX / 2.0_dp
 		dy		= real(nSCy,dp) * aY / real(nRy-1,dp)
 		!
 		do rIy = 1, nRy
