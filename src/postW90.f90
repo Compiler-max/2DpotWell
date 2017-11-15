@@ -205,6 +205,7 @@ module postW90
 		!1st order peierls
 		if(	doPei ) then
 			!todo
+			pPei	= 0.0_dp
 			write(*,'(a,f10.5,a,f10.5,a,f10.5,a)')	"[effTBmodel]: pPei=(",pPei(1),", ",pPei(2),", ",pPei(3),")."
 		end if
 		!
