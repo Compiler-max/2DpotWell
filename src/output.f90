@@ -167,23 +167,29 @@ module output
 		real(dp),		intent(in)		:: EnT(:,:)
 		complex(dp),	intent(in)		:: ck(:,:,:)
 		integer,		intent(in)		:: nGq(:)
-		real(dp),		allocatable		:: buffer(:,:,:)
+		real(dp),		allocatable		:: buffer(:,:)
+		integer							:: qi
 		!
 		!
-		allocate(	buffer(	size(ck,1), size(ck,2), size(ck,3)	)		)
+		allocate(	buffer(	size(ck,1), size(ck,2)	)		)
 		!
 		open(unit=200, file='rawData/bandStruct.dat', form='unformatted', access='stream', action='write', status='replace')
 		write(200)	EnT
 		close(200)
 		!
-		buffer	= dreal(ck) 
+	
 		open(unit=210, file='rawData/ckR.dat'		, form='unformatted', access='stream', action='write',status='replace') 
-		write(210)	buffer
+		do qi = 1, size(ck,3)
+			buffer	= dreal(ck(:,:,qi)) 
+			write(210)	buffer
+		end do
 		close(210)
 		!
-		buffer	= dimag(ck)
 		open(unit=211, file='rawData/ckI.dat'		, form='unformatted', access='stream', action='write', status='replace')
-		write(211)	buffer
+		do qi = 1, size(ck,3)
+			buffer	= dimag(ck(:,:,qi)) 
+			write(210)	buffer
+		end do
 		close(211)
 		!
 		open(unit=215, file='rawData/nGq.dat'		, form='unformatted', access='stream', action='write', status='replace')
@@ -399,19 +405,25 @@ module output
 	subroutine writePeierls(ckP, EnP)
 		complex(dp),	intent(in)		:: ckP(:,:,:)
 		real(dp),		intent(in)		:: EnP(:,:)
-		real(dp),		allocatable		:: buffer(:,:,:)
+		real(dp),		allocatable		:: buffer(:,:)
+		integer							:: qi
 		!
-		allocate(	buffer( size(ckP,1)	,	size(ckP,2)	,	size(ckP,3) 					)			)
+		allocate(	buffer( size(ckP,1)	,	size(ckP,2)		)	)
 		
 		!real(UNK)
-		buffer	= dreal(ckP)
+		
 		open(unit=700,file='rawData/ckPeiR.dat',form='unformatted',access='stream',action='write')
-		write(700)	buffer
+		do qi = 1, size(ckP,3)
+			buffer	= dreal(ckP(:,:,qi))
+			write(700)	buffer
+		end do
 		close(700)
 		!imag(UNK)
-		buffer	= dimag(ckP)
 		open(unit=705,file='rawData/ckPeiI.dat',form='unformatted',access='stream',action='write')
-		write(705)	buffer
+		do qi = 1, size(ckP,3)
+			buffer	= dimag(ckP(:,:,qi))
+			write(700)	buffer
+		end do
 		close(705)
 		!
 		!Conn
@@ -437,7 +449,7 @@ module output
 
 
 	subroutine writePolFile(pWann, pBerry, pNiuF2, pNiuF3, pPei )	!writePolFile(pWann, pBerry, pNiu, pPei )
-		real(dp),		intent(in)		:: pWann(2), pBerry(2), pNiuF2(3), pNiuF3(3), pPei(3)
+		real(dp),		intent(in)		:: pWann(2), pBerry(3), pNiuF2(3), pNiuF3(3), pPei(3)
 		real(dp)						:: pNiu(3)
 		!	
 		!	
@@ -460,7 +472,8 @@ module output
 		write(600,'(a,f16.7,a,f16.7,a,a,f16.7,a,f16.7,a)')	"pWann =  (",  pWann(1)	,	", ",	pWann(2),		"),",& 
 												" moded=(",dmod(pWann(1),aX/vol),", ",dmod(pWann(2),aY/vol),")."
 		!
-		write(600,'(a,f16.7,a,f16.7,a,a,f16.7,a,f16.7,a)')	"pBerry=  (",		pBerry(1)	,	", ",	pBerry(2),		"),",& 
+		write(600,'(a,f16.7,a,f16.7,a,f16.7,a,a,f16.7,a,f16.7,a)')	"pBerry=  (",		pBerry(1)	,	", ",&	
+																					pBerry(2), " ,", pBerry(3)	,	"),",& 
 												" moded=(",dmod(pBerry(1),aX/vol),", ",dmod(pBerry(2),aY/vol),")."
 		!write(600,'(a,e16.9,a,f16.12,a,f16.12,a)')	"pInt= ",norm2(pInt)," * (", &	
 		!														pInt(1)/norm2(pInt),	", ",	pInt(2)/norm2(pInt),	")"

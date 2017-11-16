@@ -41,7 +41,7 @@ module berry
 
 	subroutine berryMethod()
 		!todo
-		real(dp)						:: 	pBerry(2), pNiuF2(3), pNiuF3(3), pPei(3)
+		real(dp)						:: 	pBerry(3), pNiuF2(3), pNiuF3(3), pPei(3)
 		real(dp),		allocatable		:: 	EnK(:,:)
 		complex(dp),	allocatable		:: 	AconnK(:,:,:,:), FcurvK(:,:,:,:), veloK(:,:,:,:), &
 											tHopp(:,:,:), rHopp(:,:,:,:) 
