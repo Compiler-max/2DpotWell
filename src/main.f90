@@ -85,17 +85,17 @@ program main
 	
 	!EFF TB - post w90
 	call cpu_time(T0)
+	write(*,*)"[main]:**************************POST WANNIER90 *************************"
 	if(	doPw90 ) then
 		write(*,*)"*"
 		write(*,*)"*"
 		write(*,*)"*"
 		write(*,*)"*"
-		write(*,*)"[main]:**************************POST WANNIER90 *************************"
-		
-
 		write(*,*)	"[main]: start with eff TB model calculations"
 		call effTBmodel()
-		write(*,*)"[main]: done with effective tight binding calculations"
+		write(*,*)	"[main]: done with effective tight binding calculations"
+	else
+		write(*,*)	"[main]: effective TB model disabled"
 	end if
 	call cpu_time(T1)
 	pwT	= T1-T0
@@ -103,12 +103,12 @@ program main
 
 	!K SPACE METHOD
 	call cpu_time(T0)
+	write(*,*)"[main]:**************************WAVEFUNCTION METHOD*************************"
 	if ( doBerry ) then
 		write(*,*)"*"
 		write(*,*)"*"
 		write(*,*)"*"
 		write(*,*)"*"
-		write(*,*)"[main]:**************************WAVEFUNCTION METHOD*************************"
 		call berryMethod()
 		write(*,*)"[main]: done with wavefunction method "
 	else
