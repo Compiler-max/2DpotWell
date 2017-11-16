@@ -93,7 +93,8 @@ module berry
 			write(*,*)	"[berryMethod]: applied U matrix to basis coefficients"
 		else 
 			if( nWfs <= nBands) then
-				ckW(gi,:,qi)	= ck(gi,1:nWfs,qi)
+				
+				ckW(:,1:nWfs,:)	= ck(:,1:nWfs,:)
 				write(*,*)	"[berryMethod]: rotations disabled. Will use initial electronic structure coeff"
 			else 
 				ckW	= dcmplx(0.0_dp)
