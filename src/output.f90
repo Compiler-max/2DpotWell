@@ -188,7 +188,7 @@ module output
 		open(unit=211, file='rawData/ckI.dat'		, form='unformatted', access='stream', action='write', status='replace')
 		do qi = 1, size(ck,3)
 			buffer	= dimag(ck(:,:,qi)) 
-			write(210)	buffer
+			write(211)	buffer
 		end do
 		close(211)
 		!
@@ -554,7 +554,7 @@ module output
 		print '    ("prep w90 time spend     = ",f16.4," seconds = ",f16.4,"% of overall time")',& 
 									wT				, 100.0_dp*wT		   	/mastT
 		print '    ("post w90 - eff TB       = ",f16.4," seconds = ",f16.4,"% of overall time")',& 
-		pwT				, 100.0_dp*wT		   	/mastT
+									pwT				, 100.0_dp*pwT		   	/mastT
 		print '    ("berry method            = ",f16.4," seconds = ",f16.4,"% of overall time")',& 
 									bT				, 100.0_dp*bT		   	/mastT														
 		print '    ("writing  time spend     = ",f16.4," seconds = ",f16.4,"% of overall time")',& 
