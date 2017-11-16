@@ -47,7 +47,7 @@ module berry
 		complex(dp),	allocatable		:: 	AconnK(:,:,:,:), FcurvK(:,:,:,:), veloK(:,:,:,:), &
 											tHopp(:,:,:), rHopp(:,:,:,:) 
 		real(dp)						::	pWann(3)
-		integer							::	gi, qi
+		integer							::	gi, qi, n
 		!					
 		!
 		write(*,*)	"[berrryMethod]: hello from Berry"
@@ -68,7 +68,17 @@ module berry
 		allocate(	EnQ(	nG,				nQ		)	)
 
 		!read in U matrix (yields nQ, nWfs) 
-		call readUmatrix()
+		if( useRot )  then
+			call readUmatrix()
+		else
+			allocate( Uq( nWfs, nWfs, nQ )	)
+			Uq = dcmplx(0.0_dp)
+			do qi = 1, nQ
+				do n = 1, nWfs
+					Uq(n,n,qi)	= dcmplx(1.0_dp)
+				end do
+			end do
+		end if
 
 		!read in ck, En
 		call readHam(ck, EnQ)
