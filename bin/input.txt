@@ -38,14 +38,14 @@
 
 [methods]
     doSolveHam  = t
+    useBloch    = f
     doPw90      = f
     doBerry     = t
     writeBin    = f
 
 [pw90]
     seedName    = 'wf1'
-    shell       = 2
-    useBloch    = f
+    shell       = 2   
     nw90it      = 1000
     pw90GaugeB  = f
 

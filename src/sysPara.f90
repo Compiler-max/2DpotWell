@@ -88,6 +88,7 @@ module sysPara
 		call CFG_add_get(my_cfg,	"numerics%thres"    ,	thres      	,	"threshold for overlap warnings"		)
 		![methods]
 		call CFG_add_get(my_cfg,	"methods%doSolveHam",	doSolveHam	,	"solve electronic structure or read in"	)
+		call CFG_add_get(my_cfg,	"methods%useBloch"	,	useBloch	,	"use bloch phase for projections	"	)
 		call CFG_add_get(my_cfg,	"methods%doPw90"	,	doPw90		,	"read in the matrices in wann base	"	)	
 		call CFG_add_get(my_cfg,	"methods%doBerry"	,	doBerry		,	"switch on/off 	berry( unk) method "	)
 		call CFG_add_get(my_cfg,	"methods%writeBin"	,	writeBin	,	"switch for writing binary files"		)

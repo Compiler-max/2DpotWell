@@ -15,16 +15,16 @@ module effTB
 		complex(dp),		intent(in)		:: ckQ(:,:,:), Uq(:,:,:)
 		real(dp),			intent(in)		:: EnQ(:,:)
 		complex(dp),		intent(out)		:: tHopp(:,:,:), rHopp(:,:,:,:)
-		complex(dp),		allocatable		:: AconnQ(:,:,:,:)
+		complex(dp),		allocatable		:: Atmp(:,:,:,:)
 		complex(dp),		allocatable		:: Htmp(:,:,:)
 		complex(dp)							:: phase
 		integer								:: R, qi
 		!
-		allocate(	AconnQ(	2,		nWfs,	nWfs,	nQ	)			)
+		allocate(	Atmp(	2,		nWfs,	nWfs,	nQ	)			)
 		allocate(	Htmp(			nWfs,	nWfs,	nQ	)			)
 		
 		!SET UP K SPACE QUANTITIES
-		call calcConnOnCoarse(ckQ, AconnQ)
+		call calcConnOnCoarse(ckQ, Atmp)
 		call calcHtmp(EnQ, Uq, Htmp)
 		!FT TO REAL SPACE
 		rHopp	= dcmplx(0.0_dp)
@@ -34,8 +34,8 @@ module effTB
 				phase			= myExp( -1.0_dp * dot_product(qpts(:,qi),Rcell(:,R))		)  / dsqrt(real(nSC,dp) )
 				!
 				!RHOPP
-				rHopp(1,:,:,R)	= rHopp(1,:,:,R) 	+ phase * AconnQ(1,:,:,qi) 
-				rHopp(2,:,:,R)	= rHopp(2,:,:,R) 	+ phase * AconnQ(2,:,:,qi) 
+				rHopp(1,:,:,R)	= rHopp(1,:,:,R) 	+ phase * Atmp(1,:,:,qi) 
+				rHopp(2,:,:,R)	= rHopp(2,:,:,R) 	+ phase * Atmp(2,:,:,qi) 
 				!
 				!THOPP
 				tHopp(:,:,R)	= tHopp(:,:,R)		+ phase * Htmp(:,:,qi)
