@@ -50,6 +50,7 @@
     pw90GaugeB  = f
 
 [berry]
+    useRot      = f
     doVeloNUM   = f
     doNiu       = t
     doPei       = f

@@ -15,7 +15,7 @@ module sysPara
 				Bext, prefactF3, &
 				seedName, &
 				debugProj, debugHam, debugWann, doSolveHam, useBloch, doPw90, pw90GaugeB, doVdesc,  &
-				doBerry, doWanni, doVeloNUM, doNiu, doPei, doGaugBack, writeBin
+				doBerry, useRot, doWanni, doVeloNUM, doNiu, doPei, doGaugBack, writeBin
 
 
 	!
@@ -33,7 +33,7 @@ module sysPara
 	real(dp),	allocatable,	dimension(:,:,:)	::	Gvec
 	logical											::	debugHam, debugWann, debugProj, &
 														doSolveHam, doPw90, pw90GaugeB, useBloch, doVdesc , &
-														doBerry, doWanni, doVeloNUM, doNiu, doPei, doGaugBack, &
+														doBerry, useRot, doWanni, doVeloNUM, doNiu, doPei, doGaugBack, &
 														writeBin
 
 
@@ -97,6 +97,7 @@ module sysPara
 		call CFG_add_get(my_cfg,	"pw90%nw90it"		, 	 nw90it		,	"number of iterations for wannnierisat,")
 		call CFG_add_get(my_cfg,	"pw90%pw90GaugeB"	,	pw90GaugeB	,	"logical for switching gauge trafo	   ")
 		![berry]
+		call CFG_add_get(my_cfg,	"berry%useRot"		,	useRot		,	"logical for switching on/off rotation	")
 		call CFG_add_get(my_cfg,	"berry%doVeloNUM"	,	doVeloNUM	,	"if true tb velocities, else analyitcal")
 		call CFG_add_get(my_cfg,	"berry%doNiu"		,	doNiu		,	"switch for nius first order pol"		)
 		call CFG_add_get(my_cfg,	"berry%doPei"		,	doPei		,	"switch for  peierls first order pol"	)

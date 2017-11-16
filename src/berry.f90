@@ -74,11 +74,22 @@ module berry
 		call readHam(ck, EnQ)
 
 		!rotate ck, get ckW
-		do qi = 1, nQ
-			do gi = 1, nGq(qi)
-				ckW(gi,:,qi)	= matmul( ck(gi,:,qi), Uq(:,:,qi))
+		if(	useRot ) then
+			do qi = 1, nQ
+				do gi = 1, nGq(qi)
+					ckW(gi,:,qi)	= matmul( ck(gi,:,qi), Uq(:,:,qi))
+				end do
 			end do
-		end do
+			write(*,*)	"[berryMethod]: applied U matrix to basis coefficients"
+		else 
+			if( nWfs <= nBands) then
+				ckW(gi,:,qi)	= ck(gi,1:nWfs,qi)
+				write(*,*)	"[berryMethod]: rotations disabled. Will use initial electronic structure coeff"
+			else 
+				ckW	= dcmplx(0.0_dp)
+				write(*,*)	"[berryMethod]: critical error, less nBands then nWfs, coeff set to zero..."
+			end if
+		end if
 
 		!SET UP EFFECTIVE TIGHT BINDING MODELL
 		call TBviaKspace(ckW, EnQ, Uq, tHopp, rHopp)
