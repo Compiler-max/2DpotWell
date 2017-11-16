@@ -14,7 +14,7 @@ module sysPara
 				atPos, atR, qpts, rpts, Rcell, kpts, Zion, recpLatt, &
 				Bext, prefactF3, &
 				seedName, &
-				debugProj, debugHam, debugWann, doSolveHam, doPw90, doVdesc, doProj, doProjNUM, &
+				debugProj, debugHam, debugWann, doSolveHam, doPw90, doVdesc,  &
 				doBerry, doWanni, doVeloNUM, doNiu, doPei, doGaugBack, writeBin
 
 
@@ -32,7 +32,7 @@ module sysPara
 
 	real(dp),	allocatable,	dimension(:,:,:)	::	Gvec
 	logical											::	debugHam, debugWann, debugProj, &
-														doSolveHam, doPw90, doVdesc , doProj, doProjNUM, &
+														doSolveHam, doPw90, doVdesc , &
 														doBerry, doWanni, doVeloNUM, doNiu, doPei, doGaugBack, &
 														writeBin
 
@@ -89,7 +89,7 @@ module sysPara
 		![methods]
 		call CFG_add_get(my_cfg,	"methods%doSolveHam",	doSolveHam	,	"solve electronic structure or read in"	)
 		call CFG_add_get(my_cfg,	"methods%doPw90"	,	doPw90		,	"read in the matrices in wann base	"	)	
-		call CFG_add_get(my_cfg,	"methods%doProj"	,	doProj		,	"switch on/off 	projections onto trial"	)
+		call CFG_add_get(my_cfg,	"methods%doBerry"	,	doBerry		,	"switch on/off 	berry( unk) method "	)
 		call CFG_add_get(my_cfg,	"methods%writeBin"	,	writeBin	,	"switch for writing binary files"		)
 		![pw90]
 		call CFG_add_get(my_cfg,	"pw90%seedName"		, 	 seedName	,	"seedName for wannier files(char len=3)")
@@ -101,8 +101,7 @@ module sysPara
 		call CFG_add_get(my_cfg,	"berry%doPei"		,	doPei		,	"switch for  peierls first order pol"	)
 		call CFG_add_get(my_cfg,	"berry%doWanni"		,	doWanni		,	"switch on/off 	wannier( wnf ) method"	)
 		call CFG_add_get(my_cfg,	"berry%doGaugBack"	,	doGaugBack	,	"switch for trafo: Wann to Ham gauge"	)
-		call CFG_add_get(my_cfg,	"methods%doProjNUM"	,	doProjNUM	,	"switch on/off 	projections onto trial"	)
-		call CFG_add_get(my_cfg,	"methods%doBerry"	,	doBerry		,	"switch on/off 	berry( unk) method "	)
+		
 		![semiclassics]
 		call CFG_add_get(my_cfg,	"semiclassics%prefactF3"	,	prefactF3,	"real prefactor for F3 "			)
 		![debug]
