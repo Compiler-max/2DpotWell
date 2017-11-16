@@ -10,7 +10,7 @@ module output
 	private
 
 	public ::	writeMeshInfo, writeMeshBin, writeEnAndCK, writeCkASunk, writeConnCurv, writeWannFiles, writePolFile, &
-				printMat, printTiming , writePeierls,  writeInterpBands, writeEnH, printBasisInfo, writeVeloH
+				printMat, printTiming , writePeierls,  writeInterpBands, writeEnH, printBasisInfo, writeVeloHtxt
 
 
 	interface printMat
@@ -258,7 +258,7 @@ module output
 
 
 
-	subroutine writeVeloH(velo)
+	subroutine writeVeloHtxt(velo)
 		complex(dp),	intent(in)		:: velo(:,:,:,:) !veloK(3		, 	nWfs	,	nWfs	,	nK		)
 		integer		qi, n, m
 

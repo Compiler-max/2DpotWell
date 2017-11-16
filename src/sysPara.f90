@@ -14,7 +14,7 @@ module sysPara
 				atPos, atR, qpts, rpts, Rcell, kpts, Zion, recpLatt, &
 				Bext, prefactF3, &
 				seedName, &
-				debugProj, debugHam, debugWann, doSolveHam, doPw90, doVdesc,  &
+				debugProj, debugHam, debugWann, doSolveHam, useBloch, doPw90, pw90GaugeB, doVdesc,  &
 				doBerry, doWanni, doVeloNUM, doNiu, doPei, doGaugBack, writeBin
 
 
@@ -32,7 +32,7 @@ module sysPara
 
 	real(dp),	allocatable,	dimension(:,:,:)	::	Gvec
 	logical											::	debugHam, debugWann, debugProj, &
-														doSolveHam, doPw90, doVdesc , &
+														doSolveHam, doPw90, pw90GaugeB, useBloch, doVdesc , &
 														doBerry, doWanni, doVeloNUM, doNiu, doPei, doGaugBack, &
 														writeBin
 
@@ -95,6 +95,7 @@ module sysPara
 		call CFG_add_get(my_cfg,	"pw90%seedName"		, 	 seedName	,	"seedName for wannier files(char len=3)")
 		call CFG_add_get(my_cfg,	"pw90%shell"		, 	 shell		,	"manually set the shell to use for FD  ")
 		call CFG_add_get(my_cfg,	"pw90%nw90it"		, 	 nw90it		,	"number of iterations for wannnierisat,")
+		call CFG_add_get(my_cfg,	"pw90%pw90GaugeB"	,	pw90GaugeB	,	"logical for switching gauge trafo	   ")
 		![berry]
 		call CFG_add_get(my_cfg,	"berry%doVeloNUM"	,	doVeloNUM	,	"if true tb velocities, else analyitcal")
 		call CFG_add_get(my_cfg,	"berry%doNiu"		,	doNiu		,	"switch for nius first order pol"		)

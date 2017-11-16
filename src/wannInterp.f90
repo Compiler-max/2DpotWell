@@ -1,7 +1,7 @@
 module wannInterp
 	use mathematics,	only:	dp, PI_dp, i_dp, acc, machineP, myExp, myLeviCivita, nIntegrate, eigSolver, rotMat, myCommutat
 	use sysPara
-	use output,			only: 	writeEnH, writeVeloH
+	use output,			only: 	writeEnH, writeVeloHtxt
 
 	!use 
 	implicit none
@@ -58,7 +58,7 @@ module wannInterp
 		write(*,*)	"[DoGaugeTrafo]: calculated (H) gauge energy, connection, curvature, velocity"
 		!
 		if( writeBin )	call writeEnH(EnH)
-		if( writeBin )	call writeVeloH(veloH)
+		call writeVeloHtxt(veloH)
 		!
 		return
 	end subroutine

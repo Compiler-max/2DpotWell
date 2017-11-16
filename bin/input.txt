@@ -24,16 +24,16 @@
     Bext        = 0.0 0.0 1.0  
 
 [numerics]
-    Gcut        = 15.0
+    Gcut        = 5.0
     nSolve      = 16        
-    nQx         = 4   
-    nQy         = 4
-    nSCx        = 5 
-    nSCy        = 5
-    nKx         = 4
-    nKy         = 4                 
-    nRx         = 51   
-    nRy         = 51
+    nQx         = 8   
+    nQy         = 8
+    nSCx        = 9 
+    nSCy        = 9
+    nKx         = 8
+    nKy         = 8                 
+    nRx         = 91   
+    nRy         = 91
     thres       = 0.1
 
 [methods]
@@ -45,13 +45,15 @@
 [pw90]
     seedName    = 'wf1'
     shell       = 2
+    useBloch    = f
     nw90it      = 1000
+    pw90GaugeB  = f
 
 [berry]
     doVeloNUM   = f
     doNiu       = t
-    doPei       = t
-    doWanni     = t
+    doPei       = f
+    doWanni     = f
     doGaugBack  = f
 
 [semiclassics]
