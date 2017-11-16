@@ -4,7 +4,6 @@ program main
 	use mathematics, 	only: 		dp, PI_dp
 
 	use sysPara
-	use input,			only:		filesExist, readHam 
 	use potWellModel, 	only: 		solveHam
 	use w90Interface,	only:		w90Interf
 	use postW90,		only:		effTBmodel

@@ -4,7 +4,6 @@ module berry
 	use omp_lib
 	use mathematics,	only:	dp, PI_dp, i_dp, acc, myExp, myLeviCivita, nIntegrate
 	use sysPara
-	use input,			only:	readHam
 	use effTB,			only:	TBviaKspace
 	use wannInterp,		only:	DoWannInterpol
 	use polarization,	only:	calcPolViaA
@@ -186,6 +185,43 @@ module berry
 		end do
 		close(300)
 
+		return
+	end subroutine
+
+
+	subroutine	readHam(ck, En)
+		complex(dp),	intent(out)		:: ck(:,:,:)
+		real(dp),		intent(out)		:: En(:,:)
+		real(dp),		allocatable		:: buffer(:,:,:), eBuff(:,:)
+		!
+		allocate(	buffer( size(ck,1), size(ck,2), size(ck,3) )		)
+		allocate(	eBuff(nG,nQ)										)
+		!
+		!
+		!
+		!UNK REAL PART
+		buffer	= 0.0_dp
+		open(unit=700, file="./rawData/ckR.dat",form='unformatted',access='stream',action='read')
+			read(700) buffer
+		close(700)
+		ck	= buffer
+		!
+		!UNK IMAG PART
+		buffer	= 0.0_dp
+		open(unit=710, file="./rawData/ckI.dat",form='unformatted',access='stream',action='read')
+			read(710) buffer
+		close(710)
+		ck	= ck + i_dp * buffer
+		!
+		!BAND ENERGIES
+		open(unit=720, file="./rawData/bandStruct.dat",form='unformatted',access='stream',action='read')
+			read(720) eBuff
+		close(720)
+		En(1:nBands,:)	= eBuff(1:nBands,:)
+		!
+		!
+	
+		!
 		return
 	end subroutine
 
