@@ -46,7 +46,7 @@ module potWellModel
 		do qi = 1, nQ
 			!
 			!SETUP HAM
-			call populateH(qi, Hmat) 	!omp
+			call populateH(qi, Hmat) 
 			!
 			!SOLVE HAM
 			Gmax 	= nGq(qi)

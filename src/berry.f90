@@ -50,7 +50,7 @@ module berry
 		!					
 		!
 		write(*,*)	"[berrryMethod]: hello from Berry"
-		if( setBasis() /= 0 ) write(*,*)	"[berryMethod]: could not read nGq file"
+		!if( setBasis() /= 0 ) write(*,*)	"[berryMethod]: could not read nGq file"
 
 
 		allocate(			tHopp(					nWfs	, 	nWfs	,	nSc		)			)
