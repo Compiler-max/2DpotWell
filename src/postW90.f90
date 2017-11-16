@@ -276,11 +276,16 @@ module postW90
 			Ucjg				= dconjg(	transpose( U_mat(:,:,ki) )		)
 			do a = 1, 3
 				!conn
-				tmp(:,:)		= matmul(	A_mat(a,:,:,ki) 	, 	U_mat(:,:,ki)	)
-				AaBar(a,:,:)	= matmul(	Ucjg				,	tmp(:,:)		)
+				tmp(:,:)		= matmul(	A_mat(a,:,:,ki) 	, 		Ucjg		)
+				AaBar(a,:,:)	= matmul(	U_mat(:,:,ki)		,	tmp(:,:)		)
 				!HaBar
-				tmp(:,:)		= matmul(	Ha_mat(a,:,:,ki) 	, 	U_mat(:,:,ki)	)
-				HaBar(a,:,:)	= matmul(	Ucjg				,	tmp(:,:)		)
+				tmp(:,:)		= matmul(	Ha_mat(a,:,:,ki) 	, 		Ucjg		)
+				HaBar(a,:,:)	= matmul(	U_mat(:,:,ki)		,	tmp(:,:)		)
+				!OmBar
+				do b = 1, 3
+					tmp(:,:)		= matmul(	Om_tens(a,b,:,:,ki)	,	Ucjg	)		
+					OmBar(a,b,:,:)	= matmul(	U_mat(:,:,ki)				,	tmp(:,:)		)
+				end do
 				!DaH
 				do n = 1, num_wann
 					do m = 1, num_wann
@@ -288,11 +293,7 @@ module postW90
 						if(n==m)	DaH(a,n,m)	= dcmplx(0.0_dp)
 					end do
 				end do
-				!OmBar
-				do b = 1, 3
-					tmp(:,:)		= matmul(	Om_tens(a,b,:,:,ki)	,	U_mat(:,:,ki)	)		
-					OmBar(a,b,:,:)	= matmul(	Ucjg				,	tmp(:,:)		)
-				end do
+				
 			end do
 			!
 			!
