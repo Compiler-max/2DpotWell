@@ -28,8 +28,8 @@
     nSolve      = 10        
     nQx         = 4   
     nQy         = 4
-    nSCx        = 5 
-    nSCy        = 5
+    nSCx        = 4 
+    nSCy        = 4
     nKx         = 4
     nKy         = 4                 
     nRx         = 91   

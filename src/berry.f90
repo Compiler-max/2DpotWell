@@ -49,10 +49,6 @@ module berry
 		integer							::	gi, qi, n
 		!					
 		!
-		write(*,*)	"[berrryMethod]: hello from Berry"
-		!if( setBasis() /= 0 ) write(*,*)	"[berryMethod]: could not read nGq file"
-
-
 		allocate(			tHopp(					nWfs	, 	nWfs	,	nSc		)			)
 		allocate(			rHopp(		2		,	nWfs	, 	nWfs	, 	nSC		)			)			
 		allocate(			EnK(					nWfs	, 				nK		)			)
@@ -71,6 +67,8 @@ module berry
 		else
 			allocate( Uq( nWfs, nWfs, nQ )	)
 			Uq = dcmplx(0.0_dp)
+			num_wann	= nWfs
+			num_kpts	= nQ
 			do qi = 1, nQ
 				do n = 1, nWfs
 					Uq(n,n,qi)	= dcmplx(1.0_dp)

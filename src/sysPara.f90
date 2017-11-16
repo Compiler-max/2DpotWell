@@ -196,18 +196,7 @@ module sysPara
 !end function
 
 
-	integer function getTestGridSize()
-		integer				:: nGrid
-		!
-		nGrid = ceiling( 	dmax1(aX,aY)*Gcut/PI_dp 	+	dsqrt(2.0_dp)		)
-		!
-		!make sure Grid is symmetric (needs to be odd number)
-		if(mod(nGrid,2)==0) nGrid = nGrid + 1 
-		!
-		getTestGridSize = nGrid
-		!
-		return
-	end function
+
 
 
 
@@ -418,8 +407,21 @@ module sysPara
 		return
 	end subroutine
 
+!G SET
+	integer function getTestGridSize()
+		integer				:: nGrid
+		!
+		nGrid = ceiling( 	dmax1(aX,aY)*Gcut/PI_dp 	+	dsqrt(2.0_dp)		)
 
-
+		!nGrid = ceiling(	Gcut * dmin1(aX,aY) / (PI_dp *(2.0_dp + dsqrt(2.0_dp))))
+		!
+		!make sure Grid is symmetric (needs to be odd number)
+		if(mod(nGrid,2)==0) nGrid = nGrid + 1 
+		!
+		getTestGridSize = nGrid
+		!
+		return
+	end function
 
 
 
@@ -469,7 +471,9 @@ module sysPara
 				if( norm2(kg) < Gcut ) then
 					nGq(qi) = nGq(qi) + 1
 					Gvec(:,nGq(qi),qi) = kg(:)
+					if( gi == 1)	write(*,*)	"[popGvec]: warning hit boundary of Gtest grid"
 				end if
+
 			end do
 			!DEBUG INFO
 			if(nGq(qi) > nG) write(*,'(a,i4,a,i6)')	"[popGvec]: warning, somehow counted more basis functions at qi=",qi," limit nG=",nG	
@@ -544,8 +548,8 @@ module sysPara
 		do nJ = 1, nSCy
 			do nI = 1, nSCx
 				n = (nJ-1) * nSCx + nI  !rI	=	(rIy-1) * nRy + rIx
-				Rcell(1,n)	= real((nI-1),dp) * aX -real(nSCx-1,dp) * aX / 2.0_dp
-				Rcell(2,n)	= real((nJ-1),dp) * aY -real(nSCy-1,dp) * aY / 2.0_dp
+				Rcell(1,n)	= real((nI-1),dp) * aX -real(nSCx,dp) * aX / 2.0_dp
+				Rcell(2,n)	= real((nJ-1),dp) * aY -real(nSCy,dp) * aY / 2.0_dp
 				if(abs(Rcell(1,n))< machineP .and. abs(Rcell(2,n))< machineP ) R0 = n
 			end do
 		end do
