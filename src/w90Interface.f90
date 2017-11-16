@@ -46,7 +46,12 @@ module w90Interface
 
 		call w90prepEigVal(En)
 		call w90prepMmat(ck)
-		call w90prepAmat(ck)
+		if( .not. useBloch )	then
+			call w90prepAmat(ck)
+			write(*,*)	"[w90Interf]: projection overlap matrix calculated"
+		else
+			write(*,*)	"[w90Interf]: projection disabled will use bloch phase"
+		end if
 		call writeW90inputPost()
 		write(*,*)	"[w90Interf]: done preparing wannierization input matrices"
 
@@ -88,6 +93,7 @@ module w90Interface
 		write(100,*)	'num_wann  = ',nWfs
 		write(100,*)	'num_bands = ',nBands
 		write(100,*)	'mp_grid   = ', mp_grid(1) , ' ', mp_grid(2), ' ', mp_grid(3)
+		if( useBloch )	write(100,*)	'use_bloch_phases = true '
 		write(100,*)	
 		!
 
@@ -143,7 +149,7 @@ module w90Interface
 		!PROJECTIONS
 		write(100,*)	'Begin Projections'
 		!write(100,*)	'H: l=',0,';l=',1,',mr=',1,';l=',1,',mr=',2
-		write(100,*)	'H: l=0;l=1,mr=1,2'
+		write(100,*)	'H: l=0;l=1,mr=2,3'
 		
 		!write(100,*)	'He: l=0;l=1,mr=1,2'
 		write(100,*)	'End Projections'
@@ -244,6 +250,7 @@ module w90Interface
 		write(100,*)	
 		write(100,*)	'shell_list =',shell
 		write(100,*)	'skip_b1_tests = .true.'
+		if( useBloch )	write(100,*)	'use_bloch_phases = true '
 		write(100,*)	
 		!
 		!real lattice
@@ -274,7 +281,7 @@ module w90Interface
         !
         !PROJECTIONS
 		write(100,*)	'Begin Projections'
-		write(100,*)	'H: l=0;l=1,mr=1,2'	
+		write(100,*)	'H: l=0;l=1,mr=2,3'	
 		write(100,*)	'End Projections'
 		write(100,*)
 		!
