@@ -44,8 +44,10 @@ module postW90
 			write(*,*)	"[effTBmodel]: done reading eff tb matrices"
 			call wannInterp()
 			write(*,*)	"[effTBmodel]: done interpolating to k mesh with nK=",nK
-			!call gaugeTrafo()
-			!write(*,*)	"[effTBmodel]: done gauging back to (H) gauge"
+			if( pw90GaugeB ) then
+				call gaugeTrafo()
+				write(*,*)	"[effTBmodel]: done gauging back to (H) gauge"
+			end if
 			!calc all desired polarizations
 			call polWrapper(pWann, pConn, pNiuF2, pNiuF3, pPei)
 		else
@@ -180,41 +182,6 @@ module postW90
 		!
 		return
 	end function
-
-
-	subroutine polWrapper(pWann, pConn, pNiuF2, pNiuF3, pPei)
-		real(dp),		intent(out)		:: pWann(3), pConn(3), pNiuF2(3), pNiuF3(3), pPei(3)
-		!
-		!
-		!POLARIZATION CALC
-		write(*,*)	"[effTBmodel]: start calculating electric polarization:"
-		write(*,'(a,f6.3,a,f6.3,a,f6.3,a)')	"R_real(:,R_null)= (",&
-												R_real(1,R_null),", ",R_real(2,R_null),", ",R_real(3,R_null),")."
-		!0th order pol
-		pWann	= 0.0_dp
-		call calcPolWannCent( wCent, pWann )
-		write(*,'(a,f10.4,a,f10.4,a,f10.4,a)')	"[effTBmodel]: pWann=(",pWann(1),", ",pWann(2),", ",pWann(3),")."
-		call calcPolViaA(A_mat, pConn)
-		write(*,'(a,f10.5,a,f10.5,a,f10.5,a)')	"[effTBmodel]: pConn=(",pConn(1),", ",pConn(2),", ",pConn(3),")."
-		!1st order pol
-		if( doNiu ) then
-			call calcFirstOrdP(Om_mat,A_mat,v_mat,En_vec,pNiuF2, pNiuF3) !calcFirstOrdP(Fcurv, Aconn, Velo, En, p1F2, p1F3)
-			write(*,'(a,f12.5,a,f12.5,a,f12.5,a)')	"[effTBmodel]: pNiuF2=(",pNiuF2(1),", ",pNiuF2(2),", ",pNiuF2(3),")."
-			write(*,'(a,f12.5,a,f12.5,a,f12.5,a)')	"[effTBmodel]: pNiuF3=(",pNiuF3(1),", ",pNiuF3(2),", ",pNiuF3(3),")."
-		end if
-		!1st order peierls
-		if(	doPei ) then
-			!todo
-			pPei	= 0.0_dp
-			write(*,'(a,f10.5,a,f10.5,a,f10.5,a)')	"[effTBmodel]: pPei=(",pPei(1),", ",pPei(2),", ",pPei(3),")."
-		end if
-		!
-		!
-		return
-	end subroutine
-
-
-
 
 
 	subroutine wannInterp()
@@ -354,6 +321,38 @@ module postW90
 	end subroutine
 
 
+	subroutine polWrapper(pWann, pConn, pNiuF2, pNiuF3, pPei)
+		real(dp),		intent(out)		:: pWann(3), pConn(3), pNiuF2(3), pNiuF3(3), pPei(3)
+		!
+		!
+		!POLARIZATION CALC
+		write(*,*)	"[effTBmodel]: start calculating electric polarization:"
+		write(*,'(a,f6.3,a,f6.3,a,f6.3,a)')	"R_real(:,R_null)= (",&
+												R_real(1,R_null),", ",R_real(2,R_null),", ",R_real(3,R_null),")."
+		!0th order pol
+		pWann	= 0.0_dp
+		call calcPolWannCent( wCent, pWann )
+		write(*,'(a,f10.4,a,f10.4,a,f10.4,a)')	"[effTBmodel]: pWann=(",pWann(1),", ",pWann(2),", ",pWann(3),")."
+		call calcPolViaA(A_mat, pConn)
+		write(*,'(a,f10.5,a,f10.5,a,f10.5,a)')	"[effTBmodel]: pConn=(",pConn(1),", ",pConn(2),", ",pConn(3),")."
+		!1st order pol
+		if( doNiu ) then
+			call calcFirstOrdP(Om_mat,A_mat,v_mat,En_vec,pNiuF2, pNiuF3) !calcFirstOrdP(Fcurv, Aconn, Velo, En, p1F2, p1F3)
+			write(*,'(a,f12.5,a,f12.5,a,f12.5,a)')	"[effTBmodel]: pNiuF2=(",pNiuF2(1),", ",pNiuF2(2),", ",pNiuF2(3),")."
+			write(*,'(a,f12.5,a,f12.5,a,f12.5,a)')	"[effTBmodel]: pNiuF3=(",pNiuF3(1),", ",pNiuF3(2),", ",pNiuF3(3),")."
+		end if
+		!1st order peierls
+		if(	doPei ) then
+			!todo
+			pPei	= 0.0_dp
+			write(*,'(a,f10.5,a,f10.5,a,f10.5,a)')	"[effTBmodel]: pPei=(",pPei(1),", ",pPei(2),", ",pPei(3),")."
+		end if
+		!
+		!
+		return
+	end subroutine
+
+
 	subroutine writePw90pol( pWann, pConn, pNiuF2, pNiuF3, pPei)
 		real(dp),		intent(in)		::	pWann(3), pConn(3), pNiuF2(3), pNiuF3(3), pPei(3)
 		real(dp)						:: 	pNiu(3)
@@ -419,117 +418,6 @@ module postW90
 	end subroutine
 
 
-
-	!subroutine readTB()
-	!	!deprecated
-	!	integer					:: stat, dumI(3), line15(15), n, m, cnt, offset, i, R, mn(2)
-	!	real(dp)				:: real2(2), real6(6)
-	!	!
-	!	!READ H(R) data
-	!	open(unit=310,iostat=stat, file=seed_name//'_hr.dat', status='old',action='read')
-	!	if( stat /= 0)	write(*,*)	"[readTB]: warning did not file _hr.dat file"
-	!	read(310,*)
-	!	read(310,*) num_wann
-	!	read(310,*)	nrpts
-	!	if(nrpts /=  num_kpts	)	write(*,*)	"[readTB]: warning number of unit cells does not match amount of k points"
-	!	!
-	!	allocate( 	wigStzDegn(									nrpts	)		)
-	!	allocate(	R_vect(			3,							nrpts	)		)
-	!	allocate(	R_real(			3,							nrpts	)		)
-	!	allocate(	H_tb(				num_wann,	num_wann, 	nrpts	)		)
-	!	allocate(	r_tb(			3,	num_wann,	num_wann,	nrpts	)		)
-	!	allocate(	wCent(			3,		num_wann					)		)
-	!	!
-	!	!read degeneracy of each wigner seitz grid point
-	!	cnt 	= 0
-	!	offset 	= 0
-	!	if(	nrpts <= 15 ) then
-	!		read(310,*) wigStzDegn
-	!	else
-	!		do while ( cnt < nrpts )		!read 15 entries per line till nrpts real2ues are read 
-	!			if( nrpts - cnt >= 15	) then
-	!				read(310,*)		line15
-	!				cnt	= cnt + 15
-	!				do i = 1 , 15
-	!					if(offset+i <= size(wigStzDegn))	wigStzDegn(offset+i)	= line15(i) 
-	!				end do
-	!				offset=	offset + 15
-	!			else
-	!				read(310,*)	wigStzDegn( (offset+1):(offset+(nrpts-cnt)) )
-	!				cnt = cnt + (nrpts-cnt)
-	!				offset = offset + (nrpts-cnt)
-	!			end if
-	!		end do
-	!	end if
-	!	!read matrix elements
-	!	do R = 1, nrpts
-	!		do n = 1, num_wann
-	!			do m = 1, num_wann
-	!				read(310,*)	dumI(1:3), mn(1:2), real2(1:2)
-	!				!get matrix element
-	!				H_tb(mn(1),mn(2),R)	= dcmplx(real2(1)) + i_dp * dcmplx(real2(2))
-	!				!get R vector( make sure input file has R vectors as major order)
-	!				if( n == 1 .and. m==1 ) then
-	!					R_vect(1:3,R)	= dumI(1:3)
-	!					if( R_vect(1,R)==0 .and. R_vect(2,R)==0 .and. R_vect(3,R)==0 ) R_null = R
-	!				else	
-	!					if( R_vect(1,R)	/= dumI(1) .or. R_vect(2,R)	/= dumI(2) .or. R_vect(3,R)	/= dumI(3)  ) then 
-	!						write(*,*)	"[readTB]: warning R vect. order not given (read _hr.dat)"
-	!					end if
-	!				end if
-	!			end do
-	!		end do
-	!	end do
-	!	close(310)
-	!	!
-	!	!CONVERT UNITS TO A.U.
-	!	H_tb	= H_tb /	aUtoEv 
-!
-!	!
-!
-!	!	!READ R MATRIX 
-!	!	open(unit=320,iostat=stat, file=seed_name//'_r.dat', status='old',action='read')
-!	!	read(320,*)
-!	!	read(320,*)	dumI(3)
-!	!	if( num_wann /= dumI(3)	) write(*,*)	"[readTB]: warning _r.dat has wrong number of wannier functions"
-!	!	do R = 1 , nrpts
-!	!		do n = 1, nWfs
-!	!			do m = 1, nWfs
-!	!				read(320,*)	dumI(1:3), mn(1:2), real6(1:6)
-!	!				!get matrix element
-!	!				r_tb(1,mn(1),mn(2),R)	= dcmplx(real6(1)) + i_dp * dcmplx(real6(2))
-!	!				r_tb(2,mn(1),mn(2),R)	= dcmplx(real6(3)) + i_dp * dcmplx(real6(4))
-!	!				r_tb(3,mn(1),mn(2),R)	= dcmplx(real6(5)) + i_dp * dcmplx(real6(6))
-!	!				! todo read in all 3 components of r_tb!!!!!!
-!
-!	!				!test if R vector ordering is given
-!	!				if( R_vect(1,R)	/= dumI(1) .or. R_vect(2,R)	/= dumI(2) .or. R_vect(3,R)	/= dumI(3)  ) then 
-!	!					write(*,*)	"[readTB]: warning R vect. order not given (read _r.dat)"
-!	!				end if
-!
-!	!			end do
-!	!		end do
-!	!	end do
-!
-!	!	!CONVERT UNITS TO ATOMIC UNITS 
-!	!	!r_tb	= r_tb / aUtoAngstrm
-!
-!	!	!get centers
-!	!	do n = 1, num_wann
-!	!		wCent(1:3,n)	= r_tb(1:3,n,n,R_null)
-!	!	end do
-!	!	
-!
-!	!	!calculate real R vector
-!	!	do R = 1 , nrpts
-!	!		R_real(1,R)	= R_vect(1,R)	* aX
-!	!		R_real(2,R)	= R_vect(2,R)	* aY
-!	!		R_real(3,R)	= R_vect(3,R)	* 0
-!	!	end do
-!
-!	!
-!	!	return
-	!end subroutine
 
 
 
