@@ -100,9 +100,9 @@ module potWellModel
 	!POPULATION OF H MATRIX
 	subroutine populateH(qi, Hmat)
 		!populates the Hamiltonian matrix by adding 
-		!	1. qinetic energy terms
-		!	2. potential terms
-		!and checks if the resulting matrix is still hermitian( for debugging)
+		!	1. kinetic energy terms (onSite)
+		!	2. potential terms V(qi,i,j)
+		!and checks if the resulting matrix is hermitian( for debugging)
 		integer,		intent(in)	:: qi
 		complex(dp), intent(inout) 	:: Hmat(:,:)
 		complex(dp)					:: onSite
@@ -110,11 +110,6 @@ module potWellModel
 		!init to zero
 		Hmat = dcmplx(0.0_dp) 
 		!
-		!GET CUTOFF
-
-	
-
-		!!!$OMP PARALLEL DO SCHEDULE(DYNAMIC,nG/8) DEFAULT(SHARED) FIRSTPRIVATE(q) PRIVATE(j, i, kgi, kgj, onSite)
 		do j = 1, nGq(qi)
 			do i = 1, nGq(qi)
 					if(i == j )	then	
@@ -126,8 +121,6 @@ module potWellModel
 				!end if
 			end do
 		end do
-		!!!$OMP END PARALLEL DO
-
 		!
 		if(debugHam) then
 			if ( .not.	isHermitian(Hmat)	) then

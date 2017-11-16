@@ -24,7 +24,7 @@
     Bext        = 0.0 0.0 1.0  
 
 [numerics]
-    Gcut        = 18.0
+    Gcut        = 2.0
     nSolve      = 10        
     nQx         = 4   
     nQy         = 4
@@ -62,7 +62,7 @@
   
 
 [debug]
-    debugHam    = f
+    debugHam    = t
     debugProj   = f
     debugWann   = f
 
