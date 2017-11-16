@@ -31,7 +31,7 @@ module effTB
 		tHopp	= dcmplx(0.0_dp)
 		do R = 1, nSC
 			do qi = 1, nQ
-				phase			= myExp( -1.0_dp * dot_product(qpts(:,qi),Rcell(:,R))		)  / dsqrt(real(nQ,dp) )
+				phase			= myExp( -1.0_dp * dot_product(qpts(:,qi),Rcell(:,R))		)  / dsqrt(real(nSC,dp) )
 				!
 				!RHOPP
 				rHopp(1,:,:,R)	= rHopp(1,:,:,R) 	+ phase * AconnQ(1,:,:,qi) 

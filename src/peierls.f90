@@ -1,7 +1,6 @@
 module peierls
 	use mathematics,	only:	dp, PI_dp, i_dp, myExp, crossP, nIntegrate, eigSolver, isUnit
 	use sysPara
-	use projection,		only:	projectUnk
 	use effTB,			only:	calcConnOnCoarse
 	use wannInterp,		only:	DoWannInterpol
 	use	polarization,	only:	calcPolViaA

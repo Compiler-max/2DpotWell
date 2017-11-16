@@ -45,7 +45,7 @@
 [pw90]
     seedName    = 'wf1'
     shell       = 2
-    nw90it      = 300
+    nw90it      = 1000
 
 [berry]
     doVeloNUM   = f
@@ -53,8 +53,6 @@
     doPei       = t
     doWanni     = t
     doGaugBack  = f
-    doProj      = t
-    doProjNUM   = f
 
 [semiclassics]
     prefactF3   = 1.0

@@ -58,7 +58,7 @@ module wannInterp
 		write(*,*)	"[DoGaugeTrafo]: calculated (H) gauge energy, connection, curvature, velocity"
 		!
 		if( writeBin )	call writeEnH(EnH)
-		call writeVeloH(veloH)
+		if( writeBin )	call writeVeloH(veloH)
 		!
 		return
 	end subroutine
