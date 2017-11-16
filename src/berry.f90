@@ -192,26 +192,30 @@ module berry
 	subroutine	readHam(ck, En)
 		complex(dp),	intent(out)		:: ck(:,:,:)
 		real(dp),		intent(out)		:: En(:,:)
-		real(dp),		allocatable		:: buffer(:,:,:), eBuff(:,:)
+		real(dp),		allocatable		:: buffer(:,:), eBuff(:,:)
+		integer							:: qi
 		!
-		allocate(	buffer( size(ck,1), size(ck,2), size(ck,3) )		)
-		allocate(	eBuff(nG,nQ)										)
+		allocate(	buffer( size(ck,1), size(ck,2) 	)		)
+		allocate(	eBuff(size(En,1), size(En,2)	)		)
 		!
 		!
 		!
 		!UNK REAL PART
-		buffer	= 0.0_dp
 		open(unit=700, file="./rawData/ckR.dat",form='unformatted',access='stream',action='read')
+		do qi = 1 , size(ck,3)
 			read(700) buffer
+			ck(:,:,qi)	= dcmplx(buffer)
+		end do
 		close(700)
-		ck	= buffer
 		!
 		!UNK IMAG PART
 		buffer	= 0.0_dp
 		open(unit=710, file="./rawData/ckI.dat",form='unformatted',access='stream',action='read')
+		do qi = 1 , size(ck,3)
 			read(710) buffer
+			ck(:,:,qi)	= ck(:,:,qi) + i_dp * dcmplx(buffer)
+		end do
 		close(710)
-		ck	= ck + i_dp * buffer
 		!
 		!BAND ENERGIES
 		open(unit=720, file="./rawData/bandStruct.dat",form='unformatted',access='stream',action='read')
