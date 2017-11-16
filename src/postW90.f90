@@ -304,6 +304,7 @@ module postW90
 			do n = 1, num_wann
 				do m = 1, num_wann
 					v_mat(1:3,n,m,ki)	= HaBar(1:3,n,m) - i_dp * ( En_vec(m,ki) - En_vec(n,ki) ) * AaBar(1:3,n,m)
+					
 				end do 
 			end do
 			!curv
