@@ -63,7 +63,7 @@ module berry
 		!read in U matrix (yields nQ, nWfs) 
 		if( useRot )  then
 			call readUmatrix()
-			write(*,*)	"[berryMethod]: wrote U matrix "
+			write(*,*)	"[berryMethod]: read U matrix "
 		else
 			allocate( Uq( nWfs, nWfs, nQ )	)
 			Uq = dcmplx(0.0_dp)
