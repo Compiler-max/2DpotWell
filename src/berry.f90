@@ -53,8 +53,6 @@ module berry
 		write(*,*)	"[berrryMethod]: hello from Berry"
 		if( setBasis() /= 0 ) write(*,*)	"[berryMethod]: could not read nGq file"
 
-		
-		write(*,*)	"[berrryMethod]: wrote the U matrix from file"
 
 		allocate(			tHopp(					nWfs	, 	nWfs	,	nSc		)			)
 		allocate(			rHopp(		2		,	nWfs	, 	nWfs	, 	nSC		)			)			
@@ -70,6 +68,7 @@ module berry
 		!read in U matrix (yields nQ, nWfs) 
 		if( useRot )  then
 			call readUmatrix()
+			write(*,*)	"[berryMethod]: wrote U matrix "
 		else
 			allocate( Uq( nWfs, nWfs, nQ )	)
 			Uq = dcmplx(0.0_dp)
@@ -78,6 +77,7 @@ module berry
 					Uq(n,n,qi)	= dcmplx(1.0_dp)
 				end do
 			end do
+			write(*,*)	"[berryMethod]: U matrix set as Identity"
 		end if
 
 		!read in ck, En

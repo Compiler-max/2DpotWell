@@ -39,7 +39,7 @@
 [methods]
     doSolveHam  = t
     doPw90      = f
-    doBerry     = f
+    doBerry     = t
     writeBin    = f
 
 [pw90]
