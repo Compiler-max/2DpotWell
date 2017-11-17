@@ -270,6 +270,8 @@ module output
 
 		open(unit=800,file='velocities.txt',action='write')
 		write(800,*)"*******************analytic velocities******************************"
+		write(800,*)"nQ  = ",size(velo,4)
+		write(800,*)"nWfs= ",size(velo,2)
 		do qi = 1, size(velo,4)
 			write(800,*)"*"
 			write(800,*)"*"
@@ -307,6 +309,8 @@ module output
 
 		open(unit=800,file='veloTB.txt',action='write')
 		write(800,*)"*******************eff TB velocities******************************"
+		write(800,*)"nQ  = ",size(velo,4)
+		write(800,*)"nWfs= ",size(velo,2)
 		do qi = 1, size(velo,4)
 			write(800,*)"*"
 			write(800,*)"*"
