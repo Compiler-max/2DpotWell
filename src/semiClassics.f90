@@ -24,13 +24,12 @@ module semiClassics
 !public
 
 
-	subroutine	calcFirstOrdP(Fcurv, Aconn, Velo, En, p1F2, p1F3)
+	subroutine	calcFirstOrdP(Fcurv, Aconn, Velo, En, pF2, pF3)
 		!calculates the first order polarization p1 according to
 		!	P'= -int_dk [0.5 (Curv.Velo)*B_ext + a']
 		complex(dp),	intent(in)		::	Fcurv(:,:,:,:), Aconn(:,:,:,:), Velo(:,:,:,:)	!Fcurv(3,nWfs, nQ)
 		real(dp),		intent(in)		::	En(:,:)				!	En(			nWfs, nQ)						
-		real(dp),		intent(out)		:: 	p1F2(3), p1F3(3)
-		complex(dp), 	allocatable		::	fF2(:,:), fF3(:,:)
+		real(dp),		intent(out)		:: 	pF2(3), pF3(3)
 		complex(dp)						::	pnF2(3), pnF3(3)
 		complex(dp)						:: 	F2(3,3), F3(3,3)
 		real(dp)						:: 	densCorr(3)
@@ -38,8 +37,6 @@ module semiClassics
 		!
 		nSize	= size(Velo,3)
 		kSize	= size(Velo,4)
-		allocate(	fF2(3,kSize )		)
-		allocate(	fF3(3,ksize	)		)
 		!
 		!
 		if(		kSize /= size(En,2)		) then
@@ -48,12 +45,12 @@ module semiClassics
 		!
 		!
 		write(*,*)"[calcFirstOrdP]: start calculating P' via semiclassic approach"
-		p1F2 = 0.0_dp
-		p1F3 = 0.0_dp
+		pF2 = 0.0_dp
+		pF3 = 0.0_dp
 		do n = 1, nSize
-			fF2	= dcmplx(0.0_dp)
-			fF3	= dcmplx(0.0_dp)
-			!FILL INTEGRATION ARRAY
+			pnF2	= dcmplx(0.0_dp)
+			pnF3	= dcmplx(0.0_dp)
+			!
 			do ki = 1, kSize
 				!PHASE SPACE DENSITY CORRECTION
 				densCorr	= 0.5_dp * dot_product(		dreal(Fcurv(:,n,n,ki)), dreal(Aconn(:,n,n,ki) )	)		* Bext
@@ -66,18 +63,11 @@ module semiClassics
 				F3	= dcmplx(0.0_dp)
 				call addF2(n,ki,Velo,En, F2)
 				call addF3(n,ki,Velo,En, F3)
-
-				
-				fF2(:,ki)	= fF2(:,ki) + matmul(F2, Bext) 
-				fF3(:,ki)	= fF3(:,ki) + matmul(F3, Bext)
+				!Integrate
+				pnF2		= pnF2		+ matmul(F2, Bext) / dcmplx(kSize)
+				pnF3		= pnF3		+ matmul(F3, Bext) / dcmplx(kSize)
 			end do
-			!INTEGRATE over k-space
-			pnF2	= dcmplx(0.0_dp)
-			pnF3	= dcmplx(0.0_dp)
-			do ki = 1, kSize
-				pnF2	= pnF2 + fF2(:,ki)  / dcmplx(kSize)
-				pnF3	= pnF3 + fF3(:,ki)	/ dcmplx(kSize)
-			end do
+		
 			!!!SINGLE ATOM
 			!if( nAt == 1 ) then
 			!	pnF2(:)	= pnF2(:) - atPos(:,1)		!calc center w.r.t. atom center
@@ -98,8 +88,8 @@ module semiClassics
 			write(*,'(a,i5,a,f12.4,a,f12.4,a,f12.4,a)')	"[calcFirstOrdP]: pNiuF3(n=", n,") =(" ,dreal(pnF3(1)),&
 																		", ",dreal(pnF3(2)),", ", dreal(pnF3(3)),")."
 			!SUM OVER n
-			p1F2 = p1F2 + dreal(pnF2)
-			p1F3 = p1F3 + dreal(pnF3)
+			pF2 = pF2 + dreal(pnF2)
+			pF3 = pF3 + dreal(pnF3)
 			!DEBUG
 			if( norm2(dimag(pnF2)) > acc	) write(*,*)"[calcFirstOrdP]: F2 found complex pol. contribution from band n=",n 
 			if( norm2(dimag(pnF3)) > acc	) write(*,*)"[calcFirstOrdP]: F3 found complex pol. contribution from band n=",n 
