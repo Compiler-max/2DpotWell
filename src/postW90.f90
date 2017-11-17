@@ -283,7 +283,7 @@ module postW90
 			do m = 1, num_wann
 				do n = 1, num_wann
 					if( n==m )	v_mat(1:3,n,n,ki) = Ha_mat(1:3,n,n,ki)
-					if( n/=m )	v_mat(1:3,n,m,ki) = - i_dp * dcmplx( En_vec(m,ki) - En_vec(n,ki) ) * A_mat(1:3,n,m,ki) 
+					if( n/=m )	v_mat(1:3,n,m,ki) = Ha_mat(1:3,n,m,ki)- i_dp * dcmplx( En_vec(m,ki) - En_vec(n,ki) ) * A_mat(1:3,n,m,ki) 
 					!v_mat(1:3,n,m,ki)	=  Ha_mat(1:3,n,m,ki)	- i_dp * dcmplx( En_vec(m,ki) - En_vec(n,ki) ) * A_mat(1:3,n,m,ki) 
 				end do
 			end do
