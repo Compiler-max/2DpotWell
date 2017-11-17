@@ -260,33 +260,33 @@ module postW90
 		do ki = 1, nK
 			!GAUGE BACK
 
-			Ucjg			= dconjg(	transpose(U_mat(:,:,ki))	)
-			!
-			do i = 1, 3
-				!ROTATE TO HAM GAUGE
-				Hbar(i,:,:)	= matmul(	Ha_mat(i,:,:,ki)	, U_mat(:,:,ki)		)	
-				Hbar(i,:,:)	= matmul(	Ucjg				, Hbar(i,:,:)		)	
-				!
-				Abar(i,:,:)	= matmul(	A_mat(i,:,:,ki)	, U_mat(:,:,ki)		)	
-				Abar(i,:,:)	= matmul(	Ucjg				, Abar(i,:,:)		)
-				!APPLY ROTATION
-				do m = 1, num_wann
-					do n = 1, num_wann
-						if( n==m )	v_mat(i,n,n,ki) = Hbar(i,n,n)
-						if( n/=m )	v_mat(i,n,m,ki) = - i_dp * dcmplx( En_vec(m,ki) - En_vec(n,ki) ) * Abar(i,n,m) 
-						!v_mat(1:3,n,m,ki)	=  Ha_mat(1:3,n,m,ki)	- i_dp * dcmplx( En_vec(m,ki) - En_vec(n,ki) ) * A_mat(1:3,n,m,ki) 
-					end do
-				end do
-			end do	
+			!Ucjg			= dconjg(	transpose(U_mat(:,:,ki))	)
+			!!
+			!do i = 1, 3
+			!	!ROTATE TO HAM GAUGE
+			!	Hbar(i,:,:)	= matmul(	Ha_mat(i,:,:,ki)	, U_mat(:,:,ki)		)	
+			!	Hbar(i,:,:)	= matmul(	Ucjg				, Hbar(i,:,:)		)	
+			!	!
+			!	Abar(i,:,:)	= matmul(	A_mat(i,:,:,ki)	, U_mat(:,:,ki)		)	
+			!	Abar(i,:,:)	= matmul(	Ucjg				, Abar(i,:,:)		)
+			!	!APPLY ROTATION
+			!	do m = 1, num_wann
+			!		do n = 1, num_wann
+			!			if( n==m )	v_mat(i,n,n,ki) = Hbar(i,n,n)
+			!			if( n/=m )	v_mat(i,n,m,ki) = - i_dp * dcmplx( En_vec(m,ki) - En_vec(n,ki) ) * Abar(i,n,m) 
+			!			!v_mat(1:3,n,m,ki)	=  Ha_mat(1:3,n,m,ki)	- i_dp * dcmplx( En_vec(m,ki) - En_vec(n,ki) ) * A_mat(1:3,n,m,ki) 
+			!		end do
+			!	end do
+			!end do	
 			
 			!NO GAUGE BACK
-			!do m = 1, num_wann
-			!	do n = 1, num_wann
-			!		if( n==m )	v_mat(1:3,n,n,ki) = Ha_mat(1:3,n,n,ki)
-			!		if( n/=m )	v_mat(1:3,n,m,ki) = - i_dp * dcmplx( En_vec(m,ki) - En_vec(n,ki) ) * A_mat(1:3,n,m,ki) 
-			!		!v_mat(1:3,n,m,ki)	=  Ha_mat(1:3,n,m,ki)	- i_dp * dcmplx( En_vec(m,ki) - En_vec(n,ki) ) * A_mat(1:3,n,m,ki) 
-			!	end do
-			!end do
+			do m = 1, num_wann
+				do n = 1, num_wann
+					if( n==m )	v_mat(1:3,n,n,ki) = Ha_mat(1:3,n,n,ki)
+					if( n/=m )	v_mat(1:3,n,m,ki) = - i_dp * dcmplx( En_vec(m,ki) - En_vec(n,ki) ) * A_mat(1:3,n,m,ki) 
+					!v_mat(1:3,n,m,ki)	=  Ha_mat(1:3,n,m,ki)	- i_dp * dcmplx( En_vec(m,ki) - En_vec(n,ki) ) * A_mat(1:3,n,m,ki) 
+				end do
+			end do
 		end do
 		!
 		return

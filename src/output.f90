@@ -269,7 +269,7 @@ module output
 		integer		qi, n, m
 
 		open(unit=800,file='velocities.txt',action='write')
-		write(800,*)"*******************velocities******************************"
+		write(800,*)"*******************analytic velocities******************************"
 		do qi = 1, size(velo,4)
 			write(800,*)"*"
 			write(800,*)"*"
@@ -306,7 +306,7 @@ module output
 		integer		qi, n, m
 
 		open(unit=800,file='veloTB.txt',action='write')
-		write(800,*)"*******************velocities******************************"
+		write(800,*)"*******************eff TB velocities******************************"
 		do qi = 1, size(velo,4)
 			write(800,*)"*"
 			write(800,*)"*"
