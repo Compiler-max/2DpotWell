@@ -44,7 +44,7 @@ module peierls
 		!
 		!DO PEIERLS SUBSTITUTION
 		do R = 1, nSC
-			shft			= shift(R0,R)
+			shft			= shift(R)
 			tshift(:,:,R)	= tHopp(:,:,R) * shft
 			write(*,'(a,i3,a,f10.4)')	"[peierlsMethod]: R=",R," shift=",shft
 		end do
@@ -112,21 +112,28 @@ module peierls
 
 
 !privat:
-	real(dp) function shift(ri, rj)
+	real(dp) function shift(rj)
 		!integrates the vector potential A(r) analytically
 		!	A(r)	= -0.5 cross_p[r,B]
 		!	return 	= Integrate^\vec{rMax]_\vec{rMin} 		\vec{A(r')}.\vec{dr'}
 		!			= -0.5 cross_p[rMin,B].(rMax - rMin)
-		integer,		intent(in)		:: ri, rj
+		integer,		intent(in)		:: rj
 		real(dp)						:: rMin(2), rMax(2), rU(3), rL(3), integrateA
-		rMin(:)		= Rcell(:,ri)
+		rMin(:)		= 0.0_dp
 		rMax(:)		= Rcell(:,rj)
+		!
 		rU(1:2)		= rMax(1:2)
 		rU(3)		= 0.0_dp
 		rL(1:2)		= rMin(1:2)
 		rL(3)		= 0.0_dp
 		!
-		integrateA	= -0.5_dp * dot_product( crossP(rL,Bext)	, (rU-rL)	)
+		!old (symmetric gauge - A_vec =  -0.5 * crossp(R_vec,B_vec)		)
+		!integrateA	= -0.5_dp * dot_product( crossP(rL,Bext)	, (rU-rL)	)
+		!
+		!new (Landau Gauge - A_vec = y_hat * abs(B) R_vec(1)	)
+		integrateA  = 0.5_dp * Bext(3) * Rcell(1,rj) * Rcell(2,rj) 
+		!
+		!
 		shift		= myExp( integrateA )
 		!
 		return
