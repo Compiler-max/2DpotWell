@@ -36,6 +36,8 @@ program main
 	call readInp()
 	!
 	!
+	write(*,*)"*"
+	write(*,*)"*"
 	write(*,*)"[main]:**************************Infos about this run*************************"
 	write(*,*)"[main]: electronic structure mesh nQ=",nQ
 	write(*,*)"[main]: interpolation mesh        nK=",nK
@@ -45,6 +47,10 @@ program main
     write(*,*)"[main]: nBands=", nBands
 	write(*,*)"[main]: nWfs  =", nWfs
 	write(*,*)"[main]: w90 seed_name= ", seedName	
+	write(*,*)"*"
+	write(*,*)"*"
+	write(*,*)"*"
+	write(*,*)"*"
 	!
 	call cpu_time(T1)
 	aT = T1 - T0
@@ -57,10 +63,6 @@ program main
 		call cpu_time(T0)	
 		allocate(	En(						nBands	, 	nQ		)	)
 		allocate(	ck(			nG		,	nBands  	,	nQ	)	)
-		write(*,*)"*"
-		write(*,*)"*"
-		write(*,*)"*"
-		write(*,*)"*"
 		write(*,*)"[main]:**************************ELECTRONIC STRUCTURE PART*************************"
 		write(*,*)	"[main]: start electronic structure calculation now"
 		call solveHam(ck, En)
@@ -76,6 +78,10 @@ program main
 		write(*,*)"[main]:**************************WANNIER90 SETUP*************************"
 		call w90Interf(ck,En)
 		write(*,*)"[main]: done setting up wannier. please execute wannier90 now"
+		write(*,*)"*"
+		write(*,*)"*"
+		write(*,*)"*"
+		write(*,*)"*"
 		call cpu_time(T1)
 		wT = T1-T0
 	end if
@@ -87,16 +93,18 @@ program main
 	call cpu_time(T0)
 	write(*,*)"[main]:**************************POST WANNIER90 *************************"
 	if(	doPw90 ) then
-		write(*,*)"*"
-		write(*,*)"*"
-		write(*,*)"*"
-		write(*,*)"*"
+		
 		write(*,*)	"[main]: start with eff TB model calculations"
 		call effTBmodel()
 		write(*,*)	"[main]: done with effective tight binding calculations"
 	else
 		write(*,*)	"[main]: effective TB model disabled"
 	end if
+	!
+	write(*,*)"*"
+	write(*,*)"*"
+	write(*,*)"*"
+	write(*,*)"*"
 	call cpu_time(T1)
 	pwT	= T1-T0
 
@@ -105,15 +113,16 @@ program main
 	call cpu_time(T0)
 	write(*,*)"[main]:**************************WAVEFUNCTION METHOD*************************"
 	if ( doBerry ) then
-		write(*,*)"*"
-		write(*,*)"*"
-		write(*,*)"*"
-		write(*,*)"*"
 		call berryMethod()
 		write(*,*)"[main]: done with wavefunction method "
 	else
 		write(*,*)"[main]: berry method disabled"
 	end if
+	!
+	write(*,*)"*"
+	write(*,*)"*"
+	write(*,*)"*"
+	write(*,*)"*"
 	call cpu_time(T1)
 	bT	= T1 - T0
 
@@ -122,10 +131,6 @@ program main
 
 
 	!OUTPUT
-	write(*,*)"*"
-	write(*,*)"*"
-	write(*,*)"*"
-	write(*,*)"*"
 	write(*,*)"[main]:**************************WRITE OUTPUT*************************"
 	call cpu_time(T0)
 	!
@@ -137,30 +142,34 @@ program main
 		write(*,*)"[main]: ...wrote binary files for meshes and unks"
 	end if
 	!
+	write(*,*)"*"
+	write(*,*)"*"
+	write(*,*)"*"
+	write(*,*)"*"
 	call cpu_time(T1)
 	oT = T1 - T0
 	
 	
 	!WARNINGS IF GCUT IS TO HIGH
-	write(*,*)"*"
-	write(*,*)"*"
-	write(*,*)"*"
-	write(*,*)"*"
 	write(*,*)"[main]:**************************BASIS SET DEBUG*************************"
 	call printBasisInfo()
 	write(*,*)"[main]: ...wrote basis set debug info"
+	write(*,*)"*"
+	write(*,*)"*"
+	write(*,*)"*"
+	write(*,*)"*"
 
 
 	
 	!TIMING INFO SECTION
 	call cpu_time(mastT1)
 	mastT= mastT1-mastT0
-	write(*,*)"*"
-	write(*,*)"*"
-	write(*,*)"*"
-	write(*,*)"*"
 	write(*,*) '**************TIMING INFORMATION************************'
 	call printTiming(aT,kT,wT,pwT,bT,oT,mastT)
+	write(*,*)"*"
+	write(*,*)"*"
+	write(*,*)"*"
+	write(*,*)"*"
 	write(*,*)	"[main]: all done, exit"
 	!
 	!
