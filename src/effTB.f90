@@ -75,7 +75,7 @@ module effTB
 			do n = 1, nWfs
 				Ediag(n,n)	= EnQ(n,qi)
 			end do
-			tmp				= matmul(	Ediag	, 	Udag		)
+			tmp				= matmul(	Ediag	, 	Udag	)
 			Htmp(:,:,qi)	= matmul( 	U		, 	tmp		)
 			!
 			if( .not. isHermitian(Htmp(:,:,qi)) ) 	then

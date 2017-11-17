@@ -56,7 +56,7 @@ module semiClassics
 				densCorr	= 0.5_dp * dot_product(		dreal(Fcurv(:,n,n,ki)), dreal(Aconn(:,n,n,ki) )	)		* Bext
 				!f(:,ki)		= f(:,ki) + densCorr
 				if( norm2(densCorr) > acc ) then
-					write(*,*)	"[calcFirstOrdP]: warning the densCorr is none zero, norm2(densCorr)",norm2(densCorr)
+					write(*,*)	"[calcFirstOrdP]: warning the densCorr is none zero, norm2(densCorr)=",norm2(densCorr)
 				end if
 				!POSITIONAL SHIFT
 				F2	= dcmplx(0.0_dp)
