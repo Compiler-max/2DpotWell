@@ -277,22 +277,22 @@ module output
 			!x component
 			do m = 1, size(velo,3)
 				do n = 1, size(velo,2)
-					write(800,'(a,i3,a,i3,a,f8.4,a,f8.4)')  "n=",n," m=",m,&
-										" v_x=",dreal(velo(1,n,m,qi)),"+i*",dimag(velo(1,n,m,qi))
+					write(800,'(a,i3,a,i3,a,f8.4,a,f8.4,a,f8.4)')  "n=",n," m=",m,&
+										" v_x=",dreal(velo(1,n,m,qi)),"+i*",dimag(velo(1,n,m,qi)),"; abs=",cdabs(velo(1,n,m,qi))
 				end do
 			end do
 			!y component
 			do m = 1, size(velo,3)
 				do n = 1, size(velo,2)
-					write(800,'(a,i3,a,i3,a,f8.4,a,f8.4)')  "n=",n," m=",m,&
-										" v_y=",dreal(velo(2,n,m,qi)),"+i*",dimag(velo(2,n,m,qi))
+					write(800,'(a,i3,a,i3,a,f8.4,a,f8.4,a,f8.4)')  "n=",n," m=",m,&
+										" v_y=",dreal(velo(2,n,m,qi)),"+i*",dimag(velo(2,n,m,qi)),"; abs=",cdabs(velo(2,n,m,qi))
 				end do
 			end do
 			!z component
 			do m = 1, size(velo,3)
 				do n = 1, size(velo,2)
-					write(800,'(a,i3,a,i3,a,f8.4,a,f8.4)')  "n=",n," m=",m,&
-										" v_z=",dreal(velo(3,n,m,qi)),"+i*",dimag(velo(3,n,m,qi))
+					write(800,'(a,i3,a,i3,a,f8.4,a,f8.4,a,f8.4)')  "n=",n," m=",m,&
+										" v_z=",dreal(velo(3,n,m,qi)),"+i*",dimag(velo(3,n,m,qi)),"; abs=",cdabs(velo(1,n,m,qi))
 				end do
 			end do
 		end do
@@ -314,22 +314,22 @@ module output
 			!x component
 			do m = 1, size(velo,3)
 				do n = 1, size(velo,2)
-					write(800,'(a,i3,a,i3,a,f8.4,a,f8.4)')  "n=",n," m=",m,&
-										" v_x=",dreal(velo(1,n,m,qi)),"+i*",dimag(velo(1,n,m,qi))
+					write(800,'(a,i3,a,i3,a,f8.4,a,f8.4,a,f8.4)')  "n=",n," m=",m,&
+										" v_x=",dreal(velo(1,n,m,qi)),"+i*",dimag(velo(1,n,m,qi)),"; abs=",cdabs(velo(1,n,m,qi))
 				end do
 			end do
 			!y component
 			do m = 1, size(velo,3)
 				do n = 1, size(velo,2)
-					write(800,'(a,i3,a,i3,a,f8.4,a,f8.4)')  "n=",n," m=",m,&
-										" v_y=",dreal(velo(2,n,m,qi)),"+i*",dimag(velo(2,n,m,qi))
+					write(800,'(a,i3,a,i3,a,f8.4,a,f8.4,a,f8.4)')  "n=",n," m=",m,&
+										" v_y=",dreal(velo(2,n,m,qi)),"+i*",dimag(velo(2,n,m,qi)),"; abs=",cdabs(velo(1,n,m,qi))
 				end do
 			end do
 			!z component
 			do m = 1, size(velo,3)
 				do n = 1, size(velo,2)
-					write(800,'(a,i3,a,i3,a,f8.4,a,f8.4)')  "n=",n," m=",m,&
-										" v_z=",dreal(velo(3,n,m,qi)),"+i*",dimag(velo(3,n,m,qi))
+					write(800,'(a,i3,a,i3,a,f8.4,a,f8.4,a,f8.4)')  "n=",n," m=",m,&
+										" v_z=",dreal(velo(3,n,m,qi)),"+i*",dimag(velo(3,n,m,qi)),"; abs=",cdabs(velo(1,n,m,qi))
 				end do
 			end do
 		end do
