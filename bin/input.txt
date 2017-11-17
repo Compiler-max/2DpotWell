@@ -32,8 +32,8 @@
     nSCy        = 4
     nKx         = 4
     nKy         = 4                 
-    nRx         = 91   
-    nRy         = 91
+    nRx         = 81   
+    nRy         = 81
     thres       = 0.1
 
 [methods]

@@ -10,7 +10,7 @@ module output
 	private
 
 	public ::	writeMeshInfo, writeMeshBin, writeEnAndCK, writeCkASunk, writeConnCurv, writeWannFiles, writePolFile, &
-				printMat, printTiming , writePeierls,  writeInterpBands, writeEnH, printBasisInfo, writeVeloHtxt
+				printMat, printTiming , writePeierls,  writeInterpBands, writeEnH, printBasisInfo, writeVeloHtxt, writeVeloEffTB
 
 
 	interface printMat
@@ -269,6 +269,43 @@ module output
 		integer		qi, n, m
 
 		open(unit=800,file='velocities.txt',action='write')
+		write(800,*)"*******************velocities******************************"
+		do qi = 1, size(velo,4)
+			write(800,*)"*"
+			write(800,*)"*"
+			write(800,*)" qi=",qi
+			!x component
+			do m = 1, size(velo,3)
+				do n = 1, size(velo,2)
+					write(800,'(a,i3,a,i3,a,f8.4,a,f8.4)')  "n=",n," m=",m,&
+										" v_x=",dreal(velo(1,n,m,qi)),"+i*",dimag(velo(1,n,m,qi))
+				end do
+			end do
+			!y component
+			do m = 1, size(velo,3)
+				do n = 1, size(velo,2)
+					write(800,'(a,i3,a,i3,a,f8.4,a,f8.4)')  "n=",n," m=",m,&
+										" v_y=",dreal(velo(2,n,m,qi)),"+i*",dimag(velo(2,n,m,qi))
+				end do
+			end do
+			!z component
+			do m = 1, size(velo,3)
+				do n = 1, size(velo,2)
+					write(800,'(a,i3,a,i3,a,f8.4,a,f8.4)')  "n=",n," m=",m,&
+										" v_z=",dreal(velo(3,n,m,qi)),"+i*",dimag(velo(3,n,m,qi))
+				end do
+			end do
+		end do
+
+		return
+	end subroutine
+
+
+	subroutine writeVeloEffTB(velo)
+		complex(dp),	intent(in)		:: velo(:,:,:,:) !veloK(3		, 	nWfs	,	nWfs	,	nK		)
+		integer		qi, n, m
+
+		open(unit=800,file='veloTB.txt',action='write')
 		write(800,*)"*******************velocities******************************"
 		do qi = 1, size(velo,4)
 			write(800,*)"*"
