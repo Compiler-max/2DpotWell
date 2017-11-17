@@ -42,7 +42,7 @@ module potWellModel
 		allocate(	Hmat(	nG,	nG		)			)
 		allocate(	ctemp(	nG, nSolve	)			)
 		allocate(	EnT(	nG			)			)	
-		!$OMP DO SCHEDULE(STATIC) 
+		!$OMP DO SCHEDULE(DYNAMIC) 
 		do qi = 1, nQ
 			!
 			!SETUP HAM
