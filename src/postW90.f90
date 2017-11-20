@@ -279,11 +279,11 @@ module postW90
 						!DEBUG
 						if( n==m .and. abs(Abar(i,n,m)) > machineP ) then 
 							write(*,'(a,i1,a,i3,a,f8.4,a,f8.4)')"[calcVelo]: found diagonal connection i=",i, " n=m=",n,& 
-													" v_n=",dreal(Hbar(i,n,n)), "+i*",dimag(Hbar(i,n,n))
+													" A_n=",dreal(Abar(i,n,n)), "+i*",dimag(Abar(i,n,n))
 						end if
 						if( n/=m .and. abs(Hbar(i,n,m)) > machineP ) then
 							write(*,'(a,i1,a,i3,a,i3,a,f8.4,a,f8.4)')"[calcVelo]: found off diag band deriv i=",i,&
-													" n=",n," m=",m, "A_nm=",dreal(Abar(i,n,m)), "+i*",dimag(Abar(i,n,n))
+													" n=",n," m=",m, "v_nm=",dreal(Hbar(i,n,m)), "+i*",dimag(Hbar(i,n,m))
 						end if
 					end do
 				end do
