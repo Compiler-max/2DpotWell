@@ -328,34 +328,34 @@ module output
 			vSum = dcmplx(0.0_dp)
 			do m = 1, size(velo,3)
 				do n = 1, size(velo,2)
-					write(800,'(a,i3,a,i3,a,f8.4,a,f8.4,a,f8.4)')  "n=",n," m=",m,&
+					write(800,'(a,i3,a,i3,a,e17.10,a,e17.10,a,e17.10)')  "n=",n," m=",m,&
 										" v_x=",dreal(velo(1,n,m,qi)),"+i*",dimag(velo(1,n,m,qi)),"; abs=",cdabs(velo(1,n,m,qi))
 					vSum = vSum + velo(1,n,m,qi)
 				end do
 			end do
-			write(800,'(a,f8.4,a,f8.4)') "sum v_x = ",dreal(vSum),"+i*",dimag(vSum)
+			write(800,'(a,e17.10,a,e17.10)') "sum v_x = ",dreal(vSum),"+i*",dimag(vSum)
 			!
 			!y component
 			vSum = dcmplx(0.0_dp)
 			do m = 1, size(velo,3)
 				do n = 1, size(velo,2)
-					write(800,'(a,i3,a,i3,a,f8.4,a,f8.4,a,f8.4)')  "n=",n," m=",m,&
+					write(800,'(a,i3,a,i3,a,e17.10,a,e17.10,a,e17.10)')  "n=",n," m=",m,&
 										" v_y=",dreal(velo(2,n,m,qi)),"+i*",dimag(velo(2,n,m,qi)),"; abs=",cdabs(velo(2,n,m,qi))
 					vSum = vSum + velo(2,n,m,qi)
 				end do
 			end do
-			write(800,'(a,f8.4,a,f8.4)') "sum v_y = ",dreal(vSum),"+i*",dimag(vSum)
+			write(800,'(a,e17.10,a,e17.10)') "sum v_y = ",dreal(vSum),"+i*",dimag(vSum)
 			!
 			!z component
 			vSum = dcmplx(0.0_dp)
 			do m = 1, size(velo,3)
 				do n = 1, size(velo,2)
-					write(800,'(a,i3,a,i3,a,f8.4,a,f8.4,a,f8.4)')  "n=",n," m=",m,&
+					write(800,'(a,i3,a,i3,a,e17.10,a,e17.10,a,e17.10)')  "n=",n," m=",m,&
 										" v_z=",dreal(velo(3,n,m,qi)),"+i*",dimag(velo(3,n,m,qi)),"; abs=",cdabs(velo(3,n,m,qi))
 					vSum = vSum + velo(3,n,m,qi)
 				end do
 			end do
-			write(800,'(a,f8.4,a,f8.4)') "sum v_z = ",dreal(vSum),"+i*",dimag(vSum)
+			write(800,'(a,e17.10,a,e17.10)') "sum v_z = ",dreal(vSum),"+i*",dimag(vSum)
 		end do
 
 		return
@@ -380,34 +380,34 @@ module output
 			vSum = dcmplx(0.0_dp)
 			do m = 1, size(velo,3)
 				do n = 1, size(velo,2)
-					write(800,'(a,i3,a,i3,a,f8.4,a,f8.4,a,f8.4)')  "n=",n," m=",m,&
+					write(800,'(a,i3,a,i3,a,e17.10,a,e17.10,a,e17.10)')  "n=",n," m=",m,&
 										" v_x=",dreal(velo(1,n,m,qi)),"+i*",dimag(velo(1,n,m,qi)),"; abs=",cdabs(velo(1,n,m,qi))
 					vSum = vSum + velo(1,n,m,qi)
 				end do
 			end do
-			write(800,'(a,f8.4,a,f8.4)') "sum v_x = ",dreal(vSum),"+i*",dimag(vSum)
+			write(800,'(a,e17.10,a,e17.10)') "sum v_x = ",dreal(vSum),"+i*",dimag(vSum)
 			!
 			!y component
 			vSum = dcmplx(0.0_dp)
 			do m = 1, size(velo,3)
 				do n = 1, size(velo,2)
-					write(800,'(a,i3,a,i3,a,f8.4,a,f8.4,a,f8.4)')  "n=",n," m=",m,&
+					write(800,'(a,i3,a,i3,a,e17.10,a,e17.10,a,e17.10)')  "n=",n," m=",m,&
 										" v_y=",dreal(velo(2,n,m,qi)),"+i*",dimag(velo(2,n,m,qi)),"; abs=",cdabs(velo(2,n,m,qi))
 					vSum = vSum + velo(2,n,m,qi)
 				end do
 			end do
-			write(800,'(a,f8.4,a,f8.4)') "sum v_y = ",dreal(vSum),"+i*",dimag(vSum)
+			write(800,'(a,e17.10,a,e17.10)') "sum v_y = ",dreal(vSum),"+i*",dimag(vSum)
 			!
 			!z component
 			vSum = dcmplx(0.0_dp)
 			do m = 1, size(velo,3)
 				do n = 1, size(velo,2)
-					write(800,'(a,i3,a,i3,a,f8.4,a,f8.4,a,f8.4)')  "n=",n," m=",m,&
+					write(800,'(a,i3,a,i3,a,e17.10,a,e17.10,a,e17.10)')  "n=",n," m=",m,&
 										" v_z=",dreal(velo(3,n,m,qi)),"+i*",dimag(velo(3,n,m,qi)),"; abs=",cdabs(velo(3,n,m,qi))
 					vSum = vSum + velo(3,n,m,qi)
 				end do
 			end do
-			write(800,'(a,f8.4,a,f8.4)') "sum v_z = ",dreal(vSum),"+i*",dimag(vSum)
+			write(800,'(a,e17.10,a,e17.10)') "sum v_z = ",dreal(vSum),"+i*",dimag(vSum)
 		end do
 
 		return
