@@ -251,23 +251,25 @@ module postW90
 
 	subroutine calcVelo()
 		integer							:: ki, m, n, i
-		complex(dp),	allocatable		:: Hbar(:,:,:), Abar(:,:,:), Ucjg(:,:), tmp(:,:)
+		complex(dp),	allocatable		:: Hbar(:,:,:), Abar(:,:,:), Ucjg(:,:),U(:,:), tmp(:,:)
 		!
 		allocate(		Hbar(	size(Ha_mat,1),	size(Ha_mat,2),	size(Ha_mat,3)		)	)		
 		allocate(		Abar(	size(A_mat ,1),	size(A_mat ,2),	size(A_mat ,3)		)	)
+		allocate(		U(	size(U_mat,1),	size(U_mat,2)							)	)
 		allocate(		Ucjg(	size(U_mat,1),	size(U_mat,2)						)	)
 		allocate(		tmp(	size(U_mat,1),	size(U_mat,2)						)	)
 		!
 		do ki = 1, nK
 			!GAUGE BACK
-			Ucjg			= dconjg(	transpose(U_mat(:,:,ki))	)
+			U				= U_mat(:,:,ki)
+			Ucjg			= dconjg(	transpose(U)	)
 			do i = 1, 3
 				!ROTATE TO HAM GAUGE
-				tmp			= matmul(	Ha_mat(i,:,:,ki)	, U_mat(:,:,ki)		)	
-				Hbar(i,:,:)	= matmul(	Ucjg				, tmp				)	
+				tmp			= matmul(	Ha_mat(i,:,:,ki)	, Ucjg			)	
+				Hbar(i,:,:)	= matmul(	U				, tmp				)	
 				!
-				tmp			= matmul(	A_mat(i,:,:,ki)		, U_mat(:,:,ki)		)	
-				Abar(i,:,:)	= matmul(	Ucjg				, tmp				)
+				tmp			= matmul(	A_mat(i,:,:,ki)		, Ucjg			)	
+				Abar(i,:,:)	= matmul(	U				, tmp				)
 				!APPLY ROTATION
 				do m = 1, num_wann
 					do n = 1, num_wann
