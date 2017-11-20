@@ -277,7 +277,7 @@ module postW90
 						if( n/=m )	v_mat(i,n,m,ki) = - i_dp * dcmplx( En_vec(m,ki) - En_vec(n,ki) ) * Abar(i,n,m) 
 						!v_mat(1:3,n,m,ki)	=  Ha_mat(1:3,n,m,ki)	- i_dp * dcmplx( En_vec(m,ki) - En_vec(n,ki) ) * A_mat(1:3,n,m,ki) 
 						!DEBUG
-						if( n==m .and. abs(Abar(i,n,m)) > machineP ) then 
+						if( n==m .and. dsqrt(dreal( Abar(i,n,m)*conjg(Abar(i,n,m)))) > machineP ) then 
 							write(*,'(a,i1,a,i3,a,f8.4,a,f8.4)')"[calcVelo]: found diagonal connection i=",i, " n=m=",n,& 
 													" A_n=",dreal(Abar(i,n,n)), "+i*",dimag(Abar(i,n,n))
 						end if
