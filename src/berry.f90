@@ -10,7 +10,8 @@ module berry
 	use semiClassics,	only:	calcFirstOrdP
 	use peierls,		only:	peierlsMethod
 	use wannier,		only:	wannMethod
-	use output,			only:	writeCkASunk, writePolFile
+	use output,			only:	writeCkASunk, writePolFile, writeVeloHtxt, writeEnH
+
 	implicit none
 
 	private
@@ -141,8 +142,9 @@ module berry
 		!OUTPUT
 		pWann = 0.0_dp
 		call writePolFile(pWann, pBerry, pNiuF2, pNiuF3, pPei )
-
+		call writeVeloHtxt(veloK)
 		if( writeBin )	call writeCkASunk(ck, ckW)
+		if( writeBin )	call writeEnH(EnK)
 		write(*,*)	"[berrryMethod]: all done"
 		!
 		!
