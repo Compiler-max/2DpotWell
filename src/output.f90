@@ -1,7 +1,7 @@
 module output
 	!module contains several routines for printing and writing data
 	use omp_lib
-	use mathematics,	only:	dp, PI_dp, machineP, aUtoEv
+	use mathematics,	only:	dp, PI_dp, machineP, aUtoEv, aUtoAngstrm
 	use blochWf,		only:	calcBasis
 	use sysPara 
 
@@ -314,6 +314,9 @@ module output
 		complex(dp),	intent(in)		:: velo(:,:,:,:) !veloK(3		, 	nWfs	,	nWfs	,	nK		)
 		integer		qi, n, m
 		complex(dp)						:: vSum
+		real(dp)						:: Ederiv
+
+		Ederiv	= aUtoEv * aUtoAngstrm
 
 		open(unit=800,file='velocities.txt',action='write')
 		write(800,*)"*******************analytic velocities******************************"

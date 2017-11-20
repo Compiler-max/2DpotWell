@@ -413,8 +413,8 @@ module postW90
 		write(*,'(a,f10.5,a,f10.5,a,f10.5,a)')	"[effTBmodel]: pConn=(",pConn(1),", ",pConn(2),", ",pConn(3),")."
 		!1st order pol
 		call calcFirstOrdP(Om_mat,A_mat,v_mat,En_vec,pNiuF2, pNiuF3) !calcFirstOrdP(Fcurv, Aconn, Velo, En, p1F2, p1F3)
-		write(*,'(a,f12.5,a,f12.5,a,f12.5,a)')	"[effTBmodel]: pNiuF2=(",pNiuF2(1),", ",pNiuF2(2),", ",pNiuF2(3),")."
-		write(*,'(a,f12.5,a,f12.5,a,f12.5,a)')	"[effTBmodel]: pNiuF3=(",pNiuF3(1),", ",pNiuF3(2),", ",pNiuF3(3),")."
+		write(*,'(a,g17.10,a,g17.10,a,g17.10,a)')	"[effTBmodel]: pNiuF2=(",pNiuF2(1),", ",pNiuF2(2),", ",pNiuF2(3),")."
+		write(*,'(a,g17.10,a,g17.10,a,g17.10,a)')	"[effTBmodel]: pNiuF3=(",pNiuF3(1),", ",pNiuF3(2),", ",pNiuF3(3),")."
 		
 		!1st order peierls
 		!if(	doPei ) then
