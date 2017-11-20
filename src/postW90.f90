@@ -1,6 +1,6 @@
 module postW90
 	use omp_lib
-	use mathematics,	only:	dp, PI_dp, i_dp, acc, machineP, & 
+	use mathematics,	only:	dp, PI_dp, i_dp, acc, machineP,  & 
 								aUtoAngstrm, aUtoEv, & 
 								myExp, myLeviCivita, eigSolver
 	use sysPara
@@ -276,6 +276,11 @@ module postW90
 						if( n==m )	v_mat(i,n,n,ki) = Hbar(i,n,n)
 						if( n/=m )	v_mat(i,n,m,ki) = - i_dp * dcmplx( En_vec(m,ki) - En_vec(n,ki) ) * Abar(i,n,m) 
 						!v_mat(1:3,n,m,ki)	=  Ha_mat(1:3,n,m,ki)	- i_dp * dcmplx( En_vec(m,ki) - En_vec(n,ki) ) * A_mat(1:3,n,m,ki) 
+						!DEBUG
+						if( n==m .and. abs(Abar(i,n,m)) > machineP ) write(*,*)"[calcVelo]: found diagonal connection i=",i,&
+																							" n=m=",n
+						if( n/=m .and. abs(Hbar(i,n,m)) > machineP ) write(*,*)"[calcVelo]: found off diag band deriv i=",i,&
+																							" n=",n," m=",m
 					end do
 				end do
 			end do	
