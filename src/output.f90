@@ -272,7 +272,8 @@ module output
 			write(800,*)	Rcell(1,R)," ",Rcell(2,R)
 			do n = 1 , size(tHopp,2)
 				do m = 1, size(tHopp,1)
-					write(800,'(i4,a,i4,a,f8.4,a,f8.4)')	m," "," ",n," ", dreal(tHopp(m,n,R))," ", dimag(tHopp(m,n,R))
+					write(800,'(i4,a,i4,a,f8.4,a,f8.4)')	m," "," ",n," ", &
+													dreal(aUtoEv*tHopp(m,n,R))," ", dimag(aUtoEv*tHopp(m,n,R))
 				end do
 			end do
 			write(800,*)
