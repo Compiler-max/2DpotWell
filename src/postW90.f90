@@ -260,39 +260,42 @@ module postW90
 		!
 		do ki = 1, nK
 			!GAUGE BACK
-
-			Ucjg			= dconjg(	transpose(U_mat(:,:,ki))	)
-			!
-			do i = 1, 3
-				!ROTATE TO HAM GAUGE
-				tmp			= matmul(	Ha_mat(i,:,:,ki)	, U_mat(:,:,ki)		)	
-				Hbar(i,:,:)	= matmul(	Ucjg				, tmp				)	
-				!
-				tmp			= matmul(	A_mat(i,:,:,ki)		, U_mat(:,:,ki)		)	
-				Abar(i,:,:)	= matmul(	Ucjg				, tmp				)
-				!APPLY ROTATION
-				do m = 1, num_wann
-					do n = 1, num_wann
-						if( n==m )	v_mat(i,n,n,ki) = Hbar(i,n,n)
-						if( n/=m )	v_mat(i,n,m,ki) = - i_dp * dcmplx( En_vec(m,ki) - En_vec(n,ki) ) * Abar(i,n,m) 
-						!v_mat(1:3,n,m,ki)	=  Ha_mat(1:3,n,m,ki)	- i_dp * dcmplx( En_vec(m,ki) - En_vec(n,ki) ) * A_mat(1:3,n,m,ki) 
-						!DEBUG
-						if( n/=m .and. abs(Hbar(i,n,m)) > 0.1_dp ) then
-							write(*,'(a,i1,a,i3,a,i3,a,f8.4,a,f8.4,a,f8.4)')"[calcVelo]: found off diag band deriv i=",i,&
-									" n=",n," m=",m, "v_nm=",dreal(Hbar(i,n,m)), "+i*",dimag(Hbar(i,n,m))," abs=",abs(Abar(i,n,n))
-						end if
-					end do
-				end do
-			end do	
+			!Ucjg			= dconjg(	transpose(U_mat(:,:,ki))	)
+			!do i = 1, 3
+			!	!ROTATE TO HAM GAUGE
+			!	tmp			= matmul(	Ha_mat(i,:,:,ki)	, U_mat(:,:,ki)		)	
+			!	Hbar(i,:,:)	= matmul(	Ucjg				, tmp				)	
+			!	!
+			!	tmp			= matmul(	A_mat(i,:,:,ki)		, U_mat(:,:,ki)		)	
+			!	Abar(i,:,:)	= matmul(	Ucjg				, tmp				)
+			!	!APPLY ROTATION
+			!	do m = 1, num_wann
+			!		do n = 1, num_wann
+			!			if( n==m )	v_mat(i,n,n,ki) = Hbar(i,n,n)
+			!			if( n/=m )	v_mat(i,n,m,ki) = - i_dp * dcmplx( En_vec(m,ki) - En_vec(n,ki) ) * Abar(i,n,m) 
+			!			!v_mat(1:3,n,m,ki)	=  Ha_mat(1:3,n,m,ki)	- i_dp * dcmplx( En_vec(m,ki) - En_vec(n,ki) ) * A_mat(1:3,n,m,ki) 
+			!			!DEBUG
+			!			if( n/=m .and. abs(Hbar(i,n,m)) > 0.1_dp ) then
+			!				write(*,'(a,i1,a,i3,a,i3,a,f8.4,a,f8.4,a,f8.4)')"[calcVelo]: found off diag band deriv i=",i,&
+			!						" n=",n," m=",m, "v_nm=",dreal(Hbar(i,n,m)), "+i*",dimag(Hbar(i,n,m))," abs=",abs(Abar(i,n,n))
+			!			end if
+			!		end do
+			!	end do
+			!end do	
 			
 			!NO GAUGE BACK
-			!do m = 1, num_wann
-			!	do n = 1, num_wann
-			!		if( n==m )	v_mat(1:3,n,n,ki) = Ha_mat(1:3,n,n,ki)
-			!		if( n/=m )	v_mat(1:3,n,m,ki) = Ha_mat(1:3,n,m,ki)- i_dp * dcmplx( En_vec(m,ki) - En_vec(n,ki) ) * A_mat(1:3,n,m,ki) 
-			!		!v_mat(1:3,n,m,ki)	=  Ha_mat(1:3,n,m,ki)	- i_dp * dcmplx( En_vec(m,ki) - En_vec(n,ki) ) * A_mat(1:3,n,m,ki) 
-			!	end do
-			!end do
+			do m = 1, num_wann
+				do n = 1, num_wann
+					if( n==m )	v_mat(1:3,n,n,ki) = Ha_mat(1:3,n,n,ki)
+					if( n/=m )	v_mat(1:3,n,m,ki) =  - i_dp * dcmplx( En_vec(m,ki) - En_vec(n,ki) ) * A_mat(1:3,n,m,ki) 
+					!v_mat(1:3,n,m,ki)	=  Ha_mat(1:3,n,m,ki)	- i_dp * dcmplx( En_vec(m,ki) - En_vec(n,ki) ) * A_mat(1:3,n,m,ki) 
+					!DEBUG
+					if( n/=m .and. abs(Hbar(i,n,m)) > 0.1_dp ) then
+							write(*,'(a,i1,a,i3,a,i3,a,f8.4,a,f8.4,a,f8.4)')"[calcVelo]: found off diag band deriv i=",i,&
+									" n=",n," m=",m, "v_nm=",dreal(Hbar(i,n,m)), "+i*",dimag(Hbar(i,n,m))," abs=",abs(Abar(i,n,n))
+					end if
+				end do
+			end do
 		end do
 		!
 		return
