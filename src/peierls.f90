@@ -56,14 +56,14 @@ module peierls
 			!SET UP k SPACE HAMILTONIAN
 			Hp	= dcmplx(0.0_dp)
 			do R = 1, nSC
-				phase	= myExp( dot_product(qpts(:,qi),Rcell(:,R))	) / dsqrt(real(nSC,dp))
+				phase	= myExp( dot_product(qpts(:,qi),Rcell(:,R))	) !/ dsqrt(real(nSC,dp))
 				Hp(:,:)	= Hp(:,:) + phase * tshift(:,:,R)
 			end do
 			!SOLVE HAM	
 			call eigSolver(Hp(:,:),EnP(:,qi))
 			!
 			if( .not. isUnit(Hp)	) write(*,*) "[peierlsMethod]: ckP not unitary at qi=",qi
-			!
+			!EXTRACT EXPANSION COEFF
 			ckP(:,:,qi)	= dcmplx(0.0_dp)
 			do gi = 1, nGq(qi)
 				ckP(gi,:,qi)	= matmul( ck(gi,:,qi), Hp(:,:))
