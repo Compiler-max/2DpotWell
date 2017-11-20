@@ -1,7 +1,7 @@
 module output
 	!module contains several routines for printing and writing data
 	use omp_lib
-	use mathematics,	only:	dp, PI_dp, machineP
+	use mathematics,	only:	dp, PI_dp, machineP, aUtoEv
 	use blochWf,		only:	calcBasis
 	use sysPara 
 
@@ -10,7 +10,8 @@ module output
 	private
 
 	public ::	writeMeshInfo, writeMeshBin, writeEnAndCK, writeCkASunk, writeConnCurv, writeWannFiles, writePolFile, &
-				printMat, printTiming , writePeierls,  writeInterpBands, writeEnH, printBasisInfo, writeVeloHtxt, writeVeloEffTB
+				printMat, printTiming , writePeierls,  writeInterpBands, writeEnH, printBasisInfo, & 
+				writeVeloHtxt, writeVeloEffTB, writeHopp
 
 
 	interface printMat
@@ -261,6 +262,30 @@ module output
 		!
 		return
 	end subroutine
+
+	subroutine writeHopp(tHopp)
+		complex(dp),		intent(in)		:: tHopp(:,:,:)
+		integer								:: R, n, m
+		!
+		open(unit=800,file='tHopping.txt',action='write')
+		do R = 1, size(tHopp,3)
+			write(800,*)	Rcell(1,R)," ",Rcell(2,R)
+			do n = 1 , size(tHopp,2)
+				do m = 1, size(tHopp,1)
+					write(800,'(i4,a,i4,a,f8.4,a,f8.4)')	m," "," ",n," ", dreal(tHopp(m,n,R))," ", dimag(tHopp(m,n,R))
+				end do
+			end do
+			write(800,*)
+		end do
+		close(800)
+		!
+		return
+	end subroutine
+
+
+
+
+
 
 
 
