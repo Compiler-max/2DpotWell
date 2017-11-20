@@ -24,7 +24,7 @@
     Bext        = 0.0 0.0 1.0  
 
 [numerics]
-    Gcut        = 2.0
+    Gcut        = 5.0
     nSolve      = 10        
     nQx         = 4   
     nQy         = 4
@@ -37,7 +37,7 @@
     thres       = 0.1
 
 [methods]
-    doSolveHam  = t
+    doSolveHam  = f
     useBloch    = f
     doPw90      = f
     doBerry     = t
@@ -45,7 +45,7 @@
 
 [pw90]
     seedName    = 'wf1'
-    shell       = 2   
+    shell       = 3   
     nw90it      = 1000
     pw90GaugeB  = f
 
@@ -53,7 +53,7 @@
     useRot      = f
     doVeloNUM   = f
     doNiu       = t
-    doPei       = t
+    doPei       = f
     doWanni     = f
     doGaugBack  = f
 
@@ -62,7 +62,7 @@
   
 
 [debug]
-    debugHam    = t
+    debugHam    = f
     debugProj   = f
     debugWann   = f
 
