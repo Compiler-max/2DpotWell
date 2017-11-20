@@ -54,6 +54,9 @@ module w90Interface
 		end if
 		call writeW90inputPost()
 		write(*,*)	"[w90Interf]: done preparing wannierization input matrices"
+		call writeW90KinterpMesh()
+		write(*,*)	"[w90Interf]: wrote interpolation mesh file"
+
 
 		!call wannier_run(seed_name,mp_grid,num_kpts,real_lattice,recip_lattice, &
 		!					kpt_latt,num_bands,num_wann,nntot,num_atoms,atom_symbols, &
@@ -330,7 +333,21 @@ module w90Interface
 	end subroutine
 
 
-
+	subroutine writeW90KinterpMesh()
+		!input file for post w90 module( energy and band derivative interpoltation)
+		integer						:: ki
+		!
+		open(unit=115,file=seed_name//'_geninterp.dat',action='write',access='stream',form='formatted', status='replace')
+		write(115,*)
+		write(115,*)	"frac"
+		write(115,*)	nK
+		do ki = 1, nK 
+			write(115,*)	ki," ",kpts(1,ki)/recpLatt(1,1)," ",kpts(2,ki)/recpLatt(2,ki), " ", 0.0_dp
+		end do
+		close(115)
+		!
+		return
+	end subroutine
 
 
 
