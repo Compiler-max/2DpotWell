@@ -10,7 +10,7 @@ module berry
 	use semiClassics,	only:	calcFirstOrdP
 	use peierls,		only:	peierlsMethod
 	use wannier,		only:	wannMethod
-	use output,			only:	writeCkASunk, writePolFile, writeVeloHtxt, writeEnH, writeHopp
+	use output,			only:	writeCkASunk, writePolFile, writeVeloHtxt, writeEnH, writeHopp, writeUmat
 
 	implicit none
 
@@ -144,6 +144,7 @@ module berry
 		call writePolFile(pWann, pBerry, pNiuF2, pNiuF3, pPei )
 		call writeVeloHtxt(veloK)
 		call writeHopp(tHopp)
+		call writeUmat(Uq)
 		if( writeBin )	call writeCkASunk(ck, ckW)
 		if( writeBin )	call writeEnH(EnK)
 
@@ -193,11 +194,11 @@ module berry
 	subroutine	readHam(ck, En)
 		complex(dp),	intent(out)		:: ck(:,:,:)
 		real(dp),		intent(out)		:: En(:,:)
-		real(dp),		allocatable		:: buffer(:,:), eBuff(:,:)
+		real(dp),		allocatable		:: buffer(:,:), eBuff(:)
 		integer							:: qi
 		!
 		allocate(	buffer( size(ck,1), size(ck,2) 	)		)
-		allocate(	eBuff(size(En,1), size(En,2)	)		)
+		allocate(	eBuff(size(En,1)				)		)
 		!
 		!
 		!
@@ -220,9 +221,11 @@ module berry
 		!
 		!BAND ENERGIES
 		open(unit=720, file="./rawData/bandStruct.dat",form='unformatted',access='stream',action='read')
-			read(720) eBuff
+		do qi = 1, size(En,2)	
+				read(720) eBuff
+				En(1:nBands,qi)	= eBuff(1:nBands)
+		end do
 		close(720)
-		En(1:nBands,:)	= eBuff(1:nBands,:)
 		!
 		!
 	
