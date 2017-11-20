@@ -40,7 +40,7 @@
     doSolveHam  = t
     useBloch    = f
     doPw90      = f
-    doBerry     = t
+    doBerry     = f
     writeBin    = f
 
 [pw90]

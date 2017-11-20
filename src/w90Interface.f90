@@ -343,8 +343,8 @@ module w90Interface
 		!input file for post w90 module( energy and band derivative interpoltation)
 		integer						:: ki
 		!
-		open(unit=115,file=seed_name//'_geninterp.dat',action='write',access='stream',form='formatted', status='replace')
-		write(115,*)
+		open(unit=115,file=seed_name//'_geninterp.kpt',action='write',access='stream',form='formatted', status='replace')
+		write(115,*)	'post w90 input file, gives info about interpolation mesh'
 		write(115,*)	"frac"
 		write(115,*)	nK
 		do ki = 1, nK 
