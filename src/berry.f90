@@ -120,8 +120,8 @@ module berry
 		if(doNiu) then
 			write(*,*)	"[berrryMethod]: now calc first order pol"
 			call calcFirstOrdP(FcurvK, AconnK, veloK, EnK, pNiuF2, pNiuF3)
-			write(*,'(a,g17.10,a,g17.10,a,g17.10,a)')	"[berryMethod]: pNiuF2=(",pNiuF2(1),", ",pNiuF2(2),", ",pNiuF2(3),")."
-			write(*,'(a,g17.10,a,g17.10,a,g17.10,a)')	"[berryMethod]: pNiuF3=(",pNiuF3(1),", ",pNiuF3(2),", ",pNiuF3(3),")."
+			write(*,'(a,e17.10,a,e17.10,a,e17.10,a)')	"[berryMethod]: pNiuF2=(",pNiuF2(1),", ",pNiuF2(2),", ",pNiuF2(3),")."
+			write(*,'(a,e17.10,a,e17.10,a,e17.10,a)')	"[berryMethod]: pNiuF3=(",pNiuF3(1),", ",pNiuF3(2),", ",pNiuF3(3),")."
 		end if
 
 
@@ -129,7 +129,7 @@ module berry
 		if(doPei) then
 			write(*,*)	"[berrryMethod]: now calc first order pol via peierls sub."
 			call peierlsMethod(ckW, tHopp, pPei)
-			write(*,'(a,g17.10,a,g17.10,a,g17.10,a)')	"[berryMethod]: pPei=(",pPei(1),", ",pPei(2),", ",pPei(3),")."
+			write(*,'(a,e17.10,a,e17.10,a,e17.10,a)')	"[berryMethod]: pPei=(",pPei(1),", ",pPei(2),", ",pPei(3),")."
 		end if
 
 		!WANNIER
