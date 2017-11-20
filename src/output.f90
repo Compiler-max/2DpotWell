@@ -268,6 +268,7 @@ module output
 		integer								:: R, n, m
 		!
 		open(unit=800,file='tHopping.txt',action='write')
+		write(800,*)	"hopping parameters (via berry) in eV"
 		do R = 1, size(tHopp,3)
 			write(800,*)	Rcell(1,R)," ",Rcell(2,R)
 			do n = 1 , size(tHopp,2)
