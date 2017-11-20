@@ -75,8 +75,8 @@ module effTB
 			do n = 1, nWfs
 				Ediag(n,n)	= EnQ(n,qi)
 			end do
-			tmp				= matmul(	Ediag	, 	U		)
-			Htmp(:,:,qi)	= matmul( 	Udag	, 	tmp		)
+			tmp				= matmul(	Ediag	, 	Udag	)
+			Htmp(:,:,qi)	= matmul( 	U		, 	tmp		)
 			!
 			if( .not. isHermitian(Htmp(:,:,qi)) ) 	then
 				write(*,'(a,i3)')	"[TBviaKspace]: generated H matrix is not hermitian, at qi=",qi
@@ -107,6 +107,7 @@ module effTB
 		Z 		= 4	!amount of nearest neighbours( 2 for 2D cubic unit cell)
 		wbx 	= 2.0_dp / 		( real(Z,dp) * dqx**2 )
 		wby		= wbx
+		write(*,*)	"[calcConnOnCoarse]	weight wb=", wbx
 		!wby 	= 1.0_dp /		( real(Z,dp) * dqy**2 )
 		!b vector two nearest X neighbours:
 		bxl(1) 	= -dqx				
