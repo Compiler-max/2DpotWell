@@ -11,7 +11,7 @@ module output
 
 	public ::	writeMeshInfo, writeMeshBin, writeEnAndCK, writeCkASunk, writeConnCurv, writeWannFiles, writePolFile, &
 				printMat, printTiming , writePeierls,  writeInterpBands, writeEnH, printBasisInfo, & 
-				writeVeloHtxt, writeVeloEffTB, writeHopp
+				writeVeloHtxt, writeVeloEffTB, writeHopp, writeUmat
 
 
 	interface printMat
@@ -285,6 +285,25 @@ module output
 	end subroutine
 
 
+	subroutine writeUmat(U_mat)	
+		complex(dp),		intent(in)		:: U_mat(:,:,:)
+		integer								:: qi, n, m
+		!
+		open(unit=800,file='U_mat.txt',action='write')
+		write(800,*)	"U_mat after read in from berry"
+		do qi = 1, size(U_mat,3)
+			write(800,*)	qpts(1,qi)/recpLatt(1,1)," ",qpts(2,qi)/recpLatt(2,2)
+			do n = 1, size(U_mat,2)
+				do m = 1, size(U_mat,1)
+					write(800,'(a,i3,a,i3,a,f14.10,a,f14.10)')	" ",m," ",n," ",dreal(U_mat(m,n,qi))," ",dimag(U_mat(m,n,qi))
+				end do
+			end do
+			write(800,*)
+		end do 
+		close(800)
+		!
+		return
+	end subroutine
 
 
 

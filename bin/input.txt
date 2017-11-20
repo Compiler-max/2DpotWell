@@ -24,14 +24,14 @@
     Bext        = 0.0 0.0 1.0  
 
 [numerics]
-    Gcut        = 5.0
+    Gcut        = 2.0
     nSolve      = 10        
-    nQx         = 4   
-    nQy         = 4
-    nSCx        = 5 
-    nSCy        = 5
-    nKx         = 4
-    nKy         = 4                 
+    nQx         = 8   
+    nQy         = 8
+    nSCx        = 9 
+    nSCy        = 9
+    nKx         = 8
+    nKy         = 8                 
     nRx         = 101   
     nRy         = 101
     thres       = 0.1
@@ -45,12 +45,12 @@
 
 [pw90]
     seedName    = 'wf1'
-    shell       = 3   
+    shell       = 2   
     nw90it      = 1000
     pw90GaugeB  = f
 
 [berry]
-    useRot      = f
+    useRot      = t
     doVeloNUM   = f
     doNiu       = t
     doPei       = f
