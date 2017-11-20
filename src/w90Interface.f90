@@ -348,7 +348,7 @@ module w90Interface
 		write(115,*)	"frac"
 		write(115,*)	nK
 		do ki = 1, nK 
-			write(115,*)	ki," ",kpts(1,ki)/recpLatt(1,1)," ",kpts(2,ki)/recpLatt(2,ki), " ", 0.0_dp
+			write(115,*)	ki," ",kpts(1,ki)/recpLatt(1,1)," ",kpts(2,ki)/recpLatt(2,2), " ", 0.0_dp
 		end do
 		close(115)
 		!
