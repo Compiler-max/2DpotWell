@@ -14,8 +14,7 @@ module wannInterp
 	subroutine DoWannInterpol(ckW, rHopp, tHopp, EnH, AconnH, FcurvH, veloH)
 		complex(dp),	intent(in)		:: ckW(:,:,:), rHopp(:,:,:,:), tHopp(:,:,:)
 		real(dp),		intent(out)		:: EnH(:,:)
-		complex(dp),	intent(out)		:: AconnH(:,:,:,:), FcurvH(:,:,:,:)
-		complex(dp),	intent(out)		:: veloH(:,:,:,:)
+		complex(dp),	intent(out)		:: AconnH(:,:,:,:), FcurvH(:,:,:,:), veloH(:,:,:,:)
 		complex(dp),	allocatable		:: U(:,:), HW(:,:), HaW(:,:,:), AW(:,:,:), FW(:,:,:,:)
 		integer							:: ki, a, b
 		!
@@ -71,21 +70,20 @@ module wannInterp
 		H_mat	= dcmplx(0.0_dp)
 		Ha_mat	= dcmplx(0.0_dp)
 		En_vec	= 0.0_dp
-		!v_mat	= dcmplx(0.0_dp)
 		nrpts 	= nSC
 		!
 		!SET UP K SPACE MATRICES
 		do R = 1, nrpts
 			phase				= myExp( 	dot_product(kpts(1:2,ki),Rcell(1:2,R))		) !/ dcmplx(real(nrpts,dp))
 			!
-			H_mat(:,:)			= H_mat(:,:)	 	+ phase 								* H_tb(:,:,R)
+			H_mat(:,:)			= H_mat(:,:)	 	+ 			phase 								* H_tb(:,:,R)
 			do a = 1, 3
-				Ha_mat(a,:,:)	= Ha_mat(a,:,:) 	+ phase * i_dp * dcmplx(Rcell(a,R))	* H_tb(:,:,R)
-				A_mat(a,:,:)	= A_mat(a,:,:)		+ phase									* r_tb(a,:,:,R)
+				Ha_mat(a,:,:)	= Ha_mat(a,:,:) 	+ 			phase * i_dp * dcmplx(Rcell(a,R))	* H_tb(:,:,R)
+				A_mat(a,:,:)	= A_mat(a,:,:)		+ 			phase								* r_tb(a,:,:,R)
 				!
 				do b = 1, 3
-					Om_tens(a,b,:,:)	= Om_tens(a,b,:,:)	+  phase * i_dp * dcmplx(Rcell(a,R)) * r_tb(b,:,:,R)
-					Om_tens(a,b,:,:)	= Om_tens(a,b,:,:)	-  phase * i_dp * dcmplx(Rcell(b,R)) * r_tb(a,:,:,R)
+					Om_tens(a,b,:,:)	= Om_tens(a,b,:,:)	+  	phase * i_dp * dcmplx(Rcell(a,R)) 	* r_tb(b,:,:,R)
+					Om_tens(a,b,:,:)	= Om_tens(a,b,:,:)	-  	phase * i_dp * dcmplx(Rcell(b,R)) 	* r_tb(a,:,:,R)
 				end do
 			end do
 		end do
@@ -152,7 +150,7 @@ module wannInterp
 						!DEBUG
 						if( n/=m .and. abs(Hbar(i,n,m)) > 0.1_dp ) then
 							write(*,'(a,i1,a,i3,a,i3,a,f8.4,a,f8.4,a,f8.4)')"[calcVeloNeW]: found off diag band deriv i=",i,&
-									" n=",n," m=",m, "v_nm=",dreal(Hbar(i,n,m)), "+i*",dimag(Hbar(i,n,m))," abs=",abs(Hbar(i,n,n))
+									" n=",n," m=",m, "v_nm=",dreal(Hbar(i,n,m)), "+i*",dimag(Hbar(i,n,m))," abs=",abs(Hbar(i,n,m))
 						end if
 					end do
 				end do
