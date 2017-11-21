@@ -40,7 +40,7 @@ module wannInterp
 			else
 				if(ki ==1)	write(*,*)	"[DoGaugeTrafo]: Gauge trafo DISABLED	"
 				!CONNECTION
-				AconnH(1:2,:,:,ki) 		= AW(1:2,:,:)
+				AconnH(1:3,:,:,ki) 		= AW(1:3,:,:)
 				!VELOCITIES
 				!call calcVeloNOIntP(ki, ckW, U, HaW, EnH, AconnH, veloH)
 				call calcVeloNew(ki, EnH, U, ckW, HaW, AconnH, veloH)
@@ -127,10 +127,10 @@ module wannInterp
 		integer							::	m, n, i, gi
 		!
 		!
-		allocate(		Hbar(	size(Ha_mat,1),	size(Ha_mat,2),	size(Ha_mat,3)		)	)		
-		allocate(		Abar(	size(A_mat ,1),	size(A_mat ,2),	size(A_mat ,3)		)	)
-		allocate(		Ucjg(	size(Ha_mat,2),	size(Ha_mat,2)						)	)
-		allocate(		tmp(	size(Ha_mat,2),	size(Ha_mat,2)						)	)
+		allocate(		Hbar(	3,	nWfs 	,	nWfs		)	)		
+		allocate(		Abar(	3,	nWfs 	,	nWfs		)	)
+		allocate(		Ucjg(		nWfs	,	nWfs		)	)
+		allocate(		tmp(		nWfs	,	nWfs		)	)
 		!
 		if(	doVeloNUM ) then
 			if(ki==1)	write(*,*)"[calcVeloNew]: velocities are calculated via TB approach"
@@ -151,8 +151,8 @@ module wannInterp
 						!v_mat(1:3,n,m,ki)	=  Ha_mat(1:3,n,m,ki)	- i_dp * dcmplx( En_vec(m,ki) - En_vec(n,ki) ) * A_mat(1:3,n,m,ki) 
 						!DEBUG
 						if( n/=m .and. abs(Hbar(i,n,m)) > 0.1_dp ) then
-							write(*,'(a,i1,a,i3,a,i3,a,f8.4,a,f8.4,a,f8.4)')"[calcVelo]: found off diag band deriv i=",i,&
-									" n=",n," m=",m, "v_nm=",dreal(Hbar(i,n,m)), "+i*",dimag(Hbar(i,n,m))," abs=",abs(Abar(i,n,n))
+							write(*,'(a,i1,a,i3,a,i3,a,f8.4,a,f8.4,a,f8.4)')"[calcVeloNeW]: found off diag band deriv i=",i,&
+									" n=",n," m=",m, "v_nm=",dreal(Hbar(i,n,m)), "+i*",dimag(Hbar(i,n,m))," abs=",abs(Hbar(i,n,n))
 						end if
 					end do
 				end do

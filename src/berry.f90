@@ -51,7 +51,7 @@ module berry
 		!					
 		!
 		allocate(			tHopp(					nWfs	, 	nWfs	,	nSc		)			)
-		allocate(			rHopp(		2		,	nWfs	, 	nWfs	, 	nSC		)			)			
+		allocate(			rHopp(		3		,	nWfs	, 	nWfs	, 	nSC		)			)			
 		allocate(			EnK(					nWfs	, 				nK		)			)
 		allocate(			AconnK(		3		, 	nWfs	,	nWfs	,	nK		)			)
 		allocate(			FcurvK(		3		, 	nWfs	, 	nWfs	,	nK		)			)
