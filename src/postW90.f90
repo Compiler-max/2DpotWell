@@ -190,12 +190,13 @@ module postW90
 				R_real(1,R)	= R_vect(1,R)	* aX
 				R_real(2,R)	= R_vect(2,R)	* aY
 				R_real(3,R)	= R_vect(3,R)	* 0
-				if( abs(R_real(1,R)-Rcell(1,R)) > machineP ) then
-					write(*,*) "[readTB]: warning  Rcell and R_real dont match (x comp)" 
-					write(*,*) "			R_real(x)=",R_real(1,R)," Rcell=",Rcell(1,R)
-					write(*,*) "			R_real(y)=",R_real(2,R)," Rcell=",Rcell(2,R)
-				end if
-				!if( abs(R_real(2,R)-Rcell(2,R)) > machineP ) write(*,*) "[readTB]: warning Rcell and R_real dont match(y comp)"
+				!!DEBUG
+				!if( abs(R_real(1,R)-Rcell(1,R)) > machineP ) then
+				!	write(*,*) "[readTB]: warning  Rcell and R_real dont match (x comp)" 
+				!	write(*,*) "			R_real(x)=",R_real(1,R)," Rcell=",Rcell(1,R)
+				!	write(*,*) "			R_real(y)=",R_real(2,R)," Rcell=",Rcell(2,R)
+				!end if
+				!!if( abs(R_real(2,R)-Rcell(2,R)) > machineP ) write(*,*) "[readTB]: warning Rcell and R_real dont match(y comp)"
 			end do
 			!
 		end if
