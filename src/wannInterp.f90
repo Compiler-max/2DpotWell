@@ -45,7 +45,8 @@ module wannInterp
 				!CONNECTION
 				AconnH(1:2,:,:,ki) 		= AW(1:2,:,:)
 				!VELOCITIES
-				call calcVeloNOIntP(ki, ckW, U, HaW, EnH, AconnH, veloH)
+				!call calcVeloNOIntP(ki, ckW, U, HaW, EnH, AconnH, veloH)
+				call calcVeloNew(ki, EnH, U, ckW, HaW, AconnH, veloH)
 				!CURVATURE
 				FcurvH(1:2,:,:,ki)		= dcmplx(0.0_dp)
 				do b = 1, 2
@@ -128,6 +129,72 @@ module wannInterp
 
 
 
+	subroutine calcVeloNew(ki, En_vec, U, ckW, Ha_mat, A_mat, v_mat)
+		integer,		intent(in)		::	ki
+		real(dp),		intent(in)		::	En_vec(:,:)
+		complex(dp),	intent(in)		::	U(:,:), ckW(:,:,:), Ha_mat(:,:,:), A_mat(:,:,:,:)
+		complex(dp),	intent(out)		::	v_mat(:,:,:,:)
+		complex(dp),	allocatable		:: 	Hbar(:,:,:), Abar(:,:,:), Ucjg(:,:), tmp(:,:)
+		integer							::	m, n, i, gi
+		!
+		!
+		allocate(		Hbar(	size(Ha_mat,1),	size(Ha_mat,2),	size(Ha_mat,3)		)	)		
+		allocate(		Abar(	size(A_mat ,1),	size(A_mat ,2),	size(A_mat ,3)		)	)
+		allocate(		Ucjg(	size(Ha_mat,2),	size(Ha_mat,2)						)	)
+		allocate(		tmp(	size(Ha_mat,2),	size(Ha_mat,2)						)	)
+		!
+		if(	doVeloNUM ) then
+			if(ki==1)	write(*,*)"[calcVeloNOIntP]: velocities are calculated via TB approach"
+			!GAUGE BACK
+			Ucjg			= dconjg(	transpose(U)	)
+			do i = 1, 3
+				!ROTATE TO HAM GAUGE
+				tmp			= matmul(	Ha_mat(i,:,:)	, Ucjg			)	
+				Hbar(i,:,:)	= matmul(	U				, tmp				)	
+				!
+				tmp			= matmul(	A_mat(i,:,:,ki)		, Ucjg			)	
+				Abar(i,:,:)	= matmul(	U				, tmp				)
+				!APPLY ROTATION
+				do m = 1, nWfs
+					do n = 1, nWfs
+						if( n==m )	v_mat(i,n,n,ki) = Hbar(i,n,n)
+						if( n/=m )	v_mat(i,n,m,ki) = - i_dp * dcmplx( En_vec(m,ki) - En_vec(n,ki) ) * Abar(i,n,m) 
+						!v_mat(1:3,n,m,ki)	=  Ha_mat(1:3,n,m,ki)	- i_dp * dcmplx( En_vec(m,ki) - En_vec(n,ki) ) * A_mat(1:3,n,m,ki) 
+						!DEBUG
+						if( n/=m .and. abs(Hbar(i,n,m)) > 0.1_dp ) then
+							write(*,'(a,i1,a,i3,a,i3,a,f8.4,a,f8.4,a,f8.4)')"[calcVelo]: found off diag band deriv i=",i,&
+									" n=",n," m=",m, "v_nm=",dreal(Hbar(i,n,m)), "+i*",dimag(Hbar(i,n,m))," abs=",abs(Abar(i,n,n))
+						end if
+					end do
+				end do
+			end do
+		else	
+			if(ki==1)	write(*,*)"[calcVeloNOIntP]: velocities are calculated analytically"
+			if( nK /= nQ) write(*,*)"[calcVeloNOIntP]: warning analytic approach does not support different k mesh spacing"
+			do m = 1, nWfs
+				do n = 1, nWfs
+					do gi = 1 , nGq(ki)
+						v_mat(1:2,n,m,ki) = v_mat(1:2,n,m,ki) +  dconjg(ckW(gi,n,ki)) *  ckW(gi,m,ki) * i_dp * Gvec(1:2,gi,ki)
+					end do
+				end do
+			end do
+		end if	
+			!NO GAUGE BACK
+			!do m = 1, num_wann
+			!	do n = 1, num_wann
+			!		if( n==m )	v_mat(1:3,n,n,ki) = Ha_mat(1:3,n,n,ki)
+			!		if( n/=m )	v_mat(1:3,n,m,ki) =  - i_dp * dcmplx( En_vec(m,ki) - En_vec(n,ki) ) * A_mat(1:3,n,m,ki) 
+			!		!v_mat(1:3,n,m,ki)	=  Ha_mat(1:3,n,m,ki)	- i_dp * dcmplx( En_vec(m,ki) - En_vec(n,ki) ) * A_mat(1:3,n,m,ki) 
+			!		!DEBUG
+			!		if( n/=m .and. abs(Hbar(i,n,m)) > 0.1_dp ) then
+			!				write(*,'(a,i1,a,i3,a,i3,a,f8.4,a,f8.4,a,f8.4)')"[calcVelo]: found off diag band deriv i=",i,&
+			!						" n=",n," m=",m, "v_nm=",dreal(Hbar(i,n,m)), "+i*",dimag(Hbar(i,n,m))," abs=",abs(Abar(i,n,n))
+			!		end if
+			!	end do
+			!end do
+		!
+		return
+	end subroutine
 
 
 
