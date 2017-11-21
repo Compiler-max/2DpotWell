@@ -57,6 +57,8 @@ module postW90
 			dummy = dcmplx(0.0_dp)	!need to set doVeloNum = true
 			call DoWannInterpol( dummy, r_tb, H_tb, R_real, En_vec, A_mat, Om_mat, v_mat)
 			write(*,*)	"[effTBmodel]: done interpolating to k mesh with nK=",nK
+			!
+			!Gauge to (H) gauge
 			if( pw90GaugeB ) then
 				call gaugeTrafo()
 				write(*,*)	"[effTBmodel]: done gauging back to (H) gauge"

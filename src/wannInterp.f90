@@ -62,20 +62,19 @@ module wannInterp
 		real(dp),		intent(out)		::	En_vec(:,:)
 		complex(dp),	intent(out)		::	U_mat(:,:), H_mat(:,:), Ha_mat(:,:,:), A_mat(:,:,:), Om_mat(:,:,:)
 		complex(dp),	allocatable		::	Om_tens(:,:,:,:)
-		integer						:: R, a, b, c, nrpts
+		integer						:: R, a, b, c
 		complex(dp)					:: phase
 		!
 		allocate(	Om_tens(	3,	3,	nWfs,	nWfs	)	)
 		!
-		A_mat	= dcmplx(0.0_dp)
-		Om_tens = dcmplx(0.0_dp)
 		H_mat	= dcmplx(0.0_dp)
 		Ha_mat	= dcmplx(0.0_dp)
+		A_mat	= dcmplx(0.0_dp)
+		Om_tens = dcmplx(0.0_dp)
 		En_vec	= 0.0_dp
-		nrpts 	= nSC
 		!
 		!SET UP K SPACE MATRICES
-		do R = 1, nrpts
+		do R = 1, size(R_real,2)
 			phase				= myExp( 	dot_product(kpts(1:2,ki),R_real(1:2,R))		) !/ dcmplx(real(nrpts,dp))
 			!
 			H_mat(:,:)			= H_mat(:,:)	 	+ 			phase 								* H_tb(:,:,R)
@@ -210,6 +209,7 @@ module wannInterp
 
 
 	subroutine calcVeloNOIntP(ki, ckW, U, HaW, EnH, AconnH, veloH)
+		!deprecated, use calcVeloNew
 		integer,		intent(in)		:: ki
 		complex(dp),	intent(in)		:: ckW(:,:,:), U(:,:), HaW(:,:,:), AconnH(:,:,:,:)
 		real(dp),		intent(in)		:: EnH(:,:) 

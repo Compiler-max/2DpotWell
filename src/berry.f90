@@ -2,7 +2,7 @@ module berry
 	!module contains methods related to the Berry phase theory of modern polarization
 	!	i.e. calculation of connection, velocities, curvatures and polarization
 	use omp_lib
-	use mathematics,	only:	dp, PI_dp, i_dp, acc, myExp, myLeviCivita, nIntegrate
+	use mathematics,	only:	dp, PI_dp, i_dp, acc, machineP,  myExp, myLeviCivita, nIntegrate
 	use sysPara
 	use effTB,			only:	TBviaKspace
 	use wannInterp,		only:	DoWannInterpol
@@ -190,6 +190,14 @@ module berry
 					Uq(m,n,qi)	= dcmplx(val(1))	+	i_dp	*	dcmplx(val(2))
 				end do
 			end do
+			!DEBUG
+			if( abs( krel(1,qi)*2.0_dp*PI_dp/aX - qpts(1,qi)) > machineP) then
+				write(*,*)	"[readUmatrix]: warning k meshes are ordered diffferently"
+				write(*,*)	"				x: k_w90= ",krel(1,qi)*2.0_dp*PI_dp/aX, " qpts=",qpts(1,qi)
+				write(*,*)	"				y: k_w90= ",krel(2,qi)*2.0_dp*PI_dp/aY, " qpts=",qpts(2,qi)
+			end if
+
+
 		end do
 		close(300)
 
