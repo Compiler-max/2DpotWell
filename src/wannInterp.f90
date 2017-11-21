@@ -69,14 +69,26 @@ module wannInterp
 		complex(dp),	intent(in)		:: ckW(:,:,:), U(:,:), HaW(:,:,:), AconnH(:,:,:,:)
 		real(dp),		intent(in)		:: EnH(:,:) 
 		complex(dp),	intent(out)		:: veloH(:,:,:,:)
-		integer							:: n,m, gi
+		complex(dp),	allocatable		:: Hbar(:,:,:), Abar(:,:,:)
+		integer							:: n,m, gi, i
+
+		allocate(	Hbar( size(HaW,1),size(HaW,2),size(HaW,3) 			)			)
+		allocate(	Abar( size(AconnH,1),size(AconnH,2),size(AconnH,3) 	)			)
 
 		!TB approach
 		if( doVeloNUM ) then
 			if(ki==1)	write(*,*)"[calcVeloNOIntP]: velocities are calculated via TB approach"
+			
+			do i = 1, 3
+				Hbar(i,:,:)	= matmul(	Haw(i,:,:),	U	)
+				Hbar(i,:,:)	= matmul( dconjg(transpose(U)),	Hbar(i,:,:)	)
+				Abar(i,:,:)	= matmul(	AconnH(i,:,:,ki),	U	)
+				Abar(i,:,:)	= matmul( dconjg(transpose(U)),	AconnH(i,:,:,ki)	)
+			end do
+
 			do m = 1, nWfs
 				do n = 1, nWfs
-					if( n==m ) veloH(1:2,n,m,ki)	= HaW(1:2,n,m)
+					if( n==m ) veloH(1:2,n,n,ki)	= Hbar(1:2,n,n)
 					if( n/=m ) veloH(1:2,n,m,ki)	= - i_dp * ( EnH(m,ki)-EnH(n,ki) ) * AconnH(1:2,n,m,ki) 
 				end do
 			end do
