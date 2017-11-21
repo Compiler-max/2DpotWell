@@ -21,9 +21,9 @@ module wannInterp
 		!
 		allocate(	U(				nWfs, 	nWfs			)		)
 		allocate(	HW(				nWfs, 	nWfs			)		)
-		allocate(	HaW(	2	,	nWfs, 	nWfs			)		)
-		allocate(	AW(		2	,	nWfs, 	nWfs			)		)
-		allocate(	Fw(		2,2	,	nWfs,	nWfs			)		)
+		allocate(	HaW(	3	,	nWfs, 	nWfs			)		)
+		allocate(	AW(		3	,	nWfs, 	nWfs			)		)
+		allocate(	Fw(		3,3	,	nWfs,	nWfs			)		)
 		!
 		EnH	= 0.0_dp
 		AconnH	= dcmplx(0.0_dp)
@@ -144,7 +144,7 @@ module wannInterp
 		allocate(		tmp(	size(Ha_mat,2),	size(Ha_mat,2)						)	)
 		!
 		if(	doVeloNUM ) then
-			if(ki==1)	write(*,*)"[calcVeloNOIntP]: velocities are calculated via TB approach"
+			if(ki==1)	write(*,*)"[calcVeloNew]: velocities are calculated via TB approach"
 			!GAUGE BACK
 			Ucjg			= dconjg(	transpose(U)	)
 			do i = 1, 3
@@ -169,8 +169,8 @@ module wannInterp
 				end do
 			end do
 		else	
-			if(ki==1)	write(*,*)"[calcVeloNOIntP]: velocities are calculated analytically"
-			if( nK /= nQ) write(*,*)"[calcVeloNOIntP]: warning analytic approach does not support different k mesh spacing"
+			if(ki==1)	write(*,*)"[calcVeloNew]:velocities are calculated analytically"
+			if( nK /= nQ) write(*,*)"[calcVeloNew]: warning analytic approach does not support different k mesh spacing"
 			do m = 1, nWfs
 				do n = 1, nWfs
 					do gi = 1 , nGq(ki)
