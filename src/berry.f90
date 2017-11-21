@@ -85,7 +85,7 @@ module berry
 		if(	useRot ) then
 			do qi = 1, nQ
 				do gi = 1, nGq(qi)
-					ckW(gi,:,qi)	= matmul( ck(gi,:,qi), Uq(:,:,qi))
+					ckW(gi,:,qi)	= matmul(  Uq(:,:,qi) , ck(gi,:,qi) )
 				end do
 			end do
 			write(*,*)	"[berryMethod]: applied U matrix to basis coefficients"

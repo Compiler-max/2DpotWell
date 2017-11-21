@@ -56,6 +56,27 @@ module mathematics
 
 
 !public
+	subroutine myFT_R_to_kdense()
+
+		return
+	end subroutine
+
+	subroutine myFT_R_to_kcoarse()
+
+		return
+	end subroutine
+
+	subroutine myFT_kcoarse_to_R()
+
+		return
+	end subroutine
+
+	subroutine myFT_kdense_to_R()
+
+		return
+	end subroutine
+
+
 	subroutine setAcc(thres)
 		real(dp),		intent(in)	:: thres
 		acc	= thres
