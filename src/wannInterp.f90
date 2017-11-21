@@ -11,8 +11,9 @@ module wannInterp
 	contains
 
 !public
-	subroutine DoWannInterpol(ckW, rHopp, tHopp, EnH, AconnH, FcurvH, veloH)
+	subroutine DoWannInterpol(ckW, rHopp, tHopp, R_real, EnH, AconnH, FcurvH, veloH)
 		complex(dp),	intent(in)		:: ckW(:,:,:), rHopp(:,:,:,:), tHopp(:,:,:)
+		real(dp),		intent(in)		:: R_real(:,:)
 		real(dp),		intent(out)		:: EnH(:,:)
 		complex(dp),	intent(out)		:: AconnH(:,:,:,:), FcurvH(:,:,:,:), veloH(:,:,:,:)
 		complex(dp),	allocatable		:: U(:,:), HW(:,:), HaW(:,:,:), AW(:,:,:), FW(:,:,:,:)
@@ -32,7 +33,7 @@ module wannInterp
 		!
 		do ki = 1, nK
 			!call interpolateMat(ki, tHopp, rHopp, HW, HaW, AW, FW)
-			call wannInterpolator(ki, tHopp, rHopp, EnH, U, HW, HaW, AW, FcurvH(:,:,:,ki))
+			call wannInterpolator(ki, tHopp, rHopp, R_real, EnH, U, HW, HaW, AW, FcurvH(:,:,:,ki))
 			if( doGaugBack ) then
 				if(ki == 1) write(*,*)	"[DoGaugeTrafo]: start gauging back" 	
 				call gaugeBack(Hw, HaW, AW, FW, EnH(:,ki), U, AconnH(:,:,:,ki), FcurvH(:,:,:,ki), veloH(:,:,:,ki))	
@@ -54,9 +55,10 @@ module wannInterp
 
 
 
-	subroutine wannInterpolator(ki, H_tb,r_tb, En_vec, U_mat, H_mat, Ha_mat, A_mat,Om_mat)
+	subroutine wannInterpolator(ki, H_tb,r_tb, R_real, En_vec, U_mat, H_mat, Ha_mat, A_mat,Om_mat)
 		integer,		intent(in)		::	ki
 		complex(dp),	intent(in)		::	H_tb(:,:,:), r_tb(:,:,:,:)
+		real(dp),		intent(in)		:: 	R_real(:,:)
 		real(dp),		intent(out)		::	En_vec(:,:)
 		complex(dp),	intent(out)		::	U_mat(:,:), H_mat(:,:), Ha_mat(:,:,:), A_mat(:,:,:), Om_mat(:,:,:)
 		complex(dp),	allocatable		::	Om_tens(:,:,:,:)
@@ -74,16 +76,16 @@ module wannInterp
 		!
 		!SET UP K SPACE MATRICES
 		do R = 1, nrpts
-			phase				= myExp( 	dot_product(kpts(1:2,ki),Rcell(1:2,R))		) !/ dcmplx(real(nrpts,dp))
+			phase				= myExp( 	dot_product(kpts(1:2,ki),R_real(1:2,R))		) !/ dcmplx(real(nrpts,dp))
 			!
 			H_mat(:,:)			= H_mat(:,:)	 	+ 			phase 								* H_tb(:,:,R)
 			do a = 1, 3
-				Ha_mat(a,:,:)	= Ha_mat(a,:,:) 	+ 			phase * i_dp * dcmplx(Rcell(a,R))	* H_tb(:,:,R)
+				Ha_mat(a,:,:)	= Ha_mat(a,:,:) 	+ 			phase * i_dp * dcmplx(R_real(a,R))	* H_tb(:,:,R)
 				A_mat(a,:,:)	= A_mat(a,:,:)		+ 			phase								* r_tb(a,:,:,R)
 				!
 				do b = 1, 3
-					Om_tens(a,b,:,:)	= Om_tens(a,b,:,:)	+  	phase * i_dp * dcmplx(Rcell(a,R)) 	* r_tb(b,:,:,R)
-					Om_tens(a,b,:,:)	= Om_tens(a,b,:,:)	-  	phase * i_dp * dcmplx(Rcell(b,R)) 	* r_tb(a,:,:,R)
+					Om_tens(a,b,:,:)	= Om_tens(a,b,:,:)	+  	phase * i_dp * dcmplx(R_real(a,R)) 	* r_tb(b,:,:,R)
+					Om_tens(a,b,:,:)	= Om_tens(a,b,:,:)	-  	phase * i_dp * dcmplx(R_real(b,R)) 	* r_tb(a,:,:,R)
 				end do
 			end do
 		end do

@@ -55,7 +55,7 @@ module postW90
 			!allocate(	v_mat(		3,		num_wann,	num_wann,	nK	)	)
 			!allocate(	Om_mat(		3,		num_wann,	num_wann,	nK	)	)
 			!dummy = dcmplx(0.0_dp)	!need to set doVeloNum = true
-			!call DoWannInterpol( dummy, r_tb, H_tb, En_vec, A_mat, Om_mat, v_mat)
+			!call DoWannInterpol( dummy, r_tb, H_tb, R_real, En_vec, A_mat, Om_mat, v_mat)
 			write(*,*)	"[effTBmodel]: done interpolating to k mesh with nK=",nK
 			if( pw90GaugeB ) then
 				call gaugeTrafo()
