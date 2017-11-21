@@ -223,16 +223,16 @@ module postW90
 		!SET UP K SPACE MATRICES
 		do ki = 1 , nK
 			do R = 1, nrpts
-				phase		= myExp( 	dot_product(kpts(1:2,ki),Rcell(1:2,R))		) !/ dcmplx(real(nrpts,dp))
+				phase		= myExp( 	dot_product(kpts(1:2,ki),R_real(1:2,R))		) !/ dcmplx(real(nrpts,dp))
 				!
 				H_mat(:,:,ki)		= H_mat(:,:,ki)	 		+ phase 								* H_tb(:,:,R)
 				do a = 1, 3
-					Ha_mat(a,:,:,ki)	= Ha_mat(a,:,:,ki) 	+ phase * i_dp * dcmplx(Rcell(a,R))	* H_tb(:,:,R)
+					Ha_mat(a,:,:,ki)	= Ha_mat(a,:,:,ki) 	+ phase * i_dp * dcmplx(R_real(a,R))	* H_tb(:,:,R)
 					A_mat(a,:,:,ki)		= A_mat(a,:,:,ki)	+ phase									* r_tb(a,:,:,R)
 					!
 					do b = 1, 3
-						Om_tens(a,b,:,:,ki)	= Om_tens(a,b,:,:,ki)	+  phase * i_dp * dcmplx(Rcell(a,R)) * r_tb(b,:,:,R)
-						Om_tens(a,b,:,:,ki)	= Om_tens(a,b,:,:,ki)	-  phase * i_dp * dcmplx(Rcell(b,R)) * r_tb(a,:,:,R)
+						Om_tens(a,b,:,:,ki)	= Om_tens(a,b,:,:,ki)	+  phase * i_dp * dcmplx(R_real(a,R)) * r_tb(b,:,:,R)
+						Om_tens(a,b,:,:,ki)	= Om_tens(a,b,:,:,ki)	-  phase * i_dp * dcmplx(R_real(b,R)) * r_tb(a,:,:,R)
 					end do
 				end do
 			end do
