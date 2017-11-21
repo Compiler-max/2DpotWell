@@ -33,27 +33,17 @@ module wannInterp
 		!
 		do ki = 1, nK
 			!call interpolateMat(ki, tHopp, rHopp, HW, HaW, AW, FW)
-			call wannInterpolator(ki, tHopp, rHopp, EnH, HW, HaW, AW, FcurvH(:,:,:,ki))
+			call wannInterpolator(ki, tHopp, rHopp, EnH, U, HW, HaW, AW, FcurvH(:,:,:,ki))
 			if( doGaugBack ) then
 				if(ki == 1) write(*,*)	"[DoGaugeTrafo]: start gauging back" 	
 				call gaugeBack(Hw, HaW, AW, FW, EnH(:,ki), U, AconnH(:,:,:,ki), FcurvH(:,:,:,ki), veloH(:,:,:,ki))	
 			else
 				if(ki ==1)	write(*,*)	"[DoGaugeTrafo]: Gauge trafo DISABLED	"
-				!ENERGIES
-				U = HW
-				call eigSolver(U,EnH(:,ki))
 				!CONNECTION
 				AconnH(1:2,:,:,ki) 		= AW(1:2,:,:)
 				!VELOCITIES
 				!call calcVeloNOIntP(ki, ckW, U, HaW, EnH, AconnH, veloH)
 				call calcVeloNew(ki, EnH, U, ckW, HaW, AconnH, veloH)
-				!CURVATURE
-				FcurvH(1:2,:,:,ki)		= dcmplx(0.0_dp)
-				do b = 1, 2
-					do a = 1,2
-						FcurvH(3,:,:,ki)	= myLeviCivita(a,b,3) * FW(a,b,:,:)
-					end do
-				end do
 			end if
 		end do	
 		!
@@ -65,11 +55,11 @@ module wannInterp
 
 
 
-	subroutine wannInterpolator(ki, H_tb,r_tb, En_vec, H_mat, Ha_mat, A_mat,Om_mat)
+	subroutine wannInterpolator(ki, H_tb,r_tb, En_vec, U_mat, H_mat, Ha_mat, A_mat,Om_mat)
 		integer,		intent(in)		::	ki
 		complex(dp),	intent(in)		::	H_tb(:,:,:), r_tb(:,:,:,:)
 		real(dp),		intent(out)		::	En_vec(:,:)
-		complex(dp),	intent(out)		::	H_mat(:,:), Ha_mat(:,:,:), A_mat(:,:,:), Om_mat(:,:,:)
+		complex(dp),	intent(out)		::	U_mat(:,:), H_mat(:,:), Ha_mat(:,:,:), A_mat(:,:,:), Om_mat(:,:,:)
 		complex(dp),	allocatable		::	Om_tens(:,:,:,:)
 		integer						:: R, a, b, c, nrpts
 		complex(dp)					:: phase
@@ -85,25 +75,24 @@ module wannInterp
 		nrpts 	= nSC
 		!
 		!SET UP K SPACE MATRICES
-
-			do R = 1, nrpts
-				phase				= myExp( 	dot_product(kpts(1:2,ki),Rcell(1:2,R))		) !/ dcmplx(real(nrpts,dp))
+		do R = 1, nrpts
+			phase				= myExp( 	dot_product(kpts(1:2,ki),Rcell(1:2,R))		) !/ dcmplx(real(nrpts,dp))
+			!
+			H_mat(:,:)			= H_mat(:,:)	 	+ phase 								* H_tb(:,:,R)
+			do a = 1, 3
+				Ha_mat(a,:,:)	= Ha_mat(a,:,:) 	+ phase * i_dp * dcmplx(Rcell(a,R))	* H_tb(:,:,R)
+				A_mat(a,:,:)	= A_mat(a,:,:)		+ phase									* r_tb(a,:,:,R)
 				!
-				H_mat(:,:)			= H_mat(:,:)	 	+ phase 								* H_tb(:,:,R)
-				do a = 1, 3
-					Ha_mat(a,:,:)	= Ha_mat(a,:,:) 	+ phase * i_dp * dcmplx(Rcell(a,R))	* H_tb(:,:,R)
-					A_mat(a,:,:)	= A_mat(a,:,:)		+ phase									* r_tb(a,:,:,R)
-					!
-					do b = 1, 3
-						Om_tens(a,b,:,:)	= Om_tens(a,b,:,:)	+  phase * i_dp * dcmplx(Rcell(a,R)) * r_tb(b,:,:,R)
-						Om_tens(a,b,:,:)	= Om_tens(a,b,:,:)	-  phase * i_dp * dcmplx(Rcell(b,R)) * r_tb(a,:,:,R)
-					end do
+				do b = 1, 3
+					Om_tens(a,b,:,:)	= Om_tens(a,b,:,:)	+  phase * i_dp * dcmplx(Rcell(a,R)) * r_tb(b,:,:,R)
+					Om_tens(a,b,:,:)	= Om_tens(a,b,:,:)	-  phase * i_dp * dcmplx(Rcell(b,R)) * r_tb(a,:,:,R)
 				end do
 			end do
+		end do
 
 		!ENERGY INTERPOLATION
-		!U_mat(:,:,ki)	= H_mat(:,:,ki)
-		!call eigSolver(U_mat(:,:,ki),	En_vec(:,ki))
+		U_mat(:,:)	= H_mat(:,:)
+		call eigSolver(U_mat(:,:),	En_vec(:,ki))
 	
 		!
 		!CURVATURE TO MATRIX
