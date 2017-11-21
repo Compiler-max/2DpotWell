@@ -47,15 +47,15 @@ module postW90
 		if( readTBsingle() ) then
 			write(*,*)	"[effTBmodel]: done reading eff tb matrices"
 			!OWN IMPL
-			call wannInterpolator()
+			!call wannInterpolator()
 			!BERRY IMPL
-			!allocate(	dummy(				num_wann, 	num_wann ,  nQ	)	)
-			!allocate(	A_mat(		3,		num_wann,	num_wann,	nK	)	)		
-			!allocate(	En_vec(						num_wann	,	nK	)	)
-			!allocate(	v_mat(		3,		num_wann,	num_wann,	nK	)	)
-			!allocate(	Om_mat(		3,		num_wann,	num_wann,	nK	)	)
-			!dummy = dcmplx(0.0_dp)	!need to set doVeloNum = true
-			!call DoWannInterpol( dummy, r_tb, H_tb, R_real, En_vec, A_mat, Om_mat, v_mat)
+			allocate(	dummy(				num_wann, 	num_wann ,  nQ	)	)
+			allocate(	A_mat(		3,		num_wann,	num_wann,	nK	)	)		
+			allocate(	En_vec(						num_wann	,	nK	)	)
+			allocate(	v_mat(		3,		num_wann,	num_wann,	nK	)	)
+			allocate(	Om_mat(		3,		num_wann,	num_wann,	nK	)	)
+			dummy = dcmplx(0.0_dp)	!need to set doVeloNum = true
+			call DoWannInterpol( dummy, r_tb, H_tb, R_real, En_vec, A_mat, Om_mat, v_mat)
 			write(*,*)	"[effTBmodel]: done interpolating to k mesh with nK=",nK
 			if( pw90GaugeB ) then
 				call gaugeTrafo()
