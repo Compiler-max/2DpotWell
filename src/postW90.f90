@@ -70,6 +70,7 @@ module postW90
 		!output file
 		call writePw90pol( pWann, pConn, pNiuF2, pNiuF3, pPei)
 		call writeVeloEffTB(v_mat)
+		if( writeBin ) call writeInterpBands(En_vec)
 		!
 		!
 		return
@@ -241,7 +242,7 @@ module postW90
 			U_mat(:,:,ki)	= H_mat(:,:,ki)
 			call eigSolver(U_mat(:,:,ki),	En_vec(:,ki))
 		end do
-		if( writeBin ) call writeInterpBands(En_vec)
+	
 		!
 		!CURVATURE TO MATRIX
 		do ki = 1, nK

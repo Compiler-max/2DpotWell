@@ -32,7 +32,8 @@ module wannInterp
 		!
 		!
 		do ki = 1, nK
-			call interpolateMat(ki, tHopp, rHopp, HW, HaW, AW, FW)
+			!call interpolateMat(ki, tHopp, rHopp, HW, HaW, AW, FW)
+			call wannInterpolator(ki, tHopp, rHopp, EnH, HW, HaW, AW, FcurvH(:,:,:,ki))
 			if( doGaugBack ) then
 				if(ki == 1) write(*,*)	"[DoGaugeTrafo]: start gauging back" 	
 				call gaugeBack(Hw, HaW, AW, FW, EnH(:,ki), U, AconnH(:,:,:,ki), FcurvH(:,:,:,ki), veloH(:,:,:,ki))	
@@ -59,6 +60,94 @@ module wannInterp
 		!
 		return
 	end subroutine
+
+
+
+
+	subroutine wannInterpolator(ki, H_tb,r_tb, En_vec, H_mat, Ha_mat, A_mat,Om_mat)
+		integer,		intent(in)		::	ki
+		complex(dp),	intent(in)		::	H_tb(:,:,:), r_tb(:,:,:,:)
+		real(dp),		intent(out)		::	En_vec(:,:)
+		complex(dp),	intent(out)		::	H_mat(:,:), Ha_mat(:,:,:), A_mat(:,:,:), Om_mat(:,:,:)
+		complex(dp),	allocatable		::	Om_tens(:,:,:,:)
+		integer						:: R, a, b, c, nrpts
+		complex(dp)					:: phase
+		!
+		allocate(	Om_tens(	3,	3,	nWfs,	nWfs	)	)
+		!
+		A_mat	= dcmplx(0.0_dp)
+		Om_tens = dcmplx(0.0_dp)
+		H_mat	= dcmplx(0.0_dp)
+		Ha_mat	= dcmplx(0.0_dp)
+		En_vec	= 0.0_dp
+		!v_mat	= dcmplx(0.0_dp)
+		nrpts 	= nSC
+		!
+		!SET UP K SPACE MATRICES
+
+			do R = 1, nrpts
+				phase				= myExp( 	dot_product(kpts(1:2,ki),Rcell(1:2,R))		) !/ dcmplx(real(nrpts,dp))
+				!
+				H_mat(:,:)			= H_mat(:,:)	 	+ phase 								* H_tb(:,:,R)
+				do a = 1, 3
+					Ha_mat(a,:,:)	= Ha_mat(a,:,:) 	+ phase * i_dp * dcmplx(Rcell(a,R))	* H_tb(:,:,R)
+					A_mat(a,:,:)	= A_mat(a,:,:)		+ phase									* r_tb(a,:,:,R)
+					!
+					do b = 1, 3
+						Om_tens(a,b,:,:)	= Om_tens(a,b,:,:)	+  phase * i_dp * dcmplx(Rcell(a,R)) * r_tb(b,:,:,R)
+						Om_tens(a,b,:,:)	= Om_tens(a,b,:,:)	-  phase * i_dp * dcmplx(Rcell(b,R)) * r_tb(a,:,:,R)
+					end do
+				end do
+			end do
+
+		!ENERGY INTERPOLATION
+		!U_mat(:,:,ki)	= H_mat(:,:,ki)
+		!call eigSolver(U_mat(:,:,ki),	En_vec(:,ki))
+	
+		!
+		!CURVATURE TO MATRIX
+		do c = 1, 3
+			do b = 1, 3
+				do a = 1,3
+					Om_mat(c,:,:)	= myLeviCivita(a,b,c) * Om_tens(a,b,:,:)
+				end do
+			end do
+		end do
+		!
+		!VELOCITIES
+		!call calcVelo()
+		!
+		!
+		return
+	end subroutine
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
