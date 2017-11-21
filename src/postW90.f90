@@ -251,7 +251,7 @@ module postW90
 
 	subroutine calcVelo()
 		integer							:: ki, m, n, i
-		complex(dp),	allocatable		:: Hbar(:,:,:), Abar(:,:,:), Ucjg(:,:),U(:,:), tmp(:,:)
+		complex(dp),	allocatable		:: Hbar(:,:,:), Abar(:,:,:), Ucjg(:,:), U(:,:), tmp(:,:)
 		!
 		allocate(		Hbar(	size(Ha_mat,1),	size(Ha_mat,2),	size(Ha_mat,3)		)	)		
 		allocate(		Abar(	size(A_mat ,1),	size(A_mat ,2),	size(A_mat ,3)		)	)

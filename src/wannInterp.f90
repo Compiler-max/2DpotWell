@@ -39,11 +39,12 @@ module wannInterp
 			else
 				if(ki ==1)	write(*,*)	"[DoGaugeTrafo]: Gauge trafo DISABLED	"
 				!ENERGIES
-				call eigSolver(HW,EnH(:,ki))
+				U = HW
+				call eigSolver(U,EnH(:,ki))
 				!CONNECTION
 				AconnH(1:2,:,:,ki) 		= AW(1:2,:,:)
 				!VELOCITIES
-				call calcVeloNOIntP(ki, ckW, HaW, EnH, AconnH, veloH)
+				call calcVeloNOIntP(ki, ckW, U, HaW, EnH, AconnH, veloH)
 				!CURVATURE
 				FcurvH(1:2,:,:,ki)		= dcmplx(0.0_dp)
 				do b = 1, 2
@@ -63,9 +64,9 @@ module wannInterp
 
 
 
-	subroutine calcVeloNOIntP(ki, ckW, HaW, EnH, AconnH, veloH)
+	subroutine calcVeloNOIntP(ki, ckW, U, HaW, EnH, AconnH, veloH)
 		integer,		intent(in)		:: ki
-		complex(dp),	intent(in)		:: ckW(:,:,:), HaW(:,:,:), AconnH(:,:,:,:)
+		complex(dp),	intent(in)		:: ckW(:,:,:), U(:,:), HaW(:,:,:), AconnH(:,:,:,:)
 		real(dp),		intent(in)		:: EnH(:,:) 
 		complex(dp),	intent(out)		:: veloH(:,:,:,:)
 		integer							:: n,m, gi
