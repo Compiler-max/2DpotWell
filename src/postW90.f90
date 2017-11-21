@@ -4,6 +4,7 @@ module postW90
 								aUtoAngstrm, aUtoEv, & 
 								myExp, myLeviCivita, eigSolver
 	use sysPara
+	use wannInterp,		only:	DoWannInterpol
 	use polarization,	only:	calcPolWannCent, calcPolViaA
 	use semiclassics,	only:	calcFirstOrdP
 	use output,			only:	writeInterpBands, writeVeloEffTB
@@ -21,7 +22,7 @@ module postW90
 	real(dp),		allocatable		:: 	krel(:,:), En_vec(:,:), R_real(:,:), wCent(:,:)
 	complex(dp),	allocatable		::	H_tb(:,:,:), r_tb(:,:,:,:), &
 										A_mat(:,:,:,:), Om_tens(:,:,:,:,:),	H_mat(:,:,:), Ha_mat(:,:,:,:), &
-										U_mat(:,:,:), Om_mat(:,:,:,:), v_mat(:,:,:,:) 
+										U_mat(:,:,:), Om_mat(:,:,:,:), v_mat(:,:,:,:)
 
 
 	contains
@@ -31,6 +32,9 @@ module postW90
 !public
 	subroutine effTBmodel()
 		real(dp)					:: pWann(3), pConn(3), pNiuF2(3), pNiuF3(3), pPei(3)
+		complex(dp), allocatable	:: dummy(:,:,:)
+
+
 
 		pWann 	= 0.0_dp
 		pConn	= 0.0_dp
@@ -42,7 +46,16 @@ module postW90
 		!If TB file found do calc
 		if( readTBsingle() ) then
 			write(*,*)	"[effTBmodel]: done reading eff tb matrices"
-			call wannInterp()
+			!OWN IMPL
+			!call wannInterpolator()
+			!BERRY IMPL
+			allocate(	dummy(				num_wann, 	num_wann ,  nQ	)	)
+			allocate(	A_mat(		3,		num_wann,	num_wann,	nK	)	)		
+			allocate(	En_vec(						num_wann	,	nK	)	)
+			allocate(	v_mat(		3,		num_wann,	num_wann,	nK	)	)
+			allocate(	Om_mat(		3,		num_wann,	num_wann,	nK	)	)
+			dummy = dcmplx(0.0_dp)	!need to set doVeloNum = true
+			call DoWannInterpol( dummy, r_tb, H_tb, En_vec, A_mat, Om_mat, v_mat)
 			write(*,*)	"[effTBmodel]: done interpolating to k mesh with nK=",nK
 			if( pw90GaugeB ) then
 				call gaugeTrafo()
@@ -185,7 +198,7 @@ module postW90
 	end function
 
 
-	subroutine wannInterp()
+	subroutine wannInterpolator()
 		integer						:: ki, R, a, b, c
 		complex(dp)					:: phase
 		!
