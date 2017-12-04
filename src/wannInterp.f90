@@ -64,8 +64,8 @@ module wannInterp
 		real(dp),		intent(out)		::	En_vec(:,:)
 		complex(dp),	intent(out)		::	U_mat(:,:), H_mat(:,:), Ha_mat(:,:,:), A_mat(:,:,:), Om_mat(:,:,:)
 		complex(dp),	allocatable		::	Om_tens(:,:,:,:)
-		integer						:: R, a, b, c, n
-		complex(dp)					:: phase
+		integer							:: R, a, b, c, n
+		complex(dp)						:: phase
 		!
 		allocate(	Om_tens(	3,	3,	nWfs,	nWfs	)	)
 		!
@@ -138,18 +138,18 @@ module wannInterp
 		allocate(		Abar(	3,	nWfs 	,	nWfs		)	)
 		allocate(		Ucjg(		nWfs	,	nWfs		)	)
 		allocate(		tmp(		nWfs	,	nWfs		)	)
+		Ucjg			= dconjg(	transpose(U)	)
 		!
 		if(	doVeloNUM ) then
 			if(ki==1)	write(*,*)"[calcVeloNew]: velocities are calculated via TB approach"
 			!GAUGE BACK
-			Ucjg			= dconjg(	transpose(U)	)
 			do i = 1, 3
 				!ROTATE TO HAM GAUGE
-				tmp			= matmul(	Ha_mat(i,:,:)	, Ucjg			)	
-				Hbar(i,:,:)	= matmul(	U				, tmp				)	
+				tmp			= matmul(	Ha_mat(i,:,:)	, U			)	
+				Hbar(i,:,:)	= matmul(	Ucjg				, tmp				)	
 				!
-				tmp			= matmul(	A_mat(i,:,:)		, Ucjg			)	
-				Abar(i,:,:)	= matmul(	U				, tmp				)
+				tmp			= matmul(	A_mat(i,:,:)		, U			)	
+				Abar(i,:,:)	= matmul(	Ucjg				, tmp				)
 				!APPLY ROTATION
 				do m = 1, nWfs
 					do n = 1, nWfs
@@ -159,7 +159,7 @@ module wannInterp
 						!DEBUG
 						if( n/=m .and. abs(Hbar(i,n,m)) > 0.1_dp ) then
 							write(*,'(a,i1,a,i3,a,i3,a,f8.4,a,f8.4,a,f8.4)')"[calcVeloNeW]: found off diag band deriv i=",i,&
-									" n=",n," m=",m, "v_nm=",dreal(Hbar(i,n,m)), "+i*",dimag(Hbar(i,n,m))," abs=",abs(Hbar(i,n,m))
+									" n=",n," m=",m, "Hbar_nm=",dreal(Hbar(i,n,m)), "+i*",dimag(Hbar(i,n,m))," abs=",abs(Hbar(i,n,m))
 						end if
 					end do
 				end do

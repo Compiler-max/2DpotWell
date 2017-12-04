@@ -91,7 +91,7 @@ module berry
 		!rotate ck, get ckW
 		if(	useRot ) then
 			do qi = 1, nQ
-				do gi = 1, nGq(qi)
+				do gi = 1, nGq(qi)			! u^(H) = u^(W) U -> u^(W) = u^(H) U^dagger
 					ckW(gi,:,qi)	= matmul( ck(gi,:,qi)   , dconjg( 	transpose( Uq(:,:,qi) ) 	)					)
 				end do
 			end do
