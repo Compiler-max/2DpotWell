@@ -7,7 +7,7 @@ module postW90
 	use wannInterp,		only:	DoWannInterpol
 	use polarization,	only:	calcPolWannCent, calcPolViaA
 	use semiclassics,	only:	calcFirstOrdP
-	use output,			only:	writeInterpBands, writeVeloEffTB, writeInterpU
+	use output,			only:	writeInterpBands, writeVeloEffTB, writeInterpU, writeHtb
 
 	implicit none
 
@@ -201,6 +201,7 @@ module postW90
 			do R = 1, nrpts
 				if( .not. isHermitian(H_tb(:,:,R)) ) write(*,*) "warning H_tb is not hermitian for #R=",R
 			end do
+			call writeHtb(H_tb)
 			!
 		end if
 		!
