@@ -64,7 +64,7 @@ module wannInterp
 		real(dp),		intent(out)		::	En_vec(:,:)
 		complex(dp),	intent(out)		::	U_mat(:,:), H_mat(:,:), Ha_mat(:,:,:), A_mat(:,:,:), Om_mat(:,:,:)
 		complex(dp),	allocatable		::	Om_tens(:,:,:,:)
-		integer						:: R, a, b, c
+		integer						:: R, a, b, c, n
 		complex(dp)					:: phase
 		!
 		allocate(	Om_tens(	3,	3,	nWfs,	nWfs	)	)
@@ -95,6 +95,10 @@ module wannInterp
 		U_mat(:,:)	= H_mat(:,:)
 		if( .not. isHermitian(U_mat)	) write(*,*)	"[wannInterpolator]: warning Ham is not hermitian"
 		call eigSolver(U_mat(:,:),	En_vec(:,ki))
+		write(*,*)	"[wannInterpolator]: #ki=",ki
+		do n = 1, size(En_vec,1)
+			write(*,*)	"[wannInterpolator]: E_n=",n," = ",En_vec(n,ki)
+		end do
 		U_mat	= transpose( dconjg(U_mat))
 	
 		!
