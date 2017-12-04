@@ -12,7 +12,7 @@ module output
 	public ::	writeMeshInfo, writeMeshBin, writeEnAndCK, writeCkASunk, writeConnCurv, writeWannFiles, writePolFile, &
 				printMat, printTiming , writePeierls,  writeInterpBands, writeEnH, printBasisInfo, & 
 				writeVeloHtxt, writeVeloEffTB, writeUmat, writeInterpU, writeBerryInterpU,& 
-				writeHtb, writeHtbBerry, writeRtbBerry, writeEnEffTB, writeEnBerry
+				writeHtb, writeHtbBerry, writeRtbBerry, writeEnEffTB, writeEnBerry, writeEnAbInitio
 
 
 	interface printMat
@@ -328,6 +328,23 @@ module output
 		return
 	end subroutine
 
+	subroutine writeEnAbInitio(En)
+		real(dp),		intent(in)			:: En(:,:)
+		integer								:: ki, n
+		!
+		open(unit=805,file='En_AbInitio.txt',action='write')
+		write(805,*)	"energies from solver"
+		write(805,*)	size(En,2)
+		do ki = 1, size(En,2)
+			write(805,*)	"#ki=",ki
+			do n = 1, size(En,1)
+				write(805,*)	En(n,ki)
+			end do
+		end do
+		close(805)
+		!
+		return
+	end subroutine
 
 	subroutine writeEnEffTB( En)
 		real(dp),		intent(in)			:: En(:,:)
@@ -335,6 +352,7 @@ module output
 		!
 		open(unit=805,file='En_InterpTB.txt',action='write')
 		write(805,*)	"interpolated energies by pW90 in a.u."
+		write(805,*)	size(En,2)
 		do ki = 1, size(En,2)
 			write(805,*)	"#ki=",ki
 			do n = 1, size(En,1)
@@ -351,7 +369,8 @@ module output
 		integer								:: ki, n
 		!
 		open(unit=805,file='En_InterpBerry.txt',action='write')
-		write(805,*)	"interpolated energies by berrry in a.u."
+		write(805,*)	"interpolated energies by berry in a.u."
+		write(805,*)	size(En,2)
 		do ki = 1, size(En,2)
 			write(805,*)	"#ki=",ki
 			do n = 1, size(En,1)

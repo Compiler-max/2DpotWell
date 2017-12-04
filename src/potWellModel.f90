@@ -5,7 +5,7 @@ module potWellModel
 	use mathematics,	only:	dp, PI_dp,i_dp, machineP, myExp, myLeviCivita, &
 								eigSolver, eigSolver2, nIntegrate, isUnit, isHermitian
 	use sysPara				
-	use output,			only:	writeEnAndCK
+	use output,			only:	writeEnAndCK, writeEnAbInitio
 	implicit none	
 	
 	private
@@ -77,6 +77,7 @@ module potWellModel
 		write(*,*)			"[solveHam]: copied eigenvalues"
 		write(*,*)			"[solveHam]: found ", countBandsSubZero(EnTq(1:nSolve,:))," bands at the gamma point beneath zero"
 		call writeEnAndCK(EnTq, ck, nGq)
+		call writeEnAbInitio(Entq(1:nBands,:))
 		!
 		!
 		!
