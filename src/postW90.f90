@@ -7,7 +7,7 @@ module postW90
 	use wannInterp,		only:	DoWannInterpol
 	use polarization,	only:	calcPolWannCent, calcPolViaA
 	use semiclassics,	only:	calcFirstOrdP
-	use output,			only:	writeInterpBands, writeVeloEffTB, writeInterpU, writeHtb
+	use output,			only:	writeInterpBands, writeVeloEffTB, writeInterpU, writeHtb, writeEnEffTB
 
 	implicit none
 
@@ -67,6 +67,7 @@ module postW90
 		!
 		!output file
 		call writePw90pol( pWann, pConn, pNiuF2, pNiuF3, pPei)
+		call writeEnEffTB( En_vec)
 		call writeVeloEffTB(v_mat)
 		call writeInterpU(U_int)
 		if( writeBin ) call writeInterpBands(En_vec)

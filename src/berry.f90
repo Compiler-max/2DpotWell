@@ -10,7 +10,8 @@ module berry
 	use semiClassics,	only:	calcFirstOrdP
 	use peierls,		only:	peierlsMethod
 	use wannier,		only:	wannMethod
-	use output,			only:	writeCkASunk, writePolFile, writeVeloHtxt, writeEnH, writeUmat, writeBerryInterpU, writeHtbBerry, writeRtbBerry
+	use output,			only:	writeCkASunk, writePolFile, writeVeloHtxt, writeEnH, writeUmat, writeBerryInterpU, &
+								writeHtbBerry, writeRtbBerry, writeEnBerry
 
 	implicit none
 
@@ -108,6 +109,7 @@ module berry
 
 		!SET UP EFFECTIVE TIGHT BINDING MODELL
 		call TBviaKspace(ckW, EnQ, Uq, tHopp, rHopp)
+		call writeEnBerry(EnK)
 		call writeHtbBerry(tHopp)
 		call writeRtbBerry(rHopp)
 		write(*,*)	"[berryMethod]: set up effective tight binding model (k-Space method)"
