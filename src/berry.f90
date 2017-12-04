@@ -92,8 +92,7 @@ module berry
 		if(	useRot ) then
 			do qi = 1, nQ
 				do gi = 1, nGq(qi)			! u^(H) = u^(W) U -> u^(W) = u^(H) U^dagger
-					!ckW(gi,:,qi)	= matmul( ck(gi,:,qi)   , dconjg( 	transpose( Uq(:,:,qi) ) 	)					)
-					ckW(gi,:,qi)	= matmul( ck(gi,:,qi)   , Uq(:,:,qi)  	)					
+					ckW(gi,:,qi)	= matmul( ck(gi,:,qi)   , dconjg( 	transpose( Uq(:,:,qi) ) 	)					)				
 				end do
 			end do
 			write(*,*)	"[berryMethod]: applied U matrix to basis coefficients"
