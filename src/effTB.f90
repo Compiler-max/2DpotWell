@@ -3,6 +3,7 @@ module effTB
 	use mathematics,	only:	dp, PI_dp, i_dp, acc, machineP, myExp, myLeviCivita, nIntegrate, isHermitian
 	use sysPara
 	use blochWf,		only:	UNKoverlap
+	use output,			only:	writeInterpU
 
 	implicit none
 

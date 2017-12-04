@@ -313,6 +313,9 @@ module wannInterp
 		allocate(	DH(2,nWfs,nWfs)	)
 
 
+
+
+
 		!1. CALC 
 		U	= HW
 		!GET U MAT & ENERGIES

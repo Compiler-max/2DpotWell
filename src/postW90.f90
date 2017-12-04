@@ -7,7 +7,7 @@ module postW90
 	use wannInterp,		only:	DoWannInterpol
 	use polarization,	only:	calcPolWannCent, calcPolViaA
 	use semiclassics,	only:	calcFirstOrdP
-	use output,			only:	writeInterpBands, writeVeloEffTB
+	use output,			only:	writeInterpBands, writeVeloEffTB, writeInterpU
 
 	implicit none
 
