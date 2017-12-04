@@ -227,7 +227,6 @@ module berry
 		close(700)
 		!
 		!UNK IMAG PART
-		buffer	= 0.0_dp
 		open(unit=710, file="./rawData/ckI.dat",form='unformatted',access='stream',action='read')
 		do qi = 1 , size(ck,3)
 			read(710) buffer

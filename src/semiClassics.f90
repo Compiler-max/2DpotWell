@@ -196,7 +196,7 @@ module semiClassics
 								!MATRIX
 								Fmat(i,j) 	= Fmat(i,j) + prefactF3 * myLeviCivita(j,k,l) *	Vtmp / dcmplx(eDiff)
 								!if(abs(dimag(Vtmp)) > acc ) write(*,*)	"[addF3]: non vanishing imag part detected",dimag(Vtmp)
-								write(*,*) if( abs(eDiff) < machineP ) write(*,*) "[addF3]: warning vanishing n0=",nZero,"n=",n," m=",m
+								if( abs(eDiff) < machineP ) write(*,*) "[addF3]: warning vanishing n0=",nZero,"n=",n
 								!write(*,'(a,e10.3,a,e10.3)')"[addF3]: |Vtmp|=",abs(Vtmp), "eDiff=",eDiff
 							end if
 						end do
