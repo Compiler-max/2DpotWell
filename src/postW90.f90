@@ -2,7 +2,7 @@ module postW90
 	use omp_lib
 	use mathematics,	only:	dp, PI_dp, i_dp, acc, machineP,  & 
 								aUtoAngstrm, aUtoEv, & 
-								myExp, myLeviCivita, eigSolver
+								myExp, myLeviCivita, eigSolver, isHermitian
 	use sysPara
 	use wannInterp,		only:	DoWannInterpol
 	use polarization,	only:	calcPolWannCent, calcPolViaA
@@ -196,6 +196,10 @@ module postW90
 				!	write(*,*) "			R_real(y)=",R_real(2,R)," Rcell=",Rcell(2,R)
 				!end if
 				!!if( abs(R_real(2,R)-Rcell(2,R)) > machineP ) write(*,*) "[readTB]: warning Rcell and R_real dont match(y comp)"
+			end do
+			!
+			do R = 1, nrpts
+				if( .not. isHermitian(H_tb(:,:,R)) ) write(*,*) "warning H_tb is not hermitian for #R=",R
 			end do
 			!
 		end if
