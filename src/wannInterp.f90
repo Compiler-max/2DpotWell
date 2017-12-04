@@ -1,5 +1,5 @@
 module wannInterp
-	use mathematics,	only:	dp, PI_dp, i_dp, acc, machineP, myExp, myLeviCivita, nIntegrate, eigSolver, rotMat, myCommutat, isHermitian
+	use mathematics,	only:	dp, PI_dp, i_dp, acc, machineP, myExp, myLeviCivita, nIntegrate, eigSolverFULL, rotMat, myCommutat, isHermitian
 	use sysPara
 
 	!use 
@@ -17,14 +17,15 @@ module wannInterp
 		complex(dp),	intent(out)		:: U_int(:,:,:)
 		real(dp),		intent(out)		:: EnH(:,:)
 		complex(dp),	intent(out)		:: AconnH(:,:,:,:), FcurvH(:,:,:,:), veloH(:,:,:,:)
-		complex(dp),	allocatable		:: U(:,:), HW(:,:), HaW(:,:,:), AW(:,:,:), FW(:,:,:,:)
-		integer							:: ki, a, b
+		complex(dp),	allocatable		:: U(:,:), HW(:,:), HaW(:,:,:), AW(:,:,:), FWtens(:,:,:,:), FWmat(:,:,:)
+		integer							:: ki, a, b, c
 		!
 		allocate(	U(				nWfs, 	nWfs			)		)
 		allocate(	HW(				nWfs, 	nWfs			)		)
 		allocate(	HaW(	3	,	nWfs, 	nWfs			)		)
 		allocate(	AW(		3	,	nWfs, 	nWfs			)		)
-		allocate(	Fw(		3,3	,	nWfs,	nWfs			)		)
+		allocate(	FWtens(	3,3	,	nWfs,	nWfs			)		)
+		allocate(	FWmat( 	3	,	nWfs,	nWfs			)		)
 		!
 		EnH	= 0.0_dp
 		AconnH	= dcmplx(0.0_dp)
@@ -34,22 +35,33 @@ module wannInterp
 		!
 		do ki = 1, nK
 			!call interpolateMat(ki, tHopp, rHopp, HW, HaW, AW, FW)
-			call wannInterpolator(ki, tHopp, rHopp, R_real, EnH, U, HW, HaW, AW, FcurvH(:,:,:,ki))
+			call wannInterpolator(ki, tHopp, rHopp, R_real, EnH, U, HW, HaW, AW, FWtens)
 			U_int(:,:,ki)	= U(:,:)
 			if( doGaugBack ) then
-				if(ki == 1) write(*,*)	"[DoGaugeTrafo]: start gauging back" 	
-				call gaugeBack(Hw, HaW, AW, FW, EnH(:,ki), U, AconnH(:,:,:,ki), FcurvH(:,:,:,ki), veloH(:,:,:,ki))	
+				if(ki == 1) write(*,*)	"[DoWannInterpol]: start gauging back" 	
+				call gaugeBack(Hw, HaW, AW, FWtens, EnH(:,ki), U, AconnH(:,:,:,ki), FcurvH(:,:,:,ki), veloH(:,:,:,ki))	
+				write(*,*)	"[DoWannInterpol]: calculated (H) gauge energy, connection, curvature, velocity"
 			else
-				if(ki ==1)	write(*,*)	"[DoGaugeTrafo]: Gauge trafo DISABLED	"
+				if(ki ==1)	write(*,*)	"[DoWannInterpol]: Gauge trafo DISABLED	"
 				!CONNECTION
 				AconnH(1:3,:,:,ki) 		= AW(1:3,:,:)
 				!VELOCITIES
 				!call calcVeloNOIntP(ki, ckW, U, HaW, EnH, AconnH, veloH)
 				call calcVeloNew(ki, EnH, U, ckW, HaW, AW, veloH)
+				!
+				!CURVATURE TO MATRIX
+				do c = 1, 3
+					do b = 1, 3
+						do a = 1,3
+							FcurvH(c,:,:,ki)	= myLeviCivita(a,b,c) * FWtens(a,b,:,:)
+						end do
+					end do
+				end do
+				write(*,*)	"[DoWannInterpol]: calculated (W) gauge energy, connection, curvature, velocity"
 			end if
 		end do	
 		!
-		write(*,*)	"[DoGaugeTrafo]: calculated (H) gauge energy, connection, curvature, velocity"
+		
 		!
 		return
 	end subroutine
@@ -57,17 +69,14 @@ module wannInterp
 
 
 
-	subroutine wannInterpolator(ki, H_tb,r_tb, R_real, En_vec, U_mat, H_mat, Ha_mat, A_mat,Om_mat)
+	subroutine wannInterpolator(ki, H_tb,r_tb, R_real, En_vec, U_mat, H_mat, Ha_mat, A_mat,Om_tens)
 		integer,		intent(in)		::	ki
 		complex(dp),	intent(in)		::	H_tb(:,:,:), r_tb(:,:,:,:)
 		real(dp),		intent(in)		:: 	R_real(:,:)
 		real(dp),		intent(out)		::	En_vec(:,:)
-		complex(dp),	intent(out)		::	U_mat(:,:), H_mat(:,:), Ha_mat(:,:,:), A_mat(:,:,:), Om_mat(:,:,:)
-		complex(dp),	allocatable		::	Om_tens(:,:,:,:)
+		complex(dp),	intent(out)		::	U_mat(:,:), H_mat(:,:), Ha_mat(:,:,:), A_mat(:,:,:), Om_tens(:,:,:,:)
 		integer							:: R, a, b, c, n
 		complex(dp)						:: phase
-		!
-		allocate(	Om_tens(	3,	3,	nWfs,	nWfs	)	)
 		!
 		H_mat	= dcmplx(0.0_dp)
 		Ha_mat	= dcmplx(0.0_dp)
@@ -94,26 +103,12 @@ module wannInterp
 		!ENERGY INTERPOLATION
 		U_mat(:,:)	= H_mat(:,:)
 		if( .not. isHermitian(U_mat)	) write(*,*)	"[wannInterpolator]: warning Ham is not hermitian"
-		call eigSolver(U_mat(:,:),	En_vec(:,ki))
+		call eigSolverFULL(U_mat(:,:),	En_vec(:,ki))
 		U_mat	= transpose( dconjg(U_mat))
 		!write(*,*)	"[wannInterpolator]: #ki=",ki
 		!do n = 1, size(En_vec,1)
 		!	write(*,*)	"[wannInterpolator]: E_n=",n," = ",En_vec(n,ki)
 		!end do
-		
-	
-		!
-		!CURVATURE TO MATRIX
-		do c = 1, 3
-			do b = 1, 3
-				do a = 1,3
-					Om_mat(c,:,:)	= myLeviCivita(a,b,c) * Om_tens(a,b,:,:)
-				end do
-			end do
-		end do
-		!
-		!VELOCITIES
-		!call calcVelo()
 		!
 		!
 		return
@@ -310,10 +305,10 @@ module wannInterp
 
 
 
-	subroutine gaugeBack(Hw, HaW, AW, FW, EnH, U, AconnH, FcurvH, veloH)
+	subroutine gaugeBack(Hw, HaW, AW, FWtens, EnH, U, AconnH, FcurvH, veloH)
 		!transform from wannier gauge back to hamiltonian gauge
 		complex(dp),	intent(in)		:: Hw(:,:)
-		complex(dp),	intent(inout)	:: HaW(:,:,:), AW(:,:,:), FW(:,:,:,:)
+		complex(dp),	intent(inout)	:: HaW(:,:,:), AW(:,:,:), FWtens(:,:,:,:)
 		real(dp),		intent(out)		:: EnH(:)
 		complex(dp),	intent(out)		:: U(:,:), AconnH(:,:,:), FcurvH(:,:,:), veloH(:,:,:)
 		complex(dp),	allocatable		:: DH(:,:,:)
@@ -328,16 +323,16 @@ module wannInterp
 		!1. CALC 
 		U	= HW
 		!GET U MAT & ENERGIES
-		call eigSolver(U, EnH)
+		call eigSolverFULL(U, EnH)
 		U = dconjg( transpose(U))
 		!ROTATE WITH u
-		call calcBarMat(U, HaW, AW, FW)
+		call calcBarMat(U, HaW, AW, FWtens)
 		!CONNECTION
 		call calcA(EnH, AW, HaW, AconnH, DH)
 		!VELOCITIES
 		call calcVelo(EnH, AW, HaW, veloH)
 		!CURVATURE
-		call calcCurv(FW, DH, AW, FcurvH)
+		call calcCurv(FWtens, DH, AW, FcurvH)
 
 		!
 		!		

@@ -1,5 +1,5 @@
 module peierls
-	use mathematics,	only:	dp, PI_dp, i_dp, myExp, crossP, nIntegrate, eigSolver, isUnit
+	use mathematics,	only:	dp, PI_dp, i_dp, myExp, crossP, nIntegrate, eigSolverFULL, isUnit
 	use sysPara
 	use effTB,			only:	calcConnOnCoarse
 	use wannInterp,		only:	DoWannInterpol
@@ -60,7 +60,7 @@ module peierls
 				Hp(:,:)	= Hp(:,:) + phase * tshift(:,:,R)
 			end do
 			!SOLVE HAM	
-			call eigSolver(Hp(:,:),EnP(:,qi))
+			call eigSolverFULL(Hp(:,:),EnP(:,qi))
 			!
 			if( .not. isUnit(Hp)	) write(*,*) "[peierlsMethod]: ckP not unitary at qi=",qi
 			!EXTRACT EXPANSION COEFF

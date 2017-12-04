@@ -8,7 +8,7 @@ module mathematics
 
 	public :: 	dp, PI_dp, i_dp, acc, aUtoAngstrm, aUtoEv, setAcc, machineP, & 
 				myExp, Cangle, myLeviCivita, nIntegrate, crossP,& 
-				isUnit, isIdentity, isHermitian, mySVD, eigSolver, eigSolver2, myMatInvSqrt, rotMat, myCommutat
+				isUnit, isIdentity, isHermitian, mySVD, eigSolverFULL, eigSolverPART, myMatInvSqrt, rotMat, myCommutat
 
 
 	interface nIntegrate
@@ -181,13 +181,12 @@ module mathematics
 	end subroutine
 
 
-	subroutine eigSolver(A, w)
-            !solves standard (non general) eigenvalue problem with following mkl routine 
-            !return eigVectors stored in A, eigValues in w
-            !https://software.intel.com/en-us/node/469182
-            implicit none            
-            complex(dp) , intent(inout)   :: A(:,:)
-            real(dp)    , intent(out)     :: w(:)
+	subroutine eigSolverFULL(A, w)
+		!solves standard (non general) eigenvalue problem with following mkl routine 
+		!return eigVectors stored in A, eigValues in w
+		!https://software.intel.com/en-us/node/469182        
+		complex(dp) , intent(inout)   :: A(:,:)
+		real(dp)    , intent(out)     :: w(:)
             
 
             !set up workspace arrays (assuming jobz='V' and using zheevd)
@@ -221,21 +220,75 @@ module mathematics
                   call normalCheck(n,A)
             end if
             !
-            return 
-      end subroutine
+            return
+	end subroutine
 
-         subroutine eigSolver2(a, w ,z, m)
+
+	subroutine eigSolverFULL_NEW(A, w, z, m)
+		!https://software.intel.com/en-us/mkl-developer-reference-fortran-heevr#6ADF761A-127A-4C9B-9A2A-1A8AA4602CE1
+		!uses same routine as eigSolver2
+		complex(dp),	intent(inout)			:: 	A(:,:)
+		real(dp),		intent(out)				::	w(:)
+		complex(dp),	intent(out)				::	z(:,:)
+    	integer,		intent(out)				::	m
+    	character*1	 							::	jobz, range, uplo
+    	integer									::	n, lda, il, iu, ldz, lwork, lrwork, liwork,  info 
+    	integer,		allocatable				::	isuppz(:) , iwork(:)
+    	real(dp)								::	vl, vu, abstol
+    	real(dp),		allocatable				::	rwork(:)
+    	complex(dp),	allocatable				::	work(:)		
+
+    	jobz	= 'V'
+    	range	= 'A'
+    	uplo	= 'U'
+    	n 		= size(a,1)
+    	lda		= n
+    	vl		= 0.0_dp
+    	vu  	= 0.0_dp
+    	il		= 0
+    	iu		= 0
+    	abstol	= 1e-15_dp
+    	ldz		= n
+    	lwork	= 2*n
+    	lrwork	= 24*n
+    	liwork	= 10*n
+    	if( size(z,1)/= ldz ) write(*,*)"[eigSolver2]: z array has wrong size"
+    	if( size(w)/= n) write(*,*)"[eigSolver2]; w array has wrong size"
+    	!
+    	allocate( isuppz(2*iu)	)
+    	allocate(  work(lwork)	)
+    	allocate( rwork(lrwork)	)
+    	allocate( iwork(liwork)	)	
+    	
+    	!
+    	call zheevr(jobz, range, uplo, n, a, lda, vl, vu, il, iu, abstol, m, w, z, ldz, isuppz, work, lwork, rwork, lrwork, iwork, liwork, info)
+    	!
+    	!
+    	if( info < 0 ) then
+    		write(*,*)	"[eigSolver2]: the ",-info,"th parameter had an illegal value"
+    	else if( info > 0 ) then
+    		write(*,*)	"[eigSolver2]: internal error has occured"
+    	end if
+    	!
+    	!
+		return
+	end subroutine
+
+
+
+
+	subroutine eigSolverPART(a, w ,z, m)
     	!https://software.intel.com/en-us/mkl-developer-reference-fortran-heevr#6ADF761A-127A-4C9B-9A2A-1A8AA4602CE1
-    	complex(dp),	intent(inout)	:: a(:,:)
-    	real(dp),		intent(out)		:: w(:)
-    	complex(dp),	intent(out)		:: z(:,:)
-    	integer,		intent(out)		:: m
-    	character*1	 					:: jobz, range, uplo
-    	integer							:: n, lda, il, iu, ldz, lwork, lrwork, liwork,  info 
-    	integer,		allocatable		:: isuppz(:) , iwork(:)
-    	real(dp)						:: vl, vu, abstol
-    	real(dp),		allocatable		:: rwork(:)
-    	complex(dp),	allocatable		:: work(:)
+    	complex(dp),	intent(inout)			:: 	a(:,:)
+    	real(dp),		intent(out)				:: 	w(:)
+    	complex(dp),	intent(out)				:: 	z(:,:)
+    	integer,		intent(out)				:: 	m
+    	character*1	 							:: 	jobz, range, uplo
+    	integer									:: 	n, lda, il, iu, ldz, lwork, lrwork, liwork,  info 
+    	integer,		allocatable				:: 	isuppz(:) , iwork(:)
+    	real(dp)								:: 	vl, vu, abstol
+    	real(dp),		allocatable				:: 	rwork(:)
+    	complex(dp),	allocatable				:: 	work(:)
     	!
     	jobz	= 'V'
     	range	= 'I'

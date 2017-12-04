@@ -2,7 +2,7 @@ module postW90
 	use omp_lib
 	use mathematics,	only:	dp, PI_dp, i_dp, acc, machineP,  & 
 								aUtoAngstrm, aUtoEv, & 
-								myExp, myLeviCivita, eigSolver, isHermitian
+								myExp, myLeviCivita, isHermitian
 	use sysPara
 	use wannInterp,		only:	DoWannInterpol
 	use polarization,	only:	calcPolWannCent, calcPolViaA

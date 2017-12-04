@@ -2,7 +2,7 @@ module wannier
 	!contains subroutines for working with existing wannier functions
 	!	center calculations, etc. 
 	use omp_lib
-	use mathematics,	only:	dp, PI_dp, i_dp, acc, myExp, nIntegrate, eigSolver
+	use mathematics,	only:	dp, PI_dp, i_dp, acc, myExp, nIntegrate
 	use sysPara
 	use blochWf,		only:	calcBasis
 	use polarization,	only:	calcPolWannCent

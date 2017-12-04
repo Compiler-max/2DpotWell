@@ -3,7 +3,7 @@ module potWellModel
 	!	in the process the wannier functions are generated aswell with routines from wannGen module
 	use omp_lib
 	use mathematics,	only:	dp, PI_dp,i_dp, machineP, myExp, myLeviCivita, &
-								eigSolver, eigSolver2, nIntegrate, isUnit, isHermitian
+								eigSolverPART, nIntegrate, isUnit, isHermitian
 	use sysPara				
 	use output,			only:	writeEnAndCK, writeEnAbInitio
 	implicit none	
@@ -50,7 +50,7 @@ module potWellModel
 			!
 			!SOLVE HAM
 			Gmax 	= nGq(qi)
-			call eigSolver2(Hmat(1:Gmax,1:Gmax),EnT(1:Gmax), ctemp(1:Gmax,:), found)!a, w ,z, m
+			call eigSolverPART(Hmat(1:Gmax,1:Gmax),EnT(1:Gmax), ctemp(1:Gmax,:), found)!a, w ,z, m
 			!COPY INTO TARGET ARRAYS
 			ck(1:nG,1:nBands,qi)	= ctemp(1:nG,1:nBands)
 			EnTq(:,qi)	= EnT(:)

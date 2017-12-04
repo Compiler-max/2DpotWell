@@ -3,7 +3,7 @@ module blochWf
 	use omp_lib
 	use mathematics,	only:	dp, PI_dp,i_dp, acc, machineP,& 
 
-								myExp, myLeviCivita, eigSolver, nIntegrate
+								myExp, myLeviCivita, nIntegrate
 	use sysPara
 
 	implicit none

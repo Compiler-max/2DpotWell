@@ -3,8 +3,7 @@ module projection
 	!	this includes the calculation of the orthonormalized projected bloch wavefunctions
 	!	and the FT of the bwfs to calculate the wannier functions
 	use omp_lib
-	use mathematics, 	only: 	dp, PI_dp, i_dp, acc, machineP,&
-								myExp, nIntegrate, eigSolver,  mySVD, myMatInvSqrt, isUnit, isIdentity, isHermitian
+	use mathematics, 	only: 	dp, PI_dp, i_dp, acc, machineP, myExp
 	use sysPara
 	use blochWf,		only:	calcBasis
 	use output,			only:	writeInterpBands
