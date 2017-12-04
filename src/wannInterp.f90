@@ -99,7 +99,7 @@ module wannInterp
 		do n = 1, size(En_vec,1)
 			write(*,*)	"[wannInterpolator]: E_n=",n," = ",En_vec(n,ki)
 		end do
-		U_mat	= transpose( dconjg(U_mat))
+		!U_mat	= transpose( dconjg(U_mat))
 	
 		!
 		!CURVATURE TO MATRIX
