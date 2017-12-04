@@ -332,7 +332,7 @@ module output
 		integer								::	R, n, m
 
 		open(unit=805,file='H_tb.txt',action='write')
-		write(805,*)	"H_tb read in by effTB"
+		write(805,*)	"H_tb (eV) read in by effTB"
 		do R = 1, size(H_tb,3)
 			write(805,*)	Rcell(1,R), " ", Rcell(2,R)," ",Rcell(3,R)
 			do n = 1, size(H_tb,2)

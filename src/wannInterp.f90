@@ -1,5 +1,5 @@
 module wannInterp
-	use mathematics,	only:	dp, PI_dp, i_dp, acc, machineP, myExp, myLeviCivita, nIntegrate, eigSolver, rotMat, myCommutat
+	use mathematics,	only:	dp, PI_dp, i_dp, acc, machineP, myExp, myLeviCivita, nIntegrate, eigSolver, rotMat, myCommutat, isHermitian
 	use sysPara
 
 	!use 
@@ -93,6 +93,7 @@ module wannInterp
 
 		!ENERGY INTERPOLATION
 		U_mat(:,:)	= H_mat(:,:)
+		if( .not. isHermitian(U_mat)	) write(*,*)	"[wannInterpolator]: warning Ham is not hermitian"
 		call eigSolver(U_mat(:,:),	En_vec(:,ki))
 		U_mat	= transpose( dconjg(U_mat))
 	
