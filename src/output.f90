@@ -11,7 +11,7 @@ module output
 
 	public ::	writeMeshInfo, writeMeshBin, writeEnAndCK, writeCkASunk, writeConnCurv, writeWannFiles, writePolFile, &
 				printMat, printTiming , writePeierls,  writeInterpBands, writeEnH, printBasisInfo, & 
-				writeVeloHtxt, writeVeloEffTB, writeHopp, writeUmat, writeInterpU, writeHtb, writeUberryInt
+				writeVeloHtxt, writeVeloEffTB, writeHopp, writeUmat, writeInterpU, writeBerryInterpU, writeHtb, writeHtbBerry
 
 
 	interface printMat
@@ -327,7 +327,7 @@ module output
 	end subroutine
 
 
-	subroutine writeUberryInt( U_mat)
+	subroutine writeBerryInterpU( U_mat)
 		complex(dp),	intent(in)		:: U_mat(:,:,:)
 		integer								:: ki, n, m
 		!
@@ -362,6 +362,26 @@ module output
 				end do
 			end do
 			write(805,*)
+		end do 
+		close(805)
+
+		return
+	end subroutine
+
+	subroutine writeHtbBerry( H_tb )
+		complex(dp),		intent(in)		:: 	H_tb(:,:,:)
+		integer								::	R, n, m
+
+		open(unit=807,file='H_tb.txt',action='write')
+		write(807,*)	"H_tb (eV) calculated by Berry"
+		do R = 1, size(H_tb,3)
+			write(807,*)	Rcell(1,R), " ", Rcell(2,R)," ",Rcell(3,R)
+			do n = 1, size(H_tb,2)
+				do m = 1, size(H_tb,1)
+					write(807,'(a,i3,a,i3,a,e16.8,a,e16.8)')	" ",m," ",n," ",dreal(H_tb(m,n,R)*aUtoEv)," ",dimag(H_tb(m,n,R)*aUtoEv)
+				end do
+			end do
+			write(807,*)
 		end do 
 		close(805)
 
