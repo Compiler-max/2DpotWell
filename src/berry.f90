@@ -45,7 +45,7 @@ module berry
 		real(dp)						:: 	pBerry(3), pNiuF2(3), pNiuF3(3), pPei(3)
 		real(dp),		allocatable		:: 	EnK(:,:), R_real(:,:)
 		complex(dp),	allocatable		:: 	AconnK(:,:,:,:), FcurvK(:,:,:,:), veloK(:,:,:,:), &
-											tHopp(:,:,:), rHopp(:,:,:,:) 
+											tHopp(:,:,:), rHopp(:,:,:,:) , Uk(:,:,:)
 		real(dp)						::	pWann(3)
 		integer							::	gi, qi, n, R
 		!					
@@ -56,6 +56,7 @@ module berry
 		allocate(			AconnK(		3		, 	nWfs	,	nWfs	,	nK		)			)
 		allocate(			FcurvK(		3		, 	nWfs	, 	nWfs	,	nK		)			)
 		allocate(			veloK(		3		, 	nWfs	,	nWfs	,	nK		)			)
+		allocate(			Uk(						nWfs	,	nWfs	,	nK		)			)
 
 		allocate(			R_real(		3		,							nSC		)			)
 		allocate(	ck(		nG,		nBands,	nQ		)	)
@@ -110,7 +111,7 @@ module berry
 		write(*,*)	"[berryMethod]: set up effective tight binding model (k-Space method)"
 
 		!INTERPOLATE CONN,CURV, VELO
-		call DoWannInterpol(ckW, rHopp, tHopp, R_real, EnK, AconnK, FcurvK, veloK)
+		call DoWannInterpol(ckW, rHopp, tHopp, R_real, EnK, Uk, AconnK, FcurvK, veloK)
 		write(*,*)	"[berrryMethod]: interpolation done"
 
 		

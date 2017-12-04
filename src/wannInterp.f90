@@ -11,9 +11,10 @@ module wannInterp
 	contains
 
 !public
-	subroutine DoWannInterpol(ckW, rHopp, tHopp, R_real, EnH, AconnH, FcurvH, veloH)
+	subroutine DoWannInterpol(ckW, rHopp, tHopp, R_real, EnH, U_int, AconnH, FcurvH, veloH)
 		complex(dp),	intent(in)		:: ckW(:,:,:), rHopp(:,:,:,:), tHopp(:,:,:)
 		real(dp),		intent(in)		:: R_real(:,:)
+		complex(dp),	intent(out)		:: U_int(:,:,:)
 		real(dp),		intent(out)		:: EnH(:,:)
 		complex(dp),	intent(out)		:: AconnH(:,:,:,:), FcurvH(:,:,:,:), veloH(:,:,:,:)
 		complex(dp),	allocatable		:: U(:,:), HW(:,:), HaW(:,:,:), AW(:,:,:), FW(:,:,:,:)
@@ -34,6 +35,7 @@ module wannInterp
 		do ki = 1, nK
 			!call interpolateMat(ki, tHopp, rHopp, HW, HaW, AW, FW)
 			call wannInterpolator(ki, tHopp, rHopp, R_real, EnH, U, HW, HaW, AW, FcurvH(:,:,:,ki))
+			U_int(:,:,ki)	= U(:,:)
 			if( doGaugBack ) then
 				if(ki == 1) write(*,*)	"[DoGaugeTrafo]: start gauging back" 	
 				call gaugeBack(Hw, HaW, AW, FW, EnH(:,ki), U, AconnH(:,:,:,ki), FcurvH(:,:,:,ki), veloH(:,:,:,ki))	
@@ -157,7 +159,7 @@ module wannInterp
 				end do
 			end do
 		else	
-			if(ki==1)	write(*,*)"[calcVeloNew]:velocities are calculated analytically"
+			if(ki==1)	write(*,*)"[calcVeloNew]:velocities are calculated analytically, with the plane wave coefficients"
 			if( nK /= nQ) write(*,*)"[calcVeloNew]: warning analytic approach does not support different k mesh spacing"
 			do m = 1, nWfs
 				do n = 1, nWfs

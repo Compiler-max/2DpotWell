@@ -22,7 +22,7 @@ module postW90
 	real(dp),		allocatable		:: 	krel(:,:), En_vec(:,:), R_real(:,:), wCent(:,:)
 	complex(dp),	allocatable		::	H_tb(:,:,:), r_tb(:,:,:,:), &
 										A_mat(:,:,:,:), Om_tens(:,:,:,:,:),	H_mat(:,:,:), Ha_mat(:,:,:,:), &
-										U_mat(:,:,:), Om_mat(:,:,:,:), v_mat(:,:,:,:)
+										U_int(:,:,:), Om_mat(:,:,:,:), v_mat(:,:,:,:)
 
 
 	contains
@@ -52,17 +52,13 @@ module postW90
 			allocate(	dummy(				num_wann, 	num_wann ,  nQ	)	)
 			allocate(	A_mat(		3,		num_wann,	num_wann,	nK	)	)		
 			allocate(	En_vec(						num_wann	,	nK	)	)
+			allocate(	U_int(				num_wann, 	num_wann, 	nK	) 	)
 			allocate(	v_mat(		3,		num_wann,	num_wann,	nK	)	)
 			allocate(	Om_mat(		3,		num_wann,	num_wann,	nK	)	)
 			dummy = dcmplx(0.0_dp)	!need to set doVeloNum = true
-			call DoWannInterpol( dummy, r_tb, H_tb, R_real, En_vec, A_mat, Om_mat, v_mat)
+			call DoWannInterpol( dummy, r_tb, H_tb, R_real, En_vec, U_int, A_mat, Om_mat, v_mat)
 			write(*,*)	"[effTBmodel]: done interpolating to k mesh with nK=",nK
 			!
-			!Gauge to (H) gauge
-			if( pw90GaugeB ) then
-				call gaugeTrafo()
-				write(*,*)	"[effTBmodel]: done gauging back to (H) gauge"
-			end if
 			!calc all desired polarizations
 			call polWrapper(pWann, pConn, pNiuF2, pNiuF3, pPei)
 		else
@@ -72,6 +68,7 @@ module postW90
 		!output file
 		call writePw90pol( pWann, pConn, pNiuF2, pNiuF3, pPei)
 		call writeVeloEffTB(v_mat)
+		call writeInterpU(U_int)
 		if( writeBin ) call writeInterpBands(En_vec)
 		!
 		!
@@ -208,123 +205,6 @@ module postW90
 	end function
 
 
-	subroutine wannInterpolator()
-		integer						:: ki, R, a, b, c
-		complex(dp)					:: phase
-		!
-		allocate(	A_mat(		3,		num_wann,	num_wann,	nK	)	)
-		allocate(	Om_tens(	3,	3,	num_wann,	num_wann,	nK	)	)
-		allocate(	H_mat(				num_wann,	num_wann,	nK	)	)
-		allocate(	Ha_mat(		3,		num_wann,	num_wann,	nK	)	)
-		!
-		allocate(	En_vec(						num_wann	,	nK	)	)
-		allocate(	U_mat(				num_wann,	num_wann,	nK	)	)
-		allocate(	v_mat(		3,		num_wann,	num_wann,	nK	)	)
-		allocate(	Om_mat(		3,		num_wann,	num_wann,	nK	)	)
-		!
-		A_mat	= dcmplx(0.0_dp)
-		Om_tens = dcmplx(0.0_dp)
-		H_mat	= dcmplx(0.0_dp)
-		Ha_mat	= dcmplx(0.0_dp)
-		En_vec	= 0.0_dp
-		v_mat	= dcmplx(0.0_dp)
-		!
-		!SET UP K SPACE MATRICES
-		do ki = 1 , nK
-			do R = 1, nrpts
-				phase		= myExp( 	dot_product(kpts(1:2,ki),R_real(1:2,R))		) !/ dcmplx(real(nrpts,dp))
-				!
-				H_mat(:,:,ki)		= H_mat(:,:,ki)	 		+ phase 								* H_tb(:,:,R)
-				do a = 1, 3
-					Ha_mat(a,:,:,ki)	= Ha_mat(a,:,:,ki) 	+ phase * i_dp * dcmplx(R_real(a,R))	* H_tb(:,:,R)
-					A_mat(a,:,:,ki)		= A_mat(a,:,:,ki)	+ phase									* r_tb(a,:,:,R)
-					!
-					do b = 1, 3
-						Om_tens(a,b,:,:,ki)	= Om_tens(a,b,:,:,ki)	+  phase * i_dp * dcmplx(R_real(a,R)) * r_tb(b,:,:,R)
-						Om_tens(a,b,:,:,ki)	= Om_tens(a,b,:,:,ki)	-  phase * i_dp * dcmplx(R_real(b,R)) * r_tb(a,:,:,R)
-					end do
-				end do
-			end do
-		end do
-		!ENERGY INTERPOLATION
-		do ki = 1, nK
-			U_mat(:,:,ki)	= H_mat(:,:,ki)
-			call eigSolver(U_mat(:,:,ki),	En_vec(:,ki))
-		end do
-	
-		!
-		!CURVATURE TO MATRIX
-		do ki = 1, nK
-			do c = 1, 3
-				do b = 1, 3
-					do a = 1,3
-						Om_mat(c,:,:,ki)	= myLeviCivita(a,b,c) * Om_tens(a,b,:,:,ki)
-					end do
-				end do
-			end do
-		end do
-		!
-		!VELOCITIES
-		call calcVelo()
-		!
-		!
-		return
-	end subroutine
-
-
-	subroutine calcVelo()
-		integer							:: ki, m, n, i
-		complex(dp),	allocatable		:: Hbar(:,:,:), Abar(:,:,:), Ucjg(:,:), U(:,:), tmp(:,:)
-		!
-		allocate(		Hbar(	size(Ha_mat,1),	size(Ha_mat,2),	size(Ha_mat,3)		)	)		
-		allocate(		Abar(	size(A_mat ,1),	size(A_mat ,2),	size(A_mat ,3)		)	)
-		allocate(		U(	size(U_mat,1),	size(U_mat,2)							)	)
-		allocate(		Ucjg(	size(U_mat,1),	size(U_mat,2)						)	)
-		allocate(		tmp(	size(U_mat,1),	size(U_mat,2)						)	)
-		!
-		do ki = 1, nK
-			!GAUGE BACK
-			U				= U_mat(:,:,ki)
-			Ucjg			= dconjg(	transpose(U)	)
-			do i = 1, 3
-				!ROTATE TO HAM GAUGE
-				tmp			= matmul(	Ha_mat(i,:,:,ki)	, Ucjg			)	
-				Hbar(i,:,:)	= matmul(	U				, tmp				)	
-				!
-				tmp			= matmul(	A_mat(i,:,:,ki)		, Ucjg			)	
-				Abar(i,:,:)	= matmul(	U				, tmp				)
-				!APPLY ROTATION
-				do m = 1, num_wann
-					do n = 1, num_wann
-						if( n==m )	v_mat(i,n,n,ki) = Hbar(i,n,n)
-						if( n/=m )	v_mat(i,n,m,ki) = - i_dp * dcmplx( En_vec(m,ki) - En_vec(n,ki) ) * Abar(i,n,m) 
-						!v_mat(1:3,n,m,ki)	=  Ha_mat(1:3,n,m,ki)	- i_dp * dcmplx( En_vec(m,ki) - En_vec(n,ki) ) * A_mat(1:3,n,m,ki) 
-						!DEBUG
-						if( n/=m .and. abs(Hbar(i,n,m)) > 0.1_dp ) then
-							write(*,'(a,i1,a,i3,a,i3,a,f8.4,a,f8.4,a,f8.4)')"[calcVelo]: found off diag band deriv i=",i,&
-									" n=",n," m=",m, "v_nm=",dreal(Hbar(i,n,m)), "+i*",dimag(Hbar(i,n,m))," abs=",abs(Abar(i,n,n))
-						end if
-					end do
-				end do
-			end do	
-			
-			!NO GAUGE BACK
-			!do m = 1, num_wann
-			!	do n = 1, num_wann
-			!		if( n==m )	v_mat(1:3,n,n,ki) = Ha_mat(1:3,n,n,ki)
-			!		if( n/=m )	v_mat(1:3,n,m,ki) =  - i_dp * dcmplx( En_vec(m,ki) - En_vec(n,ki) ) * A_mat(1:3,n,m,ki) 
-			!		!v_mat(1:3,n,m,ki)	=  Ha_mat(1:3,n,m,ki)	- i_dp * dcmplx( En_vec(m,ki) - En_vec(n,ki) ) * A_mat(1:3,n,m,ki) 
-			!		!DEBUG
-			!		if( n/=m .and. abs(Hbar(i,n,m)) > 0.1_dp ) then
-			!				write(*,'(a,i1,a,i3,a,i3,a,f8.4,a,f8.4,a,f8.4)')"[calcVelo]: found off diag band deriv i=",i,&
-			!						" n=",n," m=",m, "v_nm=",dreal(Hbar(i,n,m)), "+i*",dimag(Hbar(i,n,m))," abs=",abs(Abar(i,n,n))
-			!		end if
-			!	end do
-			!end do
-		end do
-		!
-		return
-	end subroutine
 
 
 
@@ -349,75 +229,6 @@ module postW90
 
 
 
-
-
-
-
-	subroutine gaugeTrafo()
-		integer								:: 	ki, a, b, n, m
-		complex(dp),		allocatable		:: 	Ucjg(:,:), tmp(:,:), &
-												HaBar(:,:,:), DaH(:,:,:), AaBar(:,:,:), OmBar(:,:,:,:)
-		!
-		allocate(	Ucjg(			num_wann,	num_wann		)	)
-		allocate(	tmp(			num_wann,	num_wann		)	)
-		allocate(	HaBar(	3,		num_wann,	num_wann		)	)
-		allocate(	DaH(	3,		num_wann,	num_wann		)	)
-		allocate(	AaBar(	3,		num_wann,	num_wann		)	)
-		allocate(	OmBar(	3,	3,	num_wann,	num_wann		)	)
-		!
-		
-		do ki = 1, nK
-			!SET UP THE WORK ARRAYS
-			Ucjg				= dconjg(	transpose( U_mat(:,:,ki) )		)
-			do a = 1, 3
-				!conn
-				tmp(:,:)		= matmul(	A_mat(a,:,:,ki) 	, 		Ucjg		)
-				AaBar(a,:,:)	= matmul(	U_mat(:,:,ki)		,	tmp(:,:)		)
-				!HaBar
-				tmp(:,:)		= matmul(	Ha_mat(a,:,:,ki) 	, 		Ucjg		)
-				HaBar(a,:,:)	= matmul(	U_mat(:,:,ki)		,	tmp(:,:)		)
-				!OmBar
-				do b = 1, 3
-					tmp(:,:)		= matmul(	Om_tens(a,b,:,:,ki)	,	Ucjg	)		
-					OmBar(a,b,:,:)	= matmul(	U_mat(:,:,ki)				,	tmp(:,:)		)
-				end do
-				!DaH
-				do n = 1, num_wann
-					do m = 1, num_wann
-						if(n/=m)	DaH(a,n,m)	= HaBar(a,n,m) /	(	En_vec(m,ki) - En_vec(n,ki)	)
-						if(n==m)	DaH(a,n,m)	= dcmplx(0.0_dp)
-					end do
-				end do
-				
-			end do
-			!
-			!
-			!YIELD DESIRED QUANTITIES
-			!conn
-			A_mat(:,:,:,ki) 	= AaBar + i_dp * DaH
-			!velo
-			do n = 1, num_wann
-				do m = 1, num_wann
-					v_mat(1:3,n,m,ki)	= HaBar(1:3,n,m) - i_dp * ( En_vec(m,ki) - En_vec(n,ki) ) * AaBar(1:3,n,m)
-					
-				end do 
-			end do
-			!curv
-			do a = 1, 3
-				do b = 1, 3
-					tmp	= dcmplx(0.0_dp)
-					tmp	= tmp + OmBar(a,b,:,:)
-					tmp	= tmp - 		matmul( DaH(a,:,:), AaBar(b,:,:) ) 	+ 		matmul( AaBar(b,:,:) , DaH(a,:,:)	)
-					tmp = tmp + 		matmul( DaH(b,:,:), AaBar(a,:,:) )	-		matmul( AaBar(a,:,:) , DaH(b,:,:)	)
-					tmp = tmp - i_dp * 	matmul(	DaH(a,:,:), DaH(b,:,:)	 )  + i_dp *matmul( 	DaH(b,:,:), DaH(a,:,:)	)
-					!
-					Om_tens(a,b,:,:,ki)	= tmp(:,:)
-				end do
-			end do
-		end do
-		!
-		return
-	end subroutine
 
 
 	subroutine polWrapper(pWann, pConn, pNiuF2, pNiuF3, pPei)
@@ -522,5 +333,194 @@ module postW90
 
 
 end module
+
+!Deprecated subroutines, replaced by calls to wannInterp
+	!subroutine wannInterpolator()
+	!	integer						:: ki, R, a, b, c
+	!	complex(dp)					:: phase
+	!	!
+	!	allocate(	A_mat(		3,		num_wann,	num_wann,	nK	)	)
+	!	allocate(	Om_tens(	3,	3,	num_wann,	num_wann,	nK	)	)
+	!	allocate(	H_mat(				num_wann,	num_wann,	nK	)	)
+	!	allocate(	Ha_mat(		3,		num_wann,	num_wann,	nK	)	)
+	!	!
+	!	allocate(	En_vec(						num_wann	,	nK	)	)
+	!	allocate(	U_mat(				num_wann,	num_wann,	nK	)	)
+	!	allocate(	v_mat(		3,		num_wann,	num_wann,	nK	)	)
+	!	allocate(	Om_mat(		3,		num_wann,	num_wann,	nK	)	)
+	!	!
+	!	A_mat	= dcmplx(0.0_dp)
+	!	Om_tens = dcmplx(0.0_dp)
+	!	H_mat	= dcmplx(0.0_dp)
+	!	Ha_mat	= dcmplx(0.0_dp)
+	!	En_vec	= 0.0_dp
+	!	v_mat	= dcmplx(0.0_dp)
+	!	!
+	!	!SET UP K SPACE MATRICES
+	!	do ki = 1 , nK
+	!		do R = 1, nrpts
+	!			phase		= myExp( 	dot_product(kpts(1:2,ki),R_real(1:2,R))		) !/ dcmplx(real(nrpts,dp))
+	!			!
+	!			H_mat(:,:,ki)		= H_mat(:,:,ki)	 		+ phase 								* H_tb(:,:,R)
+	!			do a = 1, 3
+	!				Ha_mat(a,:,:,ki)	= Ha_mat(a,:,:,ki) 	+ phase * i_dp * dcmplx(R_real(a,R))	* H_tb(:,:,R)
+	!				A_mat(a,:,:,ki)		= A_mat(a,:,:,ki)	+ phase									* r_tb(a,:,:,R)
+	!				!
+	!				do b = 1, 3
+	!					Om_tens(a,b,:,:,ki)	= Om_tens(a,b,:,:,ki)	+  phase * i_dp * dcmplx(R_real(a,R)) * r_tb(b,:,:,R)
+	!					Om_tens(a,b,:,:,ki)	= Om_tens(a,b,:,:,ki)	-  phase * i_dp * dcmplx(R_real(b,R)) * r_tb(a,:,:,R)
+	!				end do
+	!			end do
+	!		end do
+	!	end do
+	!	!ENERGY INTERPOLATION
+	!	do ki = 1, nK
+	!		U_mat(:,:,ki)	= H_mat(:,:,ki)
+	!		call eigSolver(U_mat(:,:,ki),	En_vec(:,ki))
+	!	end do
+	!
+	!	!
+	!	!CURVATURE TO MATRIX
+	!	do ki = 1, nK
+	!		do c = 1, 3
+	!			do b = 1, 3
+	!				do a = 1,3
+	!					Om_mat(c,:,:,ki)	= myLeviCivita(a,b,c) * Om_tens(a,b,:,:,ki)
+	!				end do
+	!			end do
+	!		end do
+	!	end do
+	!	!
+	!	!VELOCITIES
+	!	call calcVelo()
+	!	!
+	!	!
+	!	return
+	!end subroutine
+
+
+
+
+	!subroutine calcVelo()
+	!	integer							:: ki, m, n, i
+	!	complex(dp),	allocatable		:: Hbar(:,:,:), Abar(:,:,:), Ucjg(:,:), U(:,:), tmp(:,:)
+	!	!
+	!	allocate(		Hbar(	size(Ha_mat,1),	size(Ha_mat,2),	size(Ha_mat,3)		)	)		
+	!	allocate(		Abar(	size(A_mat ,1),	size(A_mat ,2),	size(A_mat ,3)		)	)
+	!	allocate(		U(	size(U_mat,1),	size(U_mat,2)							)	)
+	!	allocate(		Ucjg(	size(U_mat,1),	size(U_mat,2)						)	)
+	!	allocate(		tmp(	size(U_mat,1),	size(U_mat,2)						)	)
+	!	!
+	!	do ki = 1, nK
+	!		!GAUGE BACK
+	!		U				= U_mat(:,:,ki)
+	!		Ucjg			= dconjg(	transpose(U)	)
+	!		do i = 1, 3
+	!			!ROTATE TO HAM GAUGE
+	!			tmp			= matmul(	Ha_mat(i,:,:,ki)	, Ucjg			)	
+	!			Hbar(i,:,:)	= matmul(	U				, tmp				)	
+	!			!
+	!			tmp			= matmul(	A_mat(i,:,:,ki)		, Ucjg			)	
+	!			Abar(i,:,:)	= matmul(	U				, tmp				)
+	!			!APPLY ROTATION
+	!			do m = 1, num_wann
+	!				do n = 1, num_wann
+	!					if( n==m )	v_mat(i,n,n,ki) = Hbar(i,n,n)
+	!					if( n/=m )	v_mat(i,n,m,ki) = - i_dp * dcmplx( En_vec(m,ki) - En_vec(n,ki) ) * Abar(i,n,m) 
+	!					!v_mat(1:3,n,m,ki)	=  Ha_mat(1:3,n,m,ki)	- i_dp * dcmplx( En_vec(m,ki) - En_vec(n,ki) ) * A_mat(1:3,n,m,ki) 
+	!					!DEBUG
+	!					if( n/=m .and. abs(Hbar(i,n,m)) > 0.1_dp ) then
+	!						write(*,'(a,i1,a,i3,a,i3,a,f8.4,a,f8.4,a,f8.4)')"[calcVelo]: found off diag band deriv i=",i,&
+	!								" n=",n," m=",m, "v_nm=",dreal(Hbar(i,n,m)), "+i*",dimag(Hbar(i,n,m))," abs=",abs(Abar(i,n,n))
+	!					end if
+	!				end do
+	!			end do
+	!		end do	
+	!		
+	!		!NO GAUGE BACK
+	!		!do m = 1, num_wann
+	!		!	do n = 1, num_wann
+	!		!		if( n==m )	v_mat(1:3,n,n,ki) = Ha_mat(1:3,n,n,ki)
+	!		!		if( n/=m )	v_mat(1:3,n,m,ki) =  - i_dp * dcmplx( En_vec(m,ki) - En_vec(n,ki) ) * A_mat(1:3,n,m,ki) 
+	!		!		!v_mat(1:3,n,m,ki)	=  Ha_mat(1:3,n,m,ki)	- i_dp * dcmplx( En_vec(m,ki) - En_vec(n,ki) ) * A_mat(1:3,n,m,ki) 
+	!		!		!DEBUG
+	!		!		if( n/=m .and. abs(Hbar(i,n,m)) > 0.1_dp ) then
+	!		!				write(*,'(a,i1,a,i3,a,i3,a,f8.4,a,f8.4,a,f8.4)')"[calcVelo]: found off diag band deriv i=",i,&
+	!		!						" n=",n," m=",m, "v_nm=",dreal(Hbar(i,n,m)), "+i*",dimag(Hbar(i,n,m))," abs=",abs(Abar(i,n,n))
+	!		!		end if
+	!		!	end do
+	!		!end do
+	!	end do
+	!	!
+	!	return
+	!end subroutine
+
+
+
+	!subroutine gaugeTrafo()
+	!	integer								:: 	ki, a, b, n, m
+	!	complex(dp),		allocatable		:: 	Ucjg(:,:), tmp(:,:), &
+	!											HaBar(:,:,:), DaH(:,:,:), AaBar(:,:,:), OmBar(:,:,:,:)
+	!	!
+	!	allocate(	Ucjg(			num_wann,	num_wann		)	)
+	!	allocate(	tmp(			num_wann,	num_wann		)	)
+	!	allocate(	HaBar(	3,		num_wann,	num_wann		)	)
+	!	allocate(	DaH(	3,		num_wann,	num_wann		)	)
+	!	allocate(	AaBar(	3,		num_wann,	num_wann		)	)
+	!	allocate(	OmBar(	3,	3,	num_wann,	num_wann		)	)
+	!	!
+	!	
+	!	do ki = 1, nK
+	!		!SET UP THE WORK ARRAYS
+	!		Ucjg				= dconjg(	transpose( U_mat(:,:,ki) )		)
+	!		do a = 1, 3
+	!			!conn
+	!			tmp(:,:)		= matmul(	A_mat(a,:,:,ki) 	, 		Ucjg		)
+	!			AaBar(a,:,:)	= matmul(	U_mat(:,:,ki)		,	tmp(:,:)		)
+	!			!HaBar
+	!			tmp(:,:)		= matmul(	Ha_mat(a,:,:,ki) 	, 		Ucjg		)
+	!			HaBar(a,:,:)	= matmul(	U_mat(:,:,ki)		,	tmp(:,:)		)
+	!			!OmBar
+	!			do b = 1, 3
+	!				tmp(:,:)		= matmul(	Om_tens(a,b,:,:,ki)	,	Ucjg	)		
+	!				OmBar(a,b,:,:)	= matmul(	U_mat(:,:,ki)				,	tmp(:,:)		)
+	!			end do
+	!			!DaH
+	!			do n = 1, num_wann
+	!				do m = 1, num_wann
+	!					if(n/=m)	DaH(a,n,m)	= HaBar(a,n,m) /	(	En_vec(m,ki) - En_vec(n,ki)	)
+	!					if(n==m)	DaH(a,n,m)	= dcmplx(0.0_dp)
+	!				end do
+	!			end do
+	!			
+	!		end do
+	!		!
+	!		!
+	!		!YIELD DESIRED QUANTITIES
+	!		!conn
+	!		A_mat(:,:,:,ki) 	= AaBar + i_dp * DaH
+	!		!velo
+	!		do n = 1, num_wann
+	!			do m = 1, num_wann
+	!				v_mat(1:3,n,m,ki)	= HaBar(1:3,n,m) - i_dp * ( En_vec(m,ki) - En_vec(n,ki) ) * AaBar(1:3,n,m)
+	!				
+	!			end do 
+	!		end do
+	!		!curv
+	!		do a = 1, 3
+	!			do b = 1, 3
+	!				tmp	= dcmplx(0.0_dp)
+	!				tmp	= tmp + OmBar(a,b,:,:)
+	!				tmp	= tmp - 		matmul( DaH(a,:,:), AaBar(b,:,:) ) 	+ 		matmul( AaBar(b,:,:) , DaH(a,:,:)	)
+	!				tmp = tmp + 		matmul( DaH(b,:,:), AaBar(a,:,:) )	-		matmul( AaBar(a,:,:) , DaH(b,:,:)	)
+	!				tmp = tmp - i_dp * 	matmul(	DaH(a,:,:), DaH(b,:,:)	 )  + i_dp *matmul( 	DaH(b,:,:), DaH(a,:,:)	)
+	!				!
+	!				Om_tens(a,b,:,:,ki)	= tmp(:,:)
+	!			end do
+	!		end do
+	!	end do
+	!	!
+	!	return
+	!end subroutine
 
 
