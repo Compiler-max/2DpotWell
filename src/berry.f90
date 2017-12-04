@@ -10,7 +10,7 @@ module berry
 	use semiClassics,	only:	calcFirstOrdP
 	use peierls,		only:	peierlsMethod
 	use wannier,		only:	wannMethod
-	use output,			only:	writeCkASunk, writePolFile, writeVeloHtxt, writeEnH, writeHopp, writeUmat
+	use output,			only:	writeCkASunk, writePolFile, writeVeloHtxt, writeEnH, writeHopp, writeUmat, writeUberryInt
 
 	implicit none
 
@@ -112,7 +112,9 @@ module berry
 
 		!INTERPOLATE CONN,CURV, VELO
 		call DoWannInterpol(ckW, rHopp, tHopp, R_real, EnK, Uk, AconnK, FcurvK, veloK)
+		call writeUberryInt(Uk)
 		write(*,*)	"[berrryMethod]: interpolation done"
+
 
 		
 		

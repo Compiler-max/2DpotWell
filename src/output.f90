@@ -11,7 +11,7 @@ module output
 
 	public ::	writeMeshInfo, writeMeshBin, writeEnAndCK, writeCkASunk, writeConnCurv, writeWannFiles, writePolFile, &
 				printMat, printTiming , writePeierls,  writeInterpBands, writeEnH, printBasisInfo, & 
-				writeVeloHtxt, writeVeloEffTB, writeHopp, writeUmat, writeInterpU, writeHtb
+				writeVeloHtxt, writeVeloEffTB, writeHopp, writeUmat, writeInterpU, writeHtb, writeUberryInt
 
 
 	interface printMat
@@ -312,6 +312,27 @@ module output
 		!
 		open(unit=805,file='U_matTB.txt',action='write')
 		write(805,*)	"U_mat interpolated by effTB"
+		do ki = 1, size(U_mat,3)
+			write(805,*)	kpts(1,ki)/recpLatt(1,1)," ",kpts(2,ki)/recpLatt(2,2)
+			do n = 1, size(U_mat,2)
+				do m = 1, size(U_mat,1)
+					write(805,'(a,i3,a,i3,a,f14.10,a,f14.10)')	" ",m," ",n," ",dreal(U_mat(m,n,ki))," ",dimag(U_mat(m,n,ki))
+				end do
+			end do
+			write(805,*)
+		end do 
+		close(805)
+		!
+		return
+	end subroutine
+
+
+	subroutine writeUberryInt( U_mat)
+		complex(dp),	intent(in)		:: U_mat(:,:,:)
+		integer								:: ki, n, m
+		!
+		open(unit=805,file='U_matBerryInterp.txt',action='write')
+		write(805,*)	"U_mat interpolated by berry"
 		do ki = 1, size(U_mat,3)
 			write(805,*)	kpts(1,ki)/recpLatt(1,1)," ",kpts(2,ki)/recpLatt(2,2)
 			do n = 1, size(U_mat,2)
