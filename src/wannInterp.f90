@@ -43,7 +43,7 @@ module wannInterp
 				AconnH(1:3,:,:,ki) 		= AW(1:3,:,:)
 				!VELOCITIES
 				!call calcVeloNOIntP(ki, ckW, U, HaW, EnH, AconnH, veloH)
-				call calcVeloNew(ki, EnH, U, ckW, HaW, AconnH, veloH)
+				call calcVeloNew(ki, EnH, U, ckW, HaW, AW, veloH)
 			end if
 		end do	
 		!
@@ -120,7 +120,7 @@ module wannInterp
 	subroutine calcVeloNew(ki, En_vec, U, ckW, Ha_mat, A_mat, v_mat)
 		integer,		intent(in)		::	ki
 		real(dp),		intent(in)		::	En_vec(:,:)
-		complex(dp),	intent(in)		::	U(:,:), ckW(:,:,:), Ha_mat(:,:,:), A_mat(:,:,:,:)
+		complex(dp),	intent(in)		::	U(:,:), ckW(:,:,:), Ha_mat(:,:,:), A_mat(:,:,:)
 		complex(dp),	intent(out)		::	v_mat(:,:,:,:)
 		complex(dp),	allocatable		:: 	Hbar(:,:,:), Abar(:,:,:), Ucjg(:,:), tmp(:,:)
 		integer							::	m, n, i, gi
@@ -140,7 +140,7 @@ module wannInterp
 				tmp			= matmul(	Ha_mat(i,:,:)	, Ucjg			)	
 				Hbar(i,:,:)	= matmul(	U				, tmp				)	
 				!
-				tmp			= matmul(	A_mat(i,:,:,ki)		, Ucjg			)	
+				tmp			= matmul(	A_mat(i,:,:)		, Ucjg			)	
 				Abar(i,:,:)	= matmul(	U				, tmp				)
 				!APPLY ROTATION
 				do m = 1, nWfs
