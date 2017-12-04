@@ -77,7 +77,7 @@ module wannInterp
 		!
 		!SET UP K SPACE MATRICES
 		do R = 1, size(R_real,2)
-			phase				= myExp( 	dot_product(kpts(1:2,ki),R_real(1:2,R))		) !/ dcmplx(real(nrpts,dp))
+			phase				= myExp( 	dot_product(kpts(1:2,ki),R_real(1:2,R))		) / dcmplx(real(nSC,dp))
 			!
 			H_mat(:,:)			= H_mat(:,:)	 	+ 			phase 								* H_tb(:,:,R)
 			do a = 1, 3
