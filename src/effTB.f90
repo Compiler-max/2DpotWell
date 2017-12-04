@@ -55,6 +55,7 @@ module effTB
 
 	subroutine calcHtmp(EnQ, Uq, Htmp)
 		!Slater Koster Interpolation of tight binding paramters
+		!	Htmp = Uq^dag Eq Uq (wann review)
 		real(dp),		intent(in)		:: EnQ(:,:)
 		complex(dp),	intent(in)		:: Uq(:,:,:)
 		complex(dp),	intent(out)		:: Htmp(:,:,:)
@@ -76,8 +77,8 @@ module effTB
 			do n = 1, nWfs
 				Ediag(n,n)	= EnQ(n,qi)
 			end do
-			tmp				= matmul(	Ediag	, 	Udag	)
-			Htmp(:,:,qi)	= matmul( 	U		, 	tmp		)
+			tmp				= matmul(	Ediag	, 	U		)
+			Htmp(:,:,qi)	= matmul( 	Udag	, 	tmp		)
 			!
 			if( .not. isHermitian(Htmp(:,:,qi)) ) 	then
 				write(*,'(a,i3)')	"[TBviaKspace]: generated H matrix is not hermitian, at qi=",qi
