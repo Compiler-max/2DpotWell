@@ -198,9 +198,6 @@ module postW90
 				!!if( abs(R_real(2,R)-Rcell(2,R)) > machineP ) write(*,*) "[readTB]: warning Rcell and R_real dont match(y comp)"
 			end do
 			!
-			do R = 1, nrpts
-				if( .not. isHermitian(H_tb(:,:,R)) ) write(*,*) "[readTBsingle]: warning H_tb is not hermitian for #R=",R
-			end do
 			call writeHtb(H_tb)
 			!
 		end if
