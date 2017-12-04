@@ -308,15 +308,15 @@ module output
 
 	subroutine writeInterpU(U_mat)
 		complex(dp),	intent(in)		:: U_mat(:,:,:)
-		integer								:: qi, n, m
+		integer								:: ki, n, m
 		!
 		open(unit=805,file='U_matTB.txt',action='write')
 		write(805,*)	"U_mat interpolated by effTB"
-		do qi = 1, size(U_mat,3)
-			write(805,*)	qpts(1,qi)/recpLatt(1,1)," ",qpts(2,qi)/recpLatt(2,2)
+		do ki = 1, size(U_mat,3)
+			write(805,*)	kpts(1,ki)/recpLatt(1,1)," ",kpts(2,ki)/recpLatt(2,2)
 			do n = 1, size(U_mat,2)
 				do m = 1, size(U_mat,1)
-					write(805,'(a,i3,a,i3,a,f14.10,a,f14.10)')	" ",m," ",n," ",dreal(U_mat(m,n,qi))," ",dimag(U_mat(m,n,qi))
+					write(805,'(a,i3,a,i3,a,f14.10,a,f14.10)')	" ",m," ",n," ",dreal(U_mat(m,n,ki))," ",dimag(U_mat(m,n,ki))
 				end do
 			end do
 			write(805,*)
