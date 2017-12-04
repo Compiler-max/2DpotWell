@@ -199,7 +199,7 @@ module postW90
 			end do
 			!
 			do R = 1, nrpts
-				if( .not. isHermitian(H_tb(:,:,R)) ) write(*,*) "warning H_tb is not hermitian for #R=",R
+				if( .not. isHermitian(H_tb(:,:,R)) ) write(*,*) "[readTBsingle]: warning H_tb is not hermitian for #R=",R
 			end do
 			call writeHtb(H_tb)
 			!
