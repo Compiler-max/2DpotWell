@@ -94,6 +94,7 @@ module wannInterp
 		!ENERGY INTERPOLATION
 		U_mat(:,:)	= H_mat(:,:)
 		call eigSolver(U_mat(:,:),	En_vec(:,ki))
+		U_mat	= transpose( dconjg(U_mat))
 	
 		!
 		!CURVATURE TO MATRIX
