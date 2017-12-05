@@ -102,7 +102,7 @@ module wannInterp
 		U_mat(:,:)	= H_mat(:,:)
 		if( .not. isHermitian(U_mat)	)		 	write(*,*)	"[wannInterpolator]: warning Ham is not hermitian"
 		call eigSolverFULL(U_mat(:,:),	En_vec(:,ki))
-		U_mat	= transpose( dconjg(U_mat))
+		!U_mat	= transpose( dconjg(U_mat))
 		if( .not. isUnit(U_mat) ) 					write(*,*)	"[wannInterpolator]: eigen solver gives non unitary U matrix"
 		!
 		!
@@ -137,10 +137,10 @@ module wannInterp
 			do i = 1, 3
 				!ROTATE TO HAM GAUGE
 				tmp			= matmul(	Ha_mat(i,:,:)	, U			)	
-				Hbar(i,:,:)	= matmul(	Ucjg				, tmp				)	
+				Hbar(i,:,:)	= matmul(	Ucjg			, tmp		)	
 				!
-				tmp			= matmul(	A_mat(i,:,:)		, U			)	
-				Abar(i,:,:)	= matmul(	Ucjg				, tmp				)
+				tmp			= matmul(	A_mat(i,:,:)		, U		)	
+				Abar(i,:,:)	= matmul(	Ucjg				, tmp	)
 				!APPLY ROTATION
 				do m = 1, nWfs
 					do n = 1, nWfs
@@ -152,8 +152,10 @@ module wannInterp
 							write(*,'(a,i1,a,i3,a,i3,a,f8.4,a,f8.4,a,f8.4)')"[calcVeloNeW]: found off diag band deriv i=",i,&
 									" n=",n," m=",m, "Hbar_nm=",dreal(Hbar(i,n,m)), "+i*",dimag(Hbar(i,n,m))," abs=",abs(Hbar(i,n,m))
 						end if
+						!
 					end do
 				end do
+				!
 			end do
 		else	
 			if(ki==1)	write(*,*)"[calcVeloNew]:velocities are calculated analytically, with the plane wave coefficients"

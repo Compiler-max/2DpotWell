@@ -211,16 +211,16 @@ module effTB
 
 
 						!FD SUM OVER NEAREST NEIGHBOURS
-						A(1:2,n,m, qi) = A(1:2,n,m, qi) + i_dp * wbx * bxl(1:2) * ( Mxl - one )
-						A(1:2,n,m, qi) = A(1:2,n,m, qi) + i_dp * wbx * bxr(1:2) * ( Mxr - one )
-						A(1:2,n,m, qi) = A(1:2,n,m, qi) + i_dp * wby * byl(1:2) * ( Myl - one )
-						A(1:2,n,m, qi) = A(1:2,n,m, qi) + i_dp * wby * byr(1:2) * ( Myr - one )
+						!A(1:2,n,m, qi) = A(1:2,n,m, qi) + i_dp * wbx * bxl(1:2) * ( Mxl - one )
+						!A(1:2,n,m, qi) = A(1:2,n,m, qi) + i_dp * wbx * bxr(1:2) * ( Mxr - one )
+						!A(1:2,n,m, qi) = A(1:2,n,m, qi) + i_dp * wby * byl(1:2) * ( Myl - one )
+						!A(1:2,n,m, qi) = A(1:2,n,m, qi) + i_dp * wby * byr(1:2) * ( Myr - one )
 
 
-						!A(1:2,n,m, qi) = A(1:2,n,m, qi) - wbx * bxl(1:2) * dimag( zlog( Mxl ) )
-						!A(1:2,n,m, qi) = A(1:2,n,m, qi) - wbx * bxr(1:2) * dimag( zlog( Mxr ) )
-						!A(1:2,n,m, qi) = A(1:2,n,m, qi) - wby * byl(1:2) * dimag( zlog( Myl ) )
-						!A(1:2,n,m, qi) = A(1:2,n,m, qi) - wby * byr(1:2) * dimag( zlog( Myr ) )
+						A(1:2,n,m, qi) = A(1:2,n,m, qi) - wbx * bxl(1:2) * dimag( zlog( Mxl ) )
+						A(1:2,n,m, qi) = A(1:2,n,m, qi) - wbx * bxr(1:2) * dimag( zlog( Mxr ) )
+						A(1:2,n,m, qi) = A(1:2,n,m, qi) - wby * byl(1:2) * dimag( zlog( Myl ) )
+						A(1:2,n,m, qi) = A(1:2,n,m, qi) - wby * byr(1:2) * dimag( zlog( Myr ) )
 						
 					end do
 				end do
