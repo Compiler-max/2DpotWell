@@ -97,9 +97,7 @@ module wannInterp
 				end do
 			end do
 		end do
-		
-
-
+		!
 		!ENERGY INTERPOLATION
 		U_mat(:,:)	= H_mat(:,:)
 		if( .not. isHermitian(U_mat)	)		 	write(*,*)	"[wannInterpolator]: warning Ham is not hermitian"
