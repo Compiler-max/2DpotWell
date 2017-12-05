@@ -90,6 +90,9 @@ module berry
 		call readHam(ck, EnQ)
 
 		!rotate ck, get ckW
+		do qi = 1, nQ
+			Uq(:,:,qi) = transpose( dconjg(Uq(:,:,qi))	)
+		end do 
 		ckW	= dcmplx(0.0_dp)
 		if(	useRot ) then
 			do qi = 1, nQ
