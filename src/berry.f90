@@ -48,7 +48,7 @@ module berry
 		complex(dp),	allocatable		:: 	AconnK(:,:,:,:), FcurvK(:,:,:,:), veloK(:,:,:,:), &
 											tHopp(:,:,:), rHopp(:,:,:,:) , Uk(:,:,:)
 		real(dp)						::	pWann(3)
-		integer							::	gi, qi, n, R
+		integer							::	gi, qi, n, m, R
 		!					
 		!
 		allocate(			tHopp(					nWfs	, 	nWfs	,	nSc		)			)
@@ -90,10 +90,16 @@ module berry
 		call readHam(ck, EnQ)
 
 		!rotate ck, get ckW
+		ckW	= dcmplx(0.0_dp)
 		if(	useRot ) then
 			do qi = 1, nQ
 				do gi = 1, nGq(qi)			! u^(H) = u^(W) U -> u^(W) = u^(H) U^dagger
-					ckW(gi,:,qi)	= matmul( Uq(:,:,qi)   , ck(gi,:,qi)					)				
+					do n = 1, num_wann
+						!SUM OVER m
+						do m = 1, num_wann
+							ckW(gi,n,qi)	=  ckW(gi,n,qi) + Uq(m,n,qi)   * ck(gi,m,qi)	
+						end do		
+					end do	
 				end do
 			end do
 			write(*,*)	"[berryMethod]: applied U matrix to basis coefficients"
