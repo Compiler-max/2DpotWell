@@ -39,7 +39,7 @@ module wannInterp
 			if( doGaugBack ) then
 				if(ki == 1) write(*,*)	"[DoWannInterpol]: start gauging back" 	
 				call gaugeBack(Hw, HaW, AW, FWtens, EnH(:,ki), U_int(:,:,ki), AconnH(:,:,:,ki), FcurvH(:,:,:,ki), veloH(:,:,:,ki))	
-				write(*,*)	"[DoWannInterpol]: calculated (H) gauge energy, connection, curvature, velocity"
+				write(*,*)	"[DoWannInterpol]: calculated (H) gauge energy, connection, curvature, velocity at ki=",ki
 			else
 				if(ki ==1)	write(*,*)	"[DoWannInterpol]: Gauge trafo DISABLED	"
 				!CONNECTION
@@ -56,7 +56,7 @@ module wannInterp
 						end do
 					end do
 				end do
-				write(*,*)	"[DoWannInterpol]: calculated (W) gauge energy, connection, curvature, velocity"
+				write(*,*)	"[DoWannInterpol]: calculated (W) gauge energy, connection, curvature, velocity at ki=",ki
 			end if
 		end do	
 		!
