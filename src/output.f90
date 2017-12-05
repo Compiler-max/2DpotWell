@@ -410,7 +410,7 @@ module output
 		open(unit=807,file='H_tbBerry.txt',action='write')
 		write(807,*)	"H_tb (eV) calculated by Berry"
 		do R = 1, size(H_tb,3)
-			write(807,*)	Rcell(1,R), " ", Rcell(2,R)," ",Rcell(3,R)
+			write(807,*)	Rcell(1,R), " ", Rcell(2,R)
 			do n = 1, size(H_tb,2)
 				do m = 1, size(H_tb,1)
 					write(807,'(a,i3,a,i3,a,e16.8,a,e16.8)')	" ",m," ",n," ",dreal(H_tb(m,n,R)*aUtoEv)," ",dimag(H_tb(m,n,R)*aUtoEv)
@@ -431,7 +431,7 @@ module output
 		open(unit=807,file='r_tbBerry.txt',action='write')
 		write(807,*)	"r_tb (angstroem) calculated by Berry"
 		do R = 1, size(r_tb,4)
-			write(807,*)	Rcell(1,R), " ", Rcell(2,R)," ",Rcell(3,R)
+			write(807,*)	Rcell(1,R), " ", Rcell(2,R)
 			do n = 1, size(r_tb,3)
 				do m = 1, size(r_tb,2)
 					write(807,'(a,i3,a,i3,a,e16.8,a,e16.8,a,e16.8,a,e16.8,a,e16.8,a,e16.8)')	&

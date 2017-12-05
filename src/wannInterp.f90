@@ -39,7 +39,6 @@ module wannInterp
 			if( doGaugBack ) then
 				if(ki == 1) write(*,*)	"[DoWannInterpol]: start gauging back" 	
 				call gaugeBack(Hw, HaW, AW, FWtens, EnH(:,ki), U_int(:,:,ki), AconnH(:,:,:,ki), FcurvH(:,:,:,ki), veloH(:,:,:,ki))	
-				write(*,*)	"[DoWannInterpol]: calculated (H) gauge energy, connection, curvature, velocity at ki=",ki
 			else
 				if(ki ==1)	write(*,*)	"[DoWannInterpol]: Gauge trafo DISABLED	"
 				!CONNECTION
@@ -56,11 +55,11 @@ module wannInterp
 						end do
 					end do
 				end do
-				write(*,*)	"[DoWannInterpol]: calculated (W) gauge energy, connection, curvature, velocity at ki=",ki
+			
 			end if
 		end do	
 		!
-		
+		write(*,*)	"[DoWannInterpol]: calculated interpolated energy, connection, curvature, velocity "
 		!
 		return
 	end subroutine
@@ -103,24 +102,10 @@ module wannInterp
 
 		!ENERGY INTERPOLATION
 		U_mat(:,:)	= H_mat(:,:)
-		if( .not. isHermitian(U_mat)	) write(*,*)	"[wannInterpolator]: warning Ham is not hermitian"
-		
-
-		!debug
-		write(*,*)	"[wannInterpolator]: #k=",ki
-		do n = 1, size(H_mat,2)
-			do m = 1, size(H_mat,1)
-				write(*,*)	m," ", n, " ", dreal(U_mat(m,n)), " ", dimag(U_mat(m,n))
-			end do
-		end do
+		if( .not. isHermitian(U_mat)	)		 	write(*,*)	"[wannInterpolator]: warning Ham is not hermitian"
 		call eigSolverFULL(U_mat(:,:),	En_vec(:,ki))
 		U_mat	= transpose( dconjg(U_mat))
-
-		if( .not. isUnit(U_mat) ) write(*,*)	"[wannInterpolator]: eigen solver gives non unitary U matrix"
-		!write(*,*)	"[wannInterpolator]: #ki=",ki
-		!do n = 1, size(En_vec,1)
-		!	write(*,*)	"[wannInterpolator]: E_n=",n," = ",En_vec(n,ki)
-		!end do
+		if( .not. isUnit(U_mat) ) 					write(*,*)	"[wannInterpolator]: eigen solver gives non unitary U matrix"
 		!
 		!
 		return
