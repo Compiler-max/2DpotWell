@@ -390,7 +390,7 @@ module output
 		open(unit=805,file='H_tb.txt',action='write')
 		write(805,*)	"H_tb (eV) read in by effTB"
 		do R = 1, size(H_tb,3)
-			write(805,*)	Rcell(1,R), " ", Rcell(2,R)," ",Rcell(3,R)
+			write(805,*)	Rcell(1,R), " ", Rcell(2,R)
 			do n = 1, size(H_tb,2)
 				do m = 1, size(H_tb,1)
 					write(805,'(a,i3,a,i3,a,e16.8,a,e16.8)')	" ",m," ",n," ",dreal(H_tb(m,n,R)*aUtoEv)," ",dimag(H_tb(m,n,R)*aUtoEv)
