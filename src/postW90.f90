@@ -60,7 +60,7 @@ module postW90
 			write(*,*)	"[effTBmodel]: done interpolating to k mesh with nK=",nK
 			!
 			!calc all desired polarizations
-			call polWrapper(pWann, pConn, pNiuF2, pNiuF3, pPei)
+			!call polWrapper(pWann, pConn, pNiuF2, pNiuF3, pPei)
 		else
 			write(*,*)	"[effTBmodel]: did not find input file, no calculations performed"
 		end if

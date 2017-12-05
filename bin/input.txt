@@ -24,7 +24,7 @@
     Bext        = 0.0 0.0 1.0  
 
 [numerics]
-    Gcut        = 8.0
+    Gcut        = 4.0
     nSolve      = 10        
     nQx         = 8   
     nQy         = 8
@@ -37,10 +37,10 @@
     thres       = 0.1
 
 [methods]
-    doSolveHam  = T
+    doSolveHam  = f
     useBloch    = f
-    doPw90      = F
-    doBerry     = F
+    doPw90      = t
+    doBerry     = f
     writeBin    = f
 
 [pw90]
