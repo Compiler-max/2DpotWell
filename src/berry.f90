@@ -45,7 +45,7 @@ module berry
 		!todo
 		real(dp)						:: 	pBerry(3), pNiuF2(3), pNiuF3(3), pPei(3)
 		real(dp),		allocatable		:: 	EnK(:,:), R_real(:,:)
-		complex(dp),	allocatable		:: 	AconnK(:,:,:,:), FcurvK(:,:,:,:), veloK(:,:,:,:), &
+		complex(dp),	allocatable		:: 	AconnQ(:,:,:,:), AconnK(:,:,:,:), FcurvK(:,:,:,:), veloK(:,:,:,:), &
 											tHopp(:,:,:), rHopp(:,:,:,:) , Uk(:,:,:)
 		real(dp)						::	pWann(3)
 		integer							::	gi, qi, n, m, R
@@ -54,6 +54,7 @@ module berry
 		allocate(			tHopp(					nWfs	, 	nWfs	,	nSc		)			)
 		allocate(			rHopp(		3		,	nWfs	, 	nWfs	, 	nSC		)			)			
 		allocate(			EnK(					nWfs	, 				nK		)			)
+		allocate(			AconnQ(		3		, 	nWfs	,	nWfs	,	nQ		)			)
 		allocate(			AconnK(		3		, 	nWfs	,	nWfs	,	nK		)			)
 		allocate(			FcurvK(		3		, 	nWfs	, 	nWfs	,	nK		)			)
 		allocate(			veloK(		3		, 	nWfs	,	nWfs	,	nK		)			)
@@ -91,10 +92,10 @@ module berry
 
 
 		!test directly
-		write(*,*)	"[berryMethod]: test abinit coeff polarization:"
-		call calcConnOnCoarse(ck, AconnK)
-		call calcPolViaA(AconnK,pBerry)
-		AconnK = dcmplx(0.0_dp)
+		write(*,*)	"[berryMethod]: test abinit coeff polarization( coarse):"
+		call calcConnOnCoarse(ck, AconnQ)
+		call calcPolViaA(AconnQ,pBerry)
+		AconnQ = dcmplx(0.0_dp)
 		write(*,*)"[berryMethod]: coarse abInitio pol =(",pBerry(1),", ",pBerry(2),", ", pBerry(3),")."
 		pBerry = 0.0_dp
 
@@ -121,6 +122,16 @@ module berry
 				write(*,*)	"[berryMethod]: critical error, less nBands then nWfs, coeff set to zero..."
 			end if
 		end if
+
+
+		!test directly
+		write(*,*)	"[berryMethod]: test rotated coeff polarization( coarse):"
+		call calcConnOnCoarse(ckW, AconnQ)
+		call calcPolViaA(AconnQ,pBerry)
+		AconnQ = dcmplx(0.0_dp)
+		write(*,*)"[berryMethod]: coarse rotated pol =(",pBerry(1),", ",pBerry(2),", ", pBerry(3),")."
+		pBerry = 0.0_dp
+
 
 		!SET UP EFFECTIVE TIGHT BINDING MODELL
 		call TBviaKspace(ckW, EnQ, Uq, tHopp, rHopp)
