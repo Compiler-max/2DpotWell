@@ -142,7 +142,7 @@ module wannInterp
 				!
 				do m = 1, nWfs
 					do n = 1, nWfs
-						if(n==m)	v_mat(i,:,:,ki)	= Ha_mat(i,:,:)
+						if(n==m)	v_mat(i,n,m,ki)	= Ha_mat(i,n,m)
 						if(n/=m)	v_mat(i,n,m,ki) = - i_dp * dcmplx( En_vec(m,ki) - En_vec(n,ki) ) * A_mat(i,n,m) 
 					end do
 				end do
