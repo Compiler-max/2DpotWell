@@ -37,7 +37,7 @@ module blochWf
 			notFound 	= .true.
 			gj			= 1
 			do while( gj<= nGq(knb) .and. notFound ) 
-				delta(:)	=  ( Gvec(:,gi,qi)-qpts(:,qi) ) 	-  		( Gvec(:,gj,knb)-qpts(:,knb)-gShift(:) )
+				delta(1:2)	=  ( Gvec(1:2,gi,qi)-qpts(1:2,qi) ) 	-  		( Gvec(1:2,gj,knb)-qpts(1:2,knb)-gShift(1:2) )
 				if( norm2(delta) < machineP )	then
 					UNKoverlap	= UNKoverlap +  dconjg( ck(gi,n,qi) ) * ck(gj,m,knb) 
 					cnt = cnt + 1
