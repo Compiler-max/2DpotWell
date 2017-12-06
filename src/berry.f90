@@ -123,7 +123,7 @@ module berry
 		call DoWannInterpol(ckW, rHopp, tHopp, R_real, EnK, Uk, AconnK, FcurvK, veloK)
 		call writeEnBerry(EnK)
 		call writeBerryInterpU(Uk)
-		write(*,*)	"[berrryMethod]: interpolation done"
+		write(*,*)	"[berryMethod]: interpolation done"
 
 
 		
