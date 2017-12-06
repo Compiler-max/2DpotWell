@@ -121,7 +121,7 @@ module wannInterp
 		real(dp),		intent(in)		::	En_vec(:,:)
 		complex(dp),	intent(in)		::	U(:,:), ckW(:,:,:), Ha_mat(:,:,:), A_mat(:,:,:)
 		complex(dp),	intent(out)		::	v_mat(:,:,:,:)
-		complex(dp),	allocatable		:: 	Hbar(:,:,:), Abar(:,:,:), Ucjg(:,:), tmp(:,:)
+		complex(dp),	allocatable		:: 	Hbar(:,:,:), Abar(:,:,:), Ucjg(:,:), tmp(:,:), vec(:)
 		integer							::	m, n, i, gi
 		!
 		!
@@ -129,7 +129,9 @@ module wannInterp
 		allocate(		Abar(	3,	nWfs 	,	nWfs		)	)
 		allocate(		Ucjg(		nWfs	,	nWfs		)	)
 		allocate(		tmp(		nWfs	,	nWfs		)	)
+		allocate(		vec(		nWfs					)	)
 		Ucjg			= dconjg(	transpose(U)	)
+		v_mat			= dcmplx(0.0_dp)
 		!
 		if(	doVeloNUM ) then
 			if(ki==1)	write(*,*)"[calcVeloNew]: velocities are calculated via TB approach"
@@ -146,7 +148,6 @@ module wannInterp
 					do n = 1, nWfs
 						if( n==m )	v_mat(i,n,n,ki) = Hbar(i,n,n)
 						if( n/=m )	v_mat(i,n,m,ki) = - i_dp * dcmplx( En_vec(m,ki) - En_vec(n,ki) ) * Abar(i,n,m) 
-						!v_mat(1:3,n,m,ki)	=  Ha_mat(1:3,n,m,ki)	- i_dp * dcmplx( En_vec(m,ki) - En_vec(n,ki) ) * A_mat(1:3,n,m,ki) 
 						!DEBUG
 						if( n/=m .and. abs(Hbar(i,n,m)) > 0.1_dp ) then
 							write(*,'(a,i1,a,i3,a,i3,a,f8.4,a,f8.4,a,f8.4)')"[calcVeloNeW]: found off diag band deriv i=",i,&
@@ -160,13 +161,25 @@ module wannInterp
 		else	
 			if(ki==1)	write(*,*)"[calcVeloNew]:velocities are calculated analytically, with the plane wave coefficients"
 			if( nK /= nQ) write(*,*)"[calcVeloNew]: warning analytic approach does not support different k mesh spacing"
-			do m = 1, nWfs
+			do gi = 1, nGq(ki)
 				do n = 1, nWfs
-					do gi = 1 , nGq(ki)
-						v_mat(1:2,n,m,ki) = v_mat(1:2,n,m,ki) +  dconjg(ckW(gi,n,ki)) *  ckW(gi,m,ki) * i_dp * Gvec(1:2,gi,ki)
+					do m = 1, nWfs
+						tmp(m,n)	= dconjg(ckW(gi,m,ki)) * ckW(gi,n,ki)
 					end do
 				end do
+				tmp		= matmul( tmp	,	U 	)
+				tmp		= matmul( Ucjg	,	tmp	)
+
+				v_mat(1:2,n,m,ki)	= v_mat(1:2,n,m,ki) + i_dp * Gvec(1:2,gi,ki) * tmp(n,m)
 			end do
+
+			!do m = 1, nWfs
+			!	do n = 1, nWfs
+			!		do gi = 1 , nGq(ki)
+			!			!v_mat(1:2,n,m,ki) = v_mat(1:2,n,m,ki) +  dconjg(ckW(gi,n,ki)) *  ckW(gi,m,ki) * i_dp * Gvec(1:2,gi,ki)
+			!		end do
+			!	end do
+			!end do
 		end if	
 			!NO GAUGE BACK
 			!do m = 1, num_wann
