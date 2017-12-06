@@ -64,7 +64,7 @@ module blochWf
 		!
 		basVec	= 0.0_dp
 		do i =1, nGq(qi)
-			basVec(i) 		= myExp( dot_product( Gvec(:,i,qi), rpts(:,ri) )		)  !/ dsqrt(vol)
+			basVec(i) 		= myExp( dot_product( Gvec(1:2,i,qi), rpts(1:2,ri) )		)  !/ dsqrt(vol)
 		end do
 		!
 		!
@@ -74,55 +74,45 @@ module blochWf
 
 
 
-	subroutine genBwfVelo(qi,basCoeff, unk)
-		!generates the bloch wavefunctions, with  the basCoeff from eigSolver, using
-		!	call zgemm(transa, transb, m, n, k, alpha, a	  , lda, b		, ldb, beta, c , ldc)
-		!			c = alpha * op(a) *op(b) + beta * c
-		integer		, intent(in)	:: qi
-		complex(dp)	, intent(in)	:: basCoeff(:,:)
-		complex(dp)	, intent(out)	:: unk(:,:)
-		complex(dp)	, allocatable	:: basVec(:) 
-		integer 				 	:: xi
-		complex(dp)					:: phase
-		!
-
-		!
-		!$OMP PARALLEL DEFAULT(SHARED) PRIVATE(xi,phase, basVec)
-		allocate(	basVec(		nG)			)
-		!$OMP DO SCHEDULE(DYNAMIC,nRx) 
-		do xi = 1, nR
-			!GET BASIS
-			call calcBasis(qi,xi, basVec)
-			!
-			!WAVE FUNCTIONS
-			phase			= myExp( -1.0_dp * dot_product( qpts(:,qi), rpts(:,xi) )		)
-			unk(xi,:)	= phase * dsqrt(real(nSc,dp))   * matmul(basVec,basCoeff) 
-			!unk(xi,:)	= phase   * matmul(basVec,basCoeff) 
-			!unk(xi,:)	= matmul(basVec,basCoeff) 
-			!
-		end do
-		!$OMP END DO
-		!$OMP END PARALLEL
-		!
-		return 
-	end subroutine
-
-
-
-
-
-
-
-!privat
-
-
-
 
 end module blochWf 
 
 
 
 
+
+	!subroutine genBwfVelo(qi,basCoeff, unk)
+	!	!generates the bloch wavefunctions, with  the basCoeff from eigSolver, using
+	!	!	call zgemm(transa, transb, m, n, k, alpha, a	  , lda, b		, ldb, beta, c , ldc)
+	!	!			c = alpha * op(a) *op(b) + beta * c
+	!	integer		, intent(in)	:: qi
+	!	complex(dp)	, intent(in)	:: basCoeff(:,:)
+	!	complex(dp)	, intent(out)	:: unk(:,:)
+	!	complex(dp)	, allocatable	:: basVec(:) 
+	!	integer 				 	:: xi
+	!	complex(dp)					:: phase
+	!	!
+!
+!	!	!
+!	!	!$OMP PARALLEL DEFAULT(SHARED) PRIVATE(xi,phase, basVec)
+!	!	allocate(	basVec(		nG)			)
+!	!	!$OMP DO SCHEDULE(DYNAMIC,nRx) 
+!	!	do xi = 1, nR
+!	!		!GET BASIS
+!	!		call calcBasis(qi,xi, basVec)
+!	!		!
+!	!		!WAVE FUNCTIONS
+!	!		phase			= myExp( -1.0_dp * dot_product( qpts(1:2,qi), rpts(1:2,xi) )		)
+!	!		unk(xi,:)	= phase * dsqrt(real(nSc,dp))   * matmul(basVec,basCoeff) 
+!	!		!unk(xi,:)	= phase   * matmul(basVec,basCoeff) 
+!	!		!unk(xi,:)	= matmul(basVec,basCoeff) 
+!	!		!
+!	!	end do
+!	!	!$OMP END DO
+!	!	!$OMP END PARALLEL
+!	!	!
+!	!	return 
+	!end subroutine
 
 
 

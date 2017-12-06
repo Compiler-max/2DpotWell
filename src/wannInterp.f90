@@ -138,7 +138,7 @@ module wannInterp
 			if(ki==1)	write(*,*)"[calcVeloNew]: velocities are calculated via TB approach"
 			!GAUGE BACK
 			do i = 1, 3
-				v_mat(i,:,:,ki)	= Ha_mat(i,:,:)
+				!v_mat(i,:,:,ki)	= Ha_mat(i,:,:)
 				!
 				do m = 1, nWfs
 					do n = 1, nWfs
