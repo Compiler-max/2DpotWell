@@ -67,7 +67,6 @@ module berry
 		allocate(			AconnQ(		3		, 	nWfs	,	nWfs	,	nQ		)			)
 		allocate(			FcurvQ(		3		,	nWfs	,	nWfs	,	nQ		)			)
 		allocate(			veloQ(		3		, 	nWfs	,	nWfs	,	nQ		)			)
-
 		allocate(			R_real(		3		,							nSC		)			)
 		
 		R_real(3,:)	= 0.0_dp
@@ -124,9 +123,7 @@ module berry
 		write(*,*)	"[berryMethod]: test rotated coeff polarization( coarse):"
 		call calcConnOnCoarse(ckW, AconnQ)
 		call calcPolViaA(AconnQ,pBerry)
-		AconnQ = dcmplx(0.0_dp)
 		write(*,*)"[berryMethod]: coarse rotated pol =(",pBerry(1),", ",pBerry(2),", ", pBerry(3),")."
-		pBerry = 0.0_dp
 
 
 		!!SET UP EFFECTIVE TIGHT BINDING MODELL
@@ -156,6 +153,9 @@ module berry
 			call calcFirstOrdP(FcurvQ, AconnQ, veloQ, EnQ, pNiuF2, pNiuF3)
 			write(*,'(a,e17.10,a,e17.10,a,e17.10,a)')	"[berryMethod]: pNiuF2=(",pNiuF2(1),", ",pNiuF2(2),", ",pNiuF2(3),")."
 			write(*,'(a,e17.10,a,e17.10,a,e17.10,a)')	"[berryMethod]: pNiuF3=(",pNiuF3(1),", ",pNiuF3(2),", ",pNiuF3(3),")."
+		else
+			pNiuF2 = 0.0_dp
+			pNiuF3 = 0.0_dp
 		end if
 
 
@@ -164,6 +164,8 @@ module berry
 			write(*,*)	"[berrryMethod]: now calc first order pol via peierls sub."
 			call peierlsMethod(ckW, tHopp, pPei)
 			write(*,'(a,e17.10,a,e17.10,a,e17.10,a)')	"[berryMethod]: pPei=(",pPei(1),", ",pPei(2),", ",pPei(3),")."
+		else
+			pPei = 0.0_dp
 		end if
 
 		!WANNIER
@@ -171,10 +173,11 @@ module berry
 			write(*,*) "[berryMethod]: now calc the Wannier functions by hand"
 			call wannMethod(ckW, pWann)
 			write(*,'(a,f8.4,a,f8.4,a,f8.4,a)')	"[berryMethod]: pWann=(",pWann(1),", ",pWann(2),", ",pWann(3),")."
+		else
+			pWann	= 0.0_dp
 		end if
 
 		!OUTPUT
-		pWann = 0.0_dp
 		call writePolFile(pWann, pBerry, pNiuF2, pNiuF3, pPei )
 		call writeVeloHtxt(veloK)
 		call writeUmat(Uq)
