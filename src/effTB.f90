@@ -148,8 +148,8 @@ module effTB
 		!
 		write(*,'(a,f6.3,a,f6.3)')	"[calcConnOnCoarse]: dqx=",dqx," dqy=",dqy
 		!
-		!!!$OMP PARALLEL DO COLLAPSE(3) DEFAULT(SHARED) SCHEDULE(STATIC) &
-		!!!$OMP& PRIVATE(m,n,qx,qy, qxl, qxr, qyl, qyr, qi,one, Mxl, Mxr, Myl, Myr, Gxl, Gxr, Gyl, Gyr, zero)
+		!$OMP PARALLEL DO COLLAPSE(3) DEFAULT(SHARED) SCHEDULE(STATIC) &
+		!$OMP& PRIVATE(m,n,qx,qy, qxl, qxr, qyl, qyr, qi,one, Mxl, Mxr, Myl, Myr, Gxl, Gxr, Gyl, Gyr, zero)
 		do m = 1, nWfs
 			do n = 1, nWfs
 				do qx = 1, nQx
@@ -215,18 +215,18 @@ module effTB
 						!A(1:2,n,m, qi) = A(1:2,n,m, qi) + i_dp * wbx * bxr(1:2) * ( Mxr - one )
 						!A(1:2,n,m, qi) = A(1:2,n,m, qi) + i_dp * wby * byl(1:2) * ( Myl - one )
 						!A(1:2,n,m, qi) = A(1:2,n,m, qi) + i_dp * wby * byr(1:2) * ( Myr - one )
-
-
+						!
+						!MORE ROBUST FORMULA
 						A(1:2,n,m, qi) = A(1:2,n,m, qi) - wbx * bxl(1:2) * dimag( zlog( Mxl ) )
 						A(1:2,n,m, qi) = A(1:2,n,m, qi) - wbx * bxr(1:2) * dimag( zlog( Mxr ) )
 						A(1:2,n,m, qi) = A(1:2,n,m, qi) - wby * byl(1:2) * dimag( zlog( Myl ) )
 						A(1:2,n,m, qi) = A(1:2,n,m, qi) - wby * byr(1:2) * dimag( zlog( Myr ) )
-						
+						!
 					end do
 				end do
 			end do
 		end do
-		!!!$OMP END PARALLEL DO
+		!$OMP END PARALLEL DO
 		!
 		!
 		return
