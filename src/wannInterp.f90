@@ -139,6 +139,15 @@ module wannInterp
 			!GAUGE BACK
 			do i = 1, 3
 				v_mat(i,:,:,ki)	= Ha_mat(i,:,:)
+				!
+				do m = 1, nWfs
+					do n = 1, nWfs
+						if(n==m)	v_mat(i,:,:,ki)	= Ha_mat(i,:,:)
+						if(n/=m)	v_mat(i,n,m,ki) = - i_dp * dcmplx( En_vec(m,ki) - En_vec(n,ki) ) * Abar(i,n,m) 
+					end do
+				end do
+
+
 				!!ROTATE TO HAM GAUGE
 				!tmp			= matmul(	Ha_mat(i,:,:)	, U_int			)	
 				!Hbar(i,:,:)	= matmul(	Ucjg			, tmp		)	
@@ -185,7 +194,7 @@ module wannInterp
 			do m = 1, nWfs
 				do n = 1, nWfs
 					do gi = 1 , nGq(ki)
-						!v_mat(1:2,n,m,ki) = v_mat(1:2,n,m,ki) +  dconjg(ckW(gi,n,ki)) *  ckW(gi,m,ki) * i_dp * Gvec(1:2,gi,ki)
+						v_mat(1:2,n,m,ki) = v_mat(1:2,n,m,ki) +  dconjg(ckW(gi,n,ki)) *  ckW(gi,m,ki) * i_dp * Gvec(1:2,gi,ki)
 					end do
 				end do
 			end do
