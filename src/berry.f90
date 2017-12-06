@@ -161,7 +161,7 @@ module berry
 			do qi = 1, size(veloQ,4)
 				!GAUGE BACK
 				U	 = Uq(:,:,qi)
-				Ucjg = tranpose( dconjg(U)	)
+				Ucjg = transpose( dconjg(U)	)
 				do a = 1, 3
 					tmp(:,:)	= matmul(	AconnQ(a,:,:,qi) 	,	U	)
 					Abar(a,:,:)	= matmul(	Ucjg				,	tmp	)
