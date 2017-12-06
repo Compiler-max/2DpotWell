@@ -39,7 +39,7 @@
 [methods]
     doSolveHam  = f
     useBloch    = f
-    doPw90      = t
+    doPw90      = f
     doBerry     = t
     writeBin    = f
 
@@ -50,10 +50,10 @@
     pw90GaugeB  = f
 
 [berry]
-    useRot      = t
-    doVeloNUM   = T
+    useRot      = f
+    doVeloNUM   = f
     doNiu       = t
-    doPei       = t
+    doPei       = f
     doWanni     = f
     doGaugBack  = f
 
