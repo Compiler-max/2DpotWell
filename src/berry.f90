@@ -48,9 +48,10 @@ module berry
 		real(dp),		allocatable		:: 	EnK(:,:), R_real(:,:)
 		complex(dp),	allocatable		:: 	AconnQ(:,:,:,:), FcurvQ(:,:,:,:),veloQ(:,:,:,:), &
 											AconnK(:,:,:,:), FcurvK(:,:,:,:), veloK(:,:,:,:), Uk(:,:,:), &
-											tHopp(:,:,:), rHopp(:,:,:,:) 
+											tHopp(:,:,:), rHopp(:,:,:,:), &
+											Abar(:,:,:), U(:,:), Ucjg(:,:), tmp(:,:)
 		real(dp)						::	pWann(3)
-		integer							::	gi, qi, n, m, R
+		integer							::	gi, qi, n, m, R, a
 		!					
 		!DENSE
 		!allocate(			tHopp(					nWfs	, 	nWfs	,	nSc		)			)
@@ -68,6 +69,11 @@ module berry
 		allocate(			FcurvQ(		3		,	nWfs	,	nWfs	,	nQ		)			)
 		allocate(			veloQ(		3		, 	nWfs	,	nWfs	,	nQ		)			)
 		allocate(			R_real(		3		,							nSC		)			)
+		allocate(			Abar(		3		,	nWfs	,	nWfs				)			)
+		allocate(			tmp(					nWfs	,	nWfs				)			)
+		allocate(			U(						nWfs	,	nWfs				)			)
+		allocate(			Ucjg(					nWfs	,	nWfs				)			)
+
 		
 		R_real(3,:)	= 0.0_dp
 		do R = 1, nSC
@@ -152,13 +158,21 @@ module berry
 			FcurvQ	= dcmplx(0.0_dp)	!does not matter since <FcurvQ,AconnQ> is always zero in 2D
 			call calcVeloGrad(ck, veloQ)
 			!!for debugging:
-			!do qi = 1, size(veloQ,4)
-			!	do m = 1, nWfs
-			!		do n = 1, nWfs
-			!			if(n/=m) 		veloQ(1:3,n,m,qi)	= dcmplx(0.0_dp)!-i_dp * dcmplx(EnQ(m,qi)-EnQ(n,qi)) * AconnQ(1:3,n,m,qi)
-			!		end do
-			!	end do
-			!end do
+			do qi = 1, size(veloQ,4)
+				!GAUGE BACK
+				U	 = Uq(:,:,qi)
+				Ucjg = tranpose( dconjg(U)	)
+				do a = 1, 3
+					tmp(:,:)	= matmul(	AconnQ(a,:,:,qi) 	,	U	)
+					Abar(a,:,:)	= matmul(	Ucjg				,	tmp	)
+				end do
+				!APPLY
+				do m = 1, nWfs
+					do n = 1, nWfs
+						if(n/=m) 		veloQ(1:3,n,m,qi)	= -i_dp * dcmplx(EnQ(m,qi)-EnQ(n,qi)) * Abar(1:3,n,m)
+					end do
+				end do
+			end do
 			!!for debugging(gauge Back AconnQ):
 			!do qi = 1, size(veloQ,4)
 			!	do m = 1, nWfs
