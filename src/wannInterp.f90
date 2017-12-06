@@ -170,8 +170,8 @@ module wannInterp
 						tmp(m,n)	= dconjg(ckW(gi,m,ki)) * ckW(gi,n,ki)
 					end do
 				end do
-				tmp		= matmul( tmp	,	U_int 	)
-				tmp		= matmul( Ucjg	,	tmp	)
+				tmp		= matmul( tmp	,	Ucjg 	)
+				tmp		= matmul( U_int	,	tmp	)
 				!SUM OVER BASIS FUNCTIONS
 				do m = 1, nWfs
 					do n = 1, nWfs
