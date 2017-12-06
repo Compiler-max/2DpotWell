@@ -45,7 +45,7 @@ module blochWf
 				end if
 				gj = gj + 1
 			end do
-			if( gj>= nGq(knb) .and. notFound	) write(*,'(a,i3,a,i3)')	"[UNKoverlap]: no neighbour for gi=",gi," at qi=",qi
+			!if( gj>= nGq(knb) .and. notFound	) write(*,'(a,i3,a,i3)')	"[UNKoverlap]: no neighbour for gi=",gi," at qi=",qi
 		end do
 		!
 		if( cnt > nGq(qi)	)	write(*,'(a,i8,a,i8)')	"[UNKoverlap]: warning, used ",cnt," where nGmax(qi)=",nGq(qi)
