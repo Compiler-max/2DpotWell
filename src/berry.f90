@@ -150,15 +150,23 @@ module berry
 			write(*,*)	"[berrryMethod]: now calc first order pol"
 			veloQ	= dcmplx(0.0_dp)
 			FcurvQ	= dcmplx(0.0_dp)	!does not matter since <FcurvQ,AconnQ> is always zero in 2D
-			call calcVeloGrad(ckW, veloQ)
-			!for debugging:
-			do qi = 1, size(veloQ,4)
-				do n = 1, nWfs
-					do m = 1, nWfs
-						if(n/=m) 		veloQ(1:3,n,m,qi)	= -i_dp * dcmplx(EnQ(m,qi)-EnQ(n,qi)) * AconnQ(1:3,n,m,qi)
-					end do
-				end do
-			end do
+			call calcVeloGrad(ck, veloQ)
+			!!for debugging:
+			!do qi = 1, size(veloQ,4)
+			!	do m = 1, nWfs
+			!		do n = 1, nWfs
+			!			if(n/=m) 		veloQ(1:3,n,m,qi)	= dcmplx(0.0_dp)!-i_dp * dcmplx(EnQ(m,qi)-EnQ(n,qi)) * AconnQ(1:3,n,m,qi)
+			!		end do
+			!	end do
+			!end do
+			!!for debugging(gauge Back AconnQ):
+			!do qi = 1, size(veloQ,4)
+			!	do m = 1, nWfs
+			!		do n = 1, nWfs
+			!			!
+			!		end do
+			!	end do
+			!end do
 			call calcFirstOrdP(FcurvQ, AconnQ, veloQ, EnQ, pNiuF2, pNiuF3)
 			write(*,'(a,e17.10,a,e17.10,a,e17.10,a)')	"[berryMethod]: pNiuF2=(",pNiuF2(1),", ",pNiuF2(2),", ",pNiuF2(3),")."
 			write(*,'(a,e17.10,a,e17.10,a,e17.10,a)')	"[berryMethod]: pNiuF3=(",pNiuF3(1),", ",pNiuF3(2),", ",pNiuF3(3),")."
