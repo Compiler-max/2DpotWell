@@ -115,13 +115,13 @@ module berry
 
 		!SET UP EFFECTIVE TIGHT BINDING MODELL
 		call TBviaKspace(ckW, EnQ, Uq, tHopp, rHopp)
-		call writeEnBerry(EnK)
 		call writeHtbBerry(tHopp)
 		call writeRtbBerry(rHopp)
 		write(*,*)	"[berryMethod]: set up effective tight binding model (k-Space method)"
 
 		!INTERPOLATE CONN,CURV, VELO
 		call DoWannInterpol(ckW, rHopp, tHopp, R_real, EnK, Uk, AconnK, FcurvK, veloK)
+		call writeEnBerry(EnK)
 		call writeBerryInterpU(Uk)
 		write(*,*)	"[berrryMethod]: interpolation done"
 

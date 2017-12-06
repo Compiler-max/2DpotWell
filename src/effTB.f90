@@ -94,7 +94,7 @@ module effTB
 		!finite difference on lattice periodic unk to calculate the Berry connection A
 		!	A_n(k) 	= <u_n(k)|i \nabla_k|u_n(k)>
 		!		 	= i  <u_n(k)| \sum_b{ w_b * b * [u_n(k+b)-u_n(k)]}
-		!			= i \sum_b{		w_b * b * [  <u_n(k)|u_n(k+b)> -  <u_n(k)|u_n(k)>]		}
+		!			= i \sum_b{		w_b	 * [  <u_n(k)|u_n(k+b)> -  <u_n(k)|u_n(k)>]		}
 		!
 		! see Mazari, Vanderbilt PRB.56.12847 (1997), Appendix B
 		!
