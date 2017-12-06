@@ -130,10 +130,10 @@ module w90Interface
 				qyr	= getkindex(qx,qyr)
 				!
 				!SHIFT NEIGHBOURS BACK TO FIRST BZ
-				Gxl(:)	= 0.0_dp
-				Gxr(:)	= 0.0_dp
-				Gyl(:)	= 0.0_dp
-				Gyr(:)	= 0.0_dp
+				Gxl(:)	= 0
+				Gxr(:)	= 0
+				Gyl(:)	= 0
+				Gyr(:)	= 0
 				if( qx == 1 ) 	Gxl(1)	= - 1
 				if( qx == nQx)	Gxr(1)	= + 1
 				if( qy == 1 ) 	Gyl(2)	= - 1
@@ -372,6 +372,7 @@ module w90Interface
 		!
 		!SETUP THE MATRIX
 		M_matrix	= dcmplx(0.0_dp)
+		write(*,*)	"[w90prepMmat]: use ",nntot," nearest neighbours per k point"
 		!$OMP PARALLEL DO SCHEDULE(STATIC) DEFAULT(SHARED) PRIVATE(qi, nn, m, n, oLap, gShift)
 		do qi = 1, num_kpts
 			do nn = 1, nntot
