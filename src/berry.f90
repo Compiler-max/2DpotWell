@@ -151,9 +151,9 @@ module berry
 		!1st ORDER SEMICLASSICS
 		if(doNiu) then
 			write(*,*)	"[berrryMethod]: now calc first order pol"
-			FcurvK	= dcmplx(0.0_dp)
+			FcurvQ	= dcmplx(0.0_dp)	!does not matter since <FcurvQ,AconnQ> is always zero in 2D
 			call calcVeloGrad(ckW, veloQ)
-			call calcFirstOrdP(FcurvK, AconnQ, veloQ, EnQ, pNiuF2, pNiuF3)
+			call calcFirstOrdP(FcurvQ, AconnQ, veloQ, EnQ, pNiuF2, pNiuF3)
 			write(*,'(a,e17.10,a,e17.10,a,e17.10,a)')	"[berryMethod]: pNiuF2=(",pNiuF2(1),", ",pNiuF2(2),", ",pNiuF2(3),")."
 			write(*,'(a,e17.10,a,e17.10,a,e17.10,a)')	"[berryMethod]: pNiuF3=(",pNiuF3(1),", ",pNiuF3(2),", ",pNiuF3(3),")."
 		end if
