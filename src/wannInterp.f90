@@ -181,7 +181,7 @@ module wannInterp
 			!	end do
 			!end do
 
-			OLD VERSION (no gauge back)
+			!OLD VERSION (no gauge back)
 			do m = 1, nWfs
 				do n = 1, nWfs
 					do gi = 1 , nGq(ki)
