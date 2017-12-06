@@ -188,7 +188,7 @@ module berry
 
 		!OUTPUT
 		call writePolFile(pWann, pBerry, pNiuF2, pNiuF3, pPei )
-		call writeVeloHtxt(veloK)
+		call writeVeloHtxt(veloQ)
 		call writeUmat(Uq)
 		if( writeBin )	call writeCkASunk(ck, ckW)
 		if( writeBin )	call writeEnH(EnK)
