@@ -47,10 +47,7 @@ module effTB
 		return
 	end subroutine
 
-
-
-
-
+	
 !private
 
 	subroutine calcHtmp(EnQ, Uq, Htmp)

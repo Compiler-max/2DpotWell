@@ -5,6 +5,7 @@ module berry
 	use mathematics,	only:	dp, PI_dp, i_dp, acc, machineP,  myExp, myLeviCivita, nIntegrate
 	use sysPara
 	use effTB,			only:	TBviaKspace, calcConnOnCoarse
+	use blochWf,		only:	calcVeloGrad
 	use wannInterp,		only:	DoWannInterpol
 	use polarization,	only:	calcPolViaA
 	use semiClassics,	only:	calcFirstOrdP
@@ -45,32 +46,36 @@ module berry
 		!todo
 		real(dp)						:: 	pBerry(3), pNiuF2(3), pNiuF3(3), pPei(3)
 		real(dp),		allocatable		:: 	EnK(:,:), R_real(:,:)
-		complex(dp),	allocatable		:: 	AconnQ(:,:,:,:), AconnK(:,:,:,:), FcurvK(:,:,:,:), veloK(:,:,:,:), &
-											tHopp(:,:,:), rHopp(:,:,:,:) , Uk(:,:,:)
+		complex(dp),	allocatable		:: 	AconnQ(:,:,:,:), FcurvQ(:,:,:,:),veloQ(:,:,:,:), &
+											AconnK(:,:,:,:), FcurvK(:,:,:,:), veloK(:,:,:,:), Uk(:,:,:), &
+											tHopp(:,:,:), rHopp(:,:,:,:) 
 		real(dp)						::	pWann(3)
 		integer							::	gi, qi, n, m, R
 		!					
-		!
-		allocate(			tHopp(					nWfs	, 	nWfs	,	nSc		)			)
-		allocate(			rHopp(		3		,	nWfs	, 	nWfs	, 	nSC		)			)			
-		allocate(			EnK(					nWfs	, 				nK		)			)
+		!DENSE
+		!allocate(			tHopp(					nWfs	, 	nWfs	,	nSc		)			)
+		!allocate(			rHopp(		3		,	nWfs	, 	nWfs	, 	nSC		)			)			
+		!allocate(			EnK(					nWfs	, 				nK		)			)
+		!allocate(			AconnK(		3		, 	nWfs	,	nWfs	,	nK		)			)
+		!allocate(			FcurvK(		3		, 	nWfs	, 	nWfs	,	nK		)			)
+		!allocate(			veloK(		3		, 	nWfs	,	nWfs	,	nK		)			)
+		!allocate(			Uk(						nWfs	,	nWfs	,	nK		)			)
+		!COARSE
+		allocate(			ck(			nG		,	nBands				,	nQ		)			)
+		allocate(			ckW(		nG		, 	nWfs				,  	nQ		)			)
+		allocate(			EnQ(		nG								,	nQ		)			)
 		allocate(			AconnQ(		3		, 	nWfs	,	nWfs	,	nQ		)			)
-		allocate(			AconnK(		3		, 	nWfs	,	nWfs	,	nK		)			)
-		allocate(			FcurvK(		3		, 	nWfs	, 	nWfs	,	nK		)			)
-		allocate(			veloK(		3		, 	nWfs	,	nWfs	,	nK		)			)
-		allocate(			Uk(						nWfs	,	nWfs	,	nK		)			)
+		allocate(			FcurvQ(		3		,	nWfs	,	nWfs	,	nQ		)			)
+		allocate(			veloQ(		3		, 	nWfs	,	nWfs	,	nQ		)			)
 
 		allocate(			R_real(		3		,							nSC		)			)
-		allocate(	ck(		nG,		nBands,	nQ		)	)
-		allocate(	ckW(	nG, 	nWfs,  	nQ		)	)
-		allocate(	EnQ(	nG,				nQ		)	)
-
+		
 		R_real(3,:)	= 0.0_dp
 		do R = 1, nSC
 			R_real(1:2,R)	= Rcell(1:2,R)
 		end do 
 
-		!read in U matrix (yields nQ, nWfs) 
+		!READ U FROM W90
 		if( useRot )  then
 			call readUmatrix()
 			write(*,*)	"[berryMethod]: read U matrix "
@@ -87,19 +92,10 @@ module berry
 			write(*,*)	"[berryMethod]: U matrix set as Identity"
 		end if
 
-		!read in ck, En
+		!READ ABINITIO
 		call readHam(ck, EnQ)
 
-
-		!test directly
-		write(*,*)	"[berryMethod]: test abinit coeff polarization( coarse):"
-		call calcConnOnCoarse(ck, AconnQ)
-		call calcPolViaA(AconnQ,pBerry)
-		AconnQ = dcmplx(0.0_dp)
-		write(*,*)"[berryMethod]: coarse abInitio pol =(",pBerry(1),", ",pBerry(2),", ", pBerry(3),")."
-		pBerry = 0.0_dp
-
-		!rotate ck, get ckW
+		!ROTATE
 		ckW	= dcmplx(0.0_dp)
 		if(	useRot ) then
 			do qi = 1, nQ
@@ -116,7 +112,7 @@ module berry
 		else 
 			if( nWfs <= nBands) then
 				ckW(:,:,:)	= ck(:,1:nWfs,:)
-				write(*,*)	"[berryMethod]: rotations disabled. Will use initial electronic structure coeff"
+				write(*,'(a,e17.10,a,e17.10,a,e17.10,a)')	"[berryMethod]: rotations disabled. Will use initial electronic structure coeff"
 			else 
 				ckW	= dcmplx(0.0_dp)
 				write(*,*)	"[berryMethod]: critical error, less nBands then nWfs, coeff set to zero..."
@@ -124,7 +120,7 @@ module berry
 		end if
 
 
-		!test directly
+		!CONNECTION
 		write(*,*)	"[berryMethod]: test rotated coeff polarization( coarse):"
 		call calcConnOnCoarse(ckW, AconnQ)
 		call calcPolViaA(AconnQ,pBerry)
@@ -133,32 +129,31 @@ module berry
 		pBerry = 0.0_dp
 
 
-		!SET UP EFFECTIVE TIGHT BINDING MODELL
-		call TBviaKspace(ckW, EnQ, Uq, tHopp, rHopp)
-		call writeHtbBerry(tHopp)
-		call writeRtbBerry(rHopp)
-		write(*,*)	"[berryMethod]: set up effective tight binding model (k-Space method)"
-
-		!INTERPOLATE CONN,CURV, VELO
-		call DoWannInterpol(ckW, rHopp, tHopp, R_real, EnK, Uk, AconnK, FcurvK, veloK)
-		call writeEnBerry(EnK)
-		call writeBerryInterpU(Uk)
-		write(*,*)	"[berryMethod]: interpolation done"
-
-
-		
-		
-		!INTEGRATE CONNECTION
-		call calcPolViaA(AconnK,pBerry)
-		write(*,'(a,f12.8,a,f12.8,a)')	"[berrryMethod]: calculated zero order pol=(",pBerry(1),", ",pBerry(2),")."
-		
+		!!SET UP EFFECTIVE TIGHT BINDING MODELL
+		!call TBviaKspace(ckW, EnQ, Uq, tHopp, rHopp)
+		!call writeHtbBerry(tHopp)
+		!call writeRtbBerry(rHopp)
+		!write(*,*)	"[berryMethod]: set up effective tight binding model (k-Space method)"
+		!!
+		!!INTERPOLATE CONN,CURV, VELO
+		!call DoWannInterpol(ckW, rHopp, tHopp, R_real, EnK, Uk, AconnK, FcurvK, veloK)
+		!call writeEnBerry(EnK)
+		!call writeBerryInterpU(Uk)
+		!write(*,*)	"[berryMethod]: interpolation done"
+		!!
+		!!INTEGRATE CONNECTION
+		!call calcPolViaA(AconnK,pBerry)
+		!write(*,'(a,f12.8,a,f12.8,a)')	"[berrryMethod]: calculated zero order pol=(",pBerry(1),", ",pBerry(2),")."
+		!
 
 
 
 		!1st ORDER SEMICLASSICS
 		if(doNiu) then
 			write(*,*)	"[berrryMethod]: now calc first order pol"
-			call calcFirstOrdP(FcurvK, AconnK, veloK, EnK, pNiuF2, pNiuF3)
+			FcurvK	= dcmplx(0.0_dp)
+			call calcVeloGrad(ckW, veloQ)
+			call calcFirstOrdP(FcurvK, AconnQ, veloQ, EnQ, pNiuF2, pNiuF3)
 			write(*,'(a,e17.10,a,e17.10,a,e17.10,a)')	"[berryMethod]: pNiuF2=(",pNiuF2(1),", ",pNiuF2(2),", ",pNiuF2(3),")."
 			write(*,'(a,e17.10,a,e17.10,a,e17.10,a)')	"[berryMethod]: pNiuF3=(",pNiuF3(1),", ",pNiuF3(2),", ",pNiuF3(3),")."
 		end if
