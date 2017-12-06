@@ -4,7 +4,7 @@ module berry
 	use omp_lib
 	use mathematics,	only:	dp, PI_dp, i_dp, acc, machineP,  myExp, myLeviCivita, nIntegrate
 	use sysPara
-	use effTB,			only:	TBviaKspace
+	use effTB,			only:	TBviaKspace, calcConnOnCoarse
 	use wannInterp,		only:	DoWannInterpol
 	use polarization,	only:	calcPolViaA
 	use semiClassics,	only:	calcFirstOrdP
@@ -88,6 +88,15 @@ module berry
 
 		!read in ck, En
 		call readHam(ck, EnQ)
+
+
+		!test directly
+		write(*,*)	"[berryMethod]: test abinit coeff polarization:"
+		call calcConnOnCoarse(ck, AconnK)
+		call calcPolViaA(AconnK,pBerry)
+		AconnK = dcmplx(0.0_dp)
+		write(*,*)"[berryMethod]: coarse abInitio pol =(",pBerry(1),", ",pBerry(2),", ", pBerry(3),")."
+		pBerry = 0.0_dp
 
 		!rotate ck, get ckW
 		ckW	= dcmplx(0.0_dp)
