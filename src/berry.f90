@@ -2,7 +2,7 @@ module berry
 	!module contains methods related to the Berry phase theory of modern polarization
 	!	i.e. calculation of connection, velocities, curvatures and polarization
 	use omp_lib
-	use mathematics,	only:	dp, PI_dp, i_dp, acc, machineP,  myExp, myLeviCivita, nIntegrate
+	use mathematics,	only:	dp, PI_dp, i_dp, acc, machineP,  myExp, myLeviCivita, nIntegrate, aUtoAngstrm, aUtoEv
 	use sysPara
 	use effTB,			only:	TBviaKspace, calcConnOnCoarse
 	use blochWf,		only:	calcVeloGrad
@@ -51,6 +51,7 @@ module berry
 											tHopp(:,:,:), rHopp(:,:,:,:), &
 											Abar(:,:,:), U(:,:), Ucjg(:,:), tmp(:,:)
 		real(dp)						::	pWann(3)
+		real(dp),		allocatable		::	v_Band(:,:,:)
 		integer							::	gi, qi, n, m, R, a
 		!					
 		!DENSE
@@ -69,6 +70,7 @@ module berry
 		allocate(			FcurvQ(		3		,	nWfs	,	nWfs	,	nQ		)			)
 		allocate(			veloQ(		3		, 	nWfs	,	nWfs	,	nQ		)			)
 		allocate(			R_real(		3		,							nSC		)			)
+		allocate(			v_Band(		3		,			nWfs		,	nQ		)			)
 		allocate(			Abar(		3		,	nWfs	,	nWfs				)			)
 		allocate(			tmp(					nWfs	,	nWfs				)			)
 		allocate(			U(						nWfs	,	nWfs				)			)
@@ -157,7 +159,13 @@ module berry
 			veloQ	= dcmplx(0.0_dp)
 			FcurvQ	= dcmplx(0.0_dp)	!does not matter since <FcurvQ,AconnQ> is always zero in 2D
 			
-
+			call readBandVelo( v_Band )
+			
+			do qi = 1, nQ
+				do n = 1, nWfs
+					veloQ(1:3,n,n,qi)	= v_Band(1:3,n,qi)
+				end do
+			end do
 
 			!ToDo: with possibility to calc grad on abinitio & w90 way (read in band deriv, off diag via conn )
 			!call calcVelo(ck, Uq, AconnQ, veloQ)
@@ -312,6 +320,32 @@ module berry
 		return
 	end subroutine
 
+
+	subroutine readBandVelo( v_vec )
+		real(dp),		intent(out)		::	v_vec(:,:,:)
+		real(dp)						::	buffer(7)
+		integer							::	stat, qi, n, qInd
+		!
+		open(unit=310,iostat=stat, file=seed_name//'_geninterp.dat', status='old',action='read')
+		read(310,*)
+		read(310,*)
+		read(310,*)
+		do qi = 1, nQ
+			do n = 1, nWfs
+				read(310,*)	qInd, buffer
+				v_vec(1,n,qInd)	= buffer(5)
+				v_vec(2,n,qInd)	= buffer(6)
+				v_vec(3,n,qInd)	= buffer(7) 
+			end do
+		end do
+		close(310)
+		!
+		!ATOMIC UNITS CONVERSION:
+		v_vec 	= v_vec * aUtoAngstrm / aUtoEv ! [v_vec] = eV / Angstroem
+		!
+		!	
+		return
+	end subroutine
 
 
 end module berry
