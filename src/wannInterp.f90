@@ -68,6 +68,27 @@ module wannInterp
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+!privat
 	subroutine wannInterpolator(ki, H_tb,r_tb, R_real, En_vec, U_mat, H_mat, Ha_mat, A_mat,Om_tens)
 		integer,		intent(in)		::	ki
 		complex(dp),	intent(in)		::	H_tb(:,:,:), r_tb(:,:,:,:)
@@ -107,64 +128,9 @@ module wannInterp
 		!
 		!
 		return
-	end subroutine
+	end subroutine	
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-!privat
-	subroutine interpolateMat(ki, tHopp, rHopp, HW, HaW, AW, FW)
-		integer,		intent(in)		:: ki
-		complex(dp),	intent(in)		:: tHopp(:,:,:), rHopp(:,:,:,:)
-		complex(dp),	intent(out)		:: HW(:,:), HaW(:,:,:), AW(:,:,:), FW(:,:,:,:)
-		integer							:: R, a, b
-		complex(dp)						:: phase
-		!
-		HW	= dcmplx(0.0_dp)
-		HaW	= dcmplx(0.0_dp)
-		AW  = dcmplx(0.0_dp)
-		FW	= dcmplx(0.0_dp)
-		!
-		do R = 1, nSC
-			phase			= myExp(	dot_product(kpts(:,ki),Rcell(:,R))	)  ! / dsqrt(real(nSC,dp) )
-			!HAM
-			HW(:,:)		= HW(:,:) 		+ phase		 					* tHopp(:,:,R)
-			!HAM DERIVATIVE
-			HaW(1,:,:)	= HaW(1,:,:)	+ phase * i_dp *  Rcell(1,R) 	* tHopp(:,:,R) 
-			HaW(2,:,:)	= HaW(2,:,:)	+ phase * i_dp *  Rcell(2,R) 	* tHopp(:,:,R) 
-			!CONNECTION
-			AW(1,:,:)	= AW(1,:,:) 	+ phase 						* rHopp(1,:,:,R) 
-			AW(2,:,:)	= AW(2,:,:) 	+ phase 						* rHopp(2,:,:,R)
-			!CURVATURE
-			do a = 1, 2
-				do b = 1, 2
-					FW(a,b,:,:) = FW(a,b,:,:) + phase * i_dp * Rcell(a,R) * rHopp(b,:,:,R)
-					FW(a,b,:,:) = FW(a,b,:,:) - phase * i_dp * Rcell(b,R) * rHopp(a,:,:,R) 	
-				end do
-			end do
-		end do
-		!
-		!
-		return
-	end subroutine
-
-
-		subroutine calcVeloNew(ki, En_vec, U_int, Ha_mat, A_mat, v_mat)
+	subroutine calcVeloNew(ki, En_vec, U_int, Ha_mat, A_mat, v_mat)
 		integer,		intent(in)		::	ki
 		real(dp),		intent(in)		::	En_vec(:,:)
 		complex(dp),	intent(in)		::	U_int(:,:), Ha_mat(:,:,:), A_mat(:,:,:)
