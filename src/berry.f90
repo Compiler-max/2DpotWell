@@ -126,7 +126,6 @@ module berry
 		!CONNECTION
 		write(*,*)	"[berryMethod]: test rotated coeff polarization( coarse):"
 		call calcConnOnCoarse(ckW, AconnQ)
-		AconnQ = AconnQ * i_dp
 		call calcPolViaA(AconnQ,pBerry)
 		write(*,*)"[berryMethod]: coarse rotated pol =(",pBerry(1),", ",pBerry(2),", ", pBerry(3),")."
 
@@ -315,7 +314,8 @@ module berry
 				do m = 1, nWfs
 					do n = 1, nWfs
 						if(n==m)	v_mat(1:3,n,n,qi)	= v_Band(1:3,n,qi)
-						if(n/=m) 	v_mat(1:3,n,m,qi)	= -i_dp * dcmplx( En_vec(m,qi)-En_vec(n,qi) ) * A_mat(1:3,n,m,qi)
+						!if(n/=m) 	v_mat(1:3,n,m,qi)	= -i_dp * dcmplx( En_vec(m,qi)-En_vec(n,qi) ) * A_mat(1:3,n,m,qi)
+						if(n/=m) 	v_mat(1:3,n,m,qi)	= - dcmplx( En_vec(m,qi)-En_vec(n,qi) ) * A_mat(1:3,n,m,qi)
 					end do
 				end do
 			end do
