@@ -326,19 +326,25 @@ module berry
 		real(dp)						::	buffer(7)
 		integer							::	stat, qi, n, qInd
 		!
-		open(unit=310,iostat=stat, file=seed_name//'_geninterp.dat', status='old',action='read')
-		read(310,*)
-		read(310,*)
-		read(310,*)
-		do qi = 1, nQ
-			do n = 1, nWfs
-				read(310,*)	qInd, buffer
-				v_vec(1,n,qInd)	= buffer(5)
-				v_vec(2,n,qInd)	= buffer(6)
-				v_vec(3,n,qInd)	= buffer(7) 
+		write(*,*)  seed_name//'_geninterp.dat'
+		open(unit=320,iostat=stat, file=seedName//'_geninterp.dat',form='formatted', status='old',action='read')
+		if( stat/= 0 ) then 
+			v_vec = 0.0_dp
+			write(*,*)	"[readBandVelo]: could not find _geninterp.dat file.. velocities set to zero"
+		else 
+			read(320,*)
+			read(320,*)
+			read(320,*)
+			do qi = 1, nQ
+				do n = 1, nWfs
+					read(320,*)	qInd, buffer
+					v_vec(1,n,qInd)	= buffer(5)
+					v_vec(2,n,qInd)	= buffer(6)
+					v_vec(3,n,qInd)	= buffer(7) 
+				end do
 			end do
-		end do
-		close(310)
+			close(320)
+		end if
 		!
 		!ATOMIC UNITS CONVERSION:
 		v_vec 	= v_vec * aUtoAngstrm / aUtoEv ! [v_vec] = eV / Angstroem
