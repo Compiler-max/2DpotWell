@@ -44,7 +44,6 @@ module wannInterp
 				!CONNECTION
 				AconnH(1:3,:,:,ki) 		= AW(1:3,:,:)
 				!VELOCITIES
-				!call calcVeloNOIntP(ki, ckW, U, HaW, EnH, AconnH, veloH)
 				call calcVeloNew(ki, EnH, U_int(:,:,ki), ckW, HaW, AW, veloH)
 				!
 				!CURVATURE TO MATRIX
@@ -116,128 +115,9 @@ module wannInterp
 
 
 
-	subroutine calcVeloNew(ki, En_vec, U_int, ckW, Ha_mat, A_mat, v_mat)
-		integer,		intent(in)		::	ki
-		real(dp),		intent(in)		::	En_vec(:,:)
-		complex(dp),	intent(in)		::	U_int(:,:), ckW(:,:,:), Ha_mat(:,:,:), A_mat(:,:,:)
-		complex(dp),	intent(out)		::	v_mat(:,:,:,:)
-		complex(dp),	allocatable		:: 	Hbar(:,:,:), Abar(:,:,:), Ucjg(:,:), tmp(:,:), vec(:)
-		integer							::	m, n, i, gi
-		!
-		!
-		allocate(		Hbar(	3,	nWfs 	,	nWfs		)	)		
-		allocate(		Abar(	3,	nWfs 	,	nWfs		)	)
-		allocate(		Ucjg(		nWfs	,	nWfs		)	)
-		allocate(		tmp(		nWfs	,	nWfs		)	)
-		allocate(		vec(		nWfs					)	)
-		Ucjg			= dconjg(	transpose(U_int)	)
-		v_mat			= dcmplx(0.0_dp)
-		!
-		do i = 1, 3
-			!v_mat(i,:,:,ki)	= Ha_mat(i,:,:)
-			!
-			!NO GAUGE BACK
-			do m = 1, nWfs
-				do n = 1, nWfs
-					if(n==m)	v_mat(i,n,m,ki)	= Ha_mat(i,n,m)
-					if(n/=m)	v_mat(i,n,m,ki) = - i_dp * dcmplx( En_vec(m,ki) - En_vec(n,ki) ) * A_mat(i,n,m) 
-				end do
-			end do
-			!
-			!!ROTATE TO HAM GAUGE
-			!tmp			= matmul(	Ha_mat(i,:,:)	, U_int			)	
-			!Hbar(i,:,:)	= matmul(	Ucjg			, tmp		)	
-			!!
-			!tmp			= matmul(	A_mat(i,:,:)		, U_int	)	
-			!Abar(i,:,:)	= matmul(	Ucjg				, tmp	)
-			!!APPLY ROTATION
-			!do m = 1, nWfs
-			!	do n = 1, nWfs
-			!		if( n==m )	v_mat(i,n,n,ki) = Hbar(i,n,n)
-			!		if( n/=m )	v_mat(i,n,m,ki) = - i_dp * dcmplx( En_vec(m,ki) - En_vec(n,ki) ) * Abar(i,n,m) 
-			!		!DEBUG
-			!		if( n/=m .and. abs(Hbar(i,n,m)) > 0.1_dp ) then
-			!			write(*,'(a,i1,a,i3,a,i3,a,f8.4,a,f8.4,a,f8.4)')"[calcVeloNeW]: found off diag band deriv i=",i,&
-			!					" n=",n," m=",m, "Hbar_nm=",dreal(Hbar(i,n,m)), "+i*",dimag(Hbar(i,n,m))," abs=",abs(Hbar(i,n,m))
-			!		end if
-			!		!
-			!	end do
-			!end do
-			!
-		end do
-		!
-		return
-	end subroutine
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-	subroutine calcVeloNOIntP(ki, ckW, U, HaW, EnH, AconnH, veloH)
-		!deprecated, use calcVeloNew
-		integer,		intent(in)		:: ki
-		complex(dp),	intent(in)		:: ckW(:,:,:), U(:,:), HaW(:,:,:), AconnH(:,:,:,:)
-		real(dp),		intent(in)		:: EnH(:,:) 
-		complex(dp),	intent(out)		:: veloH(:,:,:,:)
-		complex(dp),	allocatable		:: Hbar(:,:,:), Abar(:,:,:)
-		integer							:: n,m, gi, i
-
-		allocate(	Hbar( size(HaW,1),size(HaW,2),size(HaW,3) 			)			)
-		allocate(	Abar( size(AconnH,1),size(AconnH,2),size(AconnH,3) 	)			)
-
-		!TB approach
-		if( doVeloNUM ) then
-			if(ki==1)	write(*,*)"[calcVeloNOIntP]: velocities are calculated via TB approach"
-			
-			do i = 1, 3
-				Hbar(i,:,:)	= matmul(	Haw(i,:,:),	U	)
-				Hbar(i,:,:)	= matmul( dconjg(transpose(U)),	Hbar(i,:,:)	)
-				Abar(i,:,:)	= matmul(	AconnH(i,:,:,ki),	U	)
-				Abar(i,:,:)	= matmul( dconjg(transpose(U)),	AconnH(i,:,:,ki)	)
-			end do
-
-			do m = 1, nWfs
-				do n = 1, nWfs
-					if( n==m ) veloH(1:2,n,n,ki)	= Hbar(1:2,n,n)
-					if( n/=m ) veloH(1:2,n,m,ki)	= - i_dp * ( EnH(m,ki)-EnH(n,ki) ) * AconnH(1:2,n,m,ki) 
-				end do
-			end do
-		!ANALYTIC APPROACH
-		else	
-			if(ki==1)	write(*,*)"[calcVeloNOIntP]: velocities are calculated analytically"
-			if( nK /= nQ) write(*,*)"[calcVeloNOIntP]: warning analytic approach does not support different k mesh spacing"
-			do m = 1, nWfs
-				do n = 1, nWfs
-					do gi = 1 , nGq(ki)
-						veloH(1:2,n,m,ki) = veloH(1:2,n,m,ki) &
-											+  dconjg(ckW(gi,n,ki)) *  ckW(gi,m,ki) * i_dp * Gvec(1:2,gi,ki)
-					end do
-				end do
-			end do
-		end if
-
-		return
-	end subroutine
 
 
 
@@ -247,8 +127,6 @@ module wannInterp
 
 
 !privat
-
-
 	subroutine interpolateMat(ki, tHopp, rHopp, HW, HaW, AW, FW)
 		integer,		intent(in)		:: ki
 		complex(dp),	intent(in)		:: tHopp(:,:,:), rHopp(:,:,:,:)
@@ -285,6 +163,63 @@ module wannInterp
 	end subroutine
 
 
+		subroutine calcVeloNew(ki, En_vec, U_int, ckW, Ha_mat, A_mat, v_mat)
+		integer,		intent(in)		::	ki
+		real(dp),		intent(in)		::	En_vec(:,:)
+		complex(dp),	intent(in)		::	U_int(:,:), ckW(:,:,:), Ha_mat(:,:,:), A_mat(:,:,:)
+		complex(dp),	intent(out)		::	v_mat(:,:,:,:)
+		complex(dp),	allocatable		:: 	Hbar(:,:,:), Abar(:,:,:), Ucjg(:,:), tmp(:,:), vec(:)
+		integer							::	m, n, i, gi
+		!
+		!
+		allocate(		Hbar(	3,	nWfs 	,	nWfs		)	)		
+		allocate(		Abar(	3,	nWfs 	,	nWfs		)	)
+		allocate(		Ucjg(		nWfs	,	nWfs		)	)
+		allocate(		tmp(		nWfs	,	nWfs		)	)
+		allocate(		vec(		nWfs					)	)
+		Ucjg			= dconjg(	transpose(U_int)	)
+		v_mat			= dcmplx(0.0_dp)
+		!
+		do i = 1, 3
+			!v_mat(i,:,:,ki)	= Ha_mat(i,:,:)
+			!
+			!NO GAUGE BACK
+			do m = 1, nWfs
+				do n = 1, nWfs
+					if(n==m)	v_mat(i,n,m,ki)	= Ha_mat(i,n,m)
+					!if(n/=m)	v_mat(i,n,m,ki) = - i_dp * dcmplx( En_vec(m,ki) - En_vec(n,ki) ) * A_mat(i,n,m) 
+					if(n/=m)	v_mat(i,n,m,ki) = - dcmplx( En_vec(m,ki) - En_vec(n,ki) ) * A_mat(i,n,m) 
+
+				end do
+			end do
+			!
+			!!ROTATE TO HAM GAUGE
+			!tmp			= matmul(	Ha_mat(i,:,:)	, U_int			)	
+			!Hbar(i,:,:)	= matmul(	Ucjg			, tmp		)	
+			!!
+			!tmp			= matmul(	A_mat(i,:,:)		, U_int	)	
+			!Abar(i,:,:)	= matmul(	Ucjg				, tmp	)
+			!!APPLY ROTATION
+			!do m = 1, nWfs
+			!	do n = 1, nWfs
+			!		if( n==m )	v_mat(i,n,n,ki) = Hbar(i,n,n)
+			!		if( n/=m )	v_mat(i,n,m,ki) = - i_dp * dcmplx( En_vec(m,ki) - En_vec(n,ki) ) * Abar(i,n,m) 
+			!		!DEBUG
+			!		if( n/=m .and. abs(Hbar(i,n,m)) > 0.1_dp ) then
+			!			write(*,'(a,i1,a,i3,a,i3,a,f8.4,a,f8.4,a,f8.4)')"[calcVeloNeW]: found off diag band deriv i=",i,&
+			!					" n=",n," m=",m, "Hbar_nm=",dreal(Hbar(i,n,m)), "+i*",dimag(Hbar(i,n,m))," abs=",abs(Hbar(i,n,m))
+			!		end if
+			!		!
+			!	end do
+			!end do
+			!
+		end do
+		!
+		return
+	end subroutine
+
+
+
 
 	subroutine gaugeBack(Hw, HaW, AW, FWtens, EnH, U, AconnH, FcurvH, veloH)
 		!transform from wannier gauge back to hamiltonian gauge
@@ -296,11 +231,7 @@ module wannInterp
 		integer							:: ki
 		!
 		allocate(	DH(2,nWfs,nWfs)	)
-
-
-
-
-
+		!
 		!COPY
 		U	= HW
 		!GET U MAT & ENERGIES
@@ -314,7 +245,6 @@ module wannInterp
 		call calcVelo(EnH, AW, HaW, veloH)
 		!CURVATURE
 		call calcCurv(FWtens, DH, AW, FcurvH)
-
 		!
 		!		
 		return
