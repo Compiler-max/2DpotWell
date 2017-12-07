@@ -32,10 +32,7 @@ module postW90
 !public
 	subroutine effTBmodel()
 		real(dp)					:: pWann(3), pConn(3), pNiuF2(3), pNiuF3(3), pPei(3)
-		complex(dp), allocatable	:: dummy(:,:,:)
-
-
-
+		!
 		pWann 	= 0.0_dp
 		pConn	= 0.0_dp
 		pNiuF2	= 0.0_dp
@@ -46,17 +43,14 @@ module postW90
 		!If TB file found do calc
 		if( readTBsingle() ) then
 			write(*,*)	"[effTBmodel]: done reading eff tb matrices"
-			!OWN IMPL
-			!call wannInterpolator()
-			!BERRY IMPL
-			allocate(	dummy(				num_wann, 	num_wann ,  nQ	)	)
 			allocate(	A_mat(		3,		num_wann,	num_wann,	nK	)	)		
 			allocate(	En_vec(						num_wann	,	nK	)	)
 			allocate(	U_int(				num_wann, 	num_wann, 	nK	) 	)
 			allocate(	v_mat(		3,		num_wann,	num_wann,	nK	)	)
 			allocate(	Om_mat(		3,		num_wann,	num_wann,	nK	)	)
-			dummy = dcmplx(0.0_dp)	!need to set doVeloNum = true
-			call DoWannInterpol( dummy, r_tb, H_tb, R_real, En_vec, U_int, A_mat, Om_mat, v_mat)
+			!
+			!
+			call DoWannInterpol(r_tb, H_tb, R_real, En_vec, U_int, A_mat, Om_mat, v_mat)
 			write(*,*)	"[effTBmodel]: done interpolating to k mesh with nK=",nK
 			!
 			!calc all desired polarizations

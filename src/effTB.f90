@@ -3,7 +3,7 @@ module effTB
 	use omp_lib
 	use mathematics,	only:	dp, PI_dp, i_dp, acc, machineP, myExp, myLeviCivita, nIntegrate, isHermitian
 	use sysPara
-	use blochWf,		only:	UNKoverlap
+	use blochWf,		only:	UNKoverlap, calcConnOnCoarse
 	use output,			only:	writeInterpU
 
 	implicit none

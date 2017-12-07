@@ -12,8 +12,8 @@ module wannInterp
 	contains
 
 !public
-	subroutine DoWannInterpol(ckW, rHopp, tHopp, R_real, EnH, U_int, AconnH, FcurvH, veloH)
-		complex(dp),	intent(in)		:: ckW(:,:,:), rHopp(:,:,:,:), tHopp(:,:,:)
+	subroutine DoWannInterpol( rHopp, tHopp, R_real, EnH, U_int, AconnH, FcurvH, veloH)
+		complex(dp),	intent(in)		:: rHopp(:,:,:,:), tHopp(:,:,:)
 		real(dp),		intent(in)		:: R_real(:,:)
 		complex(dp),	intent(out)		:: U_int(:,:,:)
 		real(dp),		intent(out)		:: EnH(:,:)
@@ -38,15 +38,15 @@ module wannInterp
 			call wannInterpolator(ki, tHopp, rHopp, R_real, EnH, U_int(:,:,ki), HW, HaW, AW, FWtens)
 			!
 			!WORK IN K SPACE
-			if( doGaugBack ) then
+			if( pw90GaugeB ) then
 				if(ki == 1) write(*,*)	"[DoWannInterpol]: start gauging back" 	
-				call gaugeBack(Hw, HaW, AW, FWtens, EnH(:,ki), U_int(:,:,ki), AconnH(:,:,:,ki), FcurvH(:,:,:,ki), veloH(:,:,:,ki))	
+				call gaugeBack(ki, Hw, HaW, AW, FWtens, EnH, U_int(:,:,ki), AconnH(:,:,:,ki), FcurvH(:,:,:,ki), veloH)	
 			else
 				if(ki ==1)	write(*,*)	"[DoWannInterpol]: Gauge trafo DISABLED	"
 				!CONNECTION
 				AconnH(1:3,:,:,ki) 		= AW(1:3,:,:)
 				!VELOCITIES
-				call calcVeloNew(ki, EnH, U_int(:,:,ki), ckW, HaW, AW, veloH)
+				call calcVeloNew(ki, EnH, U_int(:,:,ki), HaW, AW, veloH)
 				!
 				!CURVATURE TO MATRIX
 				do c = 1, 3
@@ -73,7 +73,6 @@ module wannInterp
 		complex(dp),	intent(in)		::	H_tb(:,:,:), r_tb(:,:,:,:)
 		real(dp),		intent(in)		:: 	R_real(:,:)
 		real(dp),		intent(out)		::	En_vec(:,:)
-		real(dp),		allocatable		:: 	dummy(:)
 		complex(dp),	intent(out)		::	U_mat(:,:), H_mat(:,:), Ha_mat(:,:,:), A_mat(:,:,:), Om_tens(:,:,:,:)
 		integer							:: R, a, b, c, n, m
 		complex(dp)						:: phase
@@ -165,10 +164,10 @@ module wannInterp
 	end subroutine
 
 
-		subroutine calcVeloNew(ki, En_vec, U_int, ckW, Ha_mat, A_mat, v_mat)
+		subroutine calcVeloNew(ki, En_vec, U_int, Ha_mat, A_mat, v_mat)
 		integer,		intent(in)		::	ki
 		real(dp),		intent(in)		::	En_vec(:,:)
-		complex(dp),	intent(in)		::	U_int(:,:), ckW(:,:,:), Ha_mat(:,:,:), A_mat(:,:,:)
+		complex(dp),	intent(in)		::	U_int(:,:), Ha_mat(:,:,:), A_mat(:,:,:)
 		complex(dp),	intent(out)		::	v_mat(:,:,:,:)
 		complex(dp),	allocatable		:: 	Hbar(:,:,:), Abar(:,:,:), Ucjg(:,:), tmp(:,:), vec(:)
 		integer							::	m, n, i, gi
@@ -183,39 +182,41 @@ module wannInterp
 		v_mat			= dcmplx(0.0_dp)
 		!
 		do i = 1, 3
-			!v_mat(i,:,:,ki)	= Ha_mat(i,:,:)
-			!
-			!NO GAUGE BACK
-			do m = 1, nWfs
-				do n = 1, nWfs
-					if(n==m)	v_mat(i,n,m,ki)	= Ha_mat(i,n,m)
-					!if(n/=m)	v_mat(i,n,m,ki) = - i_dp * dcmplx( En_vec(m,ki) - En_vec(n,ki) ) * A_mat(i,n,m) 
-					if(n/=m)	v_mat(i,n,m,ki) = - dcmplx( En_vec(m,ki) - En_vec(n,ki) ) * A_mat(i,n,m) 
+			!ROTATE TO HAM GAUGE
+			if( pw90GaugeB ) then
+				if(i==1 .and. ki==1 )	write(*,*)	"[wannInterp/calcVeloNew]: (H) gauge velocities used, gauge back activated"
 
+				tmp			= matmul(	Ha_mat(i,:,:)	, U_int			)	
+				Hbar(i,:,:)	= matmul(	Ucjg			, tmp		)	
+				!
+				tmp			= matmul(	A_mat(i,:,:)		, U_int	)	
+				Abar(i,:,:)	= matmul(	Ucjg				, tmp	)
+				!APPLY ROTATION
+				do m = 1, nWfs
+					do n = 1, nWfs
+						if( n==m )	v_mat(i,n,n,ki) = Hbar(i,n,n)
+						if( n/=m )	v_mat(i,n,m,ki) = - i_dp * dcmplx( En_vec(m,ki) - En_vec(n,ki) ) * Abar(i,n,m) 
+						!DEBUG
+						if( n/=m .and. abs(Hbar(i,n,m)) > 0.1_dp ) then
+							write(*,'(a,i1,a,i3,a,i3,a,f8.4,a,f8.4,a,f8.4)')"[calcVeloNeW]: found off diag band deriv i=",i,&
+									" n=",n," m=",m, "Hbar_nm=",dreal(Hbar(i,n,m)), "+i*",dimag(Hbar(i,n,m))," abs=",abs(Hbar(i,n,m))
+						end if
+						!
+					end do
 				end do
-			end do
-			!
-			!!ROTATE TO HAM GAUGE
-			!tmp			= matmul(	Ha_mat(i,:,:)	, U_int			)	
-			!Hbar(i,:,:)	= matmul(	Ucjg			, tmp		)	
-			!!
-			!tmp			= matmul(	A_mat(i,:,:)		, U_int	)	
-			!Abar(i,:,:)	= matmul(	Ucjg				, tmp	)
-			!!APPLY ROTATION
-			!do m = 1, nWfs
-			!	do n = 1, nWfs
-			!		if( n==m )	v_mat(i,n,n,ki) = Hbar(i,n,n)
-			!		if( n/=m )	v_mat(i,n,m,ki) = - i_dp * dcmplx( En_vec(m,ki) - En_vec(n,ki) ) * Abar(i,n,m) 
-			!		!DEBUG
-			!		if( n/=m .and. abs(Hbar(i,n,m)) > 0.1_dp ) then
-			!			write(*,'(a,i1,a,i3,a,i3,a,f8.4,a,f8.4,a,f8.4)')"[calcVeloNeW]: found off diag band deriv i=",i,&
-			!					" n=",n," m=",m, "Hbar_nm=",dreal(Hbar(i,n,m)), "+i*",dimag(Hbar(i,n,m))," abs=",abs(Hbar(i,n,m))
-			!		end if
-			!		!
-			!	end do
-			!end do
-			!
+			!NO GAUGE BACK
+			else
+				if(i==1 .and. ki==1 )	write(*,*)	"[wannInterp/calcVeloNew]: (W) gauge velocities used"
+				do m = 1, nWfs
+					do n = 1, nWfs
+						if(n==m)	v_mat(i,n,m,ki)	= Ha_mat(i,n,m)
+						!if(n/=m)	v_mat(i,n,m,ki) = - i_dp * dcmplx( En_vec(m,ki) - En_vec(n,ki) ) * A_mat(i,n,m) 
+						if(n/=m)	v_mat(i,n,m,ki) = - dcmplx( En_vec(m,ki) - En_vec(n,ki) ) * A_mat(i,n,m) 
+					end do	
+				end do
+			end if
 		end do
+		!
 		!
 		return
 	end subroutine
@@ -223,28 +224,28 @@ module wannInterp
 
 
 
-	subroutine gaugeBack(Hw, HaW, AW, FWtens, EnH, U, AconnH, FcurvH, veloH)
+	subroutine gaugeBack(ki, Hw, HaW, AW, FWtens, EnH, U, AconnH, FcurvH, veloH)
 		!transform from wannier gauge back to hamiltonian gauge
+		integer,		intent(in)		:: ki
 		complex(dp),	intent(in)		:: Hw(:,:)
 		complex(dp),	intent(inout)	:: HaW(:,:,:), AW(:,:,:), FWtens(:,:,:,:)
-		real(dp),		intent(out)		:: EnH(:)
-		complex(dp),	intent(out)		:: U(:,:), AconnH(:,:,:), FcurvH(:,:,:), veloH(:,:,:)
+		real(dp),		intent(out)		:: EnH(:,:)
+		complex(dp),	intent(out)		:: U(:,:), AconnH(:,:,:), FcurvH(:,:,:), veloH(:,:,:,:)
 		complex(dp),	allocatable		:: DH(:,:,:)
-		integer							:: ki
 		!
 		allocate(	DH(2,nWfs,nWfs)	)
 		!
 		!COPY
 		U	= HW
 		!GET U MAT & ENERGIES
-		call eigSolverFULL(U, EnH)
+		call eigSolverFULL(U, EnH(:,ki))
 		U = dconjg( transpose(U))
 		!ROTATE WITH u
 		call calcBarMat(U, HaW, AW, FWtens)
 		!CONNECTION
-		call calcA(EnH, AW, HaW, AconnH, DH)
+		call calcA(EnH(:,ki), AW, HaW, AconnH, DH)
 		!VELOCITIES
-		call calcVelo(EnH, AW, HaW, veloH)
+		call calcVeloNew(ki, EnH, U, HaW, AW, veloH)
 		!CURVATURE
 		call calcCurv(FWtens, DH, AW, FcurvH)
 		!
