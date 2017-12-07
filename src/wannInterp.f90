@@ -102,7 +102,7 @@ module wannInterp
 		U_mat(:,:)	= H_mat(:,:)
 		if( .not. isHermitian(U_mat)	)		 	write(*,*)	"[wannInterpolator]: warning Ham is not hermitian"
 		call eigSolverFULL(U_mat(:,:),	En_vec(:,ki))
-		!U_mat	= transpose( dconjg(U_mat))
+		U_mat	= transpose( dconjg(U_mat))
 		if( .not. isUnit(U_mat) ) 					write(*,*)	"[wannInterpolator]: eigen solver gives non unitary U matrix"
 		!
 		!
@@ -133,72 +133,38 @@ module wannInterp
 		Ucjg			= dconjg(	transpose(U_int)	)
 		v_mat			= dcmplx(0.0_dp)
 		!
-		if(	doVeloNUM ) then
-			!INTERPOLATE VELOCITIES
-			if(ki==1)	write(*,*)"[calcVeloNew]: velocities are calculated via TB approach"
-			do i = 1, 3
-				!v_mat(i,:,:,ki)	= Ha_mat(i,:,:)
-				!
-				!NO GAUGE BACK
-				do m = 1, nWfs
-					do n = 1, nWfs
-						if(n==m)	v_mat(i,n,m,ki)	= Ha_mat(i,n,m)
-						if(n/=m)	v_mat(i,n,m,ki) = - i_dp * dcmplx( En_vec(m,ki) - En_vec(n,ki) ) * A_mat(i,n,m) 
-					end do
-				end do
-
-
-				!!ROTATE TO HAM GAUGE
-				!tmp			= matmul(	Ha_mat(i,:,:)	, U_int			)	
-				!Hbar(i,:,:)	= matmul(	Ucjg			, tmp		)	
-				!!
-				!tmp			= matmul(	A_mat(i,:,:)		, U_int	)	
-				!Abar(i,:,:)	= matmul(	Ucjg				, tmp	)
-				!!APPLY ROTATION
-				!do m = 1, nWfs
-				!	do n = 1, nWfs
-				!		if( n==m )	v_mat(i,n,n,ki) = Hbar(i,n,n)
-				!		if( n/=m )	v_mat(i,n,m,ki) = - i_dp * dcmplx( En_vec(m,ki) - En_vec(n,ki) ) * Abar(i,n,m) 
-				!		!DEBUG
-				!		if( n/=m .and. abs(Hbar(i,n,m)) > 0.1_dp ) then
-				!			write(*,'(a,i1,a,i3,a,i3,a,f8.4,a,f8.4,a,f8.4)')"[calcVeloNeW]: found off diag band deriv i=",i,&
-				!					" n=",n," m=",m, "Hbar_nm=",dreal(Hbar(i,n,m)), "+i*",dimag(Hbar(i,n,m))," abs=",abs(Hbar(i,n,m))
-				!		end if
-				!		!
-				!	end do
-				!end do
-				!
-			end do
-		else	
-			!GRAD OF BASIS FUNCTIONS
-			if(ki==1)	write(*,*)"[calcVeloNew]:velocities are calculated analytically, with the plane wave coefficients"
-			if( nK /= nQ) write(*,*)"[calcVeloNew]: warning analytic approach does not support different k mesh spacing"
-			!do gi = 1, nGq(ki)
-			!	!ROTATE BACK TO (H) GAUGE
-			!	do n = 1, nWfs
-			!		do m = 1, nWfs
-			!			tmp(m,n)	= dconjg(ckW(gi,m,ki)) * ckW(gi,n,ki)
-			!		end do
-			!	end do
-			!	tmp		= matmul( tmp	,	Ucjg 	)
-			!	tmp		= matmul( U_int	,	tmp	)
-			!	!SUM OVER BASIS FUNCTIONS
-			!	do m = 1, nWfs
-			!		do n = 1, nWfs
-			!			v_mat(1:2,n,m,ki)	= v_mat(1:2,n,m,ki) + i_dp * Gvec(1:2,gi,ki) * tmp(n,m)
-			!		end do
-			!	end do
-			!end do
-
-			!OLD VERSION (no gauge back)
+		do i = 1, 3
+			!v_mat(i,:,:,ki)	= Ha_mat(i,:,:)
+			!
+			!NO GAUGE BACK
 			do m = 1, nWfs
 				do n = 1, nWfs
-					do gi = 1 , nGq(ki)
-						v_mat(1:2,n,m,ki) = v_mat(1:2,n,m,ki) +  dconjg(ckW(gi,n,ki)) *  ckW(gi,m,ki) * i_dp * Gvec(1:2,gi,ki)
-					end do
+					if(n==m)	v_mat(i,n,m,ki)	= Ha_mat(i,n,m)
+					if(n/=m)	v_mat(i,n,m,ki) = - i_dp * dcmplx( En_vec(m,ki) - En_vec(n,ki) ) * A_mat(i,n,m) 
 				end do
 			end do
-		end if	
+			!
+			!!ROTATE TO HAM GAUGE
+			!tmp			= matmul(	Ha_mat(i,:,:)	, U_int			)	
+			!Hbar(i,:,:)	= matmul(	Ucjg			, tmp		)	
+			!!
+			!tmp			= matmul(	A_mat(i,:,:)		, U_int	)	
+			!Abar(i,:,:)	= matmul(	Ucjg				, tmp	)
+			!!APPLY ROTATION
+			!do m = 1, nWfs
+			!	do n = 1, nWfs
+			!		if( n==m )	v_mat(i,n,n,ki) = Hbar(i,n,n)
+			!		if( n/=m )	v_mat(i,n,m,ki) = - i_dp * dcmplx( En_vec(m,ki) - En_vec(n,ki) ) * Abar(i,n,m) 
+			!		!DEBUG
+			!		if( n/=m .and. abs(Hbar(i,n,m)) > 0.1_dp ) then
+			!			write(*,'(a,i1,a,i3,a,i3,a,f8.4,a,f8.4,a,f8.4)')"[calcVeloNeW]: found off diag band deriv i=",i,&
+			!					" n=",n," m=",m, "Hbar_nm=",dreal(Hbar(i,n,m)), "+i*",dimag(Hbar(i,n,m))," abs=",abs(Hbar(i,n,m))
+			!		end if
+			!		!
+			!	end do
+			!end do
+			!
+		end do
 		!
 		return
 	end subroutine
@@ -335,7 +301,7 @@ module wannInterp
 
 
 
-		!1. CALC 
+		!COPY
 		U	= HW
 		!GET U MAT & ENERGIES
 		call eigSolverFULL(U, EnH)
