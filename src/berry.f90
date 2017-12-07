@@ -126,6 +126,7 @@ module berry
 		!CONNECTION
 		write(*,*)	"[berryMethod]: test rotated coeff polarization( coarse):"
 		call calcConnOnCoarse(ckW, AconnQ)
+		AconnQ = AconnQ * i_dp
 		call calcPolViaA(AconnQ,pBerry)
 		write(*,*)"[berryMethod]: coarse rotated pol =(",pBerry(1),", ",pBerry(2),", ", pBerry(3),")."
 
