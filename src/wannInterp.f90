@@ -34,7 +34,10 @@ module wannInterp
 		!
 		!
 		do ki = 1, size(AconnH,4)
+			!GET K SPACE QUANTITIES		(EnH, U_int, HW, HaW, AW, FWtens)
 			call wannInterpolator(ki, tHopp, rHopp, R_real, EnH, U_int(:,:,ki), HW, HaW, AW, FWtens)
+			!
+			!WORK IN K SPACE
 			if( doGaugBack ) then
 				if(ki == 1) write(*,*)	"[DoWannInterpol]: start gauging back" 	
 				call gaugeBack(Hw, HaW, AW, FWtens, EnH(:,ki), U_int(:,:,ki), AconnH(:,:,:,ki), FcurvH(:,:,:,ki), veloH(:,:,:,ki))	
