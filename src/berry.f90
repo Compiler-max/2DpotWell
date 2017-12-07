@@ -295,23 +295,34 @@ module berry
 			!
 			call readBandVelo( v_Band )
 			do qi = 1, nQ
-				!GAUGE BACK
-				U	 = U_mat(:,:,qi)
-				Ucjg = transpose( dconjg(U)	)
-				do a = 1, 3
-					tmp(:,:)	= matmul(	A_mat(a,:,:,qi) 	,	U	)
-					Abar(a,:,:)	= matmul(	Ucjg				,	tmp	)
-				end do
-				!
-				!APPLY (currently no gauge back)
-				do m = 1, nWfs
-					do n = 1, nWfs
-						if(n==m)	v_mat(1:3,n,n,qi)	= v_Band(1:3,n,qi)
-						!if(n/=m) 	v_mat(1:3,n,m,qi)	= - i_dp * dcmplx( En_vec(m,qi)-En_vec(n,qi) ) * A_mat(1:3,n,m,qi)
-						if(n/=m) 	v_mat(1:3,n,m,qi)	= - dcmplx( En_vec(m,qi)-En_vec(n,qi) ) * A_mat(1:3,n,m,qi)
-						!if(n/=m)	v_mat(1:3,n,m,qi)	= - i_dp * dcmplx( En_vec(m,qi)-En_vec(n,qi) ) * Abar(1:3,n,m)
+				!(H) GAUGE
+				if( doGaugBack ) then
+					!GET ROTATED QUANTITIES
+					U	 = U_mat(:,:,qi)
+					Ucjg = transpose( dconjg(U)	)
+					do a = 1, 3
+						tmp(:,:)	= matmul(	A_mat(a,:,:,qi) 	,	U	)
+						Abar(a,:,:)	= matmul(	Ucjg				,	tmp	)
 					end do
-				end do
+					!
+					!APPLY
+					do m = 1, nWfs
+						do n = 1, nWfs
+							if(n==m)	v_mat(1:3,n,n,qi)	= v_Band(1:3,n,qi)
+							if(n/=m) 	v_mat(1:3,n,m,qi)	= - i_dp * dcmplx( En_vec(m,qi)-En_vec(n,qi) ) * Abar(1:3,n,m)
+						end do
+					end do
+				!(W) GAUGE
+				else
+					do m = 1, nWfs
+						do n = 1, nWfs
+							if(n==m)	v_mat(1:3,n,n,qi)	= v_Band(1:3,n,qi)
+							!if(n/=m) 	v_mat(1:3,n,m,qi)	= - i_dp * dcmplx( En_vec(m,qi)-En_vec(n,qi) ) * A_mat(1:3,n,m,qi)
+							if(n/=m) 	v_mat(1:3,n,m,qi)	= - dcmplx( En_vec(m,qi)-En_vec(n,qi) ) * A_mat(1:3,n,m,qi)
+							!if(n/=m)	v_mat(1:3,n,m,qi)	= - i_dp * dcmplx( En_vec(m,qi)-En_vec(n,qi) ) * Abar(1:3,n,m)
+						end do
+					end do
+				end if
 			end do
 		else
 			!PLANE WAVE GRADIENT
