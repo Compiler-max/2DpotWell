@@ -179,7 +179,6 @@ module wannInterp
 		allocate(		tmp(		nWfs	,	nWfs		)	)
 		allocate(		vec(		nWfs					)	)
 		Ucjg			= dconjg(	transpose(U_int)	)
-		v_mat			= dcmplx(0.0_dp)
 		!
 		do i = 1, 3
 			!ROTATE TO HAM GAUGE
