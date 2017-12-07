@@ -187,7 +187,7 @@ module berry
 		!OUTPUT
 		call writePolFile(pWann, pBerry, pNiuF2, pNiuF3, pPei )
 		call writeConnTxt( AconnQ )
-		call writeVeloHtxt( veloQ*aUtoEv/aUtoAngstrm )
+		call writeVeloHtxt( veloQ*aUtoEv/aUtoAngstrm )				
 		call writeUmat(Uq)
 		if( writeBin )	call writeCkASunk(ck, ckW)
 		if( writeBin )	call writeEnH(EnK)
@@ -294,6 +294,7 @@ module berry
 		!
 		if( doVeloNum ) then
 			!BLOUNT
+			write(*,*)	"[beryMethod/calcVelo]: velo via blount formula"
 			allocate(			Abar(		3		,	nWfs	,	nWfs				)			)
 			allocate(			tmp(					nWfs	,	nWfs				)			)
 			allocate(			U(						nWfs	,	nWfs				)			)
@@ -321,6 +322,7 @@ module berry
 			end do
 		else
 			!PLANE WAVE GRADIENT
+			write(*,*)	"[beryMethod/calcVelo]: velo via plane wave gradients"
 			call calcVeloGrad( ck, v_mat)
 		end if
 

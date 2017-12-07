@@ -34,7 +34,6 @@ module wannInterp
 		!
 		!
 		do ki = 1, nK
-			!call interpolateMat(ki, tHopp, rHopp, HW, HaW, AW, FWtens)
 			call wannInterpolator(ki, tHopp, rHopp, R_real, EnH, U_int(:,:,ki), HW, HaW, AW, FWtens)
 			if( doGaugBack ) then
 				if(ki == 1) write(*,*)	"[DoWannInterpol]: start gauging back" 	
