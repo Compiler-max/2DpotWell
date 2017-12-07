@@ -213,13 +213,17 @@ module postW90
 	subroutine polWrapper(pWann, pConn, pNiuF2, pNiuF3, pPei)
 		real(dp),		intent(out)		:: pWann(3), pConn(3), pNiuF2(3), pNiuF3(3), pPei(3)
 		!
+		pWann	= 0.0_dp
+		pConn	= 0.0_dp
+		pNiuF2	= 0.0_dp
+		pNiuF3	= 0.0_dp
+		pPei	= 0.0_dp
 		!
 		!POLARIZATION CALC
 		write(*,*)	"[effTBmodel]: start calculating electric polarization:"
 		write(*,'(a,f6.3,a,f6.3,a,f6.3,a)')	"R_real(:,R_null)= (",&
 												R_real(1,R_null),", ",R_real(2,R_null),", ",R_real(3,R_null),")."
 		!0th order pol
-		pWann	= 0.0_dp
 		call calcPolWannCent( wCent, pWann )
 		write(*,'(a,f10.4,a,f10.4,a,f10.4,a)')	"[effTBmodel]: pWann=(",pWann(1),", ",pWann(2),", ",pWann(3),")."
 		call calcPolViaA(A_mat, pConn)
@@ -228,13 +232,6 @@ module postW90
 		call calcFirstOrdP(Om_mat,A_mat,v_mat,En_vec,pNiuF2, pNiuF3) !calcFirstOrdP(Fcurv, Aconn, Velo, En, p1F2, p1F3)
 		write(*,'(a,e17.10,a,e17.10,a,e17.10,a)')	"[effTBmodel]: pNiuF2=(",pNiuF2(1),", ",pNiuF2(2),", ",pNiuF2(3),")."
 		write(*,'(a,e17.10,a,e17.10,a,e17.10,a)')	"[effTBmodel]: pNiuF3=(",pNiuF3(1),", ",pNiuF3(2),", ",pNiuF3(3),")."
-		
-		!1st order peierls
-		!if(	doPei ) then
-		!	!todo
-		!	pPei	= 0.0_dp
-		!	write(*,'(a,f10.5,a,f10.5,a,f10.5,a)')	"[effTBmodel]: pPei=(",pPei(1),", ",pPei(2),", ",pPei(3),")."
-		!end if
 		!
 		!
 		return

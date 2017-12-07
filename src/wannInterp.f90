@@ -33,7 +33,7 @@ module wannInterp
 		veloH	= dcmplx(0.0_dp)
 		!
 		!
-		do ki = 1, nK
+		do ki = 1, size(AconnH,4)
 			call wannInterpolator(ki, tHopp, rHopp, R_real, EnH, U_int(:,:,ki), HW, HaW, AW, FWtens)
 			if( doGaugBack ) then
 				if(ki == 1) write(*,*)	"[DoWannInterpol]: start gauging back" 	
@@ -365,26 +365,6 @@ module wannInterp
 		return
 	end subroutine
 
-
-!!CONVERT OMEGA TENSOR TO VECTOR
-!		do m = 1, nWfs
-!			do n = 1, nWfs
-!				do ki = 1, nK
-!					!EVAL CROSS PRODUCT
-!					do c = 1,3
-!						do b= 1,3
-!							do a=1,3
-!								if( myLeviCivita(a,b,c) /= 0) then
-!									Fh(c,ki,n,m) = Fh(c,ki,n,m) + myLeviCivita(a,b,c) * FhTens(a,b,ki,n,m)
-!								end if
-!							end do 
-!						end do
-!					end do
-!					!
-!				end do
-!			end do
-!		end do
-!
 	
 
 

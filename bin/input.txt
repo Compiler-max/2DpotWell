@@ -51,7 +51,7 @@
 
 [berry]
     useRot      = t
-    doVeloNUM   = t
+    doVeloNUM   = f
     doNiu       = t
     doPei       = f
     doWanni     = f

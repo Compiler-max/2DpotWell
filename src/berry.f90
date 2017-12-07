@@ -4,8 +4,8 @@ module berry
 	use omp_lib
 	use mathematics,	only:	dp, PI_dp, i_dp, acc, machineP,  myExp, myLeviCivita, nIntegrate, aUtoAngstrm, aUtoEv
 	use sysPara
-	use effTB,			only:	TBviaKspace, calcConnOnCoarse
-	use blochWf,		only:	calcVeloGrad
+	use effTB,			only:	TBviaKspace
+	use blochWf,		only:	calcVeloGrad, calcConnOnCoarse
 	use wannInterp,		only:	DoWannInterpol
 	use polarization,	only:	calcPolViaA
 	use semiClassics,	only:	calcFirstOrdP
