@@ -39,9 +39,6 @@ module berry
 
 
 !public
-
-
-
 	subroutine berryMethod()
 		!todo
 		real(dp)						:: 	pBerry(3), pNiuF2(3), pNiuF3(3), pPei(3)
@@ -119,6 +116,24 @@ module berry
 		!
 		return
 	end subroutine
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 !private
