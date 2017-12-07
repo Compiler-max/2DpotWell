@@ -48,8 +48,7 @@ module berry
 		real(dp),		allocatable		:: 	EnK(:,:), R_real(:,:)
 		complex(dp),	allocatable		:: 	AconnQ(:,:,:,:), FcurvQ(:,:,:,:),veloQ(:,:,:,:), &
 											AconnK(:,:,:,:), FcurvK(:,:,:,:), veloK(:,:,:,:), Uk(:,:,:), &
-											tHopp(:,:,:), rHopp(:,:,:,:), &
-											Abar(:,:,:), U(:,:), Ucjg(:,:), tmp(:,:)
+											tHopp(:,:,:), rHopp(:,:,:,:)								
 		real(dp)						::	pWann(3)
 		real(dp),		allocatable		::	v_Band(:,:,:)
 		integer							::	gi, qi, n, m, R, a
@@ -71,10 +70,7 @@ module berry
 		allocate(			veloQ(		3		, 	nWfs	,	nWfs	,	nQ		)			)
 		allocate(			R_real(		3		,							nSC		)			)
 		allocate(			v_Band(		3		,			nWfs		,	nQ		)			)
-		allocate(			Abar(		3		,	nWfs	,	nWfs				)			)
-		allocate(			tmp(					nWfs	,	nWfs				)			)
-		allocate(			U(						nWfs	,	nWfs				)			)
-		allocate(			Ucjg(					nWfs	,	nWfs				)			)
+		
 
 		
 		R_real(3,:)	= 0.0_dp
@@ -158,44 +154,9 @@ module berry
 			write(*,*)	"[berrryMethod]: now calc first order pol"
 			veloQ	= dcmplx(0.0_dp)
 			FcurvQ	= dcmplx(0.0_dp)	!does not matter since <FcurvQ,AconnQ> is always zero in 2D
-			
-			call readBandVelo( v_Band )
-			
-			do qi = 1, nQ
-				do n = 1, nWfs
-					veloQ(1:3,n,n,qi)	= v_Band(1:3,n,qi)
-				end do
-			end do
+			call calcVelo(ckW , Uq , AconnQ, EnQ ,  veloQ)
 
-			!ToDo: with possibility to calc grad on abinitio & w90 way (read in band deriv, off diag via conn )
-			!call calcVelo(ck, Uq, AconnQ, veloQ)
 
-			!call calcVeloGrad(ck, veloQ)
-			!!for debugging:
-			do qi = 1, size(veloQ,4)
-				!GAUGE BACK
-				U	 = Uq(:,:,qi)
-				Ucjg = transpose( dconjg(U)	)
-				do a = 1, 3
-					tmp(:,:)	= matmul(	AconnQ(a,:,:,qi) 	,	U	)
-					Abar(a,:,:)	= matmul(	Ucjg				,	tmp	)
-				end do
-				!APPLY
-				do m = 1, nWfs
-					do n = 1, nWfs
-						if(n/=m) 		veloQ(1:3,n,m,qi)	= -i_dp * dcmplx(EnQ(m,qi)-EnQ(n,qi)) * AconnQ(1:3,n,m,qi)
-						!if(n/=m) 		veloQ(1:3,n,m,qi)	= -i_dp * dcmplx(EnQ(m,qi)-EnQ(n,qi)) * Abar(1:3,n,m)
-					end do
-				end do
-			end do
-			!!for debugging(gauge Back AconnQ):
-			!do qi = 1, size(veloQ,4)
-			!	do m = 1, nWfs
-			!		do n = 1, nWfs
-			!			!
-			!		end do
-			!	end do
-			!end do
 			call calcFirstOrdP(FcurvQ, AconnQ, veloQ, EnQ, pNiuF2, pNiuF3)
 			write(*,'(a,e17.10,a,e17.10,a,e17.10,a)')	"[berryMethod]: pNiuF2=(",pNiuF2(1),", ",pNiuF2(2),", ",pNiuF2(3),")."
 			write(*,'(a,e17.10,a,e17.10,a,e17.10,a)')	"[berryMethod]: pNiuF3=(",pNiuF3(1),", ",pNiuF3(2),", ",pNiuF3(3),")."
@@ -321,6 +282,50 @@ module berry
 		return
 	end subroutine
 
+
+	subroutine calcVelo(ck, U_mat , A_mat, En_vec ,  v_mat)
+		complex(dp),	intent(in)		::	ck(:,:,:), U_mat(:,:,:), A_mat(:,:,:,:)
+		real(dp),		intent(in)		::	En_vec(:,:)
+		complex(dp),	intent(out)		::	v_mat(:,:,:,:)
+		complex(dp),	allocatable		:: 	Abar(:,:,:), U(:,:), Ucjg(:,:), tmp(:,:)
+		real(dp),		allocatable		::	v_Band(:,:,:)
+		integer							::	n, m, qi, a
+
+		!
+		if( doVeloNum ) then
+			!BLOUNT
+			allocate(			Abar(		3		,	nWfs	,	nWfs				)			)
+			allocate(			tmp(					nWfs	,	nWfs				)			)
+			allocate(			U(						nWfs	,	nWfs				)			)
+			allocate(			Ucjg(					nWfs	,	nWfs				)			)
+			allocate(			v_Band(		3		,			nWfs		,	nQ		)			)
+			!
+			call readBandVelo( v_Band )
+			do qi = 1, nQ
+				!GAUGE BACK
+				U	 = U_mat(:,:,qi)
+				Ucjg = transpose( dconjg(U)	)
+				do a = 1, 3
+					tmp(:,:)	= matmul(	A_mat(a,:,:,qi) 	,	U	)
+					Abar(a,:,:)	= matmul(	Ucjg				,	tmp	)
+				end do
+				!
+				!APPLY (currently no gauge back)
+				do m = 1, nWfs
+					do n = 1, nWfs
+						if(n==m)	v_mat(1:3,n,n,qi)	= v_Band(1:3,n,qi)
+						if(n/=m) 	v_mat(1:3,n,m,qi)	= -i_dp * dcmplx( En_vec(m,qi)-En_vec(n,qi) ) * A_mat(1:3,n,m,qi)
+					end do
+				end do
+			end do
+		else
+			!PLANE WAVE GRADIENT
+			call calcVeloGrad( ck, v_mat)
+		end if
+
+
+		return
+	end subroutine
 
 	subroutine readBandVelo( v_vec )
 		real(dp),		intent(out)		::	v_vec(:,:,:)
