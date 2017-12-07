@@ -478,7 +478,7 @@ module mathematics
 			do while ( i <= n .and. isHermitian) 
 				j = 1
 				do while ( j <= n .and. isHermitian) 
-					if(		abs( 	H(i,j) - dconjg( H(j,i) ) 	) 		> machineP			) then
+					if(		abs( 	H(i,j) - dconjg( H(j,i) ) 	) 		> acc			) then
 						isHermitian = .false.
 					end if
 					j = j + 1
