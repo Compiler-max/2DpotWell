@@ -78,8 +78,10 @@ module blochWf
 		complex(dp),	intent(out)		::	v_mat(:,:,:,:)
 		integer							::	qi, m, n, gi
 		!
+		v_mat = dcmplx(0.0_dp)
+		!
+		!
 		if(	size(ck,3)/=size(v_mat,4)	) then
-			v_mat = dcmplx(0.0_dp)
 			write(*,*)	"[calcVeloGrad]: coeff and velo defined on different k meshes, stop now"
 		else
 			do qi = 1, size(ck,3)
