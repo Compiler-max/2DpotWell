@@ -46,21 +46,10 @@ module berry
 		!todo
 		real(dp)						:: 	pBerry(3), pNiuF2(3), pNiuF3(3), pPei(3)
 		real(dp),		allocatable		:: 	EnK(:,:), R_real(:,:)
-		complex(dp),	allocatable		:: 	AconnQ(:,:,:,:), FcurvQ(:,:,:,:),veloQ(:,:,:,:), &
-											AconnK(:,:,:,:), FcurvK(:,:,:,:), veloK(:,:,:,:), Uk(:,:,:), &
-											tHopp(:,:,:), rHopp(:,:,:,:)								
+		complex(dp),	allocatable		:: 	AconnQ(:,:,:,:), FcurvQ(:,:,:,:),veloQ(:,:,:,:)					
 		real(dp)						::	pWann(3)
 		real(dp),		allocatable		::	v_Band(:,:,:)
-		integer							::	gi, qi, n, m, R, a
 		!					
-		!DENSE
-		!allocate(			tHopp(					nWfs	, 	nWfs	,	nSc		)			)
-		!allocate(			rHopp(		3		,	nWfs	, 	nWfs	, 	nSC		)			)			
-		!allocate(			EnK(					nWfs	, 				nK		)			)
-		!allocate(			AconnK(		3		, 	nWfs	,	nWfs	,	nK		)			)
-		!allocate(			FcurvK(		3		, 	nWfs	, 	nWfs	,	nK		)			)
-		!allocate(			veloK(		3		, 	nWfs	,	nWfs	,	nK		)			)
-		!allocate(			Uk(						nWfs	,	nWfs	,	nK		)			)
 		!COARSE
 		allocate(			ck(			nG		,	nBands				,	nQ		)			)
 		allocate(			ckW(		nG		, 	nWfs				,  	nQ		)			)
@@ -70,93 +59,25 @@ module berry
 		allocate(			veloQ(		3		, 	nWfs	,	nWfs	,	nQ		)			)
 		allocate(			R_real(		3		,							nSC		)			)
 		allocate(			v_Band(		3		,			nWfs		,	nQ		)			)
-		
-
-		
-		R_real(3,:)	= 0.0_dp
-		do R = 1, nSC
-			R_real(1:2,R)	= Rcell(1:2,R)
-		end do 
-
-		!READ U FROM W90
-		if( useRot )  then
-			call readUmatrix()
-			write(*,*)	"[berryMethod]: read U matrix "
-		else
-			allocate( Uq( nWfs, nWfs, nQ )	)
-			Uq = dcmplx(0.0_dp)
-			num_wann	= nWfs
-			num_kpts	= nQ
-			do qi = 1, nQ
-				do n = 1, nWfs
-					Uq(n,n,qi)	= dcmplx(1.0_dp)
-				end do
-			end do
-			write(*,*)	"[berryMethod]: U matrix set as Identity"
-		end if
-
-		!READ ABINITIO
-		call readHam(ck, EnQ)
-
+		!
+		!READ IN QUANTITIES
+		call initRead(R_real, ck, EnQ)
+		!
 		!ROTATE
-		ckW	= dcmplx(0.0_dp)
-		if(	useRot ) then
-			do qi = 1, nQ
-				do gi = 1, nGq(qi)			! u^(H) = u^(W) U -> u^(W) = u^(H) U^dagger
-					do n = 1, num_wann
-						!SUM OVER m
-						do m = 1, num_wann
-							ckW(gi,n,qi)	=  ckW(gi,n,qi) + Uq(m,n,qi)   * ck(gi,m,qi)	
-						end do		
-					end do	
-				end do
-			end do
-			write(*,*)	"[berryMethod]: applied U matrix to basis coefficients"
-		else 
-			if( nWfs <= nBands) then
-				ckW(:,:,:)	= ck(:,1:nWfs,:)
-				write(*,'(a,e17.10,a,e17.10,a,e17.10,a)')	"[berryMethod]: rotations disabled. Will use initial electronic structure coeff"
-			else 
-				ckW	= dcmplx(0.0_dp)
-				write(*,*)	"[berryMethod]: critical error, less nBands then nWfs, coeff set to zero..."
-			end if
-		end if
-
-
+		call applyRot(ck, Uq, ckW)
+		!
 		!CONNECTION
-		write(*,*)	"[berryMethod]: test rotated coeff polarization( coarse):"
 		call calcConnOnCoarse(ckW, AconnQ)
 		call calcPolViaA(AconnQ,pBerry)
 		write(*,*)"[berryMethod]: coarse rotated pol =(",pBerry(1),", ",pBerry(2),", ", pBerry(3),")."
-
-
-		!!SET UP EFFECTIVE TIGHT BINDING MODELL
-		!call TBviaKspace(ckW, EnQ, Uq, tHopp, rHopp)
-		!call writeHtbBerry(tHopp)
-		!call writeRtbBerry(rHopp)
-		!write(*,*)	"[berryMethod]: set up effective tight binding model (k-Space method)"
-		!!
-		!!INTERPOLATE CONN,CURV, VELO
-		!call DoWannInterpol(ckW, rHopp, tHopp, R_real, EnK, Uk, AconnK, FcurvK, veloK)
-		!call writeEnBerry(EnK)
-		!call writeBerryInterpU(Uk)
-		!write(*,*)	"[berryMethod]: interpolation done"
-		!!
-		!!INTEGRATE CONNECTION
-		!call calcPolViaA(AconnK,pBerry)
-		!write(*,'(a,f12.8,a,f12.8,a)')	"[berrryMethod]: calculated zero order pol=(",pBerry(1),", ",pBerry(2),")."
 		!
-
-
-
 		!1st ORDER SEMICLASSICS
 		if(doNiu) then
 			write(*,*)	"[berrryMethod]: now calc first order pol"
 			veloQ	= dcmplx(0.0_dp)
 			FcurvQ	= dcmplx(0.0_dp)	!does not matter since <FcurvQ,AconnQ> is always zero in 2D
 			call calcVelo(ckW , Uq , AconnQ, EnQ ,  veloQ)
-
-
+			!
 			call calcFirstOrdP(FcurvQ, AconnQ, veloQ, EnQ, pNiuF2, pNiuF3)
 			write(*,'(a,e17.10,a,e17.10,a,e17.10,a)')	"[berryMethod]: pNiuF2=(",pNiuF2(1),", ",pNiuF2(2),", ",pNiuF2(3),")."
 			write(*,'(a,e17.10,a,e17.10,a,e17.10,a)')	"[berryMethod]: pNiuF3=(",pNiuF3(1),", ",pNiuF3(2),", ",pNiuF3(3),")."
@@ -167,13 +88,13 @@ module berry
 
 
 		!PEIERLS SUBSTITUTION
-		if(doPei) then
-			write(*,*)	"[berrryMethod]: now calc first order pol via peierls sub."
-			call peierlsMethod(ckW, tHopp, pPei)
-			write(*,'(a,e17.10,a,e17.10,a,e17.10,a)')	"[berryMethod]: pPei=(",pPei(1),", ",pPei(2),", ",pPei(3),")."
-		else
-			pPei = 0.0_dp
-		end if
+		!if(doPei) then
+		!	write(*,*)	"[berrryMethod]: now calc first order pol via peierls sub."
+		!	call peierlsMethod(ckW, tHopp, pPei)
+		!	write(*,'(a,e17.10,a,e17.10,a,e17.10,a)')	"[berryMethod]: pPei=(",pPei(1),", ",pPei(2),", ",pPei(3),")."
+		!else
+		!	pPei = 0.0_dp
+		!end if
 
 		!WANNIER
 		if(doWanni) then
@@ -201,6 +122,43 @@ module berry
 
 
 !private
+	subroutine initRead(R_real, ck, EnQ)
+		real(dp),		intent(out)		:: 	R_real(:,:), EnQ(:,:)
+		complex(dp),	intent(out)		:: 	ck(:,:,:)
+		integer							::	R, qi, n 
+		!
+		!INIT SUPERCELL
+		R_real(3,:)	= 0.0_dp
+		do R = 1, nSC
+			R_real(1:2,R)	= Rcell(1:2,R)
+		end do 
+		!
+		!READ U FROM W90
+		if( useRot )  then
+			call readUmatrix()
+			write(*,*)	"[berryMethod]: read U matrix "
+		else
+			allocate( Uq( nWfs, nWfs, nQ )	)
+			Uq = dcmplx(0.0_dp)
+			num_wann	= nWfs
+			num_kpts	= nQ
+			do qi = 1, nQ
+				do n = 1, nWfs
+					Uq(n,n,qi)	= dcmplx(1.0_dp)
+				end do
+			end do
+			write(*,*)	"[berryMethod]: U matrix set as Identity"
+		end if
+		!
+		!READ ABINITIO
+		call readHam(ck, EnQ)
+		!
+		!
+		return
+	end subroutine
+
+
+
 	subroutine readUmatrix()
 		integer						:: stat, qi, n, m, dumI(3)
 		real(dp)					:: val(2)
@@ -281,6 +239,40 @@ module berry
 		!
 		return
 	end subroutine
+
+
+	subroutine applyRot(ck, Uq, ckW)
+		complex(dp),	intent(in)		::	ck(:,:,:), Uq(:,:,:)
+		complex(dp),	intent(out)		::	ckw(:,:,:)
+		integer							::	qi, gi, n, m
+		!
+		ckW	= dcmplx(0.0_dp)
+		if(	useRot ) then
+			do qi = 1, nQ
+				do gi = 1, nGq(qi)			! u^(H) = u^(W) U -> u^(W) = u^(H) U^dagger
+					do n = 1, num_wann
+						!SUM OVER m
+						do m = 1, num_wann
+							ckW(gi,n,qi)	=  ckW(gi,n,qi) + Uq(m,n,qi)   * ck(gi,m,qi)	
+						end do		
+					end do	
+				end do
+			end do
+			write(*,*)	"[berryMethod]: applied U matrix to basis coefficients"
+		else 
+			if( nWfs <= nBands) then
+				ckW(:,:,:)	= ck(:,1:nWfs,:)
+				write(*,'(a,e17.10,a,e17.10,a,e17.10,a)')	"[berryMethod]: rotations disabled. Will use initial electronic structure coeff"
+			else 
+				ckW	= dcmplx(0.0_dp)
+				write(*,*)	"[berryMethod]: critical error, less nBands then nWfs, coeff set to zero..."
+			end if
+		end if
+		!
+		!
+		return
+	end subroutine
+
 
 
 	subroutine calcVelo(ck, U_mat , A_mat, En_vec ,  v_mat)
