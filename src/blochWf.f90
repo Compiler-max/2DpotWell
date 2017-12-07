@@ -74,6 +74,9 @@ module blochWf
 
 
 	subroutine calcVeloGrad(ck, v_mat )
+		!calculates the velocity operator matrix
+		!	Psi_n v Psi_m	= i/hbar Psi_n grad_r Psi_m
+		!					= - 1 / hbar sum_G ckn^dag ckm G
 		complex(dp),	intent(in)		:: 	ck(:,:,:)
 		complex(dp),	intent(out)		::	v_mat(:,:,:,:)
 		integer							::	qi, m, n, gi
@@ -87,6 +90,7 @@ module blochWf
 			do qi = 1, size(ck,3)
 				do m = 1, nWfs
 					do n = 1, nWfs
+						!SUM OVER BASIS FUNCTIONS
 						do gi = 1 , nGq(qi)
 							v_mat(1:2,n,m,qi) = v_mat(1:2,n,m,qi) -  dconjg(ck(gi,n,qi)) *  ck(gi,m,qi) *  Gvec(1:2,gi,qi)
 						end do
