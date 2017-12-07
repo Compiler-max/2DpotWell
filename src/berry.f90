@@ -187,7 +187,7 @@ module berry
 		!OUTPUT
 		call writePolFile(pWann, pBerry, pNiuF2, pNiuF3, pPei )
 		call writeConnTxt( AconnQ )
-		call writeVeloHtxt( veloQ*aUtoEv/aUtoAngstrm )				
+		call writeVeloHtxt( veloQ)!*aUtoEv*aUtoAngstrm )				
 		call writeUmat(Uq)
 		if( writeBin )	call writeCkASunk(ck, ckW)
 		if( writeBin )	call writeEnH(EnK)
@@ -356,7 +356,7 @@ module berry
 		end if
 		!
 		!ATOMIC UNITS CONVERSION:
-		v_vec 	= v_vec * aUtoAngstrm / aUtoEv ! [v_vec] = eV / Angstroem
+		v_vec 	= v_vec  / (aUtoEv  * aUtoAngstrm)	 ! [v_vec] = eV / Angstroem
 		!
 		!	
 		return

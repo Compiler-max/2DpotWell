@@ -24,14 +24,14 @@
     Bext        = 0.0 0.0 1.0  
 
 [numerics]
-    Gcut        = 4.0
+    Gcut        = 2.0
     nSolve      = 10        
-    nQx         = 8   
-    nQy         = 8
-    nSCx        = 9 
-    nSCy        = 9
-    nKx         = 8
-    nKy         = 8                 
+    nQx         = 16   
+    nQy         = 16
+    nSCx        = 17 
+    nSCy        = 17
+    nKx         = 16
+    nKy         = 16                
     nRx         = 101   
     nRy         = 101
     thres       = 0.1
@@ -39,19 +39,19 @@
 [methods]
     doSolveHam  = f
     useBloch    = f
-    doPw90      = f
+    doPw90      = t
     doBerry     = t
     writeBin    = f
 
 [pw90]
     seedName    = 'wf1'
-    shell       = 2   
+    shell       = 1   
     nw90it      = 1000
     pw90GaugeB  = f
 
 [berry]
-    useRot      = f
-    doVeloNUM   = f
+    useRot      = t
+    doVeloNUM   = t
     doNiu       = t
     doPei       = f
     doWanni     = f

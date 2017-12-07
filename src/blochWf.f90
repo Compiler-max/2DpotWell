@@ -104,7 +104,7 @@ module blochWf
 				do m = 1, nWfs
 					do n = 1, nWfs
 						do gi = 1 , nGq(qi)
-							v_mat(1:2,n,m,qi) = v_mat(1:2,n,m,qi) +  dconjg(ck(gi,n,qi)) *  ck(gi,m,qi) * i_dp * Gvec(1:2,gi,qi)
+							v_mat(1:2,n,m,qi) = v_mat(1:2,n,m,qi) -  dconjg(ck(gi,n,qi)) *  ck(gi,m,qi) *  Gvec(1:2,gi,qi)
 						end do
 					end do
 				end do
