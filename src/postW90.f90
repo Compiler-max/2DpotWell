@@ -343,9 +343,9 @@ module postW90
 			do m = 1, size(A_mat,3)
 				do n = 1, size( A_mat,2)
 					write(350,'(i3,a,i3,a,f8.4,a,f8.4,a,f8.4,a,f8.4,a,f8.4,a,f8.4)')	n," ",m,&	
-													" ",dreal(A_mat(1,n,m,qi))," ",dimag(A_mat(1,n,m,qi)),&
-													" ",dreal(A_mat(2,n,m,qi))," ",dimag(A_mat(2,n,m,qi)),&
-													" ",dreal(A_mat(3,n,m,qi))," ",dimag(A_mat(3,n,m,qi))
+													"   ",dreal(A_mat(1,n,m,qi))," ",dimag(A_mat(1,n,m,qi)),&
+													"   ",dreal(A_mat(2,n,m,qi))," ",dimag(A_mat(2,n,m,qi)),&
+													"   ",dreal(A_mat(3,n,m,qi))," ",dimag(A_mat(3,n,m,qi))
 				end do
 			end do
 		end do
