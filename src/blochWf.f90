@@ -77,30 +77,12 @@ module blochWf
 		complex(dp),	intent(in)		:: 	ck(:,:,:)
 		complex(dp),	intent(out)		::	v_mat(:,:,:,:)
 		integer							::	qi, m, n, gi
-			
+		!
 		if(	size(ck,3)/=size(v_mat,4)	) then
+			v_mat = dcmplx(0.0_dp)
 			write(*,*)	"[calcVeloGrad]: coeff and velo defined on different k meshes, stop now"
 		else
 			do qi = 1, size(ck,3)
-				!!GRAD OF BASIS FUNCTIONS
-				!do gi = 1, nGq(ki)
-				!	!ROTATE BACK TO (H) GAUGE
-				!	do n = 1, nWfs
-				!		do m = 1, nWfs
-				!			tmp(m,n)	= dconjg(ckW(gi,m,ki)) * ckW(gi,n,ki)
-				!		end do
-				!	end do
-				!	tmp		= matmul( tmp	,	Ucjg 	)
-				!	tmp		= matmul( U_int	,	tmp	)
-				!	!SUM OVER BASIS FUNCTIONS
-				!	do m = 1, nWfs
-				!		do n = 1, nWfs
-				!			v_mat(1:2,n,m,ki)	= v_mat(1:2,n,m,ki) + i_dp * Gvec(1:2,gi,ki) * tmp(n,m)
-				!		end do
-				!	end do
-				!end do
-				!!
-				!OLD VERSION (no gauge back)
 				do m = 1, nWfs
 					do n = 1, nWfs
 						do gi = 1 , nGq(qi)
