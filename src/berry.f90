@@ -156,7 +156,13 @@ module berry
 			write(*,*)	"[berrryMethod]: now calc first order pol"
 			veloQ	= dcmplx(0.0_dp)
 			FcurvQ	= dcmplx(0.0_dp)	!does not matter since <FcurvQ,AconnQ> is always zero in 2D
-			call calcVeloGrad(ck, veloQ)
+			
+
+
+			!ToDo: with possibility to calc grad on abinitio & w90 way (read in band deriv, off diag via conn )
+			!call calcVelo(ck, Uq, AconnQ, veloQ)
+
+			!call calcVeloGrad(ck, veloQ)
 			!!for debugging:
 			do qi = 1, size(veloQ,4)
 				!GAUGE BACK
@@ -169,7 +175,8 @@ module berry
 				!APPLY
 				do m = 1, nWfs
 					do n = 1, nWfs
-						if(n/=m) 		veloQ(1:3,n,m,qi)	= -i_dp * dcmplx(EnQ(m,qi)-EnQ(n,qi)) * Abar(1:3,n,m)
+						if(n/=m) 		veloQ(1:3,n,m,qi)	= -i_dp * dcmplx(EnQ(m,qi)-EnQ(n,qi)) * AconnQ(1:3,n,m,qi)
+						!if(n/=m) 		veloQ(1:3,n,m,qi)	= -i_dp * dcmplx(EnQ(m,qi)-EnQ(n,qi)) * Abar(1:3,n,m)
 					end do
 				end do
 			end do
