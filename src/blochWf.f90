@@ -88,7 +88,7 @@ module blochWf
 				if( norm2(delta) < machineP )	then
 					do n = 1, size(Mmat,2)
 						do m = 1, size(Mmat,1)
-							Mmat(m,n)	= Mmat(m,n)	+ dconjg(	ck(gi,n,qi)	) * ck(gj,m,knb)
+							Mmat(m,n)	= Mmat(m,n)	+ dconjg(	ck(gi,m,qi)	) * ck(gj,n,knb)
 						end do
 					end do
 					!UNKoverlap	= UNKoverlap +  dconjg( ck(gi,n,qi) ) * ck(gj,m,knb) 
