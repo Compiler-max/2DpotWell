@@ -53,7 +53,7 @@ module blochWf
 		if(	size(ck,3)/=size(v_mat,4)	) then
 			write(*,*)	"[calcVeloGrad]: coeff and velo defined on different k meshes, stop now"
 		else
-			do qi = 1, size(ck,3)
+			do qi = 1, nQ
 				do m = 1, nWfs
 					do n = 1, nWfs
 						!SUM OVER BASIS FUNCTIONS
