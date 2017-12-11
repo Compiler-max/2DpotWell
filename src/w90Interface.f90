@@ -2,7 +2,7 @@ module w90Interface
 
 	use mathematics,	only:	dp, PI_dp, i_dp, machineP, aUtoAngstrm, aUtoEv, myExp
 	use sysPara
-	use blochWf,		only:	UNKoverlap
+	use blochWf,		only:	calcMmat
 	use projection,		only:	calcAmatANA
 
 	implicit none
@@ -361,7 +361,6 @@ module w90Interface
 	subroutine w90prepMmat(ck)
 		complex(dp),	intent(in)		:: ck(:,:,:) 	 !ck(			nG		,	nBands  	,	nQ	)	
 		integer							:: qi, nn, n, m
-		complex(dp)						:: oLap
 		complex(dp),	allocatable		:: M_matrix(:,:,:,:)
 		real(dp)						:: gShift(2)
 		!
@@ -373,26 +372,20 @@ module w90Interface
 		!SETUP THE MATRIX
 		M_matrix	= dcmplx(0.0_dp)
 		write(*,*)	"[w90prepMmat]: use ",nntot," nearest neighbours per k point"
-		!$OMP PARALLEL DO SCHEDULE(STATIC) DEFAULT(SHARED) PRIVATE(qi, nn, m, n, oLap, gShift)
+		!$OMP PARALLEL DO SCHEDULE(STATIC) DEFAULT(SHARED) PRIVATE(qi, nn, gShift)
 		do qi = 1, num_kpts
 			do nn = 1, nntot
-				do m = 1 , num_bands
-					do n = 1, num_bands
-						!calc overlap of unks
-						if( nncell(3,qi,nn)/= 0 ) then
-							oLap	= dcmplx(1.0_dp-5)
-							write(*,*)	"[w90prepMmat]: WARNING nearest neighbours in z direction used!"
-							if(qi==1 .and. m==1 .and. n==1 ) write(*,*)	"[w90prepMmat]: oLap set to zero for nn=",nn
-						else
-							gShift(1)			= nncell(1,qi,nn) * 2.0_dp * PI_dp / aX
-							gShift(2)			= nncell(2,qi,nn) * 2.0_dp * PI_dp / aX
-							oLap				= UNKoverlap(n,m, qi, nnlist(qi,nn), gShift, ck)
-						end if
-						!
-						!
-						M_matrix(n,m,nn,qi)		=  oLap
-					end do
-				end do
+				!calc overlap of unks
+				if( nncell(3,qi,nn)/= 0 ) then
+					M_matrix(:,:,nn,qi)	= dcmplx(1.0_dp-5)
+					write(*,*)	"[w90prepMmat]: WARNING nearest neighbours in z direction used!"
+					if(qi==1  ) write(*,*)	"[w90prepMmat]: oLap set to zero for nn=",nn
+				else
+					gShift(1)			= nncell(1,qi,nn) * 2.0_dp * PI_dp / aX
+					gShift(2)			= nncell(2,qi,nn) * 2.0_dp * PI_dp / aX
+					!oLap				= UNKoverlap(n,m, qi, nnlist(qi,nn), gShift, ck)
+					call calcMmat(qi,nnlist(qi,nn), gShift, ck, M_matrix(:,:,nn,qi))
+				end if
 			end do
 		end do
 		!$OMP END PARALLEL DO
