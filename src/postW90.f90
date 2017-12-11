@@ -3,7 +3,7 @@ module postW90
 	use mathematics,	only:	dp, PI_dp, i_dp, acc, machineP,  & 
 								aUtoAngstrm, aUtoEv, & 
 								myExp, myLeviCivita, isHermitian
-	use sysPara
+	use sysPara,		only:	nK, writeBin, seedname, prefactF3, aX, aY, Bext, vol ! aX, aY, Bext, vol only needed for output file here
 	use wannInterp,		only:	DoWannInterpol
 	use polarization,	only:	calcPolWannCent, calcPolViaA
 	use semiclassics,	only:	calcFirstOrdP
@@ -33,6 +33,7 @@ module postW90
 	subroutine effTBmodel()
 		real(dp)					:: 	pWann(3), pConn(3), pNiuF2(3), pNiuF3(3), pPei(3)
 		integer						::	ki
+		logical						::	foundFile
 		!
 		pWann 	= 0.0_dp
 		pConn	= 0.0_dp
@@ -42,7 +43,8 @@ module postW90
 		!read seed_name from eStructure input file
 		seed_name= seedName
 		!If TB file found do calc
-		if( readTBsingle() ) then
+		call readTBsingle( foundFile )
+		if( foundFile ) then
 			write(*,*)	"[effTBmodel]: done reading eff tb matrices"
 			allocate(	A_mat(		3,		num_wann,	num_wann,	nK	)	)		
 			allocate(	En_vec(						num_wann	,	nK	)	)
@@ -84,17 +86,21 @@ module postW90
 
 
 !privat
-	logical function readTBsingle( )
+	subroutine readTBsingle( readSuccess )
+		logical,	intent(out)		::	readSuccess
 		integer						:: 	stat, cnt, offset, R, n, m, i, mn(2), dumI(3), line15(15)
 		real(dp)					::	real2(2), real6(6), real3(3)
 		!try opening file
 		open(unit=310, iostat=stat, file=seed_name//'_tb.dat', status='old', action='read' )
 		if( stat /= 0)  then
-			write(*,*) "[readTBsingle]: warning, file _tb.dat not found"
-			readTBsingle 	= .false.
+			write(*,*) "[readTBsingle]: warning, file seedname_tb.dat not found"
+			readSuccess 	= .false.
 			recip_latt		= 0.0_dp
+			R_real			= 0.0_dp
+			H_tb			= dcmplx(0.0_dp)
+			r_tb			= dcmplx(0.0_dp)
 		else
-			readTBsingle	= .true.
+			readSuccess	= .true.
 			!
 			read(310,*)
 			!recip lattice (read into buffer, avoids compiler warning)
@@ -203,7 +209,7 @@ module postW90
 		!
 		!
 		return
-	end function
+	end subroutine
 
 
 
@@ -246,8 +252,8 @@ module postW90
 		write(600,*)"*"
 		write(600,*)"*"
 		write(600,*)"*"
-		write(600,*)"**************ZION:"
-		write(600,*) Zion
+		write(600,*)"*"
+		write(600,*)"*"
 		write(600,*)"*"
 		write(600,*)"*"
 		!

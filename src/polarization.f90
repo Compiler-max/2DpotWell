@@ -1,11 +1,11 @@
 module polarization
 	use mathematics,	only:	dp, PI_dp, i_dp, acc, myExp, nIntegrate
-	use sysPara
+	use sysPara,		only:	nAt, atPos, Zion
 
 	implicit none
 
 	private
-	public :: calcPolWannCent, calcPolViaA, calcIonicPol
+	public :: calcPolWannCent, calcPolViaA
 
 	contains
 
@@ -145,19 +145,6 @@ module polarization
 	end subroutine
 
 
-	subroutine calcIonicPol(pI)
-		!ionic contribution to total polarization
-		real(dp),		intent(out)		:: pI(2)
-		integer							:: at
-		!
-		pI	= 0.0_dp
-		do at = 1, nAt
-			pI	= pI + Zion(at) * atPos(:,at) 
-		end do
-		!
-		!
-		return
-	end subroutine
 
 
 

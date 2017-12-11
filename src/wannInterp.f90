@@ -1,13 +1,16 @@
 module wannInterp
 	use mathematics,	only:	dp, PI_dp, i_dp, acc, machineP, myExp, myLeviCivita, nIntegrate, &
 								eigSolverFULL, rotMat, myCommutat, isHermitian, isUnit
-	use sysPara
+	use sysPara,		only:	kpts, pw90GaugeB
 
 	!use 
 	implicit none
 
 	private
 	public ::					DoWannInterpol
+
+	integer					::	num_wann
+
 
 	contains
 
@@ -22,11 +25,12 @@ module wannInterp
 		complex(dp),	allocatable		:: HW(:,:), HaW(:,:,:), AW(:,:,:), FWtens(:,:,:,:), FWmat(:,:,:)
 		integer							:: a, b, c
 		!
-		allocate(	HW(				nWfs, 	nWfs			)		)
-		allocate(	HaW(	3	,	nWfs, 	nWfs			)		)
-		allocate(	AW(		3	,	nWfs, 	nWfs			)		)
-		allocate(	FWtens(	3,3	,	nWfs,	nWfs			)		)
-		allocate(	FWmat( 	3	,	nWfs,	nWfs			)		)
+		num_wann	= size(tHopp,1) 
+		allocate(	HW(				num_wann, 	num_wann			)		)
+		allocate(	HaW(	3	,	num_wann, 	num_wann			)		)
+		allocate(	AW(		3	,	num_wann, 	num_wann			)		)
+		allocate(	FWtens(	3,3	,	num_wann,	num_wann			)		)
+		allocate(	FWmat( 	3	,	num_wann,	num_wann			)		)
 		!
 		EnH	= 0.0_dp
 		AconnH	= dcmplx(0.0_dp)
@@ -134,14 +138,14 @@ module wannInterp
 		complex(dp),	intent(in)		::	U_int(:,:), Ha_mat(:,:,:), A_mat(:,:,:)
 		complex(dp),	intent(out)		::	v_mat(:,:,:)
 		complex(dp),	allocatable		:: 	Hbar(:,:,:), Abar(:,:,:), Ucjg(:,:), tmp(:,:), vec(:)
-		integer							::	m, n, i, gi
+		integer							::	m, n, i
 		!
 		!
-		allocate(		Hbar(	3,	nWfs 	,	nWfs		)	)		
-		allocate(		Abar(	3,	nWfs 	,	nWfs		)	)
-		allocate(		Ucjg(		nWfs	,	nWfs		)	)
-		allocate(		tmp(		nWfs	,	nWfs		)	)
-		allocate(		vec(		nWfs					)	)
+		allocate(		Hbar(	3,	num_wann 	,	num_wann		)	)		
+		allocate(		Abar(	3,	num_wann 	,	num_wann		)	)
+		allocate(		Ucjg(		num_wann	,	num_wann		)	)
+		allocate(		tmp(		num_wann	,	num_wann		)	)
+		allocate(		vec(		num_wann					)	)
 		Ucjg			= dconjg(	transpose(U_int)	)
 		!
 		do i = 1, 3
@@ -155,8 +159,8 @@ module wannInterp
 				tmp			= matmul(	A_mat(i,:,:)		, U_int	)	
 				Abar(i,:,:)	= matmul(	Ucjg				, tmp	)
 				!APPLY ROTATION
-				do m = 1, nWfs
-					do n = 1, nWfs
+				do m = 1, num_wann
+					do n = 1, num_wann
 						if( n==m )	v_mat(i,n,n) = Hbar(i,n,n)
 						if( n/=m )	v_mat(i,n,m) = - i_dp * dcmplx( En_vec(m) - En_vec(n) ) * Abar(i,n,m) 
 						!DEBUG
@@ -170,8 +174,8 @@ module wannInterp
 			!NO GAUGE BACK
 			else
 				if(i==1 .and. ki==1 )	write(*,*)	"[wannInterp/calcVeloNew]: (W) gauge velocities used"
-				do m = 1, nWfs
-					do n = 1, nWfs
+				do m = 1, num_wann
+					do n = 1, num_wann
 						if(n==m)	v_mat(i,n,m)	= Ha_mat(i,n,m)
 						!if(n/=m)	v_mat(i,n,m) = - i_dp * dcmplx( En_vec(m) - En_vec(n) ) * A_mat(i,n,m) 
 						if(n/=m)	v_mat(i,n,m) =	- i_dp *dcmplx( En_vec(m) - En_vec(n) ) * A_mat(i,n,m) 
@@ -196,7 +200,7 @@ module wannInterp
 		complex(dp),	intent(out)		:: U(:,:), AconnH(:,:,:), FcurvH(:,:,:), veloH(:,:,:)
 		complex(dp),	allocatable		:: DH(:,:,:)
 		!
-		allocate(	DH(2,nWfs,nWfs)	)
+		allocate(	DH(2,num_wann,num_wann)	)
 		!
 		!COPY
 		U	= HW
@@ -282,8 +286,8 @@ module wannInterp
 		AconnH	= dcmplx(0.0_dp)
 		DH		= dcmplx(0.0_dp)
 		!SET UP D MATRIX
-		do m = 1, nWfs
-			do n = 1, nWfs
+		do m = 1, num_wann
+			do n = 1, num_wann
 				if( n /= m) then
 					DH(1:2,n,m)	= HaW(1:2,n,m) / ( EnH(m) - EnH(n) + machineP	)
 				else
@@ -310,8 +314,8 @@ module wannInterp
 		!
 		veloH	= dcmplx(0.0_dp)
 		!
-		do m = 1, nWfs
-			do n = 1, nWfs
+		do m = 1, num_wann
+			do n = 1, num_wann
 				if( n==m ) veloH(1:2,n,m)	= HaW(1:2,n,m)
 				if( n/=m ) veloH(1:2,n,m)	= - i_dp * dcmplx(	EnH(m) - EnH(n)		) * AW(1:2,n,m)
 			end do
