@@ -31,7 +31,8 @@ module postW90
 
 !public
 	subroutine effTBmodel()
-		real(dp)					:: pWann(3), pConn(3), pNiuF2(3), pNiuF3(3), pPei(3)
+		real(dp)					:: 	pWann(3), pConn(3), pNiuF2(3), pNiuF3(3), pPei(3)
+		integer						::	ki
 		!
 		pWann 	= 0.0_dp
 		pConn	= 0.0_dp
@@ -50,7 +51,9 @@ module postW90
 			allocate(	Om_mat(		3,		num_wann,	num_wann,	nK	)	)
 			!
 			!
-			call DoWannInterpol(r_tb, H_tb, R_real, En_vec, U_int, A_mat, Om_mat, v_mat)
+			do ki = 1, nK
+				call DoWannInterpol(ki, r_tb, H_tb, R_real, En_vec(:,ki), U_int(:,:,ki), A_mat(:,:,:,ki), Om_mat(:,:,:,ki), v_mat(:,:,:,ki))
+			end do
 			write(*,*)	"[effTBmodel]: done interpolating to k mesh with nK=",nK
 			!
 			!calc all desired polarizations

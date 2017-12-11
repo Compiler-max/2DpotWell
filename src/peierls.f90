@@ -2,7 +2,6 @@ module peierls
 	use mathematics,	only:	dp, PI_dp, i_dp, myExp, crossP, nIntegrate, eigSolverFULL, isUnit
 	use sysPara
 	use blochWf,		only:	calcConnOnCoarse
-	use wannInterp,		only:	DoWannInterpol
 	use	polarization,	only:	calcPolViaA
 	use output,			only:	writePeierls
 	implicit none

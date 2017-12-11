@@ -12,14 +12,15 @@ module wannInterp
 	contains
 
 !public
-	subroutine DoWannInterpol( rHopp, tHopp, R_real, EnH, U_int, AconnH, FcurvH, veloH)
+	subroutine DoWannInterpol(ki, rHopp, tHopp, R_real, EnH, U_int, AconnH, FcurvH, veloH)
+		integer,		intent(in)		:: ki
 		complex(dp),	intent(in)		:: rHopp(:,:,:,:), tHopp(:,:,:)
 		real(dp),		intent(in)		:: R_real(:,:)
-		complex(dp),	intent(out)		:: U_int(:,:,:)
-		real(dp),		intent(out)		:: EnH(:,:)
-		complex(dp),	intent(out)		:: AconnH(:,:,:,:), FcurvH(:,:,:,:), veloH(:,:,:,:)
+		complex(dp),	intent(out)		:: U_int(:,:)
+		real(dp),		intent(out)		:: EnH(:)
+		complex(dp),	intent(out)		:: AconnH(:,:,:), FcurvH(:,:,:), veloH(:,:,:)
 		complex(dp),	allocatable		:: HW(:,:), HaW(:,:,:), AW(:,:,:), FWtens(:,:,:,:), FWmat(:,:,:)
-		integer							:: ki, a, b, c
+		integer							:: a, b, c
 		!
 		allocate(	HW(				nWfs, 	nWfs			)		)
 		allocate(	HaW(	3	,	nWfs, 	nWfs			)		)
@@ -33,32 +34,30 @@ module wannInterp
 		veloH	= dcmplx(0.0_dp)
 		!
 		!
-		do ki = 1, size(AconnH,4)
-			!GET K SPACE QUANTITIES		(EnH, U_int, HW, HaW, AW, FWtens)
-			call wannInterpolator(ki, tHopp, rHopp, R_real, EnH, U_int(:,:,ki), HW, HaW, AW, FWtens)
+		!GET K SPACE QUANTITIES		(EnH, U_int, HW, HaW, AW, FWtens)
+		call wannInterpolator(ki, tHopp, rHopp, R_real, EnH, U_int(:,:), HW, HaW, AW, FWtens)
+		!
+		!WORK IN K SPACE
+		if( pw90GaugeB ) then
+			if(ki == 1) write(*,*)	"[DoWannInterpol]: start gauging back" 	
+			call gaugeBack(ki, Hw, HaW, AW, FWtens, EnH, U_int(:,:), AconnH(:,:,:), FcurvH(:,:,:), veloH)	
+		else
+			if(ki ==1)	write(*,*)	"[DoWannInterpol]: Gauge trafo DISABLED	"
+			!CONNECTION
+			AconnH(1:3,:,:) 		= AW(1:3,:,:)
+			!VELOCITIES
+			call calcVeloNew(ki, EnH, U_int(:,:), HaW, AW, veloH)
 			!
-			!WORK IN K SPACE
-			if( pw90GaugeB ) then
-				if(ki == 1) write(*,*)	"[DoWannInterpol]: start gauging back" 	
-				call gaugeBack(ki, Hw, HaW, AW, FWtens, EnH, U_int(:,:,ki), AconnH(:,:,:,ki), FcurvH(:,:,:,ki), veloH)	
-			else
-				if(ki ==1)	write(*,*)	"[DoWannInterpol]: Gauge trafo DISABLED	"
-				!CONNECTION
-				AconnH(1:3,:,:,ki) 		= AW(1:3,:,:)
-				!VELOCITIES
-				call calcVeloNew(ki, EnH, U_int(:,:,ki), HaW, AW, veloH)
-				!
-				!CURVATURE TO MATRIX
-				do c = 1, 3
-					do b = 1, 3
-						do a = 1,3
-							FcurvH(c,:,:,ki)	= myLeviCivita(a,b,c) * FWtens(a,b,:,:)
-						end do
+			!CURVATURE TO MATRIX
+			do c = 1, 3
+				do b = 1, 3
+					do a = 1,3
+						FcurvH(c,:,:)	= myLeviCivita(a,b,c) * FWtens(a,b,:,:)
 					end do
 				end do
-			
-			end if
-		end do	
+			end do
+		
+		end if
 		!
 		write(*,*)	"[DoWannInterpol]: calculated interpolated energy, connection, curvature, velocity "
 		!
@@ -93,9 +92,9 @@ module wannInterp
 		integer,		intent(in)		::	ki
 		complex(dp),	intent(in)		::	H_tb(:,:,:), r_tb(:,:,:,:)
 		real(dp),		intent(in)		:: 	R_real(:,:)
-		real(dp),		intent(out)		::	En_vec(:,:)
+		real(dp),		intent(out)		::	En_vec(:)
 		complex(dp),	intent(out)		::	U_mat(:,:), H_mat(:,:), Ha_mat(:,:,:), A_mat(:,:,:), Om_tens(:,:,:,:)
-		integer							:: R, a, b, c, n, m
+		integer							:: R, a, b
 		complex(dp)						:: phase
 		!
 		H_mat	= dcmplx(0.0_dp)
@@ -122,7 +121,7 @@ module wannInterp
 		!ENERGY INTERPOLATION
 		U_mat(:,:)	= H_mat(:,:)
 		if( .not. isHermitian(U_mat)	)		 	write(*,*)	"[wannInterpolator]: warning Ham is not hermitian"
-		call eigSolverFULL(U_mat(:,:),	En_vec(:,ki))
+		call eigSolverFULL(U_mat(:,:),	En_vec(:))
 		U_mat	= transpose( dconjg(U_mat))
 		if( .not. isUnit(U_mat) ) 					write(*,*)	"[wannInterpolator]: eigen solver gives non unitary U matrix"
 		!
@@ -132,9 +131,9 @@ module wannInterp
 
 	subroutine calcVeloNew(ki, En_vec, U_int, Ha_mat, A_mat, v_mat)
 		integer,		intent(in)		::	ki
-		real(dp),		intent(in)		::	En_vec(:,:)
+		real(dp),		intent(in)		::	En_vec(:)
 		complex(dp),	intent(in)		::	U_int(:,:), Ha_mat(:,:,:), A_mat(:,:,:)
-		complex(dp),	intent(out)		::	v_mat(:,:,:,:)
+		complex(dp),	intent(out)		::	v_mat(:,:,:)
 		complex(dp),	allocatable		:: 	Hbar(:,:,:), Abar(:,:,:), Ucjg(:,:), tmp(:,:), vec(:)
 		integer							::	m, n, i, gi
 		!
@@ -159,8 +158,8 @@ module wannInterp
 				!APPLY ROTATION
 				do m = 1, nWfs
 					do n = 1, nWfs
-						if( n==m )	v_mat(i,n,n,ki) = Hbar(i,n,n)
-						if( n/=m )	v_mat(i,n,m,ki) = - i_dp * dcmplx( En_vec(m,ki) - En_vec(n,ki) ) * Abar(i,n,m) 
+						if( n==m )	v_mat(i,n,n) = Hbar(i,n,n)
+						if( n/=m )	v_mat(i,n,m) = - i_dp * dcmplx( En_vec(m) - En_vec(n) ) * Abar(i,n,m) 
 						!DEBUG
 						if( n/=m .and. abs(Hbar(i,n,m)) > 0.1_dp ) then
 							write(*,'(a,i1,a,i3,a,i3,a,f8.4,a,f8.4,a,f8.4)')"[calcVeloNeW]: found off diag band deriv i=",i,&
@@ -174,9 +173,9 @@ module wannInterp
 				if(i==1 .and. ki==1 )	write(*,*)	"[wannInterp/calcVeloNew]: (W) gauge velocities used"
 				do m = 1, nWfs
 					do n = 1, nWfs
-						if(n==m)	v_mat(i,n,m,ki)	= Ha_mat(i,n,m)
-						!if(n/=m)	v_mat(i,n,m,ki) = - i_dp * dcmplx( En_vec(m,ki) - En_vec(n,ki) ) * A_mat(i,n,m) 
-						if(n/=m)	v_mat(i,n,m,ki) =	- i_dp *dcmplx( En_vec(m,ki) - En_vec(n,ki) ) * A_mat(i,n,m) 
+						if(n==m)	v_mat(i,n,m)	= Ha_mat(i,n,m)
+						!if(n/=m)	v_mat(i,n,m) = - i_dp * dcmplx( En_vec(m) - En_vec(n) ) * A_mat(i,n,m) 
+						if(n/=m)	v_mat(i,n,m) =	- i_dp *dcmplx( En_vec(m) - En_vec(n) ) * A_mat(i,n,m) 
 					end do	
 				end do
 			end if
@@ -194,8 +193,8 @@ module wannInterp
 		integer,		intent(in)		:: ki
 		complex(dp),	intent(in)		:: Hw(:,:)
 		complex(dp),	intent(inout)	:: HaW(:,:,:), AW(:,:,:), FWtens(:,:,:,:)
-		real(dp),		intent(out)		:: EnH(:,:)
-		complex(dp),	intent(out)		:: U(:,:), AconnH(:,:,:), FcurvH(:,:,:), veloH(:,:,:,:)
+		real(dp),		intent(out)		:: EnH(:)
+		complex(dp),	intent(out)		:: U(:,:), AconnH(:,:,:), FcurvH(:,:,:), veloH(:,:,:)
 		complex(dp),	allocatable		:: DH(:,:,:)
 		!
 		allocate(	DH(2,nWfs,nWfs)	)
@@ -203,12 +202,12 @@ module wannInterp
 		!COPY
 		U	= HW
 		!GET U MAT & ENERGIES
-		call eigSolverFULL(U, EnH(:,ki))
+		call eigSolverFULL(U, EnH(:))
 		U = dconjg( transpose(U))
 		!ROTATE WITH u
 		call calcBarMat(U, HaW, AW, FWtens)
 		!CONNECTION
-		call calcA(EnH(:,ki), AW, HaW, AconnH, DH)
+		call calcA(EnH(:), AW, HaW, AconnH, DH)
 		!VELOCITIES
 		call calcVeloNew(ki, EnH, U, HaW, AW, veloH)
 		!CURVATURE
@@ -330,7 +329,7 @@ module wannInterp
 		!
 		!ToDO
 		FcurvH	= dcmplx(0.0_dp)
-
+		!
 		return
 	end subroutine
 

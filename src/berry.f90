@@ -6,7 +6,6 @@ module berry
 	use sysPara
 	use effTB,			only:	TBviaKspace
 	use blochWf,		only:	calcVeloGrad, calcConnOnCoarse
-	use wannInterp,		only:	DoWannInterpol
 	use polarization,	only:	calcPolViaA
 	use semiClassics,	only:	calcFirstOrdP
 	use peierls,		only:	peierlsMethod
