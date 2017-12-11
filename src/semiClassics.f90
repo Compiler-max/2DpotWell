@@ -10,7 +10,7 @@ module semiClassics
 
 
 	private
-	public ::			calcFirstOrdP
+	public ::			calcFirstOrdP, calcFmat
 
 
 
@@ -51,7 +51,7 @@ module semiClassics
 			pnF2	= dcmplx(0.0_dp)
 			pnF3	= dcmplx(0.0_dp)
 			!
-			do ki = 1, kSize
+			do ki = 1, kSize		
 				!PHASE SPACE DENSITY CORRECTION
 				densCorr	= 0.5_dp * dot_product(		dreal(Fcurv(:,n,n,ki)), dreal(Aconn(:,n,n,ki) )	)		* Bext
 				!f(:,ki)		= f(:,ki) + densCorr
@@ -100,7 +100,7 @@ module semiClassics
 	end subroutine
 
 
-!privat
+
 	subroutine	calcFmat(nZero,ki, Velo ,En, Fmat)
 		!calculates the linear response F matrix for magnetic field perturbation
 		!F is derived in the semiclassical wavepacket approach (again see Niu PRL 112, 166601 (2014))
@@ -118,7 +118,7 @@ module semiClassics
 
 
 
-
+!privat
 	subroutine	addF2(nZero,ki, Velo ,En, Fmat)
 		!
 		!	F^(2)_ij = + Re \sum_{n/=0,m/=0} \eps_{j,k,l} * (V^k_nm V^l_m0 V^i_mn) / ( (E0-En)**2 (E0-Em) )
