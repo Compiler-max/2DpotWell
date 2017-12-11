@@ -59,7 +59,6 @@ module wannInterp
 		
 		end if
 		!
-		write(*,*)	"[DoWannInterpol]: calculated interpolated energy, connection, curvature, velocity "
 		!
 		return
 	end subroutine
