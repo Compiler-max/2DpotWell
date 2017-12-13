@@ -24,20 +24,20 @@
     Bext        = 0.0 0.0 1.0  
 
 [numerics]
-    Gcut        = 2.0
+    Gcut        = 10.0
     nSolve      = 10        
-    nQx         = 16   
-    nQy         = 16
-    nSCx        = 17 
-    nSCy        = 17
-    nKx         = 16
-    nKy         = 16                
+    nQx         = 4   
+    nQy         = 4
+    nSCx        = 5 
+    nSCy        = 5
+    nKx         = 4
+    nKy         = 4                
     nRx         = 101   
     nRy         = 101
     thres       = 0.1
 
 [methods]
-    doSolveHam  = f
+    doSolveHam  = t
     useBloch    = f
     doPw90      = t
     doBerry     = t
