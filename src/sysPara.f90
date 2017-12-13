@@ -414,8 +414,8 @@ module sysPara
 		!
 		!nGrid = ceiling( 	dmax1(aX,aY)*Gcut/PI_dp 	+	dsqrt(2.0_dp)		)
 
+		!the addition of 1 makes shure that k point shifts are handled
 		nGrid = ceiling(	dmax1(aX,aY) *	( Gcut + 1.0_dp	)	 / PI_dp		)
-		!nGrid = ceiling(	Gcut * dmin1(aX,aY) / (PI_dp *(2.0_dp + dsqrt(2.0_dp))))
 		!
 		!make sure Grid is symmetric (needs to be odd number)
 		if(mod(nGrid,2)==0) nGrid = nGrid + 1 

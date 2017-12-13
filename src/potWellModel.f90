@@ -49,6 +49,8 @@ module potWellModel
 			call populateH(qi, Hmat) 
 			!
 			!SOLVE HAM
+			ctemp	= dcmplx(0.0_dp)
+			EnT		= 0.0_dp
 			Gmax 	= nGq(qi)
 			call eigSolverPART(Hmat(1:Gmax,1:Gmax),EnT(1:Gmax), ctemp(1:Gmax,:), found)!a, w ,z, m
 			!COPY INTO TARGET ARRAYS
