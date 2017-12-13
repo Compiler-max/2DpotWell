@@ -105,7 +105,7 @@ module berry
 		call writeConnTxt( AconnQ )
 		call writeVeloHtxt( veloQ)!*aUtoEv*aUtoAngstrm )				
 		call writeUmat(Uq)
-		if( writeBin )	call writeCkASunk(ck, ckW)
+		if( writeBin )	call (ck, ckW)
 		if( writeBin )	call writeEnH(EnQ)
 
 		write(*,*)	"[berrryMethod]: all done"

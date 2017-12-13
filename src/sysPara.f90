@@ -412,8 +412,9 @@ module sysPara
 	integer function getTestGridSize()
 		integer				:: nGrid
 		!
-		nGrid = ceiling( 	dmax1(aX,aY)*Gcut/PI_dp 	+	dsqrt(2.0_dp)		)
+		!nGrid = ceiling( 	dmax1(aX,aY)*Gcut/PI_dp 	+	dsqrt(2.0_dp)		)
 
+		nGrid = ceiling(	dmax1(aX,aY) *	( Gcut + 0.5_dp * dsqrt(2.0_dp)	)	 / PI_dp		)
 		!nGrid = ceiling(	Gcut * dmin1(aX,aY) / (PI_dp *(2.0_dp + dsqrt(2.0_dp))))
 		!
 		!make sure Grid is symmetric (needs to be odd number)
