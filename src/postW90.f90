@@ -118,7 +118,7 @@ module postW90
 			allocate(	R_vect(			3,							nrpts	)		)
 			allocate(	R_real(			3,							nrpts	)		)
 			allocate(	H_tb(				num_wann,	num_wann, 	nrpts	)		)
-			allocate(	r_tb(			3,	num_wann,	num_wann,	nrpts	)		)
+			allocate(	r_tb(			3,	num_wann,	num_wann,	nrpts	)		)	
 			allocate(	wCent(			3,		num_wann					)		)	
 			!
 			!read degeneracy of each wigner seitz grid point

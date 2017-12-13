@@ -648,7 +648,7 @@ module output
 
 	subroutine writeInterpBands(Ew)
 		real(dp),		intent(in)		:: Ew(:,:)
-		open(unit=520,file='rawData/Ewann.dat',form='unformatted',access='stream',action='write')
+		open(unit=520,file='rawData/EnTB.dat',form='unformatted',access='stream',action='write')
 		write(520)	Ew
 		close(520)
 		!
@@ -695,7 +695,7 @@ module output
 	subroutine writeEnH(EnH)
 		real(dp),		intent(in)		:: EnH(:,:)
 		!
-		open(unit=800,file='rawData/EnInterP.dat',form='unformatted',access='stream',action='write')
+		open(unit=800,file='rawData/EnBerry.dat',form='unformatted',access='stream',action='write')
 		write(800)	EnH
 		close(800)
 		!

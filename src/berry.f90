@@ -9,8 +9,8 @@ module berry
 	use semiClassics,	only:	calcFirstOrdP
 	use peierls,		only:	peierlsMethod
 	use wannier,		only:	wannMethod
-	use output,			only:	writeCkASunk, writePolFile, writeVeloHtxt, writeEnH, writeUmat, writeBerryInterpU, &
-								writeHtbBerry, writeRtbBerry, writeEnBerry
+	use output,			only:	writeCkASunk, writePolFile, writeVeloHtxt, writeUmat, writeBerryInterpU, &
+								writeHtbBerry, writeRtbBerry, writeEnBerry, writeEnH
 
 	implicit none
 
@@ -40,7 +40,7 @@ module berry
 	subroutine berryMethod()
 		!todo
 		real(dp)						:: 	pBerry(3), pNiuF2(3), pNiuF3(3), pPei(3)
-		real(dp),		allocatable		:: 	EnK(:,:), R_real(:,:)
+		real(dp),		allocatable		:: 	R_real(:,:)
 		complex(dp),	allocatable		:: 	AconnQ(:,:,:,:), FcurvQ(:,:,:,:),veloQ(:,:,:,:)					
 		real(dp)						::	pWann(3)
 		real(dp),		allocatable		::	v_Band(:,:,:)
@@ -106,7 +106,7 @@ module berry
 		call writeVeloHtxt( veloQ)!*aUtoEv*aUtoAngstrm )				
 		call writeUmat(Uq)
 		if( writeBin )	call writeCkASunk(ck, ckW)
-		if( writeBin )	call writeEnH(EnK)
+		if( writeBin )	call writeEnH(EnQ)
 
 		write(*,*)	"[berrryMethod]: all done"
 		!
