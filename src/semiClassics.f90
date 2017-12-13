@@ -83,9 +83,9 @@ module semiClassics
 			!	end if
 			!end if
 			!write to standard out
-			write(*,'(a,i5,a,f12.4,a,f12.4,a,f12.4,a)')	"[calcFirstOrdP]: pNiuF2(n=", n,") =(" ,dreal(pnF2(1)),&
+			write(*,'(a,i5,a,e12.5,a,e12.5,a,e12.5,a)')	"[calcFirstOrdP]: pNiuF2(n=", n,") =(" ,dreal(pnF2(1)),&
 																		", ",dreal(pnF2(2)),", ", dreal(pnF2(3)),")."
-			write(*,'(a,i5,a,f12.4,a,f12.4,a,f12.4,a)')	"[calcFirstOrdP]: pNiuF3(n=", n,") =(" ,dreal(pnF3(1)),&
+			write(*,'(a,i5,a,e12.5,a,e12.5,a,e12.5,a)')	"[calcFirstOrdP]: pNiuF3(n=", n,") =(" ,dreal(pnF3(1)),&
 																		", ",dreal(pnF3(2)),", ", dreal(pnF3(3)),")."
 			!SUM OVER n
 			pF2 = pF2 + dreal(pnF2)
