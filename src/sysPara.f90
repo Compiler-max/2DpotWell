@@ -414,7 +414,7 @@ module sysPara
 		!
 		!nGrid = ceiling( 	dmax1(aX,aY)*Gcut/PI_dp 	+	dsqrt(2.0_dp)		)
 
-		nGrid = ceiling(	dmax1(aX,aY) *	( Gcut + 0.5_dp * dsqrt(2.0_dp)	)	 / PI_dp		)
+		nGrid = ceiling(	dmax1(aX,aY) *	( Gcut + 1.0_dp	)	 / PI_dp		)
 		!nGrid = ceiling(	Gcut * dmin1(aX,aY) / (PI_dp *(2.0_dp + dsqrt(2.0_dp))))
 		!
 		!make sure Grid is symmetric (needs to be odd number)
@@ -463,21 +463,26 @@ module sysPara
 
 
 	subroutine popGvec()
-		integer						:: qi, gi
+		integer						:: qi, gi, inside,tot
 		real(dp)					:: kg(2)
 		!
 		do qi = 1, nQ
 			nGq(qi)	= 0
+			inside 	= 0
+			tot 	= 0
 			do gi = 1, nG
 				kg(:)	= qpts(:,qi) + Gtest(:,gi)
+				tot		= tot + 1
 				if( norm2(kg) < Gcut ) then
 					nGq(qi) = nGq(qi) + 1
 					Gvec(:,nGq(qi),qi) = kg(:)
+					inside = inside + 1
 					if( gi == 1)	write(*,*)	"[popGvec]: warning hit boundary of Gtest grid"
 				end if
 
 			end do
 			!DEBUG INFO
+			write(*,'(a,i3,a,i8,a,i9,a)')	"[popGvec]: qi=",qi,"found", inside," valid grid points (of",tot," grid points)"
 			if(nGq(qi) > nG) write(*,'(a,i4,a,i6)')	"[popGvec]: warning, somehow counted more basis functions at qi=",qi," limit nG=",nG	
 			!write(*,'(a,i6,a,i4)')	"[popGvec]: using ",nGq(qi), "basis functions at qi=",qi	
 		end do

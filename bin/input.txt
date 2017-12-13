@@ -32,25 +32,25 @@
     nSCy        = 5
     nKx         = 4
     nKy         = 4                
-    nRx         = 101   
-    nRy         = 101
+    nRx         = 10   
+    nRy         = 10
     thres       = 0.1
 
 [methods]
     doSolveHam  = t
     useBloch    = f
-    doPw90      = t
-    doBerry     = t
+    doPw90      = f
+    doBerry     = f
     writeBin    = f
 
 [pw90]
     seedName    = 'wf1'
-    shell       = 1   
+    shell       = 3
     nw90it      = 1000
     pw90GaugeB  = f
 
 [berry]
-    useRot      = t
+    useRot      = f
     doVeloNUM   = f
     doNiu       = t
     doPei       = f
