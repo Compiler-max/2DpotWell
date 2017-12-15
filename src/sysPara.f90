@@ -370,9 +370,9 @@ module sysPara
 		real(dp)	:: kxMin, kyMin
 		!
 		kxMin	= -1.0_dp * PI_dp * aX / vol
-		dkx		=  2.0_dp * PI_dp * aX / (vol * nKx)
+		dkx		=  2.0_dp * PI_dp * aX / (vol * (nKx-1))
 		kyMin	= -1.0_dp * PI_dp * aY / vol
-		dky		=  2.0_dp * PI_dp * aY / (vol* nKy)
+		dky		=  2.0_dp * PI_dp * aY / (vol* (nKy-1))
 		!
 		do kIy = 1, nKy
 			do kIx = 1, nKx
