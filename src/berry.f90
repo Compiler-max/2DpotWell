@@ -166,10 +166,6 @@ module berry
 		!
 		!READ ABINITIO
 		call readHam(ck, EnQ)
-		write(*,*)	"read ub energies at q=1"
-		do n = 1, nSolve
-			write(*,*)	EnQ(n,1)
-		end do
 		!
 		!
 		return

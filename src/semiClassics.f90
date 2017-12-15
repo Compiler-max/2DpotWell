@@ -38,6 +38,10 @@ module semiClassics
 		nSize	= size(Velo,3)
 		kSize	= size(Velo,4)
 		!
+		write(*,*)	"read ub energies at q=1"
+		do n = 1, size(En,1)
+			write(*,*)	En(n,1)
+		end do
 		!
 		if(		kSize /= size(En,2)		) then
 			write(*,*)"[calcFirstOrdP]: WARNING Energy and velocities live on different k meshes!"
