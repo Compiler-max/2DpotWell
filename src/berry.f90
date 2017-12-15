@@ -46,8 +46,8 @@ module berry
 		real(dp),		allocatable		::	v_Band(:,:,:)
 		!					
 		!COARSE
-		allocate(			ck(			nG		,	nSolve				,	nQ		)			)
-		allocate(			ckW(		nG		, 	nWfs				,  	nQ		)			)
+		allocate(			ck(			Gmax	,	nSolve				,	nQ		)			)
+		allocate(			ckW(		Gmax	, 	nWfs				,  	nQ		)			)
 		allocate(			EnQ(		nSolve							,	nQ		)			)
 		allocate(			AconnQ(		3		, 	nWfs	,	nWfs	,	nQ		)			)
 		allocate(			FcurvQ(		3		,	nWfs	,	nWfs	,	nQ		)			)

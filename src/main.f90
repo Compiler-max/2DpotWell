@@ -42,7 +42,7 @@ program main
 	write(*,*)"[main]: electronic structure mesh nQ=",nQ
 	write(*,*)"[main]: interpolation mesh        nK=",nK
 	write(*,*)"[main]: basis cutoff parameter  Gcut=",Gcut
-	write(*,*)"[main]: basis function   maximum  nG=",nG
+	write(*,*)"[main]: basis function   maximum  nG=",Gmax," of ",nG," trial basis functions"
 	write(*,*)"[main]: only solve for        nSolve=",nSolve
     write(*,*)"[main]: nBands=", nBands
 	write(*,*)"[main]: nWfs  =", nWfs
@@ -62,7 +62,7 @@ program main
 	if( doSolveHam ) then
 		call cpu_time(T0)	
 		allocate(	En(						nSolve	, 	nQ		)	)
-		allocate(	ck(			nG		,	nSolve 	,	nQ	)	)
+		allocate(	ck(			Gmax	,	nSolve 	,	nQ	)	)
 		write(*,*)"[main]:**************************ELECTRONIC STRUCTURE PART*************************"
 		write(*,*)	"[main]: start electronic structure calculation now"
 		call solveHam(ck, En)

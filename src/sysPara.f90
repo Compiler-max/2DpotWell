@@ -421,6 +421,7 @@ module sysPara
 		if(mod(nGrid,2)==0) nGrid = nGrid + 1 
 		!
 		getTestGridSize = nGrid
+		write(*,*)	"[getTestGridSize]: test grid should contain",getTestGridSize**2," basis functions"
 		!
 		return
 	end function
