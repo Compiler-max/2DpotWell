@@ -48,12 +48,12 @@ module berry
 		!COARSE
 		allocate(			ck(			nG		,	nSolve				,	nQ		)			)
 		allocate(			ckW(		nG		, 	nWfs				,  	nQ		)			)
-		allocate(			EnQ(		nG								,	nQ		)			)
+		allocate(			EnQ(		nSolve							,	nQ		)			)
 		allocate(			AconnQ(		3		, 	nWfs	,	nWfs	,	nQ		)			)
 		allocate(			FcurvQ(		3		,	nWfs	,	nWfs	,	nQ		)			)
 		allocate(			veloQ(		3		, 	nSolve	,	nSolve	,	nQ		)			)
 		allocate(			R_real(		3		,							nSC		)			)
-		allocate(			v_Band(		3		,			nWfs		,	nQ		)			)
+		allocate(			v_Band(		3		,			nSolve		,	nQ		)			)
 		!
 		!READ IN QUANTITIES
 		call initRead(R_real, ck, EnQ)
@@ -243,7 +243,7 @@ module berry
 		open(unit=720, file="./rawData/bandStruct.dat",form='unformatted',access='stream',action='read')
 		do qi = 1, size(En,2)	
 				read(720) eBuff
-				En(1:nBands,qi)	= eBuff(1:nBands)
+				En(1:nSolve,qi)	= eBuff(1:nSolve)
 		end do
 		close(720)
 		!
