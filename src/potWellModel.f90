@@ -27,16 +27,13 @@ module potWellModel
 		real(dp),		intent(out)		::	En(:,:)	
 		!																
 		complex(dp),	allocatable		::	Hmat(:,:) , ctemp(:,:)
-		real(dp),		allocatable		::	EnT(:), EnTq(:,:)
+		real(dp),		allocatable		::	EnT(:)
 		integer							:: 	qi, found, Gmax
 		!
 		!
 		if(debugHam) then
 			write(*,*)	"[solveHam]: debugging ON. Will do additional tests of the results"
 		end if
-		
-		!
-		allocate(	EnTq(	nSolve, nQ		)			)
 		!
 		!
 		!$OMP PARALLEL	DEFAULT(SHARED)	PRIVATE(Hmat, ctemp,EnT, qi, found, Gmax)
@@ -56,7 +53,7 @@ module potWellModel
 			call eigSolverPART(Hmat(1:Gmax,1:Gmax),EnT(1:Gmax), ctemp(1:Gmax,:), found)!a, w ,z, m
 			!COPY INTO TARGET ARRAYS
 			ck(1:nG,1:nSolve,qi)	= ctemp(1:nG,1:nSolve)
-			EnTq(:,qi)	= EnT(1:nSolve)
+			En(:,qi)	= EnT(1:nSolve)
 			!DEBUG TESTS
 			if( debugHam ) then
 				if(found /= nSolve )write(*,*)"[solveHam]: only found ",found," bands of required ",nSolve
@@ -74,13 +71,9 @@ module potWellModel
 
 		!
 		!COPY & WRITE ENERGIES/BWFs
-		do qi = 1, nQ
-				En(:,qi)	= EnTq(1:nSolve,qi)	
-		end do
-		write(*,*)			"[solveHam]: copied eigenvalues"
-		write(*,*)			"[solveHam]: found ", countBandsSubZero(EnTq(1:nSolve,:))," bands at the gamma point beneath zero"
-		call writeEnAndCK(EnTq, ck, nGq)
-		call writeEnAbInitio(Entq(1:nSolve,:))
+		write(*,*)			"[solveHam]: found ", countBandsSubZero(En(1:nSolve,:))," bands at the gamma point beneath zero"
+		call writeEnAndCK(En, ck, nGq)
+		call writeEnAbInitio(En)
 		!
 		!
 		!
