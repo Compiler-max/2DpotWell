@@ -37,9 +37,8 @@ module potWellModel
 
 		!
 		!
-		!$OMP PARALLEL	DEFAULT(SHARED)	PRIVATE(Hmat, ctemp,EnT, qi, found, Gsize) 
-		write(*,*)	"my Gmax=",Gmax
-		allocate(	Hmat(	Gmax,	Gmax		)			)
+		!$OMP PARALLEL	DEFAULT(SHARED)	PRIVATE(Hmat, ctemp,EnT, qi, found, Gsize)
+		allocate(	Hmat(	Gmax,	Gmax	)			)
 		allocate(	ctemp(	Gmax, nSolve	)			)
 		allocate(	EnT(	Gmax			)			)	
 		!$OMP DO SCHEDULE(DYNAMIC) 
@@ -52,7 +51,7 @@ module potWellModel
 			ctemp	= dcmplx(0.0_dp)
 			EnT		= 0.0_dp
 			Gsize 	= nGq(qi)
-			if( Gsize > Gmax) "[solveHam]: critical error in solveHam, please contact developer. (nobody but dev will ever read this^^)"
+			if( Gsize > Gmax) write(*,*)"[solveHam]: critical error in solveHam, please contact developer. (nobody but dev will ever read this^^)"
 			call eigSolverPART(Hmat(1:Gsize,1:Gsize),EnT(1:Gsize), ctemp(1:Gsize,:), found)!a, w ,z, m
 			!COPY INTO TARGET ARRAYS
 			ck(1:Gsize,1:nSolve,qi)	= ctemp(1:Gsize,1:nSolve)

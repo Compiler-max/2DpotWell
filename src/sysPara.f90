@@ -479,19 +479,14 @@ module sysPara
 					inside = inside + 1
 					if( gi == 1)	write(*,*)	"[popGvec]: warning hit boundary of Gtest grid"
 				end if
-
 			end do
-			Gmax = maxval(nGq)
-			write(*,*)	"[popGvec]: maximum amount of basis functions is",Gmax
-
-
 			!DEBUG INFO
 			if(nGq(qi) > nG) write(*,'(a,i4,a,i6)')	"[popGvec]: warning, somehow counted more basis functions at qi=",qi," limit nG=",nG	
-			!write(*,'(a,i6,a,i4)')	"[popGvec]: using ",nGq(qi), "basis functions at qi=",qi	
-			
+			write(*,'(a,i6,a,i4)')	"[popGvec]: using ",nGq(qi), "basis functions at qi=",qi	
 		end do
 		!
-	
+		Gmax = maxval(nGq)
+		write(*,*)	"[popGvec]: maximum amount of basis functions is",Gmax
 		!
 		!
 		return
