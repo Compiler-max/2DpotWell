@@ -155,6 +155,7 @@ module semiClassics
 									Fmat(i,j) 	= Fmat(i,j) +  myLeviCivita(j,k,l) * 	Vtmp  / dcmplx(eDiff)	
 									!if(abs(dimag(Vtmp)) > acc ) write(*,*)	"[addF2]: non vanishing imag part detected:",dimag(Vtmp)
 									if( abs(eDiff) < machineP )  then
+										write(*,*)	"[addF2]: warning for k point = ",ki
 										write(*,'(a,i3,a,i3,a,i3,a,e14.6)') "[addF2]: warning vanishing n0=",nZero,"n=",n," m=",m," eDiff=",eDiff
 										write(*,'(a,i3,a,i3,a,e14.6)')	"[addF2]: ( E(",nZero,")-E(",n,") )**2=", eDiff1
 										write(*,'(a,i3,a,i3,a,e14.6)')	"[addF2]: ( E(",nZero,")-E(",m,") )**2=", eDiff2
