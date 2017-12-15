@@ -24,7 +24,7 @@
     Bext        = 0.0 0.0 1.0  
 
 [numerics]
-    Gcut        = 10.0
+    Gcut        = 50.0
     nSolve      = 10        
     nQx         = 4   
     nQy         = 4

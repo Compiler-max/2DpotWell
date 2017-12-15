@@ -61,8 +61,8 @@ program main
 	!ELECTRONIC STRUCTURE
 	if( doSolveHam ) then
 		call cpu_time(T0)	
-		allocate(	En(						nBands	, 	nQ		)	)
-		allocate(	ck(			nG		,	nBands  	,	nQ	)	)
+		allocate(	En(						nSolve	, 	nQ		)	)
+		allocate(	ck(			nG		,	nSolve 	,	nQ	)	)
 		write(*,*)"[main]:**************************ELECTRONIC STRUCTURE PART*************************"
 		write(*,*)	"[main]: start electronic structure calculation now"
 		call solveHam(ck, En)

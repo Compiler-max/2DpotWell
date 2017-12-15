@@ -465,7 +465,7 @@ module sysPara
 	subroutine popGvec()
 		integer						:: qi, gi, inside,tot
 		real(dp)					:: kg(2)
-		!
+		!^
 		do qi = 1, nQ
 			nGq(qi)	= 0
 			inside 	= 0

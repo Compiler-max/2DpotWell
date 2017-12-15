@@ -46,12 +46,12 @@ module berry
 		real(dp),		allocatable		::	v_Band(:,:,:)
 		!					
 		!COARSE
-		allocate(			ck(			nG		,	nBands				,	nQ		)			)
+		allocate(			ck(			nG		,	nSolve				,	nQ		)			)
 		allocate(			ckW(		nG		, 	nWfs				,  	nQ		)			)
 		allocate(			EnQ(		nG								,	nQ		)			)
 		allocate(			AconnQ(		3		, 	nWfs	,	nWfs	,	nQ		)			)
 		allocate(			FcurvQ(		3		,	nWfs	,	nWfs	,	nQ		)			)
-		allocate(			veloQ(		3		, 	nWfs	,	nWfs	,	nQ		)			)
+		allocate(			veloQ(		3		, 	nSolve	,	nSolve	,	nQ		)			)
 		allocate(			R_real(		3		,							nSC		)			)
 		allocate(			v_Band(		3		,			nWfs		,	nQ		)			)
 		!
@@ -71,7 +71,7 @@ module berry
 			write(*,*)	"[berrryMethod]: now calc first order pol"
 			veloQ	= dcmplx(0.0_dp)
 			FcurvQ	= dcmplx(0.0_dp)	!does not matter since <FcurvQ,AconnQ> is always zero in 2D
-			call calcVelo(ckW , Uq , AconnQ, EnQ ,  veloQ)
+			call calcVelo(ck , Uq , AconnQ, EnQ ,  veloQ)
 			!
 			call calcFirstOrdP(FcurvQ, AconnQ, veloQ, EnQ, pNiuF2, pNiuF3)
 			write(*,'(a,e17.10,a,e17.10,a,e17.10,a)')	"[berryMethod]: pNiuF2=(",pNiuF2(1),", ",pNiuF2(2),", ",pNiuF2(3),")."
@@ -299,7 +299,7 @@ module berry
 		!
 		if( doVeloNum ) then
 			!BLOUNT
-			write(*,*)	"[beryMethod/calcVelo]: velo via blount formula"
+			write(*,*)	"[beryMethod/calcVelo]: velo via blount formula - warning this is deprecated please set doVeloNum = f"
 			allocate(			Abar(		3		,	nWfs	,	nWfs				)			)
 			allocate(			tmp(					nWfs	,	nWfs				)			)
 			allocate(			U(						nWfs	,	nWfs				)			)

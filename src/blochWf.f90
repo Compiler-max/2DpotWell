@@ -54,8 +54,8 @@ module blochWf
 			write(*,*)	"[calcVeloGrad]: coeff and velo defined on different k meshes, stop now"
 		else
 			do qi = 1, nQ
-				do m = 1, nWfs
-					do n = 1, nWfs
+				do m = 1, nSolve
+					do n = 1, nSolve
 						!SUM OVER BASIS FUNCTIONS
 						do gi = 1 , nGq(qi)
 							v_mat(1:2,n,m,qi) = v_mat(1:2,n,m,qi) -  dconjg(ck(gi,n,qi)) *  ck(gi,m,qi) *  Gvec(1:2,gi,qi)

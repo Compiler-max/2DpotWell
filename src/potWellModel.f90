@@ -54,7 +54,7 @@ module potWellModel
 			Gmax 	= nGq(qi)
 			call eigSolverPART(Hmat(1:Gmax,1:Gmax),EnT(1:Gmax), ctemp(1:Gmax,:), found)!a, w ,z, m
 			!COPY INTO TARGET ARRAYS
-			ck(1:nG,1:nBands,qi)	= ctemp(1:nG,1:nBands)
+			ck(1:nG,1:nSolve,qi)	= ctemp(1:nG,1:nSolve)
 			EnTq(:,qi)	= EnT(:)
 			!DEBUG TESTS
 			if( debugHam ) then
@@ -74,7 +74,7 @@ module potWellModel
 		!
 		!COPY & WRITE ENERGIES/BWFs
 		do qi = 1, nQ
-				En(:,qi)	= EnTq(1:nBands,qi)	
+				En(:,qi)	= EnTq(1:nSolve,qi)	
 		end do
 		write(*,*)			"[solveHam]: copied eigenvalues"
 		write(*,*)			"[solveHam]: found ", countBandsSubZero(EnTq(1:nSolve,:))," bands at the gamma point beneath zero"

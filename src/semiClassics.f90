@@ -124,15 +124,14 @@ module semiClassics
 		!	F^(2)_ij = + Re \sum_{n/=0,m/=0} \eps_{j,k,l} * (V^k_nm V^l_m0 V^i_mn) / ( (E0-En)**2 (E0-Em) )
 		!
 		integer,		intent(in)		:: nZero, ki
-		complex(dp),	intent(in)		:: Velo(:,:,:,:)  !V(3,nK,nWfs,nWfs)
-		real(dp),		intent(in)		:: En(:,:)			!	En(	nK, nWfs)	
+		complex(dp),	intent(in)		:: Velo(:,:,:,:)  
+		real(dp),		intent(in)		:: En(:,:)			!
 		complex(dp),	intent(out)		:: Fmat(:,:)
 		complex(dp)						:: Vtmp
 		real(dp)						:: eDiff
-		integer							:: i, j, k, l, n,m, nSize, kSize
+		integer							:: i, j, k, l, n,m, nSize
 		!
 		nSize	= size(Velo,3)
-		kSize	= size(Velo,2)
 		!loop spacial indices
 		do j = 1, 3
 			do i = 1, 3
@@ -173,8 +172,8 @@ module semiClassics
 		!	F^(2)_ij = +- Re \sum_{n/=0} \eps_{j,k,l}  * (v^k_0 V^l_nZero V^i_0n) / ( (E0-En)**3  )
 		!
 		integer,		intent(in)		:: nZero, ki
-		complex(dp),	intent(in)		:: Velo(:,:,:,:)  	!Velo(		3		,	nK		,nWfs, nwFs)
-		real(dp),		intent(in)		:: En(:,:)			!En(	nK	,	nWfs)
+		complex(dp),	intent(in)		:: Velo(:,:,:,:)  
+		real(dp),		intent(in)		:: En(:,:)			
 		complex(dp),	intent(out)		:: Fmat(:,:)
 		complex(dp)						:: Vtmp
 		real(dp)						:: eDiff
