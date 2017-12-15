@@ -132,7 +132,7 @@ module semiClassics
 		real(dp),		intent(in)		:: En(:,:)			!
 		complex(dp),	intent(out)		:: Fmat(:,:)
 		complex(dp)						:: Vtmp
-		real(dp)						:: eDiff
+		real(dp)						:: eDiff, eDiff1, eDiff2
 		integer							:: i, j, k, l, n,m, nSize
 		!
 		nSize	= size(Velo,3)
@@ -148,11 +148,17 @@ module semiClassics
 									!VELOCITIES
 									Vtmp		= Velo(k,n,m,ki) * Velo(l,m,nZero,ki) * Velo(i,nZero,n,ki) 
 									!ENERGIES
-									eDiff		= ( 	En(nZero,ki) - En(n,ki)	 )**2 	* 	 ( 	En(nZero,ki) - En(m,ki)	)
+									eDiff1		= 	( 	En(nZero,ki) - En(n,ki)		)**2 
+									eDiff2		=  	( 	En(nZero,ki) - En(m,ki)		)
+									eDiff		= 	eDiff1 * eDiff2	
 									!MATRIX
 									Fmat(i,j) 	= Fmat(i,j) +  myLeviCivita(j,k,l) * 	Vtmp  / dcmplx(eDiff)	
 									!if(abs(dimag(Vtmp)) > acc ) write(*,*)	"[addF2]: non vanishing imag part detected:",dimag(Vtmp)
-									if( abs(eDiff) < machineP ) write(*,*) "[addF2]: warning vanishing n0=",nZero,"n=",n," m=",m," eDiff=",eDiff
+									if( abs(eDiff) < machineP )  then
+										write(*,'(a,i3,a,i3,a,i3,a,e14.6)') "[addF2]: warning vanishing n0=",nZero,"n=",n," m=",m," eDiff=",eDiff
+										write(*,'(a,i3,a,i3,a,e14.6)')	"[addF2]: ( E(",nZero,")-E(",n,") )**2=", eDiff1
+										write(*,'(a,i3,a,i3,a,e14.6)')	"[addF2]: ( E(",nZero,")-E(",m,") )**2=", eDiff2
+									end if
 									!write(*,'(a,e10.3,a,e10.3)')"[addF2]: |Vtmp|=",abs(Vtmp), "eDiff=",eDiff
 								end if
 							end do
