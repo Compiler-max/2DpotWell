@@ -158,7 +158,10 @@ module semiClassics
 										write(*,*)	"[addF2]: warning for k point = ",ki
 										write(*,'(a,i3,a,i3,a,i3,a,e14.6)') "[addF2]: warning vanishing n0=",nZero,"n=",n," m=",m," eDiff=",eDiff
 										write(*,'(a,i3,a,i3,a,e14.6)')	"[addF2]: ( E(",nZero,")-E(",n,") )**2=", eDiff1
-										write(*,'(a,i3,a,i3,a,e14.6)')	"[addF2]: ( E(",nZero,")-E(",m,") )**2=", eDiff2
+										write(*,'(a,i3,a,i3,a,e14.6)')	"[addF2]: ( E(",nZero,")-E(",m,") )   =", eDiff2
+										write(*,*)	"[addF2]: E(nZero=",nZero,")=",En(nZero,ki)
+										write(*,*)	"[addF2]: E(n=",n,")=",En(n,ki)
+										write(*,*)	"[addF2]: E(m=",m,")=",En(m,ki)
 									end if
 									!write(*,'(a,e10.3,a,e10.3)')"[addF2]: |Vtmp|=",abs(Vtmp), "eDiff=",eDiff
 								end if
