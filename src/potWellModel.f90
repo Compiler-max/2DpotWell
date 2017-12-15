@@ -28,18 +28,20 @@ module potWellModel
 		!																
 		complex(dp),	allocatable		::	Hmat(:,:) , ctemp(:,:)
 		real(dp),		allocatable		::	EnT(:)
-		integer							:: 	qi, found, Gmax
+		integer							:: 	qi, found, Gsize
 		!
 		!
 		if(debugHam) then
 			write(*,*)	"[solveHam]: debugging ON. Will do additional tests of the results"
 		end if
+
 		!
 		!
-		!$OMP PARALLEL	DEFAULT(SHARED)	PRIVATE(Hmat, ctemp,EnT, qi, found, Gmax)
-		allocate(	Hmat(	nG,	nG		)			)
-		allocate(	ctemp(	nG, nSolve	)			)
-		allocate(	EnT(	nG			)			)	
+		!$OMP PARALLEL	DEFAULT(SHARED)	PRIVATE(Hmat, ctemp,EnT, qi, found, Gsize) 
+		write(*,*)	"my Gmax=",Gmax
+		allocate(	Hmat(	Gmax,	Gmax		)			)
+		allocate(	ctemp(	Gmax, nSolve	)			)
+		allocate(	EnT(	Gmax			)			)	
 		!$OMP DO SCHEDULE(DYNAMIC) 
 		do qi = 1, nQ
 			!
@@ -49,16 +51,17 @@ module potWellModel
 			!SOLVE HAM
 			ctemp	= dcmplx(0.0_dp)
 			EnT		= 0.0_dp
-			Gmax 	= nGq(qi)
-			call eigSolverPART(Hmat(1:Gmax,1:Gmax),EnT(1:Gmax), ctemp(1:Gmax,:), found)!a, w ,z, m
+			Gsize 	= nGq(qi)
+			if( Gsize > Gmax) "[solveHam]: critical error in solveHam, please contact developer. (nobody but dev will ever read this^^)"
+			call eigSolverPART(Hmat(1:Gsize,1:Gsize),EnT(1:Gsize), ctemp(1:Gsize,:), found)!a, w ,z, m
 			!COPY INTO TARGET ARRAYS
-			ck(1:nG,1:nSolve,qi)	= ctemp(1:nG,1:nSolve)
+			ck(1:Gsize,1:nSolve,qi)	= ctemp(1:Gsize,1:nSolve)
 			En(:,qi)	= EnT(1:nSolve)
 			!DEBUG TESTS
 			if( debugHam ) then
 				if(found /= nSolve )write(*,*)"[solveHam]: only found ",found," bands of required ",nSolve
 				if(nBands > found) write(*,*)"[solveHam]: warning did not found required amount of bands"
-				if( Gmax < nSolve ) write(*,*)"[solveHam]: cutoff to small to get ",nSolve," bands! only get",Gmax," basis functions"
+				if( Gsize < nSolve ) write(*,*)"[solveHam]: cutoff to small to get ",nSolve," bands! only get",Gsize," basis functions"
 			end if
 			!
 			!

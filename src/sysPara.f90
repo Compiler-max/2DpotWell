@@ -7,7 +7,7 @@ module sysPara
 	public :: 	readInp,  insideAt, getRindex, getRleftX, getRrightX, getRleftY, getRrightY,& 
 				getKindex, getGammaPoint, getPot, &
 				dim, aX, aY, vol, nAt, relXpos, relYpos, atRx, atRy, atPot, dVpot, &
-				nG, nGq, nG0, Gcut, Gvec, Gtest, R0, nSolve, &
+				nG, nGq, nG0, Gmax, Gcut, Gvec, Gtest, R0, nSolve, &
 				nQ, nQx, nQy, nKx, nKy, nK, nSC, nSCx, nSCy, dqx, dqy, dkx, dky, &
 				nR, nRx, nRy,  dx, dy,nw90it, shell, &
 				nBands, nWfs,   &
@@ -19,7 +19,7 @@ module sysPara
 
 
 	!
-	integer  										:: 	dim=2, nAt=0, nG, nGdim,nSolve=20, nG0,  nQx=1, nQy=1,nQ , nSCx=1, nSCy=1,& 
+	integer  										:: 	dim=2, nAt=0, nG, nGdim, Gmax,nSolve=20, nG0,  nQx=1, nQy=1,nQ , nSCx=1, nSCy=1,& 
 														nKx=1, nKy=1, nK, R0,  &
 														nw90it, shell, &
 														nRx=10, nRy=10, nR, nBands=1,nWfs=1, nSC
@@ -481,10 +481,14 @@ module sysPara
 				end if
 
 			end do
+			Gmax = maxval(nGq)
+			write(*,*)	"[popGvec]: maximum amount of basis functions is",Gmax
+
+
 			!DEBUG INFO
-			write(*,'(a,i3,a,i8,a,i9,a)')	"[popGvec]: qi=",qi,"found", inside," valid grid points (of",tot," grid points)"
 			if(nGq(qi) > nG) write(*,'(a,i4,a,i6)')	"[popGvec]: warning, somehow counted more basis functions at qi=",qi," limit nG=",nG	
 			!write(*,'(a,i6,a,i4)')	"[popGvec]: using ",nGq(qi), "basis functions at qi=",qi	
+			
 		end do
 		!
 	
