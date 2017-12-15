@@ -34,8 +34,9 @@ module potWellModel
 		if(debugHam) then
 			write(*,*)	"[solveHam]: debugging ON. Will do additional tests of the results"
 		end if
+		
 		!
-		allocate(	EnTq(	nG, nQ		)			)
+		allocate(	EnTq(	nSolve, nQ		)			)
 		!
 		!
 		!$OMP PARALLEL	DEFAULT(SHARED)	PRIVATE(Hmat, ctemp,EnT, qi, found, Gmax)
@@ -55,7 +56,7 @@ module potWellModel
 			call eigSolverPART(Hmat(1:Gmax,1:Gmax),EnT(1:Gmax), ctemp(1:Gmax,:), found)!a, w ,z, m
 			!COPY INTO TARGET ARRAYS
 			ck(1:nG,1:nSolve,qi)	= ctemp(1:nG,1:nSolve)
-			EnTq(:,qi)	= EnT(:)
+			EnTq(:,qi)	= EnT(1:nSolve)
 			!DEBUG TESTS
 			if( debugHam ) then
 				if(found /= nSolve )write(*,*)"[solveHam]: only found ",found," bands of required ",nSolve
