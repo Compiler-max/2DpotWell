@@ -40,7 +40,7 @@ module semiClassics
 		!
 		write(*,*)	"read ub energies at q=1"
 		do n = 1, size(En,1)
-			write(*,*)	En(n,1)
+			write(*,*)	En(n,2)
 		end do
 		!
 		if(		kSize /= size(En,2)		) then
