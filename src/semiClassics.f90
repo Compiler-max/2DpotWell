@@ -35,7 +35,7 @@ module semiClassics
 		real(dp)						:: 	densCorr(3)
 		integer							:: 	n, ki, nSize, kSize
 		!
-		nSize	= size(Velo,3)
+		nSize	= size(Aconn,3)
 		kSize	= size(Velo,4)
 		!
 		write(*,*)	"read ub energies at q=1"
