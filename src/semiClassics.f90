@@ -30,8 +30,8 @@ module semiClassics
 		complex(dp),	intent(in)		::	Fcurv(:,:,:,:), Aconn(:,:,:,:), Velo(:,:,:,:)	!Fcurv(3,nWfs, nQ)
 		real(dp),		intent(in)		::	En(:,:)				!	En(			nWfs, nQ)						
 		real(dp),		intent(out)		:: 	pF2(3), pF3(3)
-		complex(dp)						::	pnF2(3), pnF3(3)
-		complex(dp)						:: 	F2(3,3), F3(3,3)
+		real(dp)						::	pnF2(3), pnF3(3)
+		real(dp)						:: 	F2(3,3), F3(3,3)
 		real(dp)						:: 	densCorr(3)
 		integer							:: 	n, ki, nSize, kSize
 		!
@@ -52,8 +52,8 @@ module semiClassics
 		pF2 = 0.0_dp
 		pF3 = 0.0_dp
 		do n = 1, nSize
-			pnF2	= dcmplx(0.0_dp)
-			pnF3	= dcmplx(0.0_dp)
+			pnF2	= 0.0_dp
+			pnF3	= 0.0_dp
 			!
 			do ki = 1, kSize		
 				!PHASE SPACE DENSITY CORRECTION
@@ -63,13 +63,13 @@ module semiClassics
 					write(*,*)	"[calcFirstOrdP]: warning the densCorr is none zero, norm2(densCorr)=",norm2(densCorr)
 				end if
 				!POSITIONAL SHIFT
-				F2	= dcmplx(0.0_dp)
-				F3	= dcmplx(0.0_dp)
+				F2	= 0.0_dp
+				F3	= 0.0_dp
 				call addF2(n,ki,Velo,En, F2)
 				call addF3(n,ki,Velo,En, F3)
 				!Integrate
-				pnF2		= pnF2		+ matmul(F2, Bext) / dcmplx(kSize)
-				pnF3		= pnF3		+ matmul(F3, Bext) / dcmplx(kSize)
+				pnF2		= pnF2		+ matmul(F2, Bext) / real(kSize,dp)
+				pnF3		= pnF3		+ matmul(F3, Bext) / real(kSize,dp)
 			end do
 		
 			!!!SINGLE ATOM
@@ -87,16 +87,13 @@ module semiClassics
 			!	end if
 			!end if
 			!write to standard out
-			write(*,'(a,i5,a,e12.5,a,e12.5,a,e12.5,a)')	"[calcFirstOrdP]: pNiuF2(n=", n,") =(" ,dreal(pnF2(1)),&
-																		", ",dreal(pnF2(2)),", ", dreal(pnF2(3)),")."
-			write(*,'(a,i5,a,e12.5,a,e12.5,a,e12.5,a)')	"[calcFirstOrdP]: pNiuF3(n=", n,") =(" ,dreal(pnF3(1)),&
-																		", ",dreal(pnF3(2)),", ", dreal(pnF3(3)),")."
+			write(*,'(a,i5,a,e12.5,a,e12.5,a,e12.5,a)')	"[calcFirstOrdP]: pNiuF2(n=", n,") =(" ,pnF2(1),&
+																		", ",pnF2(2),", ", pnF2(3),")."
+			write(*,'(a,i5,a,e12.5,a,e12.5,a,e12.5,a)')	"[calcFirstOrdP]: pNiuF3(n=", n,") =(" , pnF3(1),&
+																		", ",pnF3(2),", ", pnF3(3),")."
 			!SUM OVER n
-			pF2 = pF2 + dreal(pnF2)
-			pF3 = pF3 + dreal(pnF3)
-			!DEBUG
-			if( norm2(dimag(pnF2)) > acc	) write(*,*)"[calcFirstOrdP]: F2 found complex pol. contribution from band n=",n 
-			if( norm2(dimag(pnF3)) > acc	) write(*,*)"[calcFirstOrdP]: F3 found complex pol. contribution from band n=",n 
+			pF2 = pF2 + pnF2
+			pF3 = pF3 + pnF3
 		end do
 		!
 		!
@@ -111,9 +108,9 @@ module semiClassics
 		integer,		intent(in)		:: nZero, ki
 		complex(dp),	intent(in)		:: Velo(:,:,:,:)  !V(3,nWfs,nWfs,nK)
 		real(dp),		intent(in)		:: En(:,:)			!En(nK nWfs)
-		complex(dp),	intent(out)		:: Fmat(:,:)
+		real(dp),		intent(out)		:: Fmat(:,:)
 		!
-		Fmat = dcmplx(0.0_dp)		
+		Fmat = 0.0_dp		
 		call addF2(nZero, ki, Velo, En, Fmat)
 		call addF3(nZero, ki, Velo, En, Fmat)
 		!
@@ -130,21 +127,23 @@ module semiClassics
 		integer,		intent(in)		:: nZero, ki
 		complex(dp),	intent(in)		:: Velo(:,:,:,:)  
 		real(dp),		intent(in)		:: En(:,:)			!
-		complex(dp),	intent(out)		:: Fmat(:,:)
+		real(dp),		intent(out)		:: Fmat(:,:)
 		complex(dp)						:: Vtmp
 		real(dp)						:: eDiff, eDiff1, eDiff2
 		integer							:: i, j, k, l, n,m, nSize
 		!
 		nSize	= size(Velo,3)
-		!loop spacial indices
-		do j = 1, 3
-			do i = 1, 3
-				do k = 1, 3
-					do l = 1, 3
-						!loop bands
-						do n = 1, nSize
-							do m = 1, nSize
-								if( n/=nZero .and. m/=nZero) then
+		
+		!loop bands
+		do n = 1, nSize
+			do m = 1, nSize
+				if( n/=nZero .and. m/=nZero) then
+					!loop matrix indices
+					do j = 1, 3
+						do i = 1, 3
+							!loop levi civita
+							do k = 1, 3
+								do l = 1, 3				
 									!VELOCITIES
 									Vtmp		= Velo(k,n,m,ki) * Velo(l,m,nZero,ki) * Velo(i,nZero,n,ki) 
 									!ENERGIES
@@ -152,7 +151,7 @@ module semiClassics
 									eDiff2		=  	( 	En(nZero,ki) - En(m,ki)		)
 									eDiff		= 	eDiff1 * eDiff2	
 									!MATRIX
-									Fmat(i,j) 	= Fmat(i,j) +  myLeviCivita(j,k,l) * 	Vtmp  / dcmplx(eDiff)	
+									Fmat(i,j) 	= Fmat(i,j) +   myLeviCivita(j,k,l) *  dreal( Vtmp )  / eDiff	
 									!if(abs(dimag(Vtmp)) > acc ) write(*,*)	"[addF2]: non vanishing imag part detected:",dimag(Vtmp)
 									if( abs(eDiff) < machineP )  then
 										write(*,*)	"[addF2]: warning for k point = ",ki
@@ -163,14 +162,14 @@ module semiClassics
 										write(*,*)	"[addF2]: E(n=",n,")=",En(n,ki)
 										write(*,*)	"[addF2]: E(m=",m,")=",En(m,ki)
 									end if
-									!write(*,'(a,e10.3,a,e10.3)')"[addF2]: |Vtmp|=",abs(Vtmp), "eDiff=",eDiff
-								end if
+									!write(*,'(a,e10.3,a,e10.3)')"[addF2]: |Vtmp|=",abs(Vtmp), "eDiff=",eDiff				
+								end do
 							end do
+							!
 						end do
-						!
-						!
 					end do
-				end do
+					!
+				end if
 			end do
 		end do
 		!
@@ -188,36 +187,37 @@ module semiClassics
 		integer,		intent(in)		:: nZero, ki
 		complex(dp),	intent(in)		:: Velo(:,:,:,:)  
 		real(dp),		intent(in)		:: En(:,:)			
-		complex(dp),	intent(out)		:: Fmat(:,:)
+		real(dp),		intent(out)		:: Fmat(:,:)
 		complex(dp)						:: Vtmp
 		real(dp)						:: eDiff
 		integer							:: i, j, k, l, n, nSize
 		!
 		nSize 	=	size(Velo,3)
-		!loop spacial indices
-		do j = 1, 3
-			do i = 1, 3
-				do k = 1, 3
-					do l = 1,3
-						!loop bands
-						do n = 1, nSize
-							if( n/=nZero ) then
+		!loop bands
+		do n = 1, nSize
+			if( n/=nZero ) then
+				!loop matrix indices
+				do j = 1, 3
+					do i = 1, 3
+						!loop levi civita
+						do k = 1, 3
+							do l = 1,3				
 								!VELOCITIES
 								Vtmp		= Velo(k,nZero,nZero,ki) * Velo(l,n,nZero,ki) * Velo(i,nZero,n,ki) 
 								!ENERGIES
 								eDiff		= ( 	En(nZero,ki) - En(n,ki)	 )**3 	
 								!MATRIX
-								Fmat(i,j) 	= Fmat(i,j) + prefactF3 * myLeviCivita(j,k,l) *	Vtmp / dcmplx(eDiff)
+								Fmat(i,j) 	= Fmat(i,j) + prefactF3 * myLeviCivita(j,k,l) *	 dreal( Vtmp ) / eDiff
 								!if(abs(dimag(Vtmp)) > acc ) write(*,*)	"[addF3]: non vanishing imag part detected",dimag(Vtmp)
 								if( abs(eDiff) < machineP ) write(*,*) "[addF3]: warning vanishing n0=",nZero,"n=",n," eDiff=",eDiff
 								!write(*,'(a,e10.3,a,e10.3)')"[addF3]: |Vtmp|=",abs(Vtmp), "eDiff=",eDiff
-							end if
+							end do								!
 						end do
-						!
 						!
 					end do
 				end do
-			end do
+				!
+			end if
 		end do
 		!
 		!
