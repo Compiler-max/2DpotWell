@@ -705,8 +705,9 @@ module output
 
 	subroutine writePolFile(pWann, pBerry, pNiuF2, pNiuF3, pPei )	!writePolFile(pWann, pBerry, pNiu, pPei )
 		real(dp),		intent(in)		:: pWann(2), pBerry(3), pNiuF2(3), pNiuF3(3), pPei(3)
-		real(dp)						:: pNiu(3)
+		real(dp)						:: pNiu(3), aUtoConv
 		!	
+		aUtoConv = 1.602176565_dp / 5.2917721092_dp * 1e-4_dp  ! converts from [a.u.] to  [mücro C / cm]
 		!	
 		open(unit=600,file='polOutput.txt',action='write')
 		write(600,*)"**************POLARIZATION OUTPUT FILE**********************"
@@ -724,12 +725,12 @@ module output
 		write(600,*) "aX/vol=",aX/vol,"aY/vol=",aY/vol
 
 	
-		write(600,'(a,f16.7,a,f16.7,a,a,f16.7,a,f16.7,a)')	"pWann =  (",  pWann(1)	,	", ",	pWann(2),		"),",& 
-												" moded=(",dmod(pWann(1),aX/vol),", ",dmod(pWann(2),aY/vol),")."
+		write(600,'(a,f16.7,a,f16.7,a,a,f16.7,a,f16.7,a)')	"pWann =  (",  pWann(1)	,	", ",	pWann(2),		") [a.u.],",& 
+												" moded=(",dmod(pWann(1),aX/vol)*aUtoConv,", ",dmod(pWann(2),aY/vol)*aUtoConv,") [muC/cm]."
 		!
 		write(600,'(a,f16.7,a,f16.7,a,f16.7,a,a,f16.7,a,f16.7,a)')	"pBerry=  (",		pBerry(1)	,	", ",&	
-																					pBerry(2), " ,", pBerry(3)	,	"),",& 
-												" moded=(",dmod(pBerry(1),aX/vol),", ",dmod(pBerry(2),aY/vol),")."
+																					pBerry(2), " ,", pBerry(3)	,	") [a.u.],",& 
+												" moded=(",dmod(pBerry(1),aX/vol)*aUtoConv,", ",dmod(pBerry(2),aY/vol)*aUtoConv,") [muC/cm]."
 		!write(600,'(a,e16.9,a,f16.12,a,f16.12,a)')	"pInt= ",norm2(pInt)," * (", &	
 		!														pInt(1)/norm2(pInt),	", ",	pInt(2)/norm2(pInt),	")"
 		!write(600,'(a,e16.9,a,f16.12,a,f16.12,a)')	"pIon= ",norm2(pIon)," * (", &	
@@ -751,20 +752,20 @@ module output
 		write(600,*)"**************FIRST ORDER POL:"
 		!NIU
 		write(600,'(a,f16.8)') "F3 prefactor = ",prefactF3
-		write(600,'(a,e16.7,a,e16.7,a,e16.7,a,a,e16.7,a,e16.7,a)')	"pNiuF2= (", 	pNiuF2(1),	", ",	pNiuF2(2),", ", pNiuF2(3),	")",&
-														" moded=(",dmod(pNiuF2(1),aX/vol),", ",dmod(pNiuF2(2),aY/vol),")."
+		write(600,'(a,e16.7,a,e16.7,a,e16.7,a,a,e16.7,a,e16.7,a)')	"pNiuF2= (", 	pNiuF2(1),	", ",	pNiuF2(2),", ", pNiuF2(3),	")[a.u.]",&
+														" moded=(",dmod(pNiuF2(1),aX/vol)*aUtoConv,", ",dmod(pNiuF2(2),aY/vol)*aUtoConv,") [muC/cm]."
 		!
-		write(600,'(a,e16.7,a,e16.7,a,e16.7,a,a,e16.7,a,e16.7,a)')	"pNiuF3= (", 	pNiuF3(1),	", ",	pNiuF3(2),", ", pNiuF3(3),	")",&
-														" moded=(",dmod(pNiuF3(1),aX/vol),", ",dmod(pNiuF3(2),aY/vol),")."
+		write(600,'(a,e16.7,a,e16.7,a,e16.7,a,a,e16.7,a,e16.7,a)')	"pNiuF3= (", 	pNiuF3(1),	", ",	pNiuF3(2),", ", pNiuF3(3),	")[a.u.]",&
+														" moded=(",dmod(pNiuF3(1),aX/vol)*aUtoConv,", ",dmod(pNiuF3(2),aY/vol)*aUtoConv,") [muC/cm]."
 		!
 		pNiu(:)	= pNiuF2(:) + pNiuF3(:)
 		!												
-		write(600,'(a,e16.7,a,e16.7,a,e16.7,a,a,e16.7,a,e16.7,a)')	"pNiu  = (", 	pNiu(1),	", ",	pNiu(2),", ", pNiu(3),	")",&
-														" moded=(",dmod(pNiu(1),aX/vol),", ",dmod(pNiu(2),aY/vol),")."
+		write(600,'(a,e16.7,a,e16.7,a,e16.7,a,a,e16.7,a,e16.7,a)')	"pNiu  = (", 	pNiu(1),	", ",	pNiu(2),", ", pNiu(3),	")[a.u.]",&
+														" moded=(",dmod(pNiu(1),aX/vol)*aUtoConv,", ",dmod(pNiu(2),aY/vol)*aUtoConv,") [muC/cm]."
 		
 		!PEIERLS													
-		write(600,'(a,e16.7,a,e16.7,a,e16.7,a,a,e16.7,a,e16.7,a)')	"pPei  = (", 	pPei(1),	", ",	pPei(2),", ", pPei(3),	")",&
-																" moded=(",dmod(pPei(1),aX/vol),", ",dmod(pPei(2),aY/vol),")."
+		write(600,'(a,e16.7,a,e16.7,a,e16.7,a,a,e16.7,a,e16.7,a)')	"pPei  = (", 	pPei(1),	", ",	pPei(2),", ", pPei(3),	")[a.u.]",&
+																" moded=(",dmod(pPei(1),aX/vol)*aUtoConv,", ",dmod(pPei(2),aY/vol)*aUtoConv,") [muC/cm]."
 		close(600)
 		!
 		!
