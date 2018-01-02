@@ -22,13 +22,11 @@ module semiClassics
 
 
 !public
-
-
 	subroutine	calcFirstOrdP(Fcurv, Aconn, Velo, En, pF2, pF3)
 		!calculates the first order polarization p1 according to
 		!	P'= -int_dk [0.5 (Curv.Velo)*B_ext + a']
-		complex(dp),	intent(in)		::	Fcurv(:,:,:,:), Aconn(:,:,:,:), Velo(:,:,:,:)	!Fcurv(3,nWfs, nQ)
-		real(dp),		intent(in)		::	En(:,:)				!	En(			nWfs, nQ)						
+		complex(dp),	intent(in)		::	Fcurv(:,:,:,:), Aconn(:,:,:,:), Velo(:,:,:,:)	
+		real(dp),		intent(in)		::	En(:,:)			
 		real(dp),		intent(out)		:: 	pF2(3), pF3(3)
 		real(dp)						::	pnF2(3), pnF3(3)
 		real(dp)						:: 	F2(3,3), F3(3,3)
@@ -63,34 +61,16 @@ module semiClassics
 					write(*,*)	"[calcFirstOrdP]: warning the densCorr is none zero, norm2(densCorr)=",norm2(densCorr)
 				end if
 				!POSITIONAL SHIFT
-				F2	= 0.0_dp
-				F3	= 0.0_dp
-				call addF2(n,ki,Velo,En, F2)
-				call addF3(n,ki,Velo,En, F3)
-				!Integrate
+				call getF2(n,ki,Velo,En, F2)
+				call getF3(n,ki,Velo,En, F3)
+				!Integrate k-space
 				pnF2		= pnF2		+ matmul(F2, Bext) / real(kSize,dp)
 				pnF3		= pnF3		+ matmul(F3, Bext) / real(kSize,dp)
 			end do
-		
-			!!!SINGLE ATOM
-			!if( nAt == 1 ) then
-			!	pnF2(:)	= pnF2(:) - atPos(:,1)		!calc center w.r.t. atom center
-			!	pnF3(:)	= pnF3(:) - atPos(:,1)
-			!!DOUBLE ATOM
-			!else if( nAt == 2 ) then
-			!	if( mod(n,2)== 0 ) then
-			!		pnF2(:)	= pnF2(:) - atPos(:,2)
-			!		pnF3(:)	= pnF3(:) - atPos(:,2)
-			!	else	
-			!		pnF2(:)	= pnF2(:) - atPos(:,1)
-			!		pnF3(:)	= pnF3(:) - atPos(:,1)
-			!	end if
-			!end if
+			!
 			!write to standard out
-			write(*,'(a,i5,a,e12.5,a,e12.5,a,e12.5,a)')	"[calcFirstOrdP]: pNiuF2(n=", n,") =(" ,pnF2(1),&
-																		", ",pnF2(2),", ", pnF2(3),")."
-			write(*,'(a,i5,a,e12.5,a,e12.5,a,e12.5,a)')	"[calcFirstOrdP]: pNiuF3(n=", n,") =(" , pnF3(1),&
-																		", ",pnF3(2),", ", pnF3(3),")."
+			write(*,'(a,i5,a,e12.5,a,e12.5,a,e12.5,a)')	"[calcFirstOrdP]: pNiuF2(n=", n, ") =(" ,pnF2(1), ", ", pnF2(2), ", ", pnF2(3),")."
+			write(*,'(a,i5,a,e12.5,a,e12.5,a,e12.5,a)')	"[calcFirstOrdP]: pNiuF3(n=", n, ") =(" ,pnF3(1), ", ", pnF3(2), ", ", pnF3(3),")."
 			!SUM OVER n
 			pF2 = pF2 + pnF2
 			pF3 = pF3 + pnF3
@@ -109,31 +89,44 @@ module semiClassics
 		complex(dp),	intent(in)		:: Velo(:,:,:,:)  !V(3,nWfs,nWfs,nK)
 		real(dp),		intent(in)		:: En(:,:)			!En(nK nWfs)
 		real(dp),		intent(out)		:: Fmat(:,:)
+		real(dp)						:: F2(3,3), F3(3,3)
 		!
-		Fmat = 0.0_dp		
-		call addF2(nZero, ki, Velo, En, Fmat)
-		call addF3(nZero, ki, Velo, En, Fmat)
+		Fmat	=	0.0_dp		
+		call getF2(nZero, ki, Velo, En, F2)
+		call getF3(nZero, ki, Velo, En, F3)
+		!
+		!
+		Fmat	=	F2 + F3
 		!
 		return
 	end subroutine
 
 
 
+
+
+
+
+
+
+
+
+
 !privat
-	subroutine	addF2(nZero,ki, Velo ,En, Fmat)
+	subroutine	getF2(nZero,ki, Velo ,En, F2)
 		!
 		!	F^(2)_ij = + Re \sum_{n/=0,m/=0} \eps_{j,k,l} * (V^k_nm V^l_m0 V^i_mn) / ( (E0-En)**2 (E0-Em) )
 		!
 		integer,		intent(in)		:: nZero, ki
 		complex(dp),	intent(in)		:: Velo(:,:,:,:)  
 		real(dp),		intent(in)		:: En(:,:)			!
-		real(dp),		intent(out)		:: Fmat(:,:)
+		real(dp),		intent(out)		:: F2(:,:)
 		complex(dp)						:: Vtmp
 		real(dp)						:: eDiff, eDiff1, eDiff2
 		integer							:: i, j, k, l, n,m, nSize
 		!
-		nSize	= size(Velo,3)
-		
+		nSize	=	size(Velo,3)
+		F2		=	0.0_dp
 		!loop bands
 		do n = 1, nSize
 			do m = 1, nSize
@@ -151,7 +144,7 @@ module semiClassics
 									eDiff2		=  	( 	En(nZero,ki) - En(m,ki)		)
 									eDiff		= 	eDiff1 * eDiff2	
 									!MATRIX
-									Fmat(i,j) 	= Fmat(i,j) +   myLeviCivita(j,k,l) *  dreal( Vtmp )  / eDiff	
+									F2(i,j) 	= F2(i,j) +   myLeviCivita(j,k,l) *  dreal( Vtmp )  / eDiff	
 									!DEGENERATE WARNING
 									if( abs(eDiff) < machineP )  then
 										write(*,*)	"[addF2]: warning for k point = ",ki
@@ -179,19 +172,20 @@ module semiClassics
 
 
 
-	subroutine	addF3(nZero,ki, Velo ,En, Fmat)	
+	subroutine	getF3(nZero,ki, Velo ,En, F3)	
 		!
 		!	F^(2)_ij = +- Re \sum_{n/=0} \eps_{j,k,l}  * (v^k_0 V^l_nZero V^i_0n) / ( (E0-En)**3  )
 		!
 		integer,		intent(in)		:: nZero, ki
 		complex(dp),	intent(in)		:: Velo(:,:,:,:)  
 		real(dp),		intent(in)		:: En(:,:)			
-		real(dp),		intent(out)		:: Fmat(:,:)
+		real(dp),		intent(out)		:: F3(:,:)
 		complex(dp)						:: Vtmp
 		real(dp)						:: eDiff
 		integer							:: i, j, k, l, n, nSize
 		!
 		nSize 	=	size(Velo,3)
+		F3		=	0.0_dp
 		!loop bands
 		do n = 1, nSize
 			if( n/=nZero ) then
@@ -206,7 +200,7 @@ module semiClassics
 								!ENERGIES
 								eDiff		= ( 	En(nZero,ki) - En(n,ki)	 )**3 	
 								!MATRIX
-								Fmat(i,j) 	= Fmat(i,j) + prefactF3 * myLeviCivita(j,k,l) *	 dreal( Vtmp ) / eDiff
+								F3(i,j) 	= F3(i,j) + prefactF3 * myLeviCivita(j,k,l) *	 dreal( Vtmp ) / eDiff
 								!DEGENERATE WARNING
 								if( abs(eDiff) < machineP ) write(*,*) "[addF3]: warning degenerate bands n0=",nZero,"n=",n," eDiff=",eDiff
 							end do								!
