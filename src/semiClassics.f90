@@ -152,17 +152,16 @@ module semiClassics
 									eDiff		= 	eDiff1 * eDiff2	
 									!MATRIX
 									Fmat(i,j) 	= Fmat(i,j) +   myLeviCivita(j,k,l) *  dreal( Vtmp )  / eDiff	
-									!if(abs(dimag(Vtmp)) > acc ) write(*,*)	"[addF2]: non vanishing imag part detected:",dimag(Vtmp)
+									!DEGENERATE WARNING
 									if( abs(eDiff) < machineP )  then
 										write(*,*)	"[addF2]: warning for k point = ",ki
-										write(*,'(a,i3,a,i3,a,i3,a,e14.6)') "[addF2]: warning vanishing n0=",nZero,"n=",n," m=",m," eDiff=",eDiff
+										write(*,'(a,i3,a,i3,a,i3,a,e14.6)') "[addF2]: warning degenerate bands n0=",nZero,"n=",n," m=",m," eDiff=",eDiff
 										write(*,'(a,i3,a,i3,a,e14.6)')	"[addF2]: ( E(",nZero,")-E(",n,") )**2=", eDiff1
 										write(*,'(a,i3,a,i3,a,e14.6)')	"[addF2]: ( E(",nZero,")-E(",m,") )   =", eDiff2
 										write(*,*)	"[addF2]: E(nZero=",nZero,")=",En(nZero,ki)
 										write(*,*)	"[addF2]: E(n=",n,")=",En(n,ki)
 										write(*,*)	"[addF2]: E(m=",m,")=",En(m,ki)
-									end if
-									!write(*,'(a,e10.3,a,e10.3)')"[addF2]: |Vtmp|=",abs(Vtmp), "eDiff=",eDiff				
+									end if	
 								end do
 							end do
 							!
@@ -208,9 +207,8 @@ module semiClassics
 								eDiff		= ( 	En(nZero,ki) - En(n,ki)	 )**3 	
 								!MATRIX
 								Fmat(i,j) 	= Fmat(i,j) + prefactF3 * myLeviCivita(j,k,l) *	 dreal( Vtmp ) / eDiff
-								!if(abs(dimag(Vtmp)) > acc ) write(*,*)	"[addF3]: non vanishing imag part detected",dimag(Vtmp)
-								if( abs(eDiff) < machineP ) write(*,*) "[addF3]: warning vanishing n0=",nZero,"n=",n," eDiff=",eDiff
-								!write(*,'(a,e10.3,a,e10.3)')"[addF3]: |Vtmp|=",abs(Vtmp), "eDiff=",eDiff
+								!DEGENERATE WARNING
+								if( abs(eDiff) < machineP ) write(*,*) "[addF3]: warning degenerate bands n0=",nZero,"n=",n," eDiff=",eDiff
 							end do								!
 						end do
 						!
