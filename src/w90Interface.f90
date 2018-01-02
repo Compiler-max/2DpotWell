@@ -321,7 +321,7 @@ module w90Interface
 		!
 		allocate(	eigenvalues( num_bands,	num_kpts	)	)
 		!
-		if(	size(En,1) /= num_bands	) write(*,*)"[w90prepEigVal]: warning En has wrong numbers of bands"
+		!if(	size(En,1) /= num_bands	) write(*,*)"[w90prepEigVal]: warning En has wrong numbers of bands"
 		if(	size(En,2) /= num_kpts 	) write(*,*)"[w90prepEigVal]: warning En has wrong numbers of kpts"
 		!
 		!fill new file
@@ -366,8 +366,8 @@ module w90Interface
 		!
 		allocate(	M_matrix(		num_bands	,	num_bands	,	nntot	,	num_kpts	)		)
 		!
-		if(	size(ck,2)/= num_bands ) write(*,*)"[w90prepEigVal]: waring ab initio exp. coefficients have wrong number of bands"
-		if(	size(ck,3)/= num_kpts )  write(*,*)"[w90prepEigVal]: waring ab initio exp. coefficients have wrong numbers of kpts"
+		!if(	size(ck,2)/= num_bands ) write(*,*)"[w90prepEigVal]: warning ab initio exp. coefficients have wrong number of bands"
+		if(	size(ck,3)/= num_kpts )  write(*,*)"[w90prepEigVal]: warning ab initio exp. coefficients have wrong numbers of kpts"
 		!
 		!SETUP THE MATRIX
 		M_matrix	= dcmplx(0.0_dp)
