@@ -7,11 +7,25 @@ root=$PWD
 
 
 #numerics
-gCut=25.0
-nQ=16
+gCut=10.0
+nQ=4
 nSC=$((nQ+1))
 nK=$nSC
-states=( 6 12 24 48 96 192 384 768 1536	3072 )
+states=( 6 ) #12 24 48 96 192 384 768 1536	3072 )
+
+
+#derive shell to use from nQ
+case $nQ in 
+	[1-4]*)
+		nShell=3
+		;;
+	[5-8]*)
+		nShell=2
+		;;
+	*)
+		nShell=1
+		;;
+esac
 
 
 
