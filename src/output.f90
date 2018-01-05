@@ -705,7 +705,7 @@ module output
 
 	subroutine writePolFile(pWann, pBerry, pNiuF2, pNiuF3, pPei )	!writePolFile(pWann, pBerry, pNiu, pPei )
 		real(dp),		intent(in)		:: pWann(2), pBerry(3), pNiuF2(3), pNiuF3(3), pPei(3)
-		real(dp)						:: pNiu(3), aUtoConv
+		real(dp)						:: pNiu(3), aUtoConv, pFirst(3)
 		!	
 		aUtoConv = 1.602176565_dp / 5.2917721092_dp * 1e-4_dp  ! converts from [a.u.] to  [mücro C / cm]
 		!	
@@ -769,6 +769,13 @@ module output
 		!PEIERLS													
 		write(600,'(a,e16.7,a,e16.7,a,e16.7,a,a,e16.7,a,e16.7,a)')	"pPei  = (", 	pPei(1),	", ",	pPei(2),", ", pPei(3),	")[a.u.]",&
 																" moded=(",dmod(pPei(1),aX/vol)*aUtoConv,", ",dmod(pPei(2),aY/vol)*aUtoConv,") [muC/cm]."
+		
+		!0 + 1 order
+		pFirst = pBerry + pNiu
+		write(600,'(a,e16.7,a,e16.7,a,e16.7,a,a,e16.7,a,e16.7,a)')	"p0+1  = (", 	pFirst(1),	", ",	pFirst(2),", ", pFirst(3),	")[a.u.]",&
+																" moded=(",dmod(pFirst(1),aX/vol)*aUtoConv,", ",dmod(pFirst(2),aY/vol)*aUtoConv,") [muC/cm]."
+		write(600,*)" p0+1 = pBerry + pNiu"
+
 		close(600)
 		!
 		!
