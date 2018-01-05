@@ -45,15 +45,6 @@ module peierls
 		end if
 		!
 		!
-		!DEBUG
-		if( nK /= nQ ) then
-			write(*,*)	"[peierlsMethod]: WARNING, coarse & mesh do not have same grid spacing... "
-			write(*,*)	"[peierlsMethod]: ... the FD implementation of Berry conn. is wrong in that case!!! "
-			write(*,*)	"[peierlsMethod]: ... will set pPei to zero "
-			pPei = 0.0_dp
-		else
-			write(*,*)	"[peierlsMethod]: calculated Berry connection."
-		end if
 		write(*,*)	"[peierlsMethod]: calculated polarization, by.."
 		!
 		!
@@ -181,8 +172,7 @@ module peierls
 		inquire(file=fname,opened=inq_open, exist=inq_exist, number=inq_unit)
 		if( .not. inq_exist	) write(*,*)	"[Pei/readTBsingle]: file ",fname, " does not exist (unit=",inq_unit,")."
 		if( .not. inq_open	) write(*,*)	"[Pei/readTBsingle]: file ",fname, " is not open(unit=",inq_unit,")."
-		write(*,*)	"[Pei/readTBsingle]: file ",fname, " associated unit is ",inq_unit
-
+		
 
 
 		if( stat /= 0)  then
@@ -195,9 +185,7 @@ module peierls
 		else
 			readSuccess	= .true.
 			!
-			write(*,*)	"[Pei/readTBsingle]:before first read"
 			read(310,*)
-			write(*,*)	"[Pei/readTBsingle]:first line"
 			!recip lattice (read into buffer, avoids compiler warning)
 			read(310,*) 		real3(:)
 			recip_latt(1,:)	= 	real3(:)
@@ -238,7 +226,6 @@ module peierls
 				end do
 			end if
 			!
-			write(*,*)	"[Pei/readTBsingle]: read header"
 			!READ HOPPINGS
 			do R = 1, nrpts
 				!skip first line
@@ -255,7 +242,6 @@ module peierls
 					end do
 				end do
 			end do
-			write(*,*)	"[Pei/readTBsingle]: read real space position op"
 			!
 			!READ POSITIONS
 			do R = 1, nrpts
@@ -292,13 +278,6 @@ module peierls
 				R_real(1,R)	= R_vect(1,R)	* aX
 				R_real(2,R)	= R_vect(2,R)	* aY
 				R_real(3,R)	= R_vect(3,R)	* 0
-				!!DEBUG
-				!if( abs(R_real(1,R)-Rcell(1,R)) > machineP ) then
-				!	write(*,*) "[readTB]: warning  Rcell and R_real dont match (x comp)" 
-				!	write(*,*) "			R_real(x)=",R_real(1,R)," Rcell=",Rcell(1,R)
-				!	write(*,*) "			R_real(y)=",R_real(2,R)," Rcell=",Rcell(2,R)
-				!end if
-				!!if( abs(R_real(2,R)-Rcell(2,R)) > machineP ) write(*,*) "[readTB]: warning Rcell and R_real dont match(y comp)"
 			end do
 			!
 			call writeHtb(H_tb)
