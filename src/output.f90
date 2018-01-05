@@ -740,6 +740,7 @@ module output
 		!
 		!
 		write(600,*)"**************PERTURBATION:"
+		write(600,*) "states considered for perturbation nStates=",nSolve
 		if( norm2(Bext) > machineP ) then
 			write(600,'(a,f16.12,a,f16.12,a,f16.12,a,f16.12,a)')	"Bext= ",norm2(Bext) ," * (", &
 											Bext(1)/norm2(Bext),	", ",	Bext(2)/norm2(Bext),", ", Bext(3)/norm2(Bext),	")"
