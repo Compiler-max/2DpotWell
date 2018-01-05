@@ -36,13 +36,13 @@ now="$(date +"%T")"
 echo '['$now']: created directory '$label
 printf "*\n*\n"
 
-
+echo '['$(date +"%T")']: numerics info Gcut='$gCut' nQ='$nQ' nShell='$nShell
 
 
 for s in ${states[*]}; do
 	#get directory name	
 	dir=$label'/nStat'$s
-	echo '['$(date +"%T")']: start Gcut='$gCut' nQ='$nQ' nShell='$nShell
+	echo '['$(date +"%T")']: start nStates='$s
 	#	
 	#creates directories
 	if [[ ! -e $dir ]]; then
