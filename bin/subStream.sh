@@ -44,37 +44,37 @@ function prepareInput {
 
 function runCalc {
 	#calls the exectutables
-	echo 'calculations disabled'
-	##electronic structure
-	#./main.exe > outABin.txt
-	#wait
-	#echo '['$(date +"%T")']: finished electronic structure'
-	#
-	##wannier90
-	#$wannDIR/wannier90.x wf1
-	#wait
-	#$wannDIR/postw90.x wf1
-	#wait
-	#echo '['$(date +"%T")']: finished wannier90 calculations'
-	#
-	##post-w90
-	#mv input.txt inputABinit.txt
-	#mv input2.txt input.txt
-	#wait
-	#./main.exe > out.txt
-	#wait
-	#mv input.txt inputNoROT.txt
-	#mv input3.txt input.txt
-	#mv polOutput.txt polOutputNoROT.txt
-	#mkdir rawDataOLD
-	#cp ./rawData/* rawDataNoROT
-	#wait
-	#./main.exe > outROT.txt
-	#wait
-	#mv rawData rawDatROT
-	#mv input.txt inputROT.txt
-	#mv polOutput.txt polOutputROT.txt
-	#echo '['$(date +"%T")']: finished post wannier90 run'	
+	#echo 'calculations disabled'
+	#electronic structure
+	./main.exe > outABin.txt
+	wait
+	echo '['$(date +"%T")']: finished electronic structure'
+	
+	#wannier90
+	$wannDIR/wannier90.x wf1
+	wait
+	$wannDIR/postw90.x wf1
+	wait
+	echo '['$(date +"%T")']: finished wannier90 calculations'
+	
+	#post-w90
+	mv input.txt inputABinit.txt
+	mv input2.txt input.txt
+	wait
+	./main.exe > out.txt
+	wait
+	mv input.txt inputNoROT.txt
+	mv input3.txt input.txt
+	mv polOutput.txt polOutputNoROT.txt
+	mkdir rawDataOLD
+	cp ./rawData/* rawDataNoROT
+	wait
+	./main.exe > outROT.txt
+	wait
+	mv rawData rawDatROT
+	mv input.txt inputROT.txt
+	mv polOutput.txt polOutputROT.txt
+	echo '['$(date +"%T")']: finished post wannier90 run'	
 }
 
 
