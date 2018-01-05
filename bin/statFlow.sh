@@ -15,17 +15,14 @@ states=( 6 12 ) # 24 48 96 192 384 768 1536	3072 )
 
 
 #derive shell to use from nQ
-case $nQ in 
-	[1-4]*)
-		nShell=3
-		;;
-	[5-8]*)
-		nShell=2
-		;;
-	[9-100000]*)
-		nShell=1
-		;;
-esac
+#determine nShell depending of q grid spacing
+if (( $nQ <= 4 )); then
+	nShell=3
+elif (( $nQ <= 8 )); then
+	nShell=2
+else
+	nShell=1
+fi
 
 
 

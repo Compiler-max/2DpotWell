@@ -38,9 +38,9 @@ for g in ${gVal[*]}; do
 		nK=$nSC
 		#
 		#determine nShell depending of q grid spacing
-		if [ $q <= 4 ]; then
+		if (( $q <= 4 )); then
 			nShell=3
-		elif [ $q <= 8 ]; then
+		elif (( $q <= 8 )); then
 			nShell=2
 		else
 			nShell=1
