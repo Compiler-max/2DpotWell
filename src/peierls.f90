@@ -242,6 +242,7 @@ module peierls
 					end do
 				end do
 			end do
+			write(*,*)	"[Pei/readTBsingle]: read real space position op"
 			!
 			!READ POSITIONS
 			do R = 1, nrpts
@@ -250,7 +251,7 @@ module peierls
 				!second line fractional real6 of R
 				read(310,*)	dumI(1:3)
 				if( dumI(1) /= R_vect(1,R) .or. dumI(2) /= R_vect(2,R) .or. dumI(3) /= R_vect(3,R) ) then
-					write(*,*)	"[readTBsingle]: warning, detected R vector ordering issue while reading positions"
+					write(*,*)	"[Pei/readTBsingle]: warning, detected R vector ordering issue while reading positions"
 				end if
 				!
 				do n = 1, num_wann
