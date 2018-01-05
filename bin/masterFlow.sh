@@ -5,45 +5,44 @@
  #   ->numeric parameters and subfoloders are set in convFlow.sh and statFlow.sh
  #   ->task are set and performed by the subStream.sh script
  #   ->the input file must however have correct info about the atomic system
+  
  
+function updateTime {
+	#call to update variable time to current time
+	time=$(date +"%T")
+}
+
+
  
+#specify sh scripts to run 
+flowes=( 'convFlow' 'statFlow' )
+
+#greeting message
+updateTime
+echo '['$time']: *****************hello from the masterFlow.************************************ '
+
+#make a directory log for the log files
+root=$PWD
+logDir=$PWD'/log'
+mkdir -p $logDir
+if [ "$(ls -A $logDir)" ]; then
+    rm -r $logDir/*
+    updateTime
+    echo '['$time']: wipped the log directory'
+fi
  
+##BODY
+updateTime
+echo '['$time']: start individual flows'
+#
+for f in ${flowes[*]}; do 
+	'./'$f'.sh' >> $logDir/$f'.log'
+	wait
+	updateTime
+	echo '['$time']: finished '$f' flow' 
+done
  
- 
- 
- function updateTime {
-     #call to update variable time to current time
-     time=$(date +"%T")
- }
- 
- 
- #make a directory log for the log files
- root=$PWD
- logDir=$PWD/log
- mkdir -p logDir
- 
- 
- #greeting message
- updateTime
- echo '['$time']: *****************hello from the masterFlow.************************************ '
- 
- #body
- updateTime
- echo '['$time']: start conv flow, this will do convergence tests w.r.t. gcut, kpts and states (perturbation)'
- convFlow.sh > $logDir/convFlow.log
- wait
- updateTime
- echo '['$time']: finished convergence flow'
- statFlow.sh > $logDir/statFlow.log
- wait
- updateTime
- echo '['$time']: finished states flow'
- 
- 
- 
- 
- 
- #final message
- wait
- updateTime
- echo '['$time']: *********************finished all flowes, by**************************************'
+#final message
+wait
+updateTime
+echo '['$time']: *********************finished all flowes, by**************************************'
