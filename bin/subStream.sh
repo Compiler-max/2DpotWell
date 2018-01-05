@@ -71,7 +71,7 @@ function runCalc {
 	wait
 	./main.exe > outROT.txt
 	wait
-	mv rawData rawDatROT
+	mv rawData rawDataROT
 	mv input.txt inputROT.txt
 	mv polOutput.txt polOutputROT.txt
 	echo '['$(date +"%T")']: finished post wannier90 run'	
