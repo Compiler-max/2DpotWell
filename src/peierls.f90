@@ -172,7 +172,7 @@ module peierls
 		character(len=10)				::	fname
 		logical							::	inq_open, inq_exist
 		!
-		fname		= seed_name//'_tb.dat'
+		fname		= seedName//'_tb.dat'
 		
 
 
