@@ -8,10 +8,10 @@ root=$PWD
 
 #numerics
 gCut=25.0
-nQ=8
+nQ=16
 nSC=$((nQ+1))
 nK=$nSC
-states=( 6 12 24 48 96 192 384 768 )
+states=( 6 12 24 48 96 192 384 768 1536	3072 )
 
 
 
