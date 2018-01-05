@@ -84,13 +84,13 @@ module berry
 
 
 		!PEIERLS SUBSTITUTION
-		!if(doPei) then
-		!	write(*,*)	"[berrryMethod]: now calc first order pol via peierls sub."
-		!	call peierlsMethod(ckW, tHopp, pPei)
-		!	write(*,'(a,e17.10,a,e17.10,a,e17.10,a)')	"[berryMethod]: pPei=(",pPei(1),", ",pPei(2),", ",pPei(3),")."
-		!else
-		!	pPei = 0.0_dp
-		!end if
+		if(doPei) then
+			write(*,*)	"[berrryMethod]: now calc first order pol via peierls sub."
+			call peierlsMethod(ckW, pPei)
+			write(*,'(a,e17.10,a,e17.10,a,e17.10,a)')	"[berryMethod]: pPei=(",pPei(1),", ",pPei(2),", ",pPei(3),")."
+		else
+			pPei = 0.0_dp
+		end if
 
 		!WANNIER
 		if(doWanni) then

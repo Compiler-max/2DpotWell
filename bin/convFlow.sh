@@ -86,7 +86,6 @@ for g in ${gVal[*]}; do
 		wait
 		#	
 		#execute calculation
-		echo '['$(date +"%T")']: start subStream'
 		./subStream.sh
 		wait
 		echo '['$(date +"%T")']: finished subStream'

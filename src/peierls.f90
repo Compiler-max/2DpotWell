@@ -11,6 +11,13 @@ module peierls
 	public ::	peierlsMethod
 
 
+
+	integer,		allocatable		:: 	wigStzDegn(:), R_vect(:,:)
+	real(dp)						::	recip_latt(3,3)
+	real(dp),		allocatable		:: 	R_real(:,:), wCent(:,:)
+	complex(dp),	allocatable		::	H_tb(:,:,:), r_tb(:,:,:,:)
+
+
 	contains
 
 
@@ -20,15 +27,19 @@ module peierls
 
 
 !public:
-	subroutine	peierlsMethod(ck, tHopp, pPei)
-		complex(dp),	intent(in)		:: ck(:,:,:), tHopp(:,:,:)	! tHopp(nWfs,nWfs,nSC)
-		real(dp),		intent(out)		:: pPei(3)
-		complex(dp),	allocatable		:: Hp(:,:), ckP(:,:,:),Up(:,:,:), tshift(:,:,:), AconnP(:,:,:,:)
-		real(dp),		allocatable		:: EnP(:,:)
-		integer							:: R, qi, gi
-		complex(dp)						:: phase
-		real(dp)						:: shft
+	subroutine	peierlsMethod(ck,  pPei)
+		complex(dp),	intent(in)		::	ck(:,:,:)	! tHopp(nWfs,nWfs,nSC)
+		real(dp),		intent(out)		::	pPei(3)
+		complex(dp),	allocatable		::	Hp(:,:), ckP(:,:,:),Up(:,:,:), tshift(:,:,:), AconnP(:,:,:,:), , tHopp(:,:,:), rHopp(:,:,:)
+		real(dp),		allocatable		::	EnP(:,:)
+		integer							::	R, qi, gi
+		complex(dp)						::	phase
+		real(dp)						::	shft
 		!
+		logical							::	foundFile
+
+
+
 		allocate(			Hp(			nWfs	,	nWfs				)			)
 		allocate(			ckP(		nG		,	nWfs	,	nQ		)			)
 		allocate(			tshift(		nWfs	, 	nWfs	,	nSc		)			)
@@ -36,15 +47,31 @@ module peierls
 		allocate(			Up(			nWfs	,	nWfs	, 	nQ		)			)
 		allocate(			AconnP(3,	nWfs	,	nWfs	,	nQ		)			)
 		!
+		if( nQ /= nK ) 	write(*,*) "[peierlsMethod]: warning abinit k mesh and interpolation k mesh have to be the same"
+
+
+		!GET tHopp
+		call readTBsingle( foundFile )
+
+
+		if( foundFile ) then
+			!call working subroutine
+		else
+			write(*,*)	"[peierlsMethod]: did not find input file seedname_tb.dat"
+			pPei	= 0.0_dp
+		end if
+
+
+
 		pPei	= 0.0_dp
 		write(*,*)	"[peierlsMethod]: start with peierls sub"
-		if( nQ /= nK ) 	write(*,*) "[peierlsMethod]: warning abinit k mesh and interpolation k mesh have to be the same"
+		
 		
 		!
 		!DO PEIERLS SUBSTITUTION
 		do R = 1, nSC
-			shft			= shift(R)
-			tshift(:,:,R)	= tHopp(:,:,R) * shft
+			shft			= shift(R) !rewrite to get directly the wannier90 rcell values ?! 
+			tshift(:,:,R)	= H_tb(:,:,R) * shft
 			write(*,'(a,i3,a,f10.4)')	"[peierlsMethod]: R=",R," shift=",shft
 		end do
 		write(*,*)	"[peierlsMethod]: substiution of hopping parameters done"
@@ -138,6 +165,133 @@ module peierls
 	end function
 
 
+
+
+	subroutine readTBsingle( readSuccess )
+		!reads the _tb.dat file given by wannier90
+		logical,		intent(out)		::	readSuccess
+		integer							:: 	stat, cnt, offset, R, n, m, i, mn(2), dumI(3), line15(15)
+		real(dp)						::	real2(2), real6(6), real3(3)
+		!try opening file
+		open(unit=310, iostat=stat, file=seed_name//'_tb.dat', status='old', action='read' )
+		if( stat /= 0)  then
+			write(*,*) "[readTBsingle]: warning, file seedname_tb.dat not found"
+			readSuccess 	= .false.
+			recip_latt		= 0.0_dp
+			R_real			= 0.0_dp
+			H_tb			= dcmplx(0.0_dp)
+			r_tb			= dcmplx(0.0_dp)
+		else
+			readSuccess	= .true.
+			!
+			read(310,*)
+			!recip lattice (read into buffer, avoids compiler warning)
+			read(310,*) 		real3(:)
+			recip_latt(1,:)	= 	real3(:)
+			read(310,*)			real3(:)
+			recip_latt(2,:)	= 	real3(:)
+			read(310,*)			real3(:)
+			recip_latt(3,:)	= 	real3(:)
+			!sys info
+			read(310,*) num_wann
+			read(310,*)	nrpts
+			!
+			allocate( 	wigStzDegn(									nrpts	)		)
+			allocate(	R_vect(			3,							nrpts	)		)
+			allocate(	R_real(			3,							nrpts	)		)
+			allocate(	H_tb(				num_wann,	num_wann, 	nrpts	)		)
+			allocate(	r_tb(			3,	num_wann,	num_wann,	nrpts	)		)	
+			allocate(	wCent(			3,		num_wann					)		)	
+			!
+			!read degeneracy of each wigner seitz grid point
+			cnt 	= 0
+			offset 	= 0
+			if(	nrpts <= 15 ) then
+				read(310,*) wigStzDegn
+			else
+				do while ( cnt < nrpts )		!read 15 entries per line till nrpts real2ues are read 
+					if( nrpts - cnt >= 15	) then
+						read(310,*)		line15
+						cnt	= cnt + 15
+						do i = 1 , 15
+							if(offset+i <= size(wigStzDegn))	wigStzDegn(offset+i)	= line15(i) 
+						end do
+						offset=	offset + 15
+					else						!the last line might contain less then 15 entries
+						read(310,*)	wigStzDegn( (offset+1):(offset+(nrpts-cnt)) )
+						cnt = cnt + (nrpts-cnt)
+						offset = offset + (nrpts-cnt)
+					end if
+				end do
+			end if
+			!
+			!READ HOPPINGS
+			do R = 1, nrpts
+				!skip first line
+				read(310,*)
+				!second line fractional real6 of R
+				read(310,*)	dumI(1:3)
+				R_vect(1:3,R)	= dumI(1:3)
+				if( R_vect(1,R)==0 .and. R_vect(2,R)==0 .and. R_vect(3,R)==0 ) R_null = R
+				!get indices & hoppings
+				do n = 1, num_wann
+					do m = 1, num_wann
+						read(310,*) mn(1:2), real2(1:2)
+						H_tb(mn(1),mn(2),R)	= dcmplx(real2(1)) + i_dp * dcmplx(real2(2))
+					end do
+				end do
+			end do
+			!
+			!READ POSITIONS
+			do R = 1, nrpts
+				!skip first line
+				read(310,*)
+				!second line fractional real6 of R
+				read(310,*)	dumI(1:3)
+				if( dumI(1) /= R_vect(1,R) .or. dumI(2) /= R_vect(2,R) .or. dumI(3) /= R_vect(3,R) ) then
+					write(*,*)	"[readTBsingle]: warning, detected R vector ordering issue while reading positions"
+				end if
+				!
+				do n = 1, num_wann
+					do m = 1, num_wann
+						read(310,*) mn(1:2), real6(1:6)
+						r_tb(1,mn(1),mn(2),R)	= dcmplx(real6(1)) + i_dp * dcmplx(real6(2))
+						r_tb(2,mn(1),mn(2),R)	= dcmplx(real6(3)) + i_dp * dcmplx(real6(4))
+						r_tb(3,mn(1),mn(2),R)	= dcmplx(real6(5)) + i_dp * dcmplx(real6(6))
+					end do
+				end do
+			end do
+			!
+			!CONVERT BACK TO [a.u.]
+			H_tb	= H_tb /	aUtoEv 
+			r_tb	= r_tb /	aUtoAngstrm
+			!
+			!get centers
+			do n = 1, num_wann
+				wCent(1:3,n)	= r_tb(1:3,n,n,R_null)
+			end do
+			!
+			!calculate real R vector
+			do R = 1 , nrpts
+				R_real(1,R)	= R_vect(1,R)	* aX
+				R_real(2,R)	= R_vect(2,R)	* aY
+				R_real(3,R)	= R_vect(3,R)	* 0
+				!!DEBUG
+				!if( abs(R_real(1,R)-Rcell(1,R)) > machineP ) then
+				!	write(*,*) "[readTB]: warning  Rcell and R_real dont match (x comp)" 
+				!	write(*,*) "			R_real(x)=",R_real(1,R)," Rcell=",Rcell(1,R)
+				!	write(*,*) "			R_real(y)=",R_real(2,R)," Rcell=",Rcell(2,R)
+				!end if
+				!!if( abs(R_real(2,R)-Rcell(2,R)) > machineP ) write(*,*) "[readTB]: warning Rcell and R_real dont match(y comp)"
+			end do
+			!
+			call writeHtb(H_tb)
+			!
+		end if
+		!
+		!
+		return
+	end subroutine
 
 
 
