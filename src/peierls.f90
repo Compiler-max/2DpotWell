@@ -167,16 +167,26 @@ module peierls
 	subroutine readTBsingle( readSuccess )
 		!reads the _tb.dat file given by wannier90
 		logical,		intent(out)		::	readSuccess
-		integer							:: 	stat, cnt, offset, R, n, m, i, mn(2), dumI(3), line15(15)
+		integer							:: 	stat, cnt, offset, R, n, m, i, mn(2), dumI(3), line15(15), inq_numb
 		real(dp)						::	real2(2), real6(6), real3(3)
-		character(len=3)				::	seed_name
+		character(len=10)				::	fname
+		logical							::	inq_open, inq_exist
 		!
-		seed_name	= seedName
+		fname		= seed_name//'_tb.dat'
+		
+
 
 		!try opening file
-		open(unit=310, iostat=stat, file=seed_name//'_tb.dat', status='old', action='read' )
+		open(unit=310, iostat=stat, file=fname, status='old', action='read' )
+		inquire(file=fname,opened=inq_open, exist=inq_exist, number=inq_numb)
+		if( .not. inq_exist	) write(*,*)	"[Pei/readTBsingle]: file ",fname, " does not exist"
+		if( .not. inq_open	) write(*,*)	"[Pei/readTBsingle]: file ",fname, " is not open( should be open)"
+		write(*,*)	"[Pei/readTBsingle]: file ",fname, " associated unit is ",inq_numb
+
+
+
 		if( stat /= 0)  then
-			write(*,*) "[readTBsingle]: warning, file seedname_tb.dat not found"
+			write(*,*) "[Pei/readTBsingle]: warning, file seedname_tb.dat not found"
 			readSuccess 	= .false.
 			recip_latt		= 0.0_dp
 			R_real			= 0.0_dp
