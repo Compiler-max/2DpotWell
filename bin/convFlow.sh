@@ -103,3 +103,4 @@ done
 
 
 echo '['$(date +"%T")']: finished all calculations, by'	
+echo '*******************************************************'
