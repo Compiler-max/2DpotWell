@@ -42,7 +42,7 @@ printf "*\n*\n"
 for s in ${states[*]}; do
 	#get directory name	
 	dir=$label'/nStat'$s
-	echo '['$(date +"%T")']: start Gcut='$g' nQ='$q' nShell='$nShell
+	echo '['$(date +"%T")']: start Gcut='$gCut' nQ='$nQ' nShell='$nShell
 	#	
 	#creates directories
 	if [[ ! -e $dir ]]; then
