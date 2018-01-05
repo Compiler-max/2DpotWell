@@ -76,7 +76,7 @@ for s in ${states[*]}; do
 	wait
 	#	
 	#execute calculation
-	#./subStream.sh
+	./subStream.sh
 	wait
 	echo '['$(date +"%T")']: finished subStream'
 			
