@@ -226,6 +226,7 @@ module peierls
 				end do
 			end if
 			!
+			write(*,*)	"[Pei/readTBsingle]: header"
 			!READ HOPPINGS
 			do R = 1, nrpts
 				!skip first line
