@@ -7,11 +7,11 @@
 [atoms]
     doVdesc     = f
     nAt         = 2      
-    relXpos     = 0.30 0.70    
+    relXpos     = 0.25 0.75    
     relYpos     = 0.00 0.00
     atRx        = 1.01 1.01
     atRy        = 1.01 1.01
-    atPot       = -3.00 -3.50
+    atPot       = -3.00 -4.50
     dVpot       = 0.00 0.00
     Zion        = 1.00 1.00
 
@@ -25,22 +25,22 @@
 
 [numerics]
     Gcut        = 5.0
-    nSolve      = 10        
-    nQx         = 4   
-    nQy         = 4
-    nSCx        = 5 
-    nSCy        = 5
-    nKx         = 5
-    nKy         = 5                
+    nSolve      = 60        
+    nQx         = 2   
+    nQy         = 2
+    nSCx        = 3 
+    nSCy        = 3
+    nKx         = 3
+    nKy         = 3                
     nRx         = 10   
     nRy         = 10
     thres       = 0.1
 
 [methods]
-    doSolveHam  = f
+    doSolveHam  = t
     useBloch    = f
     doPw90      = f
-    doBerry     = t
+    doBerry     = f
     writeBin    = f
 
 [pw90]
