@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #vars
-infoString='# edited by GcutFlow'
+infoString='# edited by convFlow'
 root=$PWD
 
 

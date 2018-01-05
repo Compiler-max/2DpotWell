@@ -24,14 +24,14 @@
     Bext        = 0.0 0.0 1.0  
 
 [numerics]
-    Gcut        = 5.0
-    nSolve      = 60        
-    nQx         = 2   
-    nQy         = 2
-    nSCx        = 3 
-    nSCy        = 3
-    nKx         = 3
-    nKy         = 3                
+    Gcut        = 25.0 # edited by statFlow
+    nSolve      = 768 # edited by statFlow
+    nQx         = 8 # edited by statFlow
+    nQy         = 8 # edited by statFlow
+    nSCx        = 9 # edited by statFlow
+    nSCy        = 9 # edited by statFlow
+    nKx         = 9 # edited by statFlow
+    nKy         = 9 # edited by statFlow
     nRx         = 10   
     nRy         = 10
     thres       = 0.1
@@ -45,7 +45,7 @@
 
 [pw90]
     seedName    = 'wf1'
-    shell       = 3
+    shell       =  # edited by statFlow
     nw90it      = 1000
     pw90GaugeB  = f
 
