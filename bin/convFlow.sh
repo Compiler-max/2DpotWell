@@ -49,11 +49,10 @@ for g in ${gVal[*]}; do
 				nShell=1
 				;;
 		esac
-		echo 'set nShell as '$nShell
 		#
 		#get directory name	
 		dir=$label'/g'$g'q'$q
-		echo '['$(date +"%T")']: start Gcut='$g' nQ='$q
+		echo '['$(date +"%T")']: start Gcut='$g' nQ='$q' nShell='$nShell
 		#	
 		#creates directories
 		if [[ ! -e $dir ]]; then
