@@ -37,6 +37,7 @@ echo '['$now']: created directory '$label
 printf "*\n*\n"
 
 echo '['$(date +"%T")']: numerics info Gcut='$gCut' nQ='$nQ' nShell='$nShell
+printf "*\n*\n"
 
 
 for s in ${states[*]}; do
