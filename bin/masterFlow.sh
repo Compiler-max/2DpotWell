@@ -17,32 +17,35 @@ function updateTime {
 #specify sh scripts to run 
 flowes=( 'convFlow' 'statFlow' )
 
-#greeting message
-updateTime
-echo '['$time']: *****************hello from the masterFlow.************************************ '
+
 
 #make a directory log for the log files
 root=$PWD
 logDir=$PWD'/log'
 mkdir -p $logDir
+masterLog=$logDir'/masterFlow.log'
+
+#greeting message
+updateTime
+echo '['$time']: *****************hello from the masterFlow.************************************ ' >>  $masterLog
 if [ "$(ls -A $logDir)" ]; then
     rm -r $logDir/*
     updateTime
-    echo '['$time']: wipped the log directory'
+    echo '['$time']: wipped the log directory' >>  $masterLog
 fi
  
 ##BODY
 updateTime
-echo '['$time']: start individual flows'
+echo '['$time']: start individual flows'>>  $masterLog
 #
 for f in ${flowes[*]}; do 
 	'./'$f'.sh' >> $logDir/$f'.log'
 	wait
 	updateTime
-	echo '['$time']: finished '$f' flow' 
+	echo '['$time']: finished '$f' flow' >>  $masterLog
 done
  
 #final message
 wait
 updateTime
-echo '['$time']: *********************finished all flowes, by**************************************'
+echo '['$time']: *********************finished all flowes, by**************************************' >>  $masterLog
