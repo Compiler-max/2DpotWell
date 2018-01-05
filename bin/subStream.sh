@@ -95,8 +95,6 @@ else
 	wait
 fi
 
-echo '['$(date +"%T")']: finished all calculations, by'	
-
 
 
 

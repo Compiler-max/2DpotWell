@@ -99,3 +99,7 @@ for g in ${gVal[*]}; do
 		printf '*\n*\n'
 	done
 done
+
+
+
+echo '['$(date +"%T")']: finished all calculations, by'	
