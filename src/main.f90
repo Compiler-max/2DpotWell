@@ -31,6 +31,7 @@ program main
     mastT	= 0.0
 
     !INPUT & ALLOCATION SECTION
+    write(*,*)"[main]:**************************setup Grids*************************"
     call cpu_time(mastT0)
     call cpu_time(T0)
 	call readInp()
