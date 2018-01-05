@@ -19,7 +19,7 @@ flowes=( 'convFlow' 'statFlow' )
 
 
 
-#make a directory log for the log files
+#make a directory to store log files
 root=$PWD
 logDir=$PWD'/log'
 mkdir -p $logDir
