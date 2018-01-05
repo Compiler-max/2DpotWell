@@ -186,6 +186,7 @@ module peierls
 			readSuccess	= .true.
 			!
 			read(310,*)
+			write(*,*)	"[Pei/readTBsingle]:first line"
 			!recip lattice (read into buffer, avoids compiler warning)
 			read(310,*) 		real3(:)
 			recip_latt(1,:)	= 	real3(:)
@@ -226,7 +227,7 @@ module peierls
 				end do
 			end if
 			!
-			write(*,*)	"[Pei/readTBsingle]: header"
+			write(*,*)	"[Pei/readTBsingle]: read header"
 			!READ HOPPINGS
 			do R = 1, nrpts
 				!skip first line
