@@ -8,7 +8,7 @@ root=$PWD
 #numerics
 label='convTest'
 gVal=( 5.0 10.0) #15.0 20.0 25.0 30.0 )
-qVal=( 4 8) # 16 32 64 128)
+qVal=( 4 8 16 ) # 32 64 128)
 nSolve=60
 
 
@@ -45,7 +45,7 @@ for g in ${gVal[*]}; do
 			[5-8]*)
 				nShell=2
 				;;
-			[9-100000000]*)
+			[9-100000]*)
 				nShell=1
 				;;
 		esac
