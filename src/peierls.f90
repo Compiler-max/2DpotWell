@@ -167,7 +167,7 @@ module peierls
 	subroutine readTBsingle( readSuccess )
 		!reads the _tb.dat file given by wannier90
 		logical,		intent(out)		::	readSuccess
-		integer							:: 	stat, cnt, offset, R, n, m, i, mn(2), dumI(3), line15(15), inq_numb
+		integer							:: 	stat, cnt, offset, R, n, m, i, mn(2), dumI(3), line15(15), inq_unit
 		real(dp)						::	real2(2), real6(6), real3(3)
 		character(len=10)				::	fname
 		logical							::	inq_open, inq_exist
@@ -178,10 +178,10 @@ module peierls
 
 		!try opening file
 		open(unit=310, iostat=stat, file=fname, status='old', action='read' )
-		inquire(file=fname,opened=inq_open, exist=inq_exist, number=inq_numb)
-		if( .not. inq_exist	) write(*,*)	"[Pei/readTBsingle]: file ",fname, " does not exist"
-		if( .not. inq_open	) write(*,*)	"[Pei/readTBsingle]: file ",fname, " is not open( should be open)"
-		write(*,*)	"[Pei/readTBsingle]: file ",fname, " associated unit is ",inq_numb
+		inquire(file=fname,opened=inq_open, exist=inq_exist, number=inq_unit)
+		if( .not. inq_exist	) write(*,*)	"[Pei/readTBsingle]: file ",fname, " does not exist (unit=",inq_unit,")."
+		if( .not. inq_open	) write(*,*)	"[Pei/readTBsingle]: file ",fname, " is not open(unit=",inq_unit,")."
+		write(*,*)	"[Pei/readTBsingle]: file ",fname, " associated unit is ",inq_unit
 
 
 

@@ -179,6 +179,7 @@ module postW90
 					end do
 				end do
 			end do
+			close(310)
 			!
 			!CONVERT BACK TO [a.u.]
 			H_tb	= H_tb /	aUtoEv 
