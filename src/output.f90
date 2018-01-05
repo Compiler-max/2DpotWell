@@ -712,6 +712,8 @@ module output
 		open(unit=600,file='polOutput.txt',action='write')
 		write(600,*)"**************POLARIZATION OUTPUT FILE**********************"
 		write(600,*)" via wavefunction method"
+		write(600,*)"Gcut=",Gcut
+		write(600,*)"nQ=",nQx,"x",nQy
 		write(600,*)"*"
 		write(600,*)"*"
 		write(600,*)"*"
