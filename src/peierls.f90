@@ -1,9 +1,9 @@
 module peierls
-	use mathematics,	only:	dp, PI_dp, i_dp, myExp, crossP, nIntegrate, eigSolverFULL, isUnit
+	use mathematics,	only:	dp, PI_dp, i_dp, myExp, crossP, nIntegrate, eigSolverFULL, isUnit, aUtoAngstrm, aUtoEv
 	use sysPara
 	use blochWf,		only:	calcConnOnCoarse
 	use	polarization,	only:	calcPolViaA
-	use output,			only:	writePeierls
+	use output,			only:	writePeierls, writeHtb
 	implicit none
 	
 
@@ -11,6 +11,7 @@ module peierls
 	public ::	peierlsMethod
 
 
+	integer							::	num_wann, nrpts, R_null
 
 	integer,		allocatable		:: 	wigStzDegn(:), R_vect(:,:)
 	real(dp)						::	recip_latt(3,3)
@@ -30,88 +31,20 @@ module peierls
 	subroutine	peierlsMethod(ck,  pPei)
 		complex(dp),	intent(in)		::	ck(:,:,:)	! tHopp(nWfs,nWfs,nSC)
 		real(dp),		intent(out)		::	pPei(3)
-		complex(dp),	allocatable		::	Hp(:,:), ckP(:,:,:),Up(:,:,:), tshift(:,:,:), AconnP(:,:,:,:), , tHopp(:,:,:), rHopp(:,:,:)
-		real(dp),		allocatable		::	EnP(:,:)
-		integer							::	R, qi, gi
-		complex(dp)						::	phase
-		real(dp)						::	shft
-		!
 		logical							::	foundFile
-
-
-
-		allocate(			Hp(			nWfs	,	nWfs				)			)
-		allocate(			ckP(		nG		,	nWfs	,	nQ		)			)
-		allocate(			tshift(		nWfs	, 	nWfs	,	nSc		)			)
-		allocate(			EnP(					nWfs	,	nQ		)			)
-		allocate(			Up(			nWfs	,	nWfs	, 	nQ		)			)
-		allocate(			AconnP(3,	nWfs	,	nWfs	,	nQ		)			)
 		!
-		if( nQ /= nK ) 	write(*,*) "[peierlsMethod]: warning abinit k mesh and interpolation k mesh have to be the same"
-
-
 		!GET tHopp
 		call readTBsingle( foundFile )
-
-
+		!
+		!PEIERLS SUB
 		if( foundFile ) then
-			!call working subroutine
+			call doPeierls(ck, pPei)
 		else
 			write(*,*)	"[peierlsMethod]: did not find input file seedname_tb.dat"
 			pPei	= 0.0_dp
 		end if
-
-
-
-		pPei	= 0.0_dp
-		write(*,*)	"[peierlsMethod]: start with peierls sub"
-		
-		
 		!
-		!DO PEIERLS SUBSTITUTION
-		do R = 1, nSC
-			shft			= shift(R) !rewrite to get directly the wannier90 rcell values ?! 
-			tshift(:,:,R)	= H_tb(:,:,R) * shft
-			write(*,'(a,i3,a,f10.4)')	"[peierlsMethod]: R=",R," shift=",shft
-		end do
-		write(*,*)	"[peierlsMethod]: substiution of hopping parameters done"
-
-		
-		!ELECTRONIC STRUCTURE
-		do qi = 1, nQ
-			!SET UP k SPACE HAMILTONIAN
-			Hp	= dcmplx(0.0_dp)
-			do R = 1, nSC
-				phase	= myExp( dot_product(qpts(:,qi),Rcell(:,R))	) !/ dsqrt(real(nSC,dp))
-				Hp(:,:)	= Hp(:,:) + phase * tshift(:,:,R)
-			end do
-			!SOLVE HAM	
-			call eigSolverFULL(Hp(:,:),EnP(:,qi))
-			!
-			if( .not. isUnit(Hp)	) write(*,*) "[peierlsMethod]: ckP not unitary at qi=",qi
-			!EXTRACT EXPANSION COEFF
-			ckP(:,:,qi)	= dcmplx(0.0_dp)
-			do gi = 1, nGq(qi)
-				ckP(gi,:,qi)	= matmul( ck(gi,:,qi), Hp(:,:))
-			end do
-		end do
-
-
-	
-
-
-		!GENERATE CONNECTION
-		AconnP	= dcmplx(0.0_dp)
-		call calcConnOnCoarse(ckP, AconnP) 
-
-
-		!CALC POL
-		call calcPolViaA(AconnP, pPei)
-
-		!WRITE UNKs & ENERGIES
-		if( writeBin ) call writePeierls(ckP, EnP)
-
-
+		!
 		!DEBUG
 		if( nK /= nQ ) then
 			write(*,*)	"[peierlsMethod]: WARNING, coarse & mesh do not have same grid spacing... "
@@ -138,7 +71,7 @@ module peierls
 
 !privat:
 	real(dp) function shift(rj)
-		!integrates the vector potential A(r) analytically
+		!integrates the vector potential A(r) analytically   (assumes uniform field)
 		!	A(r)	= -0.5 cross_p[r,B]
 		!	return 	= Integrate^\vec{rMax]_\vec{rMin} 		\vec{A(r')}.\vec{dr'}
 		!			= -0.5 cross_p[rMin,B].(rMax - rMin)
@@ -165,6 +98,70 @@ module peierls
 	end function
 
 
+	subroutine doPeierls(ck, pPei)
+		!performs peierls sub & calcs pol
+		complex(dp),	intent(in)		::	ck(:,:,:)
+		real(dp),		intent(out)		::	pPei(3)
+		complex(dp),	allocatable		::	Hp(:,:), ckP(:,:,:),Up(:,:,:), tshift(:,:,:), AconnP(:,:,:,:)
+		real(dp),		allocatable		::	EnP(:,:)
+		integer							::	R, qi, gi
+		complex(dp)						::	phase
+		!
+		allocate(			Hp(			nWfs	,	nWfs				)			)
+		allocate(			ckP(		nG		,	nWfs	,	nQ		)			)
+		allocate(			tshift(		nWfs	, 	nWfs	,	nSc		)			)
+		allocate(			EnP(					nWfs	,	nQ		)			)
+		allocate(			Up(			nWfs	,	nWfs	, 	nQ		)			)
+		allocate(			AconnP(3,	nWfs	,	nWfs	,	nQ		)			)
+		!
+		!
+		!DO PEIERLS SUBSTITUTION
+		do R = 1, nSC
+			tshift(:,:,R)	= H_tb(:,:,R) * shift(R)
+		end do
+		write(*,*)	"[peierlsMethod]: substiution of hopping parameters done"
+		!
+		!
+		!ELECTRONIC STRUCTURE
+		do qi = 1, nQ
+			!SET UP k SPACE HAMILTONIAN
+			Hp	= dcmplx(0.0_dp)
+			do R = 1, nSC
+				phase	= myExp( dot_product(qpts(:,qi),Rcell(:,R))	) !/ dsqrt(real(nSC,dp))
+				Hp(:,:)	= Hp(:,:) + phase * tshift(:,:,R)
+			end do
+			!SOLVE HAM	
+			call eigSolverFULL(Hp(:,:),EnP(:,qi))
+			!
+			if( .not. isUnit(Hp)	) write(*,*) "[peierlsMethod]: ckP not unitary at qi=",qi
+			!EXTRACT EXPANSION COEFF
+			ckP(:,:,qi)	= dcmplx(0.0_dp)
+			do gi = 1, nGq(qi)
+				ckP(gi,:,qi)	= matmul( ck(gi,:,qi), Hp(:,:))
+			end do
+		end do
+		!
+		!
+		!GENERATE CONNECTION
+		AconnP	= dcmplx(0.0_dp)
+		call calcConnOnCoarse(ckP, AconnP) 
+		!
+		!CALC POL
+		call calcPolViaA(AconnP, pPei)
+		!
+		!WRITE UNKs & ENERGIES
+		if( writeBin ) call writePeierls(ckP, EnP)
+		!
+		!
+		return
+	end subroutine
+
+
+
+
+
+
+
 
 
 	subroutine readTBsingle( readSuccess )
@@ -172,6 +169,10 @@ module peierls
 		logical,		intent(out)		::	readSuccess
 		integer							:: 	stat, cnt, offset, R, n, m, i, mn(2), dumI(3), line15(15)
 		real(dp)						::	real2(2), real6(6), real3(3)
+		character(len=3)				::	seed_name
+		!
+		seed_name	= seedName
+
 		!try opening file
 		open(unit=310, iostat=stat, file=seed_name//'_tb.dat', status='old', action='read' )
 		if( stat /= 0)  then
