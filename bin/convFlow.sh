@@ -38,17 +38,13 @@ for g in ${gVal[*]}; do
 		nK=$nSC
 		#
 		#determine nShell depending of q grid spacing
-		case $q in 
-			[1-4]*)
-				nShell=3
-				;;
-			[5-8]*)
-				nShell=2
-				;;
-			*)
-				nShell=1
-				;;
-		esac
+		if [ $q <= 4 ]; then
+			nShell=3
+		elif [ $q <= 8 ]; then
+			nShell=2
+		else
+			nShell=1
+		fi
 		#
 		#get directory name	
 		dir=$label'/g'$g'q'$q
