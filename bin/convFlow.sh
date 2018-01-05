@@ -45,7 +45,7 @@ for g in ${gVal[*]}; do
 			[5-8]*)
 				nShell=2
 				;;
-			*)
+			[9-100000000]*)
 				nShell=1
 				;;
 		esac
