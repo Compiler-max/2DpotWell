@@ -66,7 +66,7 @@ function runCalc {
 	mv input.txt inputNoROT.txt
 	mv input3.txt input.txt
 	mv polOutput.txt polOutputNoROT.txt
-	mkdir rawDataOLD
+	mkdir rawDataNoROT
 	cp ./rawData/* rawDataNoROT
 	wait
 	./main.exe > outROT.txt
