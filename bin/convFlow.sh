@@ -38,7 +38,7 @@ for g in ${gVal[*]}; do
 		nK=$nSC
 		#
 		#determine nShell depending of q grid spacing
-		case $nQ in 
+		case $q in 
 			[1-4]*)
 				nShell=3
 				;;
