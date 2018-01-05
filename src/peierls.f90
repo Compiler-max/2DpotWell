@@ -185,6 +185,7 @@ module peierls
 		else
 			readSuccess	= .true.
 			!
+			write(*,*)	"[Pei/readTBsingle]:before first read"
 			read(310,*)
 			write(*,*)	"[Pei/readTBsingle]:first line"
 			!recip lattice (read into buffer, avoids compiler warning)
@@ -265,6 +266,7 @@ module peierls
 					end do
 				end do
 			end do
+			close(310)
 			!
 			!CONVERT BACK TO [a.u.]
 			H_tb	= H_tb /	aUtoEv 
