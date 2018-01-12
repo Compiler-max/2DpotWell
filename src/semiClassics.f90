@@ -3,7 +3,7 @@ module semiClassics
 	!	to the polariztion induced by a perturbive magnetic field
 	! 	see Niu PRL 112, 166601 (2014)
 	use mathematics,	only:	dp, PI_dp, i_dp, machineP, acc, myExp, myLeviCivita
-	use sysPara,		only:	Bext, prefactF3, atPos, nAt
+	use sysPara,		only:	Bext, prefactF3, atPos, nAt, nWfs
 
 	implicit none
 
@@ -28,7 +28,7 @@ module semiClassics
 		complex(dp),	intent(in)		::	Fcurv(:,:,:,:), Aconn(:,:,:,:), Velo(:,:,:,:)	
 		real(dp),		intent(in)		::	En(:,:)			
 		real(dp),		intent(out)		:: 	pF2(3), pF3(3)
-		real(dp)						::	pnF2(3), pnF3(3)
+		!real(dp)						::	pnF2(3), pnF3(3)
 		real(dp)						:: 	F2(3,3), F3(3,3)
 		real(dp)						:: 	densCorr(3)
 		integer							:: 	n, ki, nSize, kSize
@@ -49,9 +49,9 @@ module semiClassics
 		write(*,*)"[calcFirstOrdP]: start calculating P' via semiclassic approach"
 		pF2 = 0.0_dp
 		pF3 = 0.0_dp
-		do n = 1, nSize
-			pnF2	= 0.0_dp
-			pnF3	= 0.0_dp
+
+		!$OMP PARALLEL DO SCHEDULE(STATIC) DEFAULT(SHARED) PRIVATE(n, ki, densCorr, F2, F3) REDUCTION(+: pF2, pF3)
+		do n = 1, nWfs
 			!
 			do ki = 1, kSize		
 				!PHASE SPACE DENSITY CORRECTION
@@ -64,17 +64,15 @@ module semiClassics
 				call getF2(n,ki,Velo,En, F2)
 				call getF3(n,ki,Velo,En, F3)
 				!Integrate k-space
-				pnF2		= pnF2		+ matmul(F2, Bext) / real(kSize,dp)
-				pnF3		= pnF3		+ matmul(F3, Bext) / real(kSize,dp)
+				pF2	= matmul(F2, Bext) / real(kSize,dp)
+				pF3	= matmul(F3, Bext) / real(kSize,dp)
 			end do
 			!
 			!write to standard out
-			write(*,'(a,i5,a,e12.5,a,e12.5,a,e12.5,a)')	"[calcFirstOrdP]: pNiuF2(n=", n, ") =(" ,pnF2(1), ", ", pnF2(2), ", ", pnF2(3),")."
-			write(*,'(a,i5,a,e12.5,a,e12.5,a,e12.5,a)')	"[calcFirstOrdP]: pNiuF3(n=", n, ") =(" ,pnF3(1), ", ", pnF3(2), ", ", pnF3(3),")."
-			!SUM OVER n
-			pF2 = pF2 + pnF2
-			pF3 = pF3 + pnF3
+			write(*,'(a,i5,a,e12.5,a,e12.5,a,e12.5,a)')	"[calcFirstOrdP]: pNiuF2(n=", n, ") =(" ,pF2(1), ", ", pF2(2), ", ", pF2(3),")."
+			write(*,'(a,i5,a,e12.5,a,e12.5,a,e12.5,a)')	"[calcFirstOrdP]: pNiuF3(n=", n, ") =(" ,pF3(1), ", ", pF3(2), ", ", pF3(3),")."
 		end do
+		!$OMP END PARALLEL DO
 		!
 		!
 		return

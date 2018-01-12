@@ -45,7 +45,7 @@ module blochWf
 		!					= - 1 / hbar sum_G ckn^dag ckm G
 		complex(dp),	intent(in)		:: 	ck(:,:,:)
 		complex(dp),	intent(out)		::	v_mat(:,:,:,:)
-		integer							::	qi, m, n, gi, status
+		integer							::	qi, m, n, gi
 		!
 		v_mat = dcmplx(0.0_dp)
 		!
@@ -54,6 +54,7 @@ module blochWf
 			write(*,*)	"[calcVeloGrad]: coeff and velo defined on different k meshes, stop now"
 			!call exit(status)
 		else
+			!$OMP PARALLEL DO SCHEDULE(STATIC) DEFAULT(SHARED) PRIVATE(qi, m, n, gi)
 			do qi = 1, nQ
 				do m = 1, nSolve
 					do n = 1, nSolve
@@ -64,6 +65,7 @@ module blochWf
 					end do
 				end do
 			end do
+			!$OMP END PARALLEL DO
 		end if
 		!
 		return
