@@ -75,6 +75,8 @@ function runCalc {
 	cp ./rawData/* ./rawDataROT
 	mv input.txt inputROT.txt
 	mv polOutput.txt polOutputROT.txt
+	wait
+	rm -r rawData rawDataROT rawDataNoROT
 	echo '['$(date +"%T")']: finished post wannier90 run'	
 }
 
