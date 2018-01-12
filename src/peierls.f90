@@ -93,33 +93,36 @@ module peierls
 		!performs peierls sub & calcs pol
 		complex(dp),	intent(in)		::	ck(:,:,:)
 		real(dp),		intent(out)		::	pPei(3)
-		complex(dp),	allocatable		::	Hp(:,:), ckP(:,:,:),Up(:,:,:), tshift(:,:,:), AconnP(:,:,:,:)
+		complex(dp),	allocatable		::	Hp(:,:), ckP(:,:,:), tshift(:,:,:), AconnP(:,:,:,:)
 		real(dp),		allocatable		::	EnP(:,:)
-		integer							::	R, qi, gi
+		integer							::	Ri, qi, gi
 		complex(dp)						::	phase
 		!
-		allocate(			Hp(			nWfs	,	nWfs				)			)
+		
 		allocate(			ckP(		nG		,	nWfs	,	nQ		)			)
 		allocate(			tshift(		nWfs	, 	nWfs	,	nSc		)			)
 		allocate(			EnP(					nWfs	,	nQ		)			)
-		allocate(			Up(			nWfs	,	nWfs	, 	nQ		)			)
 		allocate(			AconnP(3,	nWfs	,	nWfs	,	nQ		)			)
 		!
 		!
 		!DO PEIERLS SUBSTITUTION
-		do R = 1, nSC
-			tshift(:,:,R)	= H_tb(:,:,R) * shift(R)
+		do Ri = 1, nSC
+			tshift(:,:,Ri)	= H_tb(:,:,Ri) * shift(Ri)
 		end do
 		write(*,*)	"[peierlsMethod]: substiution of hopping parameters done"
 		!
 		!
 		!ELECTRONIC STRUCTURE
+
+		!$OMP PARALLEL DEFAULT(SHARED) PRIVATE(qi, gi, Ri, Hp, phase)
+		allocate(	Hp(	nWfs,	nWfs)		)
+		!$OMP DO SCHEDULE( STATIC )
 		do qi = 1, nQ
 			!SET UP k SPACE HAMILTONIAN
 			Hp	= dcmplx(0.0_dp)
-			do R = 1, nSC
-				phase	= myExp( dot_product(qpts(:,qi),Rcell(:,R))	) !/ dsqrt(real(nSC,dp))
-				Hp(:,:)	= Hp(:,:) + phase * tshift(:,:,R)
+			do Ri = 1, nSC
+				phase	= myExp( dot_product(qpts(:,qi),Rcell(:,Ri))	) !/ dsqrt(real(nSC,dp))
+				Hp(:,:)	= Hp(:,:) + phase * tshift(:,:,Ri)
 			end do
 			!SOLVE HAM	
 			call eigSolverFULL(Hp(:,:),EnP(:,qi))
@@ -131,6 +134,8 @@ module peierls
 				ckP(gi,:,qi)	= matmul( ck(gi,:,qi), Hp(:,:))
 			end do
 		end do
+		!$OMP END DO
+		!$OMP END PARALLEL
 		!
 		!
 		!GENERATE CONNECTION
