@@ -33,7 +33,7 @@ module semiClassics
 		real(dp)						:: 	densCorr(3)
 		integer							:: 	n, ki, nSize, kSize
 		!
-		nSize	= size(Aconn,3)
+		nSize	= nWfs!size(Aconn,3)
 		kSize	= size(Velo,4)
 		!
 		write(*,*)	"read ub energies at q=1"
@@ -51,7 +51,7 @@ module semiClassics
 		pF3 = 0.0_dp
 
 		!$OMP PARALLEL DO SCHEDULE(STATIC) DEFAULT(SHARED) PRIVATE(n, ki, densCorr, F2, F3) REDUCTION(+: pF2, pF3)
-		do n = 1, nWfs
+		do n = 1, nSize
 			!
 			do ki = 1, kSize		
 				!PHASE SPACE DENSITY CORRECTION
