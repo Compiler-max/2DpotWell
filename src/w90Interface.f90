@@ -152,7 +152,8 @@ module w90Interface
 		!PROJECTIONS
 		write(100,*)	'Begin Projections'
 		!write(100,*)	'H: l=',0,';l=',1,',mr=',1,';l=',1,',mr=',2
-		write(100,*)	'H: l=0;l=1,mr=2,3'
+		if(nWfs == 6) write(100,*)	'H: l=0;l=1,mr=2,3'
+		if(nWfs == 2) write(100,*)	'H: l=0'
 		
 		!write(100,*)	'He: l=0;l=1,mr=1,2'
 		write(100,*)	'End Projections'
