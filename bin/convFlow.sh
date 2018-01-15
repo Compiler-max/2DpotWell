@@ -9,7 +9,7 @@ root=$PWD
 label='convTest'
 gVal=( 20.0 25.0 30.0 )
 qVal=( 8 16 32 64 )
-nSolve=60
+nSolve=96
 
 
 
