@@ -7,8 +7,8 @@ root=$PWD
 
 #numerics
 label='convTest'
-gVal=( 5.0 10.0) #15.0 20.0 25.0 30.0 )
-qVal=( 4 8 16 ) # 32 64 128)
+gVal=( 20.0 25.0 30.0 )
+qVal=( 8 16 32 64 )
 nSolve=60
 
 

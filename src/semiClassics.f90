@@ -31,9 +31,8 @@ module semiClassics
 		!real(dp)						::	pnF2(3), pnF3(3)
 		real(dp)						:: 	F2(3,3), F3(3,3)
 		real(dp)						:: 	densCorr(3)
-		integer							:: 	n, ki, nSize, kSize
+		integer							:: 	n, ki, kSize
 		!
-		nSize	= nWfs!size(Aconn,3)
 		kSize	= size(Velo,4)
 		!
 		write(*,*)	"read ub energies at q=1"
@@ -47,12 +46,13 @@ module semiClassics
 		!
 		!
 		write(*,*)"[calcFirstOrdP]: start calculating P' via semiclassic approach"
-		pF2 = 0.0_dp
-		pF3 = 0.0_dp
+		
 
-		!$OMP PARALLEL DO SCHEDULE(STATIC) DEFAULT(SHARED) PRIVATE(n, ki, densCorr, F2, F3) REDUCTION(+: pF2, pF3)
-		do n = 1, nSize
+		!$OMP PARALLEL DO SCHEDULE(STATIC) DEFAULT(SHARED) PRIVATE(n, ki, densCorr, F2, F3, Bext) REDUCTION(+: pF2, pF3)
+		do n = 1, nWfs
 			!
+			pF2 = 0.0_dp
+			pF3 = 0.0_dp
 			do ki = 1, kSize		
 				!PHASE SPACE DENSITY CORRECTION
 				densCorr	= 0.5_dp * dot_product(		dreal(Fcurv(:,n,n,ki)), dreal(Aconn(:,n,n,ki) )	)		* Bext
@@ -64,8 +64,8 @@ module semiClassics
 				call getF2(n,ki,Velo,En, F2)
 				call getF3(n,ki,Velo,En, F3)
 				!Integrate k-space
-				pF2	= matmul(F2, Bext) / real(kSize,dp)
-				pF3	= matmul(F3, Bext) / real(kSize,dp)
+				pF2	= pF2 + matmul(F2, Bext) / real(kSize,dp)
+				pF3	= pF3 + matmul(F3, Bext) / real(kSize,dp)
 			end do
 			!
 			!write to standard out
