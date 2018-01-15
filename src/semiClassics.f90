@@ -51,6 +51,7 @@ module semiClassics
 		!$OMP PARALLEL DO SCHEDULE(STATIC) DEFAULT(SHARED) PRIVATE(n, ki, densCorr, F2, F3, Bext) REDUCTION(+: pF2, pF3)
 		do n = 1, nWfs
 			!
+			!K INTEGRATION
 			do ki = 1, kSize		
 				!PHASE SPACE DENSITY CORRECTION
 				densCorr	= 0.5_dp * dot_product(		dreal(Fcurv(:,n,n,ki)), dreal(Aconn(:,n,n,ki) )	)		* Bext
@@ -61,7 +62,7 @@ module semiClassics
 				!POSITIONAL SHIFT
 				call getF2(n,ki,Velo,En, F2)
 				call getF3(n,ki,Velo,En, F3)
-				!Integrate k-space
+				!sum over K
 				pF2	= pF2 + matmul(F2, Bext) / real(kSize,dp)
 				pF3	= pF3 + matmul(F3, Bext) / real(kSize,dp)
 			end do

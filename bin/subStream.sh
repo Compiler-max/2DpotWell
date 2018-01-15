@@ -76,7 +76,7 @@ function runCalc {
 	mv input.txt inputROT.txt
 	mv polOutput.txt polOutputROT.txt
 	wait
-	rm -r rawData rawDataROT rawDataNoROT
+	rm -r rawData rawDataROT rawDataNoROT veloBerry.txt
 	echo '['$(date +"%T")']: finished post wannier90 run'	
 }
 
