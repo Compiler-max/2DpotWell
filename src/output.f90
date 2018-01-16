@@ -870,7 +870,7 @@ module output
 		!
 		!
 		do i2 = 1,n
-			write(*,'(100(a,f7.3,a,f7.3,a,Xxxx))') 		 ('(',M(i2,i1),')',i1=1,n )
+			write(*,'(100(a,f7.3,a,Xxxx))') 		 ('(',M(i2,i1),')',i1=1,n )
 		end do
 		!
 		return

@@ -77,6 +77,7 @@ module semiClassics
 			!NORMALIZE
 			F2 = F2 / real(kSize,dp)
 			F3 = F3 / real(kSize,dp)
+			
 			!print
 			write(*,*)"n=",n," F2:"
 			call printMat(3,F2)
