@@ -29,7 +29,7 @@ module semiClassics
 		real(dp),		intent(in)		::	En(:,:)			
 		real(dp),		intent(out)		:: 	pF2(3), pF3(3)
 		!real(dp)						::	pnF2(3), pnF3(3)
-		real(dp)						:: 	F2(3,3), F3(3,3)
+		real(dp)						:: 	F2(3,3), F3(3,3), F2loc(3,3), F3loc(3,3)
 		real(dp)						:: 	densCorr(3)
 		integer							:: 	n, ki, kSize
 		!
@@ -46,9 +46,9 @@ module semiClassics
 		!
 		!
 		write(*,*)"[calcFirstOrdP]: start calculating P' via semiclassic approach"
-		
+		write(*,*)"[calcFirstOrdP]: will use ",size(Velo,3)," states"
 
-		!$OMP PARALLEL DO SCHEDULE(STATIC) DEFAULT(SHARED) PRIVATE(n, ki, densCorr, F2, F3, Bext) REDUCTION(+: pF2, pF3)
+		!$OMP PARALLEL DO SCHEDULE(STATIC) DEFAULT(SHARED) PRIVATE(n, ki, densCorr, F2, F2loc, F3, F3loc, Bext) REDUCTION(+: pF2, pF3)
 		do n = 1, nWfs
 			!
 			!K INTEGRATION
@@ -60,12 +60,15 @@ module semiClassics
 					write(*,*)	"[calcFirstOrdP]: warning the densCorr is none zero, norm2(densCorr)=",norm2(densCorr)
 				end if
 				!POSITIONAL SHIFT
-				call getF2(n,ki,Velo,En, F2)
-				call getF3(n,ki,Velo,En, F3)
+				call getF2(n,ki,Velo,En, F2loc)
+				call getF3(n,ki,Velo,En, F3loc)
 				!sum over K
-				pF2	= pF2 + matmul(F2, Bext) / real(kSize,dp)
-				pF3	= pF3 + matmul(F3, Bext) / real(kSize,dp)
+				F2 = F2 + F2loc
+				F3 = F3 + F3loc
 			end do
+			!
+			pF2	= matmul(F2, Bext) / real(kSize,dp)
+			pF3	= matmul(F3, Bext) / real(kSize,dp)
 			!
 			!write to standard out
 			write(*,'(a,i5,a,e12.5,a,e12.5,a,e12.5,a)')	"[calcFirstOrdP]: pNiuF2(n=", n, ") =(" ,pF2(1), ", ", pF2(2), ", ", pF2(3),")."
