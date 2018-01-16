@@ -77,6 +77,7 @@ module semiClassics
 			F2 = F2 / real(kSize,dp)
 			F3 = F3  / real(kSize,dp)
 			!
+			write(*,*)	"Bext = ",Bext(1)," ",Bext(2)," ",Bext(3)
 			!
 			!APPLY FIELD 
 			!do i = 1, 3
