@@ -54,7 +54,8 @@ module polarization
 			!	cent(:) = cent(:) - atPos(:,1)
 			!end if
 
-			write(*,'(a,f12.5,a,f12.5,a,f12.5,a,f12.5,a)')"[calc0ElPol]: Wcent = (",wCent(1,n),", ",wCent(2,n),") modified cent = (", cent(1),", ",cent(2),")"
+			write(*,'(a,f12.5,a,f12.5,a,f12.5,a,f12.5,a)')"[calc0ElPol]: Wcent = (",&
+								wCent(1,n),", ",wCent(2,n),") modified cent = (", cent(1),", ",cent(2),")"
 			pE = pE + cent(:)				
 		end do
 

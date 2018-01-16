@@ -8,7 +8,8 @@ module mathematics
 
 	public :: 	dp, PI_dp, i_dp, acc, aUtoAngstrm, aUtoEv, setAcc, machineP, & 
 				myExp, Cangle, myLeviCivita, nIntegrate, crossP,& 
-				isUnit, isIdentity, isHermitian, mySVD, eigSolverFULL, eigSolverPART, myMatInvSqrt, rotMat, myCommutat
+				isUnit, isIdentity, isHermitian, mySVD,&
+				eigSolverFULL, eigSolverPART, myMatInvSqrt, rotMat, myCommutat
 
 
 	interface nIntegrate
@@ -261,7 +262,8 @@ module mathematics
     	allocate( iwork(liwork)	)	
     	
     	!
-    	call zheevr(jobz, range, uplo, n, a, lda, vl, vu, il, iu, abstol, m, w, z, ldz, isuppz, work, lwork, rwork, lrwork, iwork, liwork, info)
+    	call zheevr(jobz, range, uplo, n, a, lda, vl, vu, il, iu, abstol, & 
+    					m, w, z, ldz, isuppz, work, lwork, rwork, lrwork, iwork, liwork, info)
     	!
     	!
     	if( info < 0 ) then
@@ -313,7 +315,8 @@ module mathematics
     	allocate( iwork(liwork)	)	
     	
     	!
-    	call zheevr(jobz, range, uplo, n, a, lda, vl, vu, il, iu, abstol, m, w, z, ldz, isuppz, work, lwork, rwork, lrwork, iwork, liwork, info)
+    	call zheevr(jobz, range, uplo, n, a, lda, vl, vu, il, iu, abstol, &
+    					m, w, z, ldz, isuppz, work, lwork, rwork, lrwork, iwork, liwork, info)
     	!
     	!
     	if( info < 0 ) then
@@ -355,7 +358,8 @@ module mathematics
 		maxS	= maxval(s)
 		minS	= minval(s)
 		if( minS < 1e-15_dp) then
-			write(*,'(a,e16.9,a,e16.9)')	"[myMatInvSqrt]: warning, minimum eigenvalue close to zero, minS=",minS," maxS=",maxS
+			write(*,'(a,e16.9,a,e16.9)')	"[myMatInvSqrt]: warning, minimum eigenvalue close to zero, minS=",&
+												minS," maxS=",maxS
 		else
 			write(*,'(a,e16.9,a,e16.9)')	"[myMatInvSqrt]: minS=",minS," maxS=",maxS
 		end if
@@ -680,8 +684,10 @@ module mathematics
 		!
 		if(info > 0) then
 		      write(*,*) '[solver/errCheck]: warning, Problem solving the eigenvalue problem: '
-		      if(jobz .EQ. 'N') write(*,*) '[solver/errCheck]: the algorithm failed to converge; ', info ,' off-diagonal elements of an intermediate tridiagonal form did not converge to zero;'
-		      if(jobz .EQ. 'V') write(*,*) '[solver/errCheck]: the algorithm failed to compute an eigenvalue while working on the submatrix lying in rows and columns ', info/(n+1), ' through ', mod(info, n+1)
+		      if(jobz .EQ. 'N') write(*,*) '[solver/errCheck]: the algorithm failed to converge; ', info ,&
+		      				' off-diagonal elements of an intermediate tridiagonal form did not converge to zero;'
+		      if(jobz .EQ. 'V') write(*,*) '[solver/errCheck]: the algorithm failed to compute an',&
+		    ' eigenvalue while working on the submatrix lying in rows and columns ', info/(n+1), ' through ', mod(info, n+1)
 		elseif(info < 0) then
 		     write(*,*) '[solver/errCheck]: the ',info,'-th parameter had an illegal value.' 
 		endif

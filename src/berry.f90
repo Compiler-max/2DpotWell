@@ -276,7 +276,8 @@ module berry
 		else 
 			if( nWfs <= nBands) then
 				ckW(:,:,:)	= ck(:,1:nWfs,:)
-				write(*,'(a,e17.10,a,e17.10,a,e17.10,a)')	"[berryMethod]: rotations disabled. Will use initial electronic structure coeff"
+				write(*,'(a,a)')	"[berryMethod]: rotations disabled.",&
+																" Will use initial electronic structure coeff"
 			else 
 				ckW	= dcmplx(0.0_dp)
 				write(*,*)	"[berryMethod]: critical error, less nBands then nWfs, coeff set to zero..."

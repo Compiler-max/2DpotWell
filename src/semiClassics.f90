@@ -2,6 +2,7 @@ module semiClassics
 	!this module uses a semiclassic approach to calculate the first ordrer correction
 	!	to the polariztion induced by a perturbive magnetic field
 	! 	see Niu PRL 112, 166601 (2014)
+	use omp_lib
 	use mathematics,	only:	dp, PI_dp, i_dp, machineP, acc, myExp, myLeviCivita
 	use sysPara,		only:	Bext, prefactF3, atPos, nAt, nWfs
 	use output,			only:	printMat
@@ -48,11 +49,15 @@ module semiClassics
 		write(*,*)"[calcFirstOrdP]: start calculating P' via semiclassic approach"
 		write(*,*)"[calcFirstOrdP]: will use ",size(Velo,3)," states"
 
-		!$OMP PARALLEL DO SCHEDULE(STATIC) DEFAULT(SHARED)  &
-		!$OMP PRIVATE(n, ki, kSize, i, j, densCorr, F2, F2k, F3, F3k) &
-		!$OMP REDUCTION(+: pF2, pF3)
+		pF2 = 0.0_dp
+		pF3 = 0.0_dp
+		!$OMP PARALLEL REDUCTION(+:pF2,pF3)  DEFAULT(SHARED)  &
+		!$OMP PRIVATE(n, ki, i, j, densCorr, F2, F2k, F3, F3k)
+		!$OMP DO SCHEDULE(STATIC)
 		do n = 1, nWfs
 			!
+			write(*,*)	"hello from omp thread", OMP_GET_THREAD_NUM()," of",OMP_GET_NUM_THREADS()
+
 			F2 = 0.0_dp
 			F3 = 0.0_dp
 			!
@@ -76,25 +81,17 @@ module semiClassics
 			!NORMALIZE
 			F2 = F2 / real(kSize,dp)
 			F3 = F3  / real(kSize,dp)
-			!
-			write(*,*)	"Bext = ",Bext(1)," ",Bext(2)," ",Bext(3)
-			!
+		
 			!APPLY FIELD 
-			!do i = 1, 3
-			!	do j = 1, 3
-			!		pF2(i)	= pF2(i) + F2(i,j) * Bext(j)
-			!		pF3(i)	= pF3(i) + F3(i,j) * Bext(j)
-			!	end do
-			!end do
 			pF2 = matmul(F2,Bext) 
 			pF3 = matmul(F3,Bext) 
-			!
 			!
 			!write to standard out
 			write(*,'(a,i5,a,e12.5,a,e12.5,a,e12.5,a)')	"[calcFirstOrdP]: pNiuF2(n=", n, ") =(" ,pF2(1), ", ", pF2(2), ", ", pF2(3),")."
 			write(*,'(a,i5,a,e12.5,a,e12.5,a,e12.5,a)')	"[calcFirstOrdP]: pNiuF3(n=", n, ") =(" ,pF3(1), ", ", pF3(2), ", ", pF3(3),")."
 		end do
-		!$OMP END PARALLEL DO
+		!$OMP END DO
+		!$OMP END PARALLEL
 		!
 		write(*,'(a,e12.5,a,e12.5,a,e12.5,a)')	"[calcFirstOrdP]: pNiuF2 =(" ,pF2(1), ", ", pF2(2), ", ", pF2(3),")."
 		write(*,'(a,e12.5,a,e12.5,a,e12.5,a)')	"[calcFirstOrdP]: pNiuF3 =(" ,pF3(1), ", ", pF3(2), ", ", pF3(3),")."
@@ -169,6 +166,7 @@ module semiClassics
 									eDiff		= 	eDiff1 * eDiff2	
 									!MATRIX
 									F2(i,j) 	= F2(i,j) +   real(myLeviCivita(j,k,l),dp) *  dreal( Vtmp )  / eDiff	
+									!F2(i,j) 	= F2(i,j) +   myLeviCivita(j,k,l) *  dreal( Vtmp )  / eDiff	
 									!DEGENERATE WARNING
 									if( abs(eDiff) < machineP )  then
 										write(*,*)	"[addF2]: warning for k point = ",ki
@@ -227,6 +225,7 @@ module semiClassics
 								eDiff		= ( 	En(nZero,ki) - En(n,ki)	 )**3 	
 								!MATRIX
 								F3(i,j) 	= F3(i,j) + real(prefactF3,dp) * real(myLeviCivita(j,k,l),dp) *	 dreal( Vtmp ) / eDiff
+								!F3(i,j) 	= F3(i,j) + prefactF3 * myLeviCivita(j,k,l) *	 dreal( Vtmp ) / eDiff
 								!DEGENERATE WARNING
 								if( abs(eDiff) < machineP ) write(*,*) "[addF3]: warning degenerate bands n0=",nZero,"n=",n," eDiff=",eDiff
 							end do								!

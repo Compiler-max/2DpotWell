@@ -1,6 +1,5 @@
 program main
 	!TWO dimensional potential well code
-	use omp_lib
 	use mathematics, 	only: 		dp, PI_dp
 
 	use sysPara
