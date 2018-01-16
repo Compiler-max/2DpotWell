@@ -48,7 +48,9 @@ module semiClassics
 		write(*,*)"[calcFirstOrdP]: start calculating P' via semiclassic approach"
 		write(*,*)"[calcFirstOrdP]: will use ",size(Velo,3)," states"
 
-		!$OMP PARALLEL DO SCHEDULE(STATIC) DEFAULT(SHARED) PRIVATE(n, ki, kSize, i, j, densCorr, F2, F2k, F3, F3k, Bext) REDUCTION(+: pF2, pF3)
+		!$OMP PARALLEL DO SCHEDULE(STATIC) DEFAULT(SHARED)  &
+		!$OMP PRIVATE(n, ki, kSize, i, j, densCorr, F2, F2k, F3, F3k) &
+		!$OMP REDUCTION(+: pF2, pF3)
 		do n = 1, nWfs
 			!
 			F2 = 0.0_dp
@@ -56,9 +58,6 @@ module semiClassics
 			!
 			!GET RESPONSE MATRIX
 			do ki = 1, kSize		
-				!
-				F2k = 0.0_dp
-				F3k = 0.0_dp
 				!
 				!PHASE SPACE DENSITY CORRECTION
 				densCorr	= 0.5_dp * dot_product(		dreal(Fcurv(:,n,n,ki)), dreal(Aconn(:,n,n,ki) )	)		* Bext
@@ -75,22 +74,19 @@ module semiClassics
 			end do
 			!
 			!NORMALIZE
-			F2 = F2 / real(kSize,dp)
-			F3 = F3 / real(kSize,dp)
-			
-			!print
-			write(*,*)"n=",n," F2:"
-			call printMat(3,F2)
-			write(*,*)"   F3:"
-			call printMat(3,F3)
+			F2 = F2 
+			F3 = F3
+			!
 			!
 			!APPLY FIELD 
-			do i = 1, 3
-				do j = 1, 3
-					pF2(i)	= pF2(i) + F2(i,j) * Bext(j)
-					pF3(i)	= pF3(i) + F3(i,j) * Bext(j)
-				end do
-			end do
+			!do i = 1, 3
+			!	do j = 1, 3
+			!		pF2(i)	= pF2(i) + F2(i,j) * Bext(j)
+			!		pF3(i)	= pF3(i) + F3(i,j) * Bext(j)
+			!	end do
+			!end do
+			pF2 = matmul(F2,Bext) / real(kSize,dp)
+			pF3 = matmul(F3,Bext)  / real(kSize,dp)
 			!
 			!
 			!write to standard out
@@ -99,6 +95,8 @@ module semiClassics
 		end do
 		!$OMP END PARALLEL DO
 		!
+		write(*,'(a,e12.5,a,e12.5,a,e12.5,a)')	"[calcFirstOrdP]: pNiuF2 =(" ,pF2(1), ", ", pF2(2), ", ", pF2(3),")."
+		write(*,'(a,e12.5,a,e12.5,a,e12.5,a)')	"[calcFirstOrdP]: pNiuF3 =(" ,pF3(1), ", ", pF3(2), ", ", pF3(3),")."
 		!
 		return
 	end subroutine
