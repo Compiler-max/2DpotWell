@@ -82,10 +82,8 @@ module semiClassics
 			call printMat(3,F2)
 			write(*,*)"   F3:"
 			call printMat(3,F3)
-
+			!
 			!APPLY FIELD 
-			pF2	= 0.0_dp	!matmul(F2, Bext) / real(kSize,dp)
-			pF3	= 0.0_dp	!matmul(F3, Bext) / real(kSize,dp)
 			do i = 1, 3
 				do j = 1, 3
 					pF2(i)	= pF2(i) + F2(i,j) * Bext(j)
@@ -93,7 +91,6 @@ module semiClassics
 				end do
 			end do
 			!
-		
 			!
 			!write to standard out
 			write(*,'(a,i5,a,e12.5,a,e12.5,a,e12.5,a)')	"[calcFirstOrdP]: pNiuF2(n=", n, ") =(" ,pF2(1), ", ", pF2(2), ", ", pF2(3),")."
