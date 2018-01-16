@@ -69,8 +69,8 @@ module semiClassics
 				call getF2(n,ki,Velo,En, F2k)
 				call getF3(n,ki,Velo,En, F3k)
 				!sum over K
-				!F2 = F2 + F2k
-				!F3 = F3 + F3k
+				F2 = F2 + F2k
+				F3 = F3 + F3k
 			end do
 			!
 			!NORMALIZE
