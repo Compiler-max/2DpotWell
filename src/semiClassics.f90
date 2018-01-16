@@ -166,7 +166,7 @@ module semiClassics
 									eDiff2		=  	( 	En(nZero,ki) - En(m,ki)		)
 									eDiff		= 	eDiff1 * eDiff2	
 									!MATRIX
-									F2(i,j) 	= F2(i,j) +   real(myLeviCivita(j,k,l),dp) *  dreal( Vtmp )  / eDiff	
+									F2(i,j) 	= F2(i,j) +   myLeviCivita(j,k,l) *  dreal( Vtmp )  / eDiff	
 									!DEGENERATE WARNING
 									if( abs(eDiff) < machineP )  then
 										write(*,*)	"[addF2]: warning for k point = ",ki
