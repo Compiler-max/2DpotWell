@@ -17,6 +17,7 @@ module output
 
 	interface printMat
 		module procedure printCmplxMat
+		module procedure printRealMat
 	end interface printMat
 
 	contains
@@ -857,6 +858,19 @@ module output
 		!
 		do i2 = 1,n
 			write(*,'(100(a,f7.3,a,f7.3,a,Xxxx))') 		 ('(',real(M(i2,i1)),imag_unit(i2,i1),abs(aimag(M(i2,i1))),')',i1=1,n )
+		end do
+		!
+		return
+	end subroutine
+
+	subroutine printRealMat(n, M)
+		integer    		, intent(in)    :: n
+		real(dp)		, intent(in)    :: M(:,:)
+		integer 						:: i1,i2
+		!
+		!
+		do i2 = 1,n
+			write(*,'(100(a,f7.3,a,f7.3,a,Xxxx))') 		 ('(',M(i2,i1),')',i1=1,n )
 		end do
 		!
 		return

@@ -4,7 +4,7 @@ module semiClassics
 	! 	see Niu PRL 112, 166601 (2014)
 	use mathematics,	only:	dp, PI_dp, i_dp, machineP, acc, myExp, myLeviCivita
 	use sysPara,		only:	Bext, prefactF3, atPos, nAt, nWfs
-
+	use output,			only:	printMat
 	implicit none
 
 
@@ -74,6 +74,15 @@ module semiClassics
 				F3 = F3 + F3k
 			end do
 			!
+			!NORMALIZE
+			F2 = F2 / real(kSize,dp)
+			F3 = F3 / real(kSize,dp)
+			!print
+			write(*,*)"n=",n," F2:"
+			call printMat(3,F2)
+			write(*,*)"   F3:"
+			call printMat(3,F3)
+
 			!APPLY FIELD 
 			pF2	= 0.0_dp	!matmul(F2, Bext) / real(kSize,dp)
 			pF3	= 0.0_dp	!matmul(F3, Bext) / real(kSize,dp)
@@ -84,9 +93,7 @@ module semiClassics
 				end do
 			end do
 			!
-			!NORMALIZE
-			pF2	= pF2 / real(kSize,dp)
-			pF3 = pF3 / real(kSize,dp)
+		
 			!
 			!write to standard out
 			write(*,'(a,i5,a,e12.5,a,e12.5,a,e12.5,a)')	"[calcFirstOrdP]: pNiuF2(n=", n, ") =(" ,pF2(1), ", ", pF2(2), ", ", pF2(3),")."
