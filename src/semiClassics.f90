@@ -69,13 +69,13 @@ module semiClassics
 				call getF2(n,ki,Velo,En, F2k)
 				call getF3(n,ki,Velo,En, F3k)
 				!sum over K
-				F2 = F2 + F2k
-				F3 = F3 + F3k
+				!F2 = F2 + F2k
+				!F3 = F3 + F3k
 			end do
 			!
 			!NORMALIZE
-			F2 = F2 
-			F3 = F3
+			F2 = F2 / real(kSize,dp)
+			F3 = F3  / real(kSize,dp)
 			!
 			!
 			!APPLY FIELD 
@@ -85,8 +85,8 @@ module semiClassics
 			!		pF3(i)	= pF3(i) + F3(i,j) * Bext(j)
 			!	end do
 			!end do
-			pF2 = matmul(F2,Bext) / real(kSize,dp)
-			pF3 = matmul(F3,Bext)  / real(kSize,dp)
+			pF2 = matmul(F2,Bext) 
+			pF3 = matmul(F3,Bext) 
 			!
 			!
 			!write to standard out
