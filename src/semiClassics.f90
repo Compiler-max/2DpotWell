@@ -110,7 +110,7 @@ module semiClassics
 		integer,		intent(in)		:: nZero, ki
 		complex(dp),	intent(in)		:: Velo(:,:,:,:)  !V(3,nWfs,nWfs,nK)
 		real(dp),		intent(in)		:: En(:,:)			!En(nK nWfs)
-		real(dp),		intent(out)		:: Fmat(:,:)
+		real(dp),		intent(out)		:: Fmat(3,3)
 		real(dp)						:: F2(3,3), F3(3,3)
 		!
 		Fmat	=	0.0_dp		
@@ -226,7 +226,7 @@ module semiClassics
 								!ENERGIES
 								eDiff		= ( 	En(nZero,ki) - En(n,ki)	 )**3 	
 								!MATRIX
-								F3(i,j) 	= F3(i,j) + real(prefactF3 * myLeviCivita(j,k,l),dp) *	 dreal( Vtmp ) / eDiff
+								F3(i,j) 	= F3(i,j) + real(prefactF3,dp) * real(myLeviCivita(j,k,l),dp) *	 dreal( Vtmp ) / eDiff
 								!DEGENERATE WARNING
 								if( abs(eDiff) < machineP ) write(*,*) "[addF3]: warning degenerate bands n0=",nZero,"n=",n," eDiff=",eDiff
 							end do								!

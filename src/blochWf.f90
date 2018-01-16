@@ -47,6 +47,7 @@ module blochWf
 		complex(dp),	intent(out)		::	v_mat(:,:,:,:)
 		integer							::	qi, m, n, gi
 		!
+		v_mat = dcmplx(0.0_dp)
 		!
 		if(	size(ck,3)/=size(v_mat,4)	) then
 			write(*,*)	"[calcVeloGrad]: coeff and velo defined on different k meshes, stop now"
@@ -57,7 +58,6 @@ module blochWf
 				do m = 1, nSolve
 					do n = 1, nSolve
 						!
-						v_mat(:,n,m,qi) = dcmplx(0.0_dp)
 						!SUM OVER BASIS FUNCTIONS
 						do gi = 1 , nGq(qi)
 							v_mat(1:2,n,m,qi) = v_mat(1:2,n,m,qi) -  dconjg(ck(gi,n,qi)) *  ck(gi,m,qi) *  Gvec(1:2,gi,qi)
