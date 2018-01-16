@@ -144,7 +144,6 @@ module semiClassics
 		integer							:: i, j, k, l, n,m, nSize
 		!
 		nSize	=	size(Velo,3)
-		F2		=	0.0_dp
 		!loop bands
 		do n = 1, nSize
 			do m = 1, nSize
@@ -152,6 +151,7 @@ module semiClassics
 					!loop matrix indices
 					do j = 1, 3
 						do i = 1, 3
+							F2(i,j)	= 0.0_dp
 							!loop levi civita
 							do k = 1, 3
 								do l = 1, 3				
@@ -162,7 +162,7 @@ module semiClassics
 									eDiff2		=  	( 	En(nZero,ki) - En(m,ki)		)
 									eDiff		= 	eDiff1 * eDiff2	
 									!MATRIX
-									F2(i,j) 	= F2(i,j) +   myLeviCivita(j,k,l) *  dreal( Vtmp )  / eDiff	
+									F2(i,j) 	= F2(i,j) +   real(myLeviCivita(j,k,l),dp) *  dreal( Vtmp )  / eDiff	
 									!DEGENERATE WARNING
 									if( abs(eDiff) < machineP )  then
 										write(*,*)	"[addF2]: warning for k point = ",ki
@@ -203,13 +203,14 @@ module semiClassics
 		integer							:: i, j, k, l, n, nSize
 		!
 		nSize 	=	size(Velo,3)
-		F3		=	0.0_dp
+		
 		!loop bands
 		do n = 1, nSize
 			if( n/=nZero ) then
 				!loop matrix indices
 				do j = 1, 3
 					do i = 1, 3
+						F3(i,j)	= 0.0_dp
 						!loop levi civita
 						do k = 1, 3
 							do l = 1,3				
@@ -218,7 +219,7 @@ module semiClassics
 								!ENERGIES
 								eDiff		= ( 	En(nZero,ki) - En(n,ki)	 )**3 	
 								!MATRIX
-								F3(i,j) 	= F3(i,j) + prefactF3 * myLeviCivita(j,k,l) *	 dreal( Vtmp ) / eDiff
+								F3(i,j) 	= F3(i,j) + real(prefactF3 * myLeviCivita(j,k,l),dp) *	 dreal( Vtmp ) / eDiff
 								!DEGENERATE WARNING
 								if( abs(eDiff) < machineP ) write(*,*) "[addF3]: warning degenerate bands n0=",nZero,"n=",n," eDiff=",eDiff
 							end do								!
