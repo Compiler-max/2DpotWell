@@ -29,9 +29,9 @@ module semiClassics
 		real(dp),		intent(in)		::	En(:,:)			
 		real(dp),		intent(out)		:: 	pF2(3), pF3(3)
 		!real(dp)						::	pnF2(3), pnF3(3)
-		real(dp)						:: 	F2(3,3), F3(3,3), F2loc(3,3), F3loc(3,3)
+		real(dp)						:: 	F2(3,3), F3(3,3), F2k(3,3), F3k(3,3)
 		real(dp)						:: 	densCorr(3)
-		integer							:: 	n, ki, kSize
+		integer							:: 	n, ki, kSize, i, j
 		!
 		kSize	= size(Velo,4)
 		!
@@ -48,11 +48,18 @@ module semiClassics
 		write(*,*)"[calcFirstOrdP]: start calculating P' via semiclassic approach"
 		write(*,*)"[calcFirstOrdP]: will use ",size(Velo,3)," states"
 
-		!$OMP PARALLEL DO SCHEDULE(STATIC) DEFAULT(SHARED) PRIVATE(n, ki, densCorr, F2, F2loc, F3, F3loc, Bext) REDUCTION(+: pF2, pF3)
+		!$OMP PARALLEL DO SCHEDULE(STATIC) DEFAULT(SHARED) PRIVATE(n, ki, kSize, i, j, densCorr, F2, F2k, F3, F3k, Bext) REDUCTION(+: pF2, pF3)
 		do n = 1, nWfs
 			!
-			!K INTEGRATION
+			F2 = 0.0_dp
+			F3 = 0.0_dp
+			!
+			!GET RESPONSE MATRIX
 			do ki = 1, kSize		
+				!
+				F2k = 0.0_dp
+				F3k = 0.0_dp
+				!
 				!PHASE SPACE DENSITY CORRECTION
 				densCorr	= 0.5_dp * dot_product(		dreal(Fcurv(:,n,n,ki)), dreal(Aconn(:,n,n,ki) )	)		* Bext
 				!f(:,ki)		= f(:,ki) + densCorr
@@ -60,15 +67,26 @@ module semiClassics
 					write(*,*)	"[calcFirstOrdP]: warning the densCorr is none zero, norm2(densCorr)=",norm2(densCorr)
 				end if
 				!POSITIONAL SHIFT
-				call getF2(n,ki,Velo,En, F2loc)
-				call getF3(n,ki,Velo,En, F3loc)
+				call getF2(n,ki,Velo,En, F2k)
+				call getF3(n,ki,Velo,En, F3k)
 				!sum over K
-				F2 = F2 + F2loc
-				F3 = F3 + F3loc
+				F2 = F2 + F2k
+				F3 = F3 + F3k
 			end do
 			!
-			pF2	= matmul(F2, Bext) / real(kSize,dp)
-			pF3	= matmul(F3, Bext) / real(kSize,dp)
+			!APPLY FIELD 
+			pF2	= 0.0_dp	!matmul(F2, Bext) / real(kSize,dp)
+			pF3	= 0.0_dp	!matmul(F3, Bext) / real(kSize,dp)
+			do i = 1, 3
+				do j = 1, 3
+					pF2(i)	= pF2(i) + F2(i,j) * Bext(j)
+					pF3(i)	= pF3(i) + F3(i,j) * Bext(j)
+				end do
+			end do
+			!
+			!NORMALIZE
+			pF2	= pF2 / real(kSize,dp)
+			pF3 = pF3 / real(kSize,dp)
 			!
 			!write to standard out
 			write(*,'(a,i5,a,e12.5,a,e12.5,a,e12.5,a)')	"[calcFirstOrdP]: pNiuF2(n=", n, ") =(" ,pF2(1), ", ", pF2(2), ", ", pF2(3),")."
