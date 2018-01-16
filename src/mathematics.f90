@@ -1,13 +1,12 @@
 module mathematics
 	!module contains some basic constants, especially dp for double precision convention
 	!additionally it contains the matrix operation wrappers to call intel mkl
-	use omp_lib
 	implicit none
 	private
 
 
 	public :: 	dp, PI_dp, i_dp, acc, aUtoAngstrm, aUtoEv, setAcc, machineP, & 
-				myExp, Cangle, myLeviCivita, nIntegrate, crossP,& 
+				myExp, Cangle, myLeviCivita,  crossP,& 
 				isUnit, isIdentity, isHermitian, mySVD,&
 				eigSolverFULL, eigSolverPART, myMatInvSqrt, rotMat, myCommutat
 

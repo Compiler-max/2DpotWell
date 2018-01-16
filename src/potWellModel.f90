@@ -3,7 +3,7 @@ module potWellModel
 	!	in the process the wannier functions are generated aswell with routines from wannGen module
 	use omp_lib
 	use mathematics,	only:	dp, PI_dp,i_dp, machineP, myExp, myLeviCivita, &
-								eigSolverPART, nIntegrate, isUnit, isHermitian
+								eigSolverPART, isUnit, isHermitian
 	use sysPara				
 	use output,			only:	writeEnAndCK, writeEnAbInitio
 	implicit none	

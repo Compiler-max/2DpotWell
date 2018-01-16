@@ -1,5 +1,5 @@
 module peierls
-	use mathematics,	only:	dp, PI_dp, i_dp, myExp, crossP, nIntegrate, eigSolverFULL, isUnit, aUtoAngstrm, aUtoEv
+	use mathematics,	only:	dp, PI_dp, i_dp, myExp, crossP, eigSolverFULL, isUnit, aUtoAngstrm, aUtoEv
 	use sysPara
 	use blochWf,		only:	calcConnOnCoarse
 	use	polarization,	only:	calcPolViaA

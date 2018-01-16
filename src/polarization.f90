@@ -1,5 +1,5 @@
 module polarization
-	use mathematics,	only:	dp, PI_dp, i_dp, acc, myExp, nIntegrate
+	use mathematics,	only:	dp, PI_dp, i_dp, acc, myExp
 	use sysPara,		only:	nAt, atPos, Zion
 
 	implicit none

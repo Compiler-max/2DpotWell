@@ -2,13 +2,12 @@ module berry
 	!module contains methods related to the Berry phase theory of modern polarization
 	!	i.e. calculation of connection, velocities, curvatures and polarization
 	use omp_lib
-	use mathematics,	only:	dp, PI_dp, i_dp, acc, machineP,  myExp, myLeviCivita, nIntegrate, aUtoAngstrm, aUtoEv
+	use mathematics,	only:	dp, PI_dp, i_dp, acc, machineP,  myExp, myLeviCivita, aUtoAngstrm, aUtoEv
 	use sysPara
 	use blochWf,		only:	calcVeloGrad, calcConnOnCoarse
 	use polarization,	only:	calcPolViaA
 	use semiClassics,	only:	calcFirstOrdP
 	use peierls,		only:	peierlsMethod
-	use wannier,		only:	wannMethod
 	use output,			only:	writeCkASunk, writePolFile, writeVeloHtxt, writeUmat, writeBerryInterpU, &
 								writeHtbBerry, writeRtbBerry, writeEnBerry, writeEnH
 
@@ -93,13 +92,14 @@ module berry
 		end if
 
 		!WANNIER
-		if(doWanni) then
-			write(*,*) "[berryMethod]: now calc the Wannier functions by hand"
-			call wannMethod(ckW, pWann)
-			write(*,'(a,f8.4,a,f8.4,a,f8.4,a)')	"[berryMethod]: pWann=(",pWann(1),", ",pWann(2),", ",pWann(3),")."
-		else
-			pWann	= 0.0_dp
-		end if
+		!if(doWanni) then
+		!	write(*,*) "[berryMethod]: now calc the Wannier functions by hand"
+		!	!call wannMethod(ckW, pWann)
+		!	write(*,'(a,f8.4,a,f8.4,a,f8.4,a)')	"[berryMethod]: pWann=(",pWann(1),", ",pWann(2),", ",pWann(3),")."
+		!else
+		!	pWann	= 0.0_dp
+		!end if
+		pWann = 0.0_dp
 
 		!OUTPUT
 		call writePolFile(pWann, pBerry, pNiuF2, pNiuF3, pPei )
