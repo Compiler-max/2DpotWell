@@ -142,7 +142,7 @@ module semiClassics
 		integer,		intent(in)		:: nZero, ki
 		complex(dp),	intent(in)		:: Velo(:,:,:,:)  
 		real(dp),		intent(in)		:: En(:,:)			!
-		real(dp),		intent(out)		:: F2(:,:)
+		real(dp),		intent(out)		:: F2(3s,3)
 		complex(dp)						:: Vtmp
 		real(dp)						:: eDiff, eDiff1, eDiff2
 		integer							:: i, j, k, l, n,m, nSize
@@ -203,7 +203,7 @@ module semiClassics
 		integer,		intent(in)		:: nZero, ki
 		complex(dp),	intent(in)		:: Velo(:,:,:,:)  
 		real(dp),		intent(in)		:: En(:,:)			
-		real(dp),		intent(out)		:: F3(:,:)
+		real(dp),		intent(out)		:: F3(3,3)
 		complex(dp)						:: Vtmp
 		real(dp)						:: eDiff
 		integer							:: i, j, k, l, n, nSize
