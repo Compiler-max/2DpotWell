@@ -38,7 +38,7 @@ module peierls
 		!
 		!PEIERLS SUB
 		if( foundFile ) then
-			call doPeierls(ck, pPei)
+			call peierlsWorker(ck, pPei)
 		else
 			write(*,*)	"[peierlsMethod]: did not find input file seedname_tb.dat"
 			pPei	= 0.0_dp
@@ -67,17 +67,15 @@ module peierls
 		!	return 	= Integrate^\vec{rMax]_\vec{rMin} 		\vec{A(r')}.\vec{dr'}
 		!			= -0.5 cross_p[rMin,B].(rMax - rMin)
 		integer,		intent(in)		:: rj
-		real(dp)						:: rMin(2), rMax(2), rU(3), rL(3), integrateA
-		rMin(:)		= 0.0_dp
-		rMax(:)		= Rcell(:,rj)
-		!
-		rU(1:2)		= rMax(1:2)
-		rU(3)		= 0.0_dp
-		rL(1:2)		= rMin(1:2)
-		rL(3)		= 0.0_dp
-		!
-		!old (symmetric gauge - A_vec =  -0.5 * crossp(R_vec,B_vec)		)
-		!integrateA	= -0.5_dp * dot_product( crossP(rL,Bext)	, (rU-rL)	)
+		real(dp)						:: integrateA
+		!real(dp)						:: rMin(2), rMax(2), rU(3), rL(3), integrateA
+		!rMin(:)		= 0.0_dp
+		!rMax(:)		= Rcell(:,rj)
+		!!
+		!rU(1:2)		= rMax(1:2)
+		!rU(3)		= 0.0_dp
+		!rL(1:2)		= rMin(1:2)
+		!rL(3)		= 0.0_dp
 		!
 		!new (Landau Gauge - A_vec = y_hat * abs(B) R_vec(1)	)
 		integrateA  = 0.5_dp * Bext(3) * Rcell(1,rj) * Rcell(2,rj) 
@@ -89,13 +87,13 @@ module peierls
 	end function
 
 
-	subroutine doPeierls(ck, pPei)
+	subroutine peierlsWorker(ck, pPei)
 		!performs peierls sub & calcs pol
 		complex(dp),	intent(in)		::	ck(:,:,:)
 		real(dp),		intent(out)		::	pPei(3)
 		complex(dp),	allocatable		::	Hp(:,:), ckP(:,:,:), tshift(:,:,:), AconnP(:,:,:,:)
 		real(dp),		allocatable		::	EnP(:,:)
-		integer							::	Ri, qi, gi
+		integer							::	Ri, qi, gi, m, n
 		complex(dp)						::	phase
 		!
 		
@@ -114,32 +112,40 @@ module peierls
 		!
 		!ELECTRONIC STRUCTURE
 
-		!$OMP PARALLEL DEFAULT(SHARED) PRIVATE(qi, gi, Ri, Hp, phase)
+		!$OMP PARALLEL DEFAULT(SHARED) PRIVATE(qi, gi, Ri, m, n, Hp, phase)
 		allocate(	Hp(	nWfs,	nWfs)		)
 		!$OMP DO SCHEDULE( STATIC )
 		do qi = 1, nQ
+			!
 			!SET UP k SPACE HAMILTONIAN
 			Hp	= dcmplx(0.0_dp)
 			do Ri = 1, nSC
 				phase	= myExp( dot_product(qpts(:,qi),Rcell(:,Ri))	) !/ dsqrt(real(nSC,dp))
 				Hp(:,:)	= Hp(:,:) + phase * tshift(:,:,Ri)
 			end do
+			!
 			!SOLVE HAM	
 			call eigSolverFULL(Hp(:,:),EnP(:,qi))
 			!
-			if( .not. isUnit(Hp)	) write(*,*) "[peierlsMethod]: ckP not unitary at qi=",qi
 			!EXTRACT EXPANSION COEFF
 			ckP(:,:,qi)	= dcmplx(0.0_dp)
 			do gi = 1, nGq(qi)
-				ckP(gi,:,qi)	= matmul( ck(gi,:,qi), Hp(:,:))
+				!ckP(gi,:,qi)	= matmul( ck(gi,:,qi), Hp(:,:))
+				do n = 1, nWfs
+					do m = 1, nWfs
+						ckP(gi,n,qi) = ckP(gi,n,qi) + ck(gi,m,qi) * Hp(m,n)
+					end do
+				end do
 			end do
+			!
+			!DEBUG
+			if( .not. isUnit(Hp)	) write(*,*) "[peierlsMethod]: ckP not unitary at qi=",qi
 		end do
 		!$OMP END DO
 		!$OMP END PARALLEL
 		!
 		!
 		!GENERATE CONNECTION
-		AconnP	= dcmplx(0.0_dp)
 		call calcConnOnCoarse(ckP, AconnP) 
 		!
 		!CALC POL

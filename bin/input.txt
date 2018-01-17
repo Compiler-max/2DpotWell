@@ -53,7 +53,7 @@
     useRot      = f
     doVeloNUM   = f
     doNiu       = t
-    doPei       = f
+    doPei       = t
     doWanni     = f
     doGaugBack  = f
 
