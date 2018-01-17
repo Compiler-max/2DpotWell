@@ -26,65 +26,19 @@ module polarization
 		!
 		pE	 	= 0.0_dp
 		!
-		!ATOM LIKE
 		do n = 1,size(wCent,2)
-			!cent(1) = dmod(wCent(1,n),aX) !get current center by projection into first unit cell
-			!cent(2)	= dmod(wCent(2,n),aY)
+			!grep center
 			cent(1:3)	= wCent(1:3,n)
-			!!
-			!!SINGLE ATOM
-			if( nAt == 1 ) then
-				cent(1:2)	= cent(1:2) - atPos(1:2,1)		!calc center w.r.t. atom center
-			!DOUBLE ATOM
-			else if( nAt == 2 ) then
-				if( mod(n,2)== 0 ) then
-					cent(1:2)	= cent(1:2) - atPos(1:2,2)
-				else	
-					cent(1:2)	= cent(1:2) - atPos(1:2,1)
-				end if
-			!DEFAULT
-			else
-				write(*,*)	"[calcPolWannCent]: to many atoms in unit cell!"
-			end if
-
-			
-			!if( mod(n,2) == 0 ) then
-			!	cent(:) = cent(:) - atPos(:,2)
-			!else
-			!	cent(:) = cent(:) - atPos(:,1)
-			!end if
-
+			!substract atom center from pol
+			call substractAtPos(n,cent)
+			!debug message
 			write(*,'(a,f12.5,a,f12.5,a,f12.5,a,f12.5,a)')"[calc0ElPol]: Wcent = (",&
 								wCent(1,n),", ",wCent(2,n),") modified cent = (", cent(1),", ",cent(2),")"
+			!sum total
 			pE = pE + cent(:)				
 		end do
-
-
-
-	
-
-		!2BAND
-		!bondC(:)	= ( atPos(:,1) + atPos(:,2) ) / 2
-		!do n = 1 , size(wCent,2)
-		!	pE 	= pE + wCent(:,n) - bondC(:)
-		!end do
-
-		!MOD QUANTUM
-		!pE(1) = dmod(pE(1),aX/vol)
-		!pE(2) = dmod(pE(2),aY/vol)
-		
-
 		!
-		!NORMALIZE
-		!pE = pE / vol
-		!pI = pI / vol
 		!
-		!SHIFT WITH RESPECT TO CENTER OF UNIT CELL
-		!cent(1)	= aX * 0.5_dp
-		!cent(2)	= aY * 0.5_dp
-		!pE = (pE - cent ) / vol
-		!
-
 		return
 	end subroutine
 
@@ -98,55 +52,71 @@ module polarization
 		complex(dp),		intent(in)		:: A_mat(:,:,:,:)			!A(2,	 nWfs, nWfs, nQ	)	
 		real(dp),			intent(out)		:: pElA(:)
 		complex(dp)	,		allocatable		:: val(:)
-		real(dp)							:: machine
+		real(dp),			allocatable		:: rVal(:)
 		integer								:: n, qi
 		!
-		allocate(	val( size(A_mat,1) )	)
-		val		= dcmplx(0.0_dp)
-		machine	= 1e-15_dp
-		if( size(A_mat,1) /= size(pElA) ) write(*,*)	"[calcPolViaA]: dimension of A_mat and output val dont fit"
+		pelA = 0.0_dp
+		allocate(	val(  size(A_mat,1) )	)
+		allocate(	rVal( size(A_mat,1) )	)
 		!
 		!
-		!SUM OVER  STATES
-		pElA	= 0.0_dp
-		do n 	= 1, size(A_mat,2)
-			val	= dcmplx(0.0_dp)
-			!INTEGRATE
-			do qi = 1, size(A_mat,4)
-				val(:)	= val(:) + A_mat(:,n,n,qi) / real(size(A_mat,4),dp)
+		if( size(A_mat,1) /= size(pElA) ) then 
+			write(*,*)	"[calcPolViaA]: dimension of A_mat and output val dont fit, el. pol. set to zero"
+		else
+			!
+			!SUM OVER  STATES
+			pElA	= 0.0_dp
+			do n 	= 1, size(A_mat,2)
+				!
+				!INTEGRATE
+				val	= dcmplx(0.0_dp)
+				do qi = 1, size(A_mat,4)
+					val(:)	= val(:) + A_mat(:,n,n,qi) 
+				end do
+				val(:)	= val(:) / real(size(A_mat,4),dp)
+				!
+				!SUBSTRACT AT CENT
+				rVal(:)	= dreal(val(:))
+				call substractAtPos(n,rVal)
+				!
+				!SUM TOTAL POL
+				pelA(:)	= pElA(:) + rVal(:)
+				!
+				!DEBUG MESSAGE
+				write(*,'(a,i3,a,f8.4,a,f8.4,a)')	"[calcPolViaA]: n=",n,"p_n=",rVal(1),",",rVal(2),")."
+				if( abs(dimag(val(1))) > acc .or. abs(dimag(val(2))) > acc .or. abs(dimag(val(3))) > acc	) then
+					write(*,*)	"[calcPolViaA]: found non zero imaginary contribution from band n=",n 
+				end if	
 			end do
-			!!SINGLE ATOM
-			!if( nAt == 1 ) then
-			!	val(1:2)	= val(1:2) - atPos(1:2,1)		!calc center w.r.t. atom center
-			!!DOUBLE ATOM
-			!else if( nAt == 2 ) then
-			!	if( mod(n,2)== 0 ) then
-			!		val(1:2)	= val(1:2) - atPos(1:2,2)
-			!	else	
-			!		val(1:2)	= val(1:2) - atPos(1:2,1)
-			!	end if
-			!end if
-			!DEFAULT
-			write(*,'(a,i3,a,f8.4,a,f8.4,a)')	"[calcPolViaA]: n=",n,"p_n=",dreal(val(1)),",",dreal(val(2)),")."
-			pelA(:)	= pElA(:) + dreal(val(:)) 
-
-			if( abs(dimag(val(1))) > acc .or. abs(dimag(val(2))) > acc .or. abs(dimag(val(3))) > acc	) then
-				write(*,*)	"[calcPolViaA]: found non zero imaginary contribution from band n=",n 
-			end if
-			
-			
-		end do
-		
-
-		!MOD QUANTUM
-		!pelA(1)	= dmod(pElA(1),aX/vol)	
-		!pelA(2)	= dmod(pElA(2),aY/vol)	
-		
+			!
+		end if
+		!
+		!		
 		return
 	end subroutine
 
 
-
-
+!private
+	subroutine substractAtPos(n, cent)
+		integer,		intent(in)		:: n
+		real(dp),		intent(inout)	:: cent(:)
+		!
+		!!SINGLE ATOM
+		if( nAt == 1 ) then
+			cent(1:2)	= cent(1:2) - atPos(1:2,1)		!calc center w.r.t. atom center
+		!!DOUBLE ATOM
+		else if( nAt == 2 ) then
+			if( mod(n,2)== 0 ) then
+				cent(1:2)	= cent(1:2) - atPos(1:2,2)
+			else	
+				cent(1:2)	= cent(1:2) - atPos(1:2,1)
+			end if
+		!!DEFAULT
+		else
+			write(*,*)	"[calcPolWannCent]: to many atoms in unit cell (more then 2)!"
+		end if
+		!
+		return
+	end subroutine
 
 end module polarization
