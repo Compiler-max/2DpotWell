@@ -8,6 +8,8 @@ project(2DpotWell)
 set (cmakeTest_VERSION_MAJOR 1)
 set (cmakeTest_VERSION_MINOR 0)
 
+#set (MPI_Fortran_COMPILER mpiifort)
+
 #set some directions
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
@@ -30,7 +32,9 @@ elseif (Fortran_COMPILER_NAME MATCHES "ifort.*")
   # ifort (untested)
   	set(CMAKE_Fortran_FLAGS "-mkl -qopenmp -g -CB -check all -fpe0 -warn -traceback -debug extended")
   	#set(CMAKE_Fortran_FLAGS "-mkl -O3 -openmp")
-  	#set(CMAKE_Fortran_FLAGS "-mkl -O3 -qopenmp")
+  	#set(CMAKE_Fortrvo,an_FLAGS "-mkl -O3 -qopenmp")
+elseif (Fortran_COMPILER_NAME MATCHES "mpiifort.*")
+	set(CMAKE_Fortran_FLAGS "-mkl -qopenmp -g -CB -check all -fpe0 -warn -traceback -debug extended")
 endif (Fortran_COMPILER_NAME MATCHES "gfortran.*")
 
 

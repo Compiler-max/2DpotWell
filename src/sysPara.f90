@@ -1,8 +1,10 @@
 module sysPara
 	!this modules reads the input file and generates the meshes accordingly
+	use mpi
 	use mathematics, only: dp, PI_dp, setAcc, acc, machineP
 	use m_config
 	implicit none
+	!#include "mpif.h"
 	private
 	public :: 	readInp,  insideAt, getRindex, getRleftX, getRrightX, getRleftY, getRrightY,& 
 				getKindex, getGammaPoint, getPot, &
@@ -52,16 +54,58 @@ module sysPara
 
 	contains
 !public:
-	subroutine readInp()
-		!reades input parameters from input.txt file
+	subroutine readInp(myID, root)
+		integer,		intent(in)		:: myID, root
+		integer							:: ierr
+		!root reades input parameters from input.txt file 
 		!calls mesh generation subroutines
+		!and bcasts everything around
 		!the first array index is always the x,y value of the vector
 		!
+		dim = 	2
+		!
+		!
+		!PARAMETERS 
+		write(*,*)	"hello from readInp"
+		if( myID == root ) then
+			call rootRead()
+		end if
+		call bcastPARAM() !todo
+
+
+		!ARRAYS
+		if( myID == root ) then
+			call rootPopArrays()
+		else
+			call allocateArrays()
+		end if
+
+		call bcastArrays()
+
+	
+		
+		
+		!ToDo: broadcast these arrays
+		
+
+
+		return
+	end subroutine
+
+
+
+
+
+!private:
+
+!READ & DISTRIBUTION ROUTINES
+	subroutine rootRead()
 		type(CFG_t) :: my_cfg
 		
-		!read in config
+		!OPEN FILE
 		call CFG_read_file(my_cfg,"input.txt")
 		
+		!READ SCALARS
 		![unitCell]
 		call CFG_add_get(my_cfg,	"unitCell%aX"      	,	aX  	   	,	"length of unit cell in agnstroem"		)
 		call CFG_add_get(my_cfg,	"unitCell%aY"      	,	aY  	   	,	"length of unit cell in agnstroem"		)
@@ -111,14 +155,9 @@ module sysPara
 		call CFG_add_get(my_cfg,	"debug%debugProj"	, 	debugProj	,	"switch for debuging tests in solveHam"	)
 		call CFG_add_get(my_cfg,	"debug%debugHam"	, 	debugHam	,	"switch for debuging tests in solveHam"	)
 		call CFG_add_get(my_cfg,	"debug%debugWann"	, 	debugWann	,	"switch for debuging in wannier"		)
-		
-		
-		
-
-
-
-		dim = 	2
-		nGdim = getTestGridSize()
+	
+		!SET
+		nGdim = getTestGridSize()	
 		nG	= nGdim**2
 		vol	=	aX 		* 	aY
 		nR 	= 	nRx 	*	nRy
@@ -126,12 +165,103 @@ module sysPara
 		nSC =	nSCx	*	nSCy
 		nK =	nKx		*	nKy
 		Bext=	B0 		* 	Bext
-
+		!
 		recpLatt		= 0.0_dp
 		recpLatt(1,1)	= 2.0_dp * PI_dp * aY / vol
 		recpLatt(2,2)	= 2.0_dp * PI_dp * aX / vol
+		!
+		call allocateArrays()
+		!
+		![atoms]
+		call CFG_add_get(my_cfg,	"atoms%relXpos"		,	relXpos		,	"relative positions in unit cell"		)
+		call CFG_add_get(my_cfg,	"atoms%relYpos"		,	relYpos		,	"relative positions in unit cell"		)
+		call CFG_add_get(my_cfg,	"atoms%atRx"		,	atRx		,	"radius of each atom in angstroem"		)
+		call CFG_add_get(my_cfg,	"atoms%atRy"		,	atRy		,	"radius of each atom in angstroem"		)
+		call CFG_add_get(my_cfg,	"atoms%atPot"		,	atPot		,	"potential depth in hartree"			)
+		call CFG_add_get(my_cfg,	"atoms%dVpot"		,	dVpot		,	"potential gradient"					)
+		call CFG_add_get(my_cfg,	"atoms%Zion"		,	Zion		,	"effective charge of the ions"			)
+		!
+		!
+		return
+	end subroutine
 
 
+	subroutine bcastPARAM(myID, root)
+		integer,		intent(in)		:: myID, root
+		integer							:: ierr
+		!
+		!
+		![unitCell]
+		call MPI_Bcast( aX			,		1	,	MPI_DOUBLE_PRECISION	, 	root,	MPI_COMM_WORLD, ierr)
+		call MPI_Bcast( aY			,		1	,	MPI_DOUBLE_PRECISION	, 	root,	MPI_COMM_WORLD, ierr)
+		![atoms]
+		call MPI_Bcast( doVdesc		, 		1	,		MPI_LOGICAL			,	root,	MPI_COMM_WORLD, ierr)	
+		call MPI_Bcast( nAt			, 		1	,		MPI_INTEGER			,	root,	MPI_COMM_WORLD, ierr)		
+		![wann]
+		call MPI_Bcast( nBands		,		1	,		MPI_INTEGER			,	root,	MPI_COMM_WORLD, ierr)		
+		call MPI_Bcast( nWfs		,		1	,		MPI_INTEGER			,	root,	MPI_COMM_WORLD, ierr)
+		![perturbation]
+		call MPI_Bcast(	B0 			,		1	,	MPI_DOUBLE_PRECISION	,	root,	MPI_COMM_WORLD, ierr)		
+		call MPI_Bcast(	Bext 		,		3	,	MPI_DOUBLE_PRECISION	,	root,	MPI_COMM_WORLD, ierr)
+		![numerics]
+		call MPI_Bcast(	Gcut		,		1	,	MPI_DOUBLE_PRECISION	,	root,	MPI_COMM_WORLD, ierr)
+		call MPI_Bcast(	nSolve		,		1	,		MPI_INTEGER			,	root,	MPI_COMM_WORLD, ierr)
+		call MPI_Bcast(	nQx			,		1	,		MPI_INTEGER			,	root,	MPI_COMM_WORLD, ierr)
+		call MPI_Bcast(	nQy			,		1	,		MPI_INTEGER			,	root,	MPI_COMM_WORLD, ierr)
+		call MPI_Bcast(	nSCx		,		1	,		MPI_INTEGER			,	root,	MPI_COMM_WORLD, ierr)
+		call MPI_Bcast(	nSCy		,		1	,		MPI_INTEGER			,	root,	MPI_COMM_WORLD, ierr)
+		call MPI_Bcast(	nKx			,		1	,		MPI_INTEGER			,	root,	MPI_COMM_WORLD, ierr)
+		call MPI_Bcast(	nKy			,		1	,		MPI_INTEGER			,	root,	MPI_COMM_WORLD, ierr)
+		call MPI_Bcast(	nRx			,		1	,		MPI_INTEGER			,	root,	MPI_COMM_WORLD, ierr)
+		call MPI_Bcast(	nRy			,		1	,		MPI_INTEGER			,	root,	MPI_COMM_WORLD, ierr)
+		call MPI_Bcast(	thres		,		1	,	MPI_DOUBLE_PRECISION	,	root,	MPI_COMM_WORLD, ierr)
+		![methods]
+		call MPI_Bcast( doSolveHam	,		1	,	MPI_LOGICAL				,	root,	MPI_COMM_WORLD, ierr)
+		call MPI_Bcast( useBloch	,		1	,	MPI_LOGICAL				,	root,	MPI_COMM_WORLD, ierr)
+		call MPI_Bcast( doPw90		,		1	,	MPI_LOGICAL				,	root,	MPI_COMM_WORLD, ierr)
+		call MPI_Bcast( doBerry		,		1	,	MPI_LOGICAL				,	root,	MPI_COMM_WORLD, ierr)
+		call MPI_Bcast( writeBin	,		1	,	MPI_LOGICAL				,	root,	MPI_COMM_WORLD, ierr)
+		![pw90]
+		call MPI_Bcast( seedName	,		3	, 	MPI_CHARACTER			,	root,	MPI_COMM_WORLD, ierr)
+		call MPI_Bcast( shell		,		1	,	MPI_INTEGER				,	root,	MPI_COMM_WORLD, ierr)
+		call MPI_Bcast( nw90it		,		1	,	MPI_INTEGER				,	root,	MPI_COMM_WORLD, ierr)		
+		call MPI_Bcast( pw90GaugeB	,		1	,	MPI_LOGICAL				,	root,	MPI_COMM_WORLD, ierr)
+		![berry]
+		call MPI_Bcast( useRot		,		1	,	MPI_LOGICAL				,	root,	MPI_COMM_WORLD,	ierr)
+		call MPI_Bcast( doVeloNUM	,		1	,	MPI_LOGICAL				,	root,	MPI_COMM_WORLD,	ierr)
+		call MPI_Bcast( doNiu		,		1	,	MPI_LOGICAL				,	root,	MPI_COMM_WORLD,	ierr)
+		call MPI_Bcast( doPei		,		1	,	MPI_LOGICAL				,	root,	MPI_COMM_WORLD,	ierr)
+		call MPI_Bcast( doWanni		,		1	,	MPI_LOGICAL				,	root,	MPI_COMM_WORLD,	ierr)
+		call MPI_Bcast( doGaugBack	,		1	,	MPI_LOGICAL				,	root,	MPI_COMM_WORLD,	ierr)
+		![semiclassics]
+		call MPI_Bcast( prefactF3	,		1	,	MPI_DOUBLE_PRECISION	,	root,	MPI_COMM_WORLD,	ierr)
+		![debug]		
+		call MPI_Bcast( debugProj	,		1	,	MPI_LOGICAL				,	root,	MPI_COMM_WORLD, ierr)		
+		call MPI_Bcast( debugHam	,		1	,	MPI_LOGICAL				,	root,	MPI_COMM_WORLD, ierr)
+		call MPI_Bcast( debugWann	,		1	,	MPI_LOGICAL				,	root,	MPI_COMM_WORLD, ierr)		
+		!
+		!
+		!derived scalars
+		call MPI_Bcast( nGdim		,		1	,	MPI_INTEGER				,	root,	MPI_COMM_WORLD, ierr)
+		call MPI_Bcast( vol			,		1	,	MPI_DOUBLE_PRECISION	,	root,	MPI_COMM_WORLD,	ierr)
+		!
+		!
+		nG 	= 	nGdim**2
+		nR 	= 	nRx 	*	nRy
+		nQ 	= 	nQx 	*	nQy
+		nSC =	nSCx	*	nSCy
+		nK 	=	nKx		*	nKy
+		Bext=	B0 		* 	Bext
+		!
+		return
+	end subroutine
+
+
+
+
+	subroutine allocateArrays()
+		!allocates all needed arrays
+		!
 		!basis
 		allocate(	Gtest(	dim,	nG				)		)
 		allocate(	nGq(					nQ		)		)
@@ -151,17 +281,28 @@ module sysPara
 		allocate(	rpts(dim,nR)		)
 		allocate(	Rcell(dim,nSC)		)
 		allocate(	kpts(dim,nK)		)
-	
-		![atoms]
-		call CFG_add_get(my_cfg,	"atoms%relXpos"		,	relXpos		,	"relative positions in unit cell"		)
-		call CFG_add_get(my_cfg,	"atoms%relYpos"		,	relYpos		,	"relative positions in unit cell"		)
-		call CFG_add_get(my_cfg,	"atoms%atRx"		,	atRx		,	"radius of each atom in angstroem"		)
-		call CFG_add_get(my_cfg,	"atoms%atRy"		,	atRy		,	"radius of each atom in angstroem"		)
-		call CFG_add_get(my_cfg,	"atoms%atPot"		,	atPot		,	"potential depth in hartree"			)
-		call CFG_add_get(my_cfg,	"atoms%dVpot"		,	dVpot		,	"potential gradient"					)
-		call CFG_add_get(my_cfg,	"atoms%Zion"		,	Zion		,	"effective charge of the ions"			)
+		!
+		!
+		return
+	end subroutine
 
+
+
+
+
+
+
+
+	subroutine bcastATOMS()
+
+		return
+	end subroutine
+
+
+!ARRAY SETUP ROUTINES
+	subroutine rootPopArray()
 		!calculate desired quantities from input: aLatt,kpts,rpts(aLatt),gVec
+		!
 		call setAcc(thres)
 		call qmeshGen()
 		call rmeshGen()
@@ -171,33 +312,9 @@ module sysPara
 		call popAtR()
 		call calcRcell()
 		call kWmeshGen()
-
+		!
 		return
 	end subroutine
-
-
-!integer function setBasis()
-!	integer				:: stat, qi, gi 
-!	open(unit=800, file="./rawData/nGq.dat",form='unformatted',access='stream',action='read',iostat=stat)
-!	if( stat==0 ) then
-!		read(800)	nGq
-!		setBasis	= 0
-!		do qi = 1, nQ
-!			do gi = 1, nGq(qi)
-!				Gvec(:,gi,qi)	= qpts(:,qi) + Gtest(:,gi)
-!			end do
-!		end do
-!	else
-!		write(*,*)	"[setBasis]: WARNING could not open nGq file"
-!		setBasis	= 1
-!	end if
-!	close(800)
-!	!
-!	return
-!end function
-
-
-
 
 
 

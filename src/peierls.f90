@@ -81,7 +81,9 @@ module peierls
 		integrateA  = 0.5_dp * Bext(3) * Rcell(1,rj) * Rcell(2,rj) 
 		!
 		!
+
 		shift		= myExp( integrateA )
+		write(*,'(a,i3,a,e15.7)') "[peierls/shift]: shift for Ri=",rj," :", shift
 		!
 		return
 	end function
@@ -133,7 +135,7 @@ module peierls
 				!ckP(gi,:,qi)	= matmul( ck(gi,:,qi), Hp(:,:))
 				do n = 1, nWfs
 					do m = 1, nWfs
-						ckP(gi,n,qi) = ckP(gi,n,qi) + ck(gi,m,qi) * Hp(m,n)
+						ckP(gi,n,qi) = ckP(gi,n,qi) + ck(gi,m,qi) * dconjg(Hp(m,n))
 					end do
 				end do
 			end do

@@ -20,7 +20,7 @@
     nWfs        = 2
 
 [perturbation]
-    B0          = 1.0               #hbar/(e*a0**2) = 2.35 * 10**5  T
+    B0          = 0.0               #hbar/(e*a0**2) = 2.35 * 10**5  T
     Bext        = 0.0 0.0 1.0  
 
 [numerics]
@@ -40,7 +40,7 @@
     doSolveHam  = f
     useBloch    = f
     doPw90      = f
-    doBerry     = t
+    doBerry     = f
     writeBin    = f
 
 [pw90]
