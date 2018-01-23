@@ -17,27 +17,24 @@ program main
 
 	implicit none
 
-    !#include "mpif.h"
 	
 
 
-	integer												::	myID, nProcs,  root, ierr
     complex(dp),	allocatable,	dimension(:,:,:)	:: 	ck
     real(dp),		allocatable,	dimension(:,:)		:: 	En    														
     real												:: 	mastT0, mastT1, mastT, T0, T1, &
     															aT,kT,wT,pwT, oT, bT			
 
-
+    !MPI INIT
 	call MPI_INIT( ierr )
     call MPI_COMM_RANK (MPI_COMM_WORLD, myID, ierr)
     call MPI_COMM_SIZE (MPI_COMM_WORLD, nProcs, ierr)
     root = 0
-
-    write(*,'(a,i4,a,i4)')	"[main]: hello from MPI id ",myID , "of ", nProcs
-
     call MPI_Barrier( MPI_COMM_WORLD, ierr )
 
+    !
     if( myID == root) then
+    	!
     	!timing zero init
     	aT		= 0.0
     	kT		= 0.0
@@ -54,19 +51,18 @@ program main
     end if
 
 
-  	call readInp(myID, root)
+  	call readInp()
 	!
 	!
 	!
 	if( myID == root) then
-
 		write(*,*)"*"
 		write(*,*)"*"
 		write(*,*)"[main]:**************************Infos about this run*************************"
 		write(*,*)"[main]: electronic structure mesh nQ=",nQ
 		write(*,*)"[main]: interpolation mesh        nK=",nK
 		write(*,*)"[main]: basis cutoff parameter  Gcut=",Gcut
-		write(*,*)"[main]: basis function   maximum  nG=",Gmax," of ",nG," trial basis functions"
+		write(*,*)"[main]: basis function   maximum  nG=",GmaxGLOBAL," of ",nG," trial basis functions"
 		write(*,*)"[main]: only solve for        nSolve=",nSolve
     	write(*,*)"[main]: nBands=", nBands
 		write(*,*)"[main]: nWfs  =", nWfs
@@ -75,46 +71,52 @@ program main
 		write(*,*)"*"
 		write(*,*)"*"
 		write(*,*)"*"
+		if( mod(nQ,nProcs)/=0) write(*,*)"[main]: CRITICAL WARNING: mpi threads have to be integer fraction of nQ"
 		!
 		call cpu_time(T1)
 		aT = T1 - T0
 	end if
 	
+	write(*,*) "myID=",myID,": I will do qi= ",(myID*nQ/nProcs+1)," till" ,(myID*nQ/nProcs+nProcs)
 
-	call MPI_Barrier( MPI_COMM_WORLD, ierr )
+	call MPI_BARRIER( MPI_COMM_WORLD, ierr )
 	
 	!ELECTRONIC STRUCTURE
 	if( doSolveHam ) then
-		write(*,*)	"id=",myID," was choosen for solving the ham"
 		!call cpu_time(T0)	
-		!allocate(	En(						nSolve	, 	nQ		)	)
-		!allocate(	ck(			Gmax	,	nSolve 	,	nQ	)	)
-		!write(*,*)"[main]:**************************ELECTRONIC STRUCTURE PART*************************"
-		!write(*,*)	"[main]: start electronic structure calculation now"
+		allocate(	En(						nSolve	, 	qChunk		)	)
+		allocate(	ck(			Gmax	,	nSolve 	,	qChunk	)	)
+		if( myID == root ) then
+			write(*,*)"[main]:**************************ELECTRONIC STRUCTURE PART*************************"
+			write(*,*)	"[main]: start electronic structure calculation now"
+		end if
 		!call solveHam(ck, En)
-		!write(*,*)"[main]: done solving Schroedinger eq."
-		!call cpu_time(T1)
-		!kT = T1-T0
-		!!W90
-		!call cpu_time(T0)	
-		!write(*,*)"*"
-		!write(*,*)"*"
-		!write(*,*)"*"
-		!write(*,*)"*"
-		!write(*,*)"[main]:**************************WANNIER90 SETUP*************************"
-		!call w90Interf(ck,En)
-		!write(*,*)"[main]: done setting up wannier. please execute wannier90 now"
-		!write(*,*)"*"
-		!write(*,*)"*"
-		!write(*,*)"*"
-		!write(*,*)"*"
-		!call cpu_time(T1)
-		!wT = T1-T0
+		if( myID == root ) then
+			write(*,*)"[main]: done solving Schroedinger eq."
+			call cpu_time(T1)
+			kT = T1-T0
+			!W90
+			call cpu_time(T0)	
+			write(*,*)"*"
+			write(*,*)"*"
+			write(*,*)"*"
+			write(*,*)"*"
+			write(*,*)"[main]:**************************WANNIER90 SETUP*************************"
+		end if
+		!call w90Interf( ck,En)
+		if( myID == root ) then
+			write(*,*)"[main]: done setting up wannier. please execute wannier90 now"
+			write(*,*)"*"
+			write(*,*)"*"
+			write(*,*)"*"
+			write(*,*)"*"
+			call cpu_time(T1)
+			wT = T1-T0
+		end if
 	end if
-	!
 	
 
-
+	call MPI_BARRIER( MPI_COMM_WORLD, ierr )
 
 
 
@@ -214,7 +216,7 @@ program main
 	end if
 
 	call MPI_Barrier( MPI_COMM_WORLD, ierr )
-	write(*,*)	"[main]: ",myID," all done, exit"
+	write(*,*)	"[",myID,";main]: all done, exit"
 
 
 	call MPI_FINALIZE ( ierr )

@@ -1,6 +1,7 @@
 module potWellModel
 	!this modules sets up the Hamiltonian matrix and solves it for each k point
 	!	in the process the wannier functions are generated aswell with routines from wannGen module
+	use mpi
 	use omp_lib
 	use mathematics,	only:	dp, PI_dp,i_dp, machineP, myExp, myLeviCivita, &
 								eigSolverPART, isUnit, isHermitian
@@ -28,7 +29,7 @@ module potWellModel
 		!																
 		complex(dp),	allocatable		::	Hmat(:,:) , ctemp(:,:)
 		real(dp),		allocatable		::	EnT(:)
-		integer							:: 	qi, found, Gsize
+		integer							:: 	qi, found, Gsize, nQloc, nQsum
 		!
 		!
 		if(debugHam) then
@@ -37,16 +38,24 @@ module potWellModel
 
 		!
 		!
-		!$OMP PARALLEL	DEFAULT(SHARED)	PRIVATE(Hmat, ctemp,EnT, qi, found, Gsize)
+		nQloc = nQ/nProcs
+		if(root <  myID .and. myID <= mod(nQ,nProcs)	)	nQloc = nQloc +	1
+		write(*,*)	"myID",myID," will solve #",nQloc," qpts"
+
+		call MPI_Reduce(nQloc,nQsum, 1, MPI_INTEGER, MPI_SUM, root, MPI_COMM_WORLD, ierr)
+		if(myID == root .and. nQsum /= nQ) write(*,*)	"[thread#",myID,",solveHam]: warning qpts are not distributed correctly"
+
 		allocate(	Hmat(	Gmax,	Gmax	)			)
 		allocate(	ctemp(	Gmax, nSolve	)			)
 		allocate(	EnT(	Gmax			)			)	
-		!$OMP DO SCHEDULE(DYNAMIC) 
-		do qi = 1, nQ
+
+		do qi = myID*qChunk+1, myID*qChunk+nProcs
 			!
-			!SETUP HAM
+			write(*,'(a,i3,a,i3)')"[solveHam]: myID=",myID," now solving qi=",qi
+
+			!!SETUP HAM
 			call populateH(qi, Hmat) 
-			!
+			!!
 			!SOLVE HAM
 			ctemp	= dcmplx(0.0_dp)
 			EnT		= 0.0_dp
@@ -56,9 +65,6 @@ module potWellModel
 			call eigSolverPART(Hmat(1:Gsize,1:Gsize),EnT(1:Gsize), ctemp(1:Gsize,:), found)!a, w ,z, m
 			!
 			!
-			!COPY INTO TARGET ARRAYS
-			ck(1:Gsize,1:nSolve,qi)	= ctemp(1:Gsize,1:nSolve)
-			En(:,qi)	= EnT(1:nSolve)
 			!DEBUG TESTS
 			if( debugHam ) then
 				if(found /= nSolve )write(*,*)"[solveHam]: only found ",found," bands of required ",nSolve
@@ -67,19 +73,11 @@ module potWellModel
 			end if
 			!
 			!
-			write(*,*)"[solveHam]: done for qi=",qi
-			!
+			write(*,*)"[#",myID,", solveHam]: done for qi=",qi
 		end do
-		!$OMP END DO
-		!$OMP END PARALLEL
 		!
 
-		!
-		!COPY & WRITE ENERGIES/BWFs
-		write(*,*)			"[solveHam]: found ", countBandsSubZero(En(1:nSolve,:))," bands at the gamma point beneath zero"
-		call writeEnAndCK(En, ck, nGq)
-		call writeEnAbInitio(En)
-		!
+		!call reduceWrite()
 		!
 		!
 		return
@@ -87,6 +85,31 @@ module potWellModel
 
 
 
+	subroutine reduceWrite(cLoc, En, nGq)
+		complex(dp),	intent(in)		:: cLoc(:,:,:)
+		real(dp),		intent(in)		:: En(:,:), nGq(:,:,:)
+		integer							:: qi
+		!
+		!sequential
+		!!!!!COPY INTO TARGET ARRAYS
+		!!!!ck(1:Gsize,1:nSolve,qi)	= ctemp(1:Gsize,1:nSolve)
+		!!!!En(:,qi)	= EnT(1:nSolve)
+		!COLLECT RESULTS OVER MPI_COMM_WORLD
+		do qi = 1, nQ
+			!	call MPI_Reduce( cLoc(1:Gsize,1:nSolve,"get loc q index") , cGlob(1:Gsize,1:nSolve,qi) , Gsize*nSolve, MPI_DOUBLE_COMPLEX,)
+
+
+		end do
+
+
+
+		if( myID == root) then
+			!COPY & WRITE ENERGIES/BWFs
+			write(*,*)			"[solveHam]: found ", countBandsSubZero(En(1:nSolve,:))," bands at the gamma point beneath zero"
+			!call writeEnAndCK(En, ck, nGq)
+			!call writeEnAbInitio(En)
+		end if
+	end subroutine
 
 
 

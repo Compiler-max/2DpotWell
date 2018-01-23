@@ -590,14 +590,12 @@ module mathematics
 
 
 
-	complex(dp)	function nIntegrateCPLX(nR, nRx, nRy, dx, dy, f)
-		integer,		intent(in)		:: nR, nRx, nRy
-		real(dp),		intent(in)		:: dx, dy
+	complex(dp)	function nIntegrateCPLX(f)
 		complex(dp),	intent(in)		:: f(:)				!f(nR)
 		real(dp)						:: rel, img
 		!
-		rel = nIntegrateREAL(nR, nRx, nRy, dx, dy, dreal(f))
-		img = nIntegrateREAL(nR, nRx, nRy, dx, dy, dimag(f))
+		rel = nIntegrateREAL(dreal(f))
+		img = nIntegrateREAL(dimag(f))
 		!
 		nIntegrateCPLX = dcmplx(	rel , img	)
 		!
@@ -605,11 +603,9 @@ module mathematics
 	end function
 
 
-	real(dp) function nIntegrateREAL(nR, nRx,nRy, dx,dy, f)
+	real(dp) function nIntegrateREAL(f)
 		!2D integration routine
 			!integrates for each y point integrate over whole x direction
-		integer,		intent(in)		:: nR, nRx, nRy
-		real(dp),		intent(in)		:: dx, dy
 		real(dp),		intent(in)		:: f(:)				!f(nR)
 		
 

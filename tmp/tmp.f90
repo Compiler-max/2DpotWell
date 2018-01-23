@@ -18,7 +18,7 @@ module sysPara
 				seedName, &
 				debugProj, debugHam, debugWann, doSolveHam, useBloch, doPw90, pw90GaugeB, doVdesc,  &
 				doBerry, useRot, doWanni, doVeloNUM, doNiu, doPei, doGaugBack, writeBin, &
-				myID, nProcs, root, ierr, qChunk
+				myID, nProcs, root, ierr, myQchunk, qChunk
 
 
 	!
@@ -27,11 +27,11 @@ module sysPara
 														nKx=1, nKy=1, nK, R0,  &
 														nw90it, shell, &
 														nRx=10, nRy=10, nR, nBands=1,nWfs=1, nSC, &
-														myID, nProcs, root, ierr, qChunk
+														myID, nProcs, root, ierr, myQchunk
 	real(dp) 										::	aX=0.0_dp, aY=0.0_dp,vol=0.0_dp, Gcut=2*PI_dp, thres,& 
 														dx, dy, dqx, dqy, dkx, dky, B0, Bext(3)	, prefactF3, recpLatt(2,2)
 	character(len=3)								::	seedName										
-	integer,	allocatable,	dimension(:)		::	nGq
+	integer,	allocatable,	dimension(:)		::	nGq, qChunk
 	real(dp),	allocatable,	dimension(:)		::	relXpos, relYpos, atRx, atRy, atPot, dVpot, Zion
 	real(dp),	allocatable,	dimension(:,:)		::	Gtest , atPos, atR, qpts, rpts, Rcell, kpts 
 
@@ -61,8 +61,6 @@ module sysPara
 		call MPI_BARRIER(MPI_COMM_WORLD, ierr)
 		call bcastPARAM() 
 		!
-		!qpts per mpi process
-		qChunk = nQ/nProcs
 		!
 		!fill arrays
 		call setAcc(thres)
@@ -75,16 +73,6 @@ module sysPara
 		call calcRcell()
 		call kWmeshGen()
 		!
-		return
-	end subroutine
-
-
-
-	subroutine distributeQpts()
-
-
-
-
 		return
 	end subroutine
 
@@ -310,8 +298,7 @@ module sysPara
 
 
 
-
-
+!ARRAY SETUP ROUTINES( Helpers for rootPopArrays)
 
 	logical function insideAt(at, r)
 		!return true if real point is inside the potential of atom at
@@ -405,6 +392,15 @@ module sysPara
 		return
 	end function
 
+
+
+
+
+
+
+
+
+
 	integer function getKindex(qx,qy)
 		integer,	intent(in)		:: qx, qy
 		!
@@ -444,7 +440,6 @@ module sysPara
 
 
 
-
 !privat:
 	subroutine qmeshGen()
 		!generates the (coarse) k point mesh for solving electronic structure
@@ -465,7 +460,7 @@ module sysPara
 				end do
 			end do
 		end if
-		call MPI_Bcast(qpts, dim*nQ, MPI_DOUBLE_PRECISION, root, MPI_COMM_WORLD, ierr)
+		!call MPI_Bcast(qpts, dim*nQ, MPI_DOUBLE_PRECISION, root, MPI_COMM_WORLD, ierr)
 		!
 		return
 	end subroutine
@@ -489,9 +484,9 @@ module sysPara
 					kpts(2,kI)	=	kyMin + (kIy-1) * dky  		!y component
 				end do
 			end do
-		end if
+		end
 		!
-		call MPI_Bcast(kpts, dim*nK, MPI_DOUBLE_PRECISION, root, MPI_COMM_WORLD, ierr)
+		!call MPI_Bcast(kpts, dim*nK, MPI_DOUBLE_PRECISION, root, MPI_COMM_WORLD, ierr)
 		!
 		return
 	end subroutine
@@ -577,40 +572,47 @@ module sysPara
 
 
 !
-	subroutine popGvec()
-		integer						:: qi, gi, inside,tot
-		real(dp)					:: kg(2)
-		!^
-		!fill array
-		allocate(	nGq(					qChunk		)		)
-		allocate(	Gvec(	dim,	nG ,	qChunk		)		)
-		!
-		do qi = myID*qChunk+1, myID*qChunk+nProcs
-			nGq(qi)	= 0
-			inside 	= 0
-			tot 	= 0
-			do gi = 1, nG
-				kg(:)	= qpts(:,qi) + Gtest(:,gi)
-				tot		= tot + 1
-				if( norm2(kg) < Gcut ) then
-					nGq(qi) = nGq(qi) + 1
-					Gvec(:,nGq(qi),qi) = kg(:)
-					inside = inside + 1
-					if( gi == 1)	write(*,*)	"[popGvec]: warning hit boundary of Gtest grid"
-				end if
-			end do
-			!DEBUG INFO
-			if(nGq(qi) > nG) write(*,'(a,i4,a,i6)')	"[popGvec]: warning, somehow counted more basis functions at qi=",qi," limit nG=",nG	
-			write(*,'(a,i6,a,i4)')	"[popGvec]: using ",nGq(qi), "basis functions at qi=",qi	
-		end do
-		!
-		Gmax = maxval(nGq)
-		write(*,*)	"[popGvec]: maximum amount of basis functions is",Gmax
-		!call MPI_ALLREDUCE(Gmax, GmaxGLOBAL, 1, MPI_INTEGER, MPI_MAX, MPI_COMM_WORLD, ierr)
-		!
-		!
-		return
-	end subroutine
+	!subroutine popGvec()
+	!	integer						:: qi, gi, inside,tot
+	!	real(dp)					:: kg(2)
+	!	!^
+	!	!get size of array  (how many qpts has to be solved my node)
+	!	myQchunk = 0
+	!	do qi = (myID+1), nQ, nProcs:
+	!		myQchunk = myQchunk + 1
+	!	end do
+	!	call MPI_ALLGATHER(myQchunk, 1, MPI_INTEGER, qChunk, nProcs, MPI_INTEGER, root, MPI_COMM_WORLD, ierr)
+	!	!
+	!	!fill array
+	!	allocate(	nGq(					myQchunk		)		)
+	!	allocate(	Gvec(	dim,	nG ,	myQchunk		)		)
+	!	!
+	!	do qi = myID+1, nQ, nProcs
+	!		nGq(qi)	= 0
+	!		inside 	= 0
+	!		tot 	= 0
+	!		do gi = 1, nG
+	!			kg(:)	= qpts(:,qi) + Gtest(:,gi)
+	!			tot		= tot + 1
+	!			if( norm2(kg) < Gcut ) then
+	!				nGq(qi) = nGq(qi) + 1
+	!				Gvec(:,nGq(qi),qi) = kg(:)
+	!				inside = inside + 1
+	!				if( gi == 1)	write(*,*)	"[popGvec]: warning hit boundary of Gtest grid"
+	!			end if
+	!		end do
+	!		!DEBUG INFO
+	!		if(nGq(qi) > nG) write(*,'(a,i4,a,i6)')	"[popGvec]: warning, somehow counted more basis functions at qi=",qi," limit nG=",nG	
+	!		write(*,'(a,i6,a,i4)')	"[popGvec]: using ",nGq(qi), "basis functions at qi=",qi	
+	!	end do
+	!	!
+	!	Gmax = maxval(nGq)
+	!	write(*,*)	"[popGvec]: maximum amount of basis functions is",Gmax
+	!	call MPI_ALLREDUCE(Gmax, GmaxGLOBAL, 1, MPI_INTEGER, MPI_MAX, MPI_COMM_WORLD, ierr)
+	!	!
+	!	!
+	!	return
+	!end subroutine
 
 
 
@@ -691,10 +693,6 @@ module sysPara
 		!
 		return
 	end subroutine
-
-
-
-
 
 
 

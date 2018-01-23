@@ -214,7 +214,7 @@ module wannInterp
 		!VELOCITIES
 		call calcVeloNew(ki, EnH, U, HaW, AW, veloH)
 		!CURVATURE
-		call calcCurv(FWtens, DH, AW, FcurvH)
+		call calcCurv(FcurvH)!returns 0.0!!!!!
 		!
 		!		
 		return
@@ -325,10 +325,8 @@ module wannInterp
 	end subroutine
 
 
-	subroutine calcCurv(FW, DH, AW, FcurvH)
-		complex(dp),	intent(in)		:: FW(:,:,:,:), DH(:,:,:), AW(:,:,:)
+	subroutine calcCurv(FcurvH)
 		complex(dp),	intent(out)		:: FcurvH(:,:,:)
-		complex(dp),	allocatable		:: FH(:,:,:,:)
 		!
 		!ToDO
 		FcurvH	= dcmplx(0.0_dp)

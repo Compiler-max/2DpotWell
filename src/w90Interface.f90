@@ -29,23 +29,30 @@ module w90Interface
 
 
 !public:
-	subroutine w90Interf(ck, En)
+	subroutine w90Interf(myID, root, ck, En)
+		integer,		intent(in)		:: myID, root
 		complex(dp),	intent(in)		:: ck(:,:,:)	
 		real(dp),		intent(in)		:: En(:,:)
 		!
 		seed_name	= seedName
-		call writeW90input()
+		if(myID == root) then
+			call writeW90input()
+			!
+			write(*,*)	"[w90Interf]: wrote w90 input file"
+			call w90setup()
+			write(*,*)	"[w90Interf]: done with w90 setup"
+			write(*,*)	"[w90Interf]: will use num_bands= ",num_bands, " bands"
+			write(*,*)	"[w90Interf]: to gen   num_wann=  ",num_wann, " wnfs"
+			write(*,*)	"[w90Interf]: start preparing wannierisation"
+		end if
+	
+		!Todo: broadcast w90setup output quantities
+		!Todo: parallel
+		call w90prepMmat(ck)
 
-		write(*,*)	"[w90Interf]: wrote w90 input file"
-		call w90setup()
-		write(*,*)	"[w90Interf]: done with w90 setup"
-		write(*,*)	"[w90Interf]: will use num_bands= ",num_bands, " bands"
-		write(*,*)	"[w90Interf]: to gen   num_wann=  ",num_wann, " wnfs"
-		write(*,*)	"[w90Interf]: start preparing wannierisation"
-		
 
 		call w90prepEigVal(En)
-		call w90prepMmat(ck)
+		
 		if( .not. useBloch )	then
 			call w90prepAmat(ck)
 			write(*,*)	"[w90Interf]: projection overlap matrix calculated"

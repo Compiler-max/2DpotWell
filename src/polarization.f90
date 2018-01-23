@@ -53,7 +53,7 @@ module polarization
 		real(dp),			intent(out)		:: pElA(:)
 		complex(dp)	,		allocatable		:: val(:)
 		real(dp),			allocatable		:: rVal(:)
-		integer								:: n, qi
+		integer								:: n
 		!
 		pelA = 0.0_dp
 		allocate(	val(  size(A_mat,1) )	)
@@ -69,11 +69,13 @@ module polarization
 			do n 	= 1, size(A_mat,2)
 				!
 				!INTEGRATE
-				val	= dcmplx(0.0_dp)
-				do qi = 1, size(A_mat,4)
-					val(:)	= val(:) + A_mat(:,n,n,qi) 
-				end do
-				val(:)	= val(:) / real(size(A_mat,4),dp)
+				
+				val(:) = sum(A_mat(:,n,n,:)) / size(A_mat,4)
+				!val	= dcmplx(0.0_dp)
+				!do qi = 1, size(A_mat,4)
+				!	val(:)	= val(:) + A_mat(:,n,n,qi) 
+				!end do
+				!val(:)	= val(:) / real(size(A_mat,4),dp)
 				!
 				!SUBSTRACT AT CENT
 				rVal(:)	= dreal(val(:))
