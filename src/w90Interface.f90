@@ -1,5 +1,6 @@
 module w90Interface	
 
+	use mpi
 	use mathematics,	only:	dp, PI_dp, i_dp, machineP, aUtoAngstrm, aUtoEv, myExp
 	use sysPara
 	use blochWf,		only:	calcMmat
@@ -29,11 +30,11 @@ module w90Interface
 
 
 !public:
-	subroutine w90Interf(myID, root, ck, En)
-		integer,		intent(in)		:: myID, root
+	subroutine w90Interf(ck, En)
 		complex(dp),	intent(in)		:: ck(:,:,:)	
 		real(dp),		intent(in)		:: En(:,:)
 		!
+		!WRITE AND EXECUTE INITIAL WANNIER90
 		seed_name	= seedName
 		if(myID == root) then
 			call writeW90input()
@@ -45,38 +46,56 @@ module w90Interface
 			write(*,*)	"[w90Interf]: to gen   num_wann=  ",num_wann, " wnfs"
 			write(*,*)	"[w90Interf]: start preparing wannierisation"
 		end if
-	
-		!Todo: broadcast w90setup output quantities
+		!
+		!BCAST NEAREST NEIGHBOURS INFO
+		call bcastW90info()
 		!Todo: parallel
-		call w90prepMmat(ck)
+		!call w90prepMmat(ck)
 
 
 		call w90prepEigVal(En)
 		
-		if( .not. useBloch )	then
-			call w90prepAmat(ck)
-			write(*,*)	"[w90Interf]: projection overlap matrix calculated"
-		else
-			write(*,*)	"[w90Interf]: projection disabled will use bloch phase"
+	!	if( .not. useBloch )	then
+	!		call w90prepAmat(ck)
+	!		write(*,*)	"[w90Interf]: projection overlap matrix calculated"
+	!	else
+	!		write(*,*)	"[w90Interf]: projection disabled will use bloch phase"
+	!	end if
+		
+
+		if( myID == root ) then
+			call writeW90inputPost()
+			write(*,*)	"[w90Interf]: done preparing wannierization input matrices"
+			call writeW90KinterpMesh()
+			write(*,*)	"[w90Interf]: wrote interpolation mesh file"
+	
+			!call wannier_run(seed_name,mp_grid,num_kpts,real_lattice,recip_lattice, &
+			!					kpt_latt,num_bands,num_wann,nntot,num_atoms,atom_symbols, &
+			!					atoms_cart,gamma_only,M_matrix_orig,A_matrix,eigenvalues, &
+			!					U_matrix,U_matrix_opt,lwindow,wann_centres,wann_spreads, &
+			!					spread)
 		end if
-		call writeW90inputPost()
-		write(*,*)	"[w90Interf]: done preparing wannierization input matrices"
-		call writeW90KinterpMesh()
-		write(*,*)	"[w90Interf]: wrote interpolation mesh file"
-
-
-		!call wannier_run(seed_name,mp_grid,num_kpts,real_lattice,recip_lattice, &
-		!					kpt_latt,num_bands,num_wann,nntot,num_atoms,atom_symbols, &
-		!					atoms_cart,gamma_only,M_matrix_orig,A_matrix,eigenvalues, &
-		!					U_matrix,U_matrix_opt,lwindow,wann_centres,wann_spreads, &
-		!					spread)
-
 
 	end subroutine
 
 
 
-
+	subroutine bcastW90info()
+		!
+		call MPI_BCAST( num_bands	, 			1				, 	MPI_INTEGER, 	root, 	MPI_COMM_WORLD,		ierr)
+		call MPI_BCAST( num_wann	,  			1				, 	MPI_INTEGER, 	root, 	MPI_COMM_WORLD,		ierr)
+		call MPI_BCAST( num_kpts	,  			1				, 	MPI_INTEGER, 	root, 	MPI_COMM_WORLD,		ierr)
+		call MPI_BCAST( nntot		,  			1				, 	MPI_INTEGER, 	root, 	MPI_COMM_WORLD,		ierr)
+		call MPI_BCAST( num_nnmax	,			1				,	MPI_INTEGER,	root,	MPI_COMM_WORLD,		ierr)
+		!
+		if( myID/=root ) 	allocate(		nncell(	3,	num_kpts,	num_nnmax)			)
+		if( myID/=root ) 	allocate(		nnlist(		num_kpts, 	num_nnmax)			)
+		!
+		call MPI_BCAST( nncell		,	3*num_kpts*num_nnmax	,	MPI_INTEGER,	root,	MPI_COMM_WORLD,		ierr)
+		call MPI_BCAST( nnlist		,	  num_kpts*num_nnmax	,	MPI_INTEGER,	root,	MPI_COMM_WORLD,		ierr)
+		!
+		return
+	end subroutine
 
 
 
@@ -326,22 +345,30 @@ module w90Interface
 		!convert eigenvalues from atomic units to eV
 		real(dp),		intent(in)		:: En(:,:)
 		integer							:: qi, n
-		real(dp),		allocatable		:: eigenvalues(:,:)
+		real(dp),		allocatable		:: eigenvalues(:,:), send_buff(:,:)
 		!
-		allocate(	eigenvalues( num_bands,	num_kpts	)	)
+		!DEBUG
+		if(	size(En,2) /= qChunk 	)	write(*,'(a,i3,a)')		"[#",myID,";w90prepEigVal]: warning En has wrong numbers of kpts"
 		!
-		!if(	size(En,1) /= num_bands	) write(*,*)"[w90prepEigVal]: warning En has wrong numbers of bands"
-		if(	size(En,2) /= num_kpts 	) write(*,*)"[w90prepEigVal]: warning En has wrong numbers of kpts"
+		!ALLOCATE TARGET
+		allocate( send_buff(num_bands, qChunk))
+		if( 	myID == root 	)	allocate(	eigenvalues( num_bands	, num_kpts	)		)
+		if(		myID /= root	)	allocate( 	eigenvalues( 	0		,	0		)		)
 		!
-		!fill new file
-		open(unit=110,file=seed_name//'.eig',action='write',access='stream',form='formatted', status='replace')
-		do qi = 1, num_kpts
-			do n = 1, num_bands
-				eigenvalues(n,qi)	= En(n,qi) * aUtoEv
-				write(110,*)	n, ' ', qi, ' ', eigenvalues(n,qi)
+		!SEND TO TARGET
+		send_buff = En(1:num_bands,:)
+		call MPI_GATHER(send_buff, num_bands*qChunk, MPI_DOUBLE_PRECISION, eigenvalues, num_bands*qChunk, MPI_DOUBLE_PRECISION, root, MPI_COMM_WORLD, ierr)
+		!
+		!WRITE FILE
+		if( myID == root ) then
+			open(unit=110,file=seed_name//'.eig',action='write',access='stream',form='formatted', status='replace')
+			do qi = 1, num_kpts
+				do n = 1, num_bands
+					write(110,*)	n, ' ', qi, ' ', eigenvalues(n,qi)!* aUtoEv
+				end do
 			end do
-		end do
-		close(110)
+			close(110)
+		end if
 		!
 		!
 		return
@@ -469,20 +496,23 @@ module w90Interface
 !A_MATRIX ROUTINES
 	subroutine w90prepAmat(ck)
 		complex(dp),	intent(in)		:: ck(:,:,:) 	 !ck(			nG		,	nBands  	,	nQ	)
-		integer							:: qi, n, m
-		complex(dp),	allocatable		:: A_matrix(:,:,:)
+		integer							:: qi, n, m, qLoc
+		complex(dp),	allocatable		:: A_matrix(:,:,:), A_loc(:,:,:)
 		!
-		allocate(	A_matrix(	num_bands	,		num_wann	,	num_kpts	)	)
+		if( myID==root )		allocate(	A_matrix(	num_bands,	num_wann,	num_kpts	)		)
+								allocate(	 A_loc( 	num_bands,	num_wann,	qChunk		)		)
 		!
-		if(	size(ck,2)/= num_bands )	write(*,*)"[w90prepAmat]: waring ab initio exp. coefficients have wrong number of bands"
-		if(	size(ck,3)/= num_kpts )  	write(*,*)"[w90prepAmat]: waring ab initio exp. coefficients have wrong numbers of kpts"
-		if(	num_wann/nAt > 3) 			write(*,*)"[w90prepAmat]: can not handle more then 3 wfs per atom at the moment"
+		if(	size(ck,2)/= num_bands )	write(*,'(a,i3,a)')"[#",myID,";w90prepAmat]: warning ab initio exp. coefficients have wrong number of bands"
+		if(	size(ck,3)/= num_kpts )  	write(*,'(a,i3,a)')"[#",myID,";w90prepAmat]: warning ab initio exp. coefficients have wrong numbers of kpts"
+		if(	num_wann/nAt > 3) 			write(*,'(a,i3,a)')"[#",myID,";w90prepAmat]: can not handle more then 3 wfs per atom at the moment"
 		!
 		!MATRIX SETUP
-		A_matrix	= dcmplx(0.0_dp)
-		do qi = 1, nQ
-			call calcAmatANA(qi,ck(:,:,qi), A_matrix(:,:,qi))
+		!$OMP PARALLEL DO SCHEDULE(DYNAMIC) DEFAULT(SHARED) PRIVATE(qLoc)		
+		do qLoc = 1, qChunk
+			A_loc(:,:,qLoc)	= dcmplx(0.0_dp)
+			call calcAmatANA(qLoc,ck(:,:,qLoc), A_loc(:,:,qLoc))
 		end do
+		!$OMP END PARALLEL DO
 		!
 		!WRITE TO FILE
 		open(unit=120,file=seed_name//'.amn',action='write',access='stream',form='formatted', status='replace')
