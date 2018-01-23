@@ -23,7 +23,8 @@ program main
     complex(dp),	allocatable,	dimension(:,:,:)	:: 	ck
     real(dp),		allocatable,	dimension(:,:)		:: 	En    														
     real												:: 	mastT0, mastT1, mastT, T0, T1, &
-    															aT,kT,wT,pwT, oT, bT			
+    															aT,kT,wT,pwT, oT, bT	
+    logical												::	mpiSuccess		
 
     !MPI INIT
 	call MPI_INIT( ierr )
@@ -54,7 +55,11 @@ program main
   	call readInp()
 	!
 	!
-	!
+	if( mod(nQ,nProcs)/=0)  then
+		if(myID == root) write(*,*)"[main]: CRITICAL WARNING: mpi threads have to be integer fraction of nQ"
+		mpiSuccess = .false.
+	end if
+
 	if( myID == root) then
 		write(*,*)"*"
 		write(*,*)"*"
@@ -71,7 +76,6 @@ program main
 		write(*,*)"*"
 		write(*,*)"*"
 		write(*,*)"*"
-		if( mod(nQ,nProcs)/=0) write(*,*)"[main]: CRITICAL WARNING: mpi threads have to be integer fraction of nQ"
 		!
 		call cpu_time(T1)
 		aT = T1 - T0
@@ -82,7 +86,7 @@ program main
 	call MPI_BARRIER( MPI_COMM_WORLD, ierr )
 	
 	!ELECTRONIC STRUCTURE
-	if( doSolveHam ) then
+	if( mpiSuccess .and. doSolveHam ) then
 		!call cpu_time(T0)	
 		allocate(	En(						nSolve	, 	qChunk		)	)
 		allocate(	ck(			Gmax	,	nSolve 	,	qChunk	)	)

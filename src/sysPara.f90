@@ -578,35 +578,38 @@ module sysPara
 
 !
 	subroutine popGvec()
-		integer						:: qi, gi, inside,tot
+		integer						:: qi, gi, inside,tot, i
 		real(dp)					:: kg(2)
 		!^
 		!fill array
 		allocate(	nGq(					qChunk		)		)
 		allocate(	Gvec(	dim,	nG ,	qChunk		)		)
 		!
+		i = 1
 		do qi = myID*qChunk+1, myID*qChunk+nProcs
-			nGq(qi)	= 0
+			nGq(i)	= 0
 			inside 	= 0
 			tot 	= 0
 			do gi = 1, nG
 				kg(:)	= qpts(:,qi) + Gtest(:,gi)
 				tot		= tot + 1
 				if( norm2(kg) < Gcut ) then
-					nGq(qi) = nGq(qi) + 1
-					Gvec(:,nGq(qi),qi) = kg(:)
+					nGq(i) = nGq(i) + 1
+					Gvec(:,nGq(i),qi) = kg(:)
 					inside = inside + 1
 					if( gi == 1)	write(*,*)	"[popGvec]: warning hit boundary of Gtest grid"
 				end if
 			end do
 			!DEBUG INFO
-			if(nGq(qi) > nG) write(*,'(a,i4,a,i6)')	"[popGvec]: warning, somehow counted more basis functions at qi=",qi," limit nG=",nG	
-			write(*,'(a,i6,a,i4)')	"[popGvec]: using ",nGq(qi), "basis functions at qi=",qi	
+			if(nGq(i) > nG) write(*,'(a,i4,a,i6)')	"[popGvec]: warning, somehow counted more basis functions at qi=",qi," limit nG=",nG	
+			write(*,'(a,i6,a,i4)')	"[popGvec]: using ",nGq(i), "basis functions at qi=",qi
+			i = i + 1	
 		end do
 		!
 		Gmax = maxval(nGq)
-		write(*,*)	"[popGvec]: maximum amount of basis functions is",Gmax
-		!call MPI_ALLREDUCE(Gmax, GmaxGLOBAL, 1, MPI_INTEGER, MPI_MAX, MPI_COMM_WORLD, ierr)
+		write(*,*)	"[",myID,";popGvec]: maximum amount of basis functions is",Gmax
+		call MPI_ALLREDUCE(Gmax, GmaxGLOBAL, 1, MPI_INTEGER, MPI_MAX, MPI_COMM_WORLD, ierr)
+		if( myID == root ) write(*,*) "global Gmax=",GmaxGLOBAL
 		!
 		!
 		return
