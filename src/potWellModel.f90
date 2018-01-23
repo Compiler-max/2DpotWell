@@ -29,7 +29,7 @@ module potWellModel
 		!																
 		complex(dp),	allocatable		::	Hmat(:,:) , ctemp(:,:)
 		real(dp),		allocatable		::	EnT(:)
-		integer							:: 	qi, qLoc, found, Gsize, nQloc, nQsum
+		integer							:: 	qi, qLoc, found, Gsize
 		!									qi: qpts grid index. qLoc: lcoal storage adress for alll quanties at qpts=qi
 		!
 		!
@@ -41,10 +41,10 @@ module potWellModel
 		allocate(	EnT(	Gmax			)			)	
 
 		qLoc = 1
-		do qi = myID*qChunk+1, myID*qChunk+nProcs
+		do qi = myID*qChunk +1, myID*qChunk + qChunk
 			!
 			!!SETUP HAM
-			call populateH(qLoc, qi, Hmat) 
+			call populateH(qLoc, Hmat) 
 			!!
 			!SOLVE HAM
 			ctemp	= dcmplx(0.0_dp)
@@ -55,6 +55,10 @@ module potWellModel
 			call eigSolverPART(Hmat(1:Gsize,1:Gsize),EnT(1:Gsize), ctemp(1:Gsize,:), found)
 			!
 			!
+			!COPY TO TARGET ARRAYS
+			ck(1:Gmax,1:nSolve,qLoc)	= ctemp(1:Gmax,1:nSolve)
+			En(1:nSolve,qLoc)			= EnT(1:nSolve)
+
 			!DEBUG TESTS
 			if( found /= nSolve )	write(*,'(a,i3,a,i5,a,i5)'	)	"[#",myID,";solveHam]: only found ",found," bands of required ",nSolve
 			if( nBands > found	)	write(*,'(a,i3,a)'			)	"[#",myID,";solveHam]: warning did not found required amount of bands"
@@ -72,50 +76,15 @@ module potWellModel
 
 
 
-	subroutine reduceWrite(cLoc, En, nGq)
-		complex(dp),	intent(in)		:: cLoc(:,:,:)
-		real(dp),		intent(in)		:: En(:,:), nGq(:,:,:)
-		integer							:: qi
-		!
-		!sequential
-		!!!!!COPY INTO TARGET ARRAYS
-		!!!!ck(1:Gsize,1:nSolve,qi)	= ctemp(1:Gsize,1:nSolve)
-		!!!!En(:,qi)	= EnT(1:nSolve)
-		!COLLECT RESULTS OVER MPI_COMM_WORLD
-		do qi = 1, nQ
-			!	call MPI_Reduce( cLoc(1:Gsize,1:nSolve,"get loc q index") , cGlob(1:Gsize,1:nSolve,qi) , Gsize*nSolve, MPI_DOUBLE_COMPLEX,)
-
-
-		end do
-
-
-
-		if( myID == root) then
-			!COPY & WRITE ENERGIES/BWFs
-			write(*,*)			"[solveHam]: found ", countBandsSubZero(En(1:nSolve,:))," bands at the gamma point beneath zero"
-			!call writeEnAndCK(En, ck, nGq)
-			!call writeEnAbInitio(En)
-		end if
-	end subroutine
-
-
-
-
-
-
-
-
-
-
 
 !private:
 	!POPULATION OF H MATRIX
-	subroutine populateH(qLoc, qi, Hmat)
+	subroutine populateH(qLoc, Hmat)
 		!populates the Hamiltonian matrix by adding 
 		!	1. kinetic energy terms (onSite)
 		!	2. potential terms V(qi,i,j)
 		!and checks if the resulting matrix is hermitian( for debugging)
-		integer,		intent(in)	:: qLoc, qi
+		integer,		intent(in)	:: qLoc
 		complex(dp), intent(inout) 	:: Hmat(:,:)
 		complex(dp)					:: onSite
 		integer						:: i, j
