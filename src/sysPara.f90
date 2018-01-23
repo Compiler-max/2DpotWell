@@ -578,33 +578,33 @@ module sysPara
 
 !
 	subroutine popGvec()
-		integer						:: qi, gi, inside,tot, i
+		integer						:: qi, gi, inside,tot, qLoc
 		real(dp)					:: kg(2)
 		!^
 		!fill array
 		allocate(	nGq(					qChunk		)		)
 		allocate(	Gvec(	dim,	nG ,	qChunk		)		)
 		!
-		i = 1
+		qLoc = 1
 		do qi = myID*qChunk+1, myID*qChunk+nProcs
-			nGq(i)	= 0
-			inside 	= 0
-			tot 	= 0
+			nGq(qLoc)	= 0
+			inside 		= 0
+			tot 		= 0
 			do gi = 1, nG
 				kg(:)	= qpts(:,qi) + Gtest(:,gi)
 				tot		= tot + 1
 				if( norm2(kg) < Gcut ) then
-					nGq(i) = nGq(i) + 1
-					Gvec(:,nGq(i),i) = kg(:)
+					nGq(qLoc) = nGq(qLoc) + 1
+					Gvec(:,nGq(qLoc),qLoc) = kg(:)
 					inside = inside + 1
 					if( gi == 1)	write(*,*)	"[popGvec]: warning hit boundary of Gtest grid"
 				end if
 			end do
 			!DEBUG INFO
-			if(nGq(i) > nG) write(*,'(a,i3,a,i4,a,i6)')	"[#",myID,&
+			if(nGq(qLoc) > nG) write(*,'(a,i3,a,i4,a,i6)')	"[#",myID,&
 											";popGvec]: warning, somehow counted more basis functions at qi=",qi," limit nG=",nG	
-			write(*,'(a,i3,a,i6,a,i4)')	"[#",myID,";popGvec]: using ",nGq(i), "basis functions at qi=",qi
-			i = i + 1	
+			write(*,'(a,i3,a,i6,a,i4)')	"[#",myID,";popGvec]: using ",nGq(qLoc), "basis functions at qi=",qi
+			qLoc = qLoc + 1	
 		end do
 		!
 		Gmax = maxval(nGq)
