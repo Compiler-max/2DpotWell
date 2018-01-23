@@ -55,12 +55,12 @@ module w90Interface
 
 		call w90prepEigVal(En)
 		
-	!	if( .not. useBloch )	then
-	!		call w90prepAmat(ck)
-	!		write(*,*)	"[w90Interf]: projection overlap matrix calculated"
-	!	else
-	!		write(*,*)	"[w90Interf]: projection disabled will use bloch phase"
-	!	end if
+		if( .not. useBloch )	then
+			call w90prepAmat(ck)
+			write(*,*)	"[w90Interf]: projection overlap matrix calculated"
+		else
+			write(*,*)	"[w90Interf]: projection disabled will use bloch phase"
+		end if
 		
 
 		if( myID == root ) then
@@ -496,11 +496,12 @@ module w90Interface
 !A_MATRIX ROUTINES
 	subroutine w90prepAmat(ck)
 		complex(dp),	intent(in)		:: ck(:,:,:) 	 !ck(			nG		,	nBands  	,	nQ	)
-		integer							:: qi, n, m, qLoc
+		integer							:: qi, n, m, qLoc, sendcount
 		complex(dp),	allocatable		:: A_matrix(:,:,:), A_loc(:,:,:)
 		!
-		if( myID==root )		allocate(	A_matrix(	num_bands,	num_wann,	num_kpts	)		)
-								allocate(	 A_loc( 	num_bands,	num_wann,	qChunk		)		)
+		if( myID==root )		allocate(	A_matrix(	num_bands	,	num_wann,	num_kpts	)		)
+		if( myID/=root )		allocate(	A_matrix(		0		,		0	,		0		)		)
+								allocate(	 A_loc( 	num_bands	,	num_wann,	qChunk		)		)
 		!
 		if(	size(ck,2)/= num_bands )	write(*,'(a,i3,a)')"[#",myID,";w90prepAmat]: warning ab initio exp. coefficients have wrong number of bands"
 		if(	size(ck,3)/= num_kpts )  	write(*,'(a,i3,a)')"[#",myID,";w90prepAmat]: warning ab initio exp. coefficients have wrong numbers of kpts"
@@ -514,17 +515,24 @@ module w90Interface
 		end do
 		!$OMP END PARALLEL DO
 		!
+		!COLLECT
+		sendcount = num_bands*num_wann*qchunk
+		call MPI_GATHER(A_loc, sendcount, MPI_DOUBLE_COMPLEX, A_matrix, sendcount, MPI_DOUBLE_COMPLEX, root, MPI_COMM_WORLD, ierr )
+
+		!
 		!WRITE TO FILE
-		open(unit=120,file=seed_name//'.amn',action='write',access='stream',form='formatted', status='replace')
-		write(120,*)	'overlap matrix'
-		write(120,*)	num_bands, ' ', num_kpts, ' ', num_wann
-		do qi = 1, num_kpts
-			do n = 1, num_wann
-				do m = 1, num_bands	
-					write(120,*)	m, ' ', n, ' ', ' ', qi, ' ', dreal(A_matrix(m,n,qi)), ' ', dimag(A_matrix(m,n,qi))
+		if( myID == root ) then
+			open(unit=120,file=seed_name//'.amn',action='write',access='stream',form='formatted', status='replace')
+			write(120,*)	'overlap matrix'
+			write(120,*)	num_bands, ' ', num_kpts, ' ', num_wann
+			do qi = 1, num_kpts
+				do n = 1, num_wann
+					do m = 1, num_bands	
+						write(120,*)	m, ' ', n, ' ', ' ', qi, ' ', dreal(A_matrix(m,n,qi)), ' ', dimag(A_matrix(m,n,qi))
+					end do
 				end do
 			end do
-		end do
+		end if
 
 		return 
 	end subroutine
