@@ -84,15 +84,14 @@ program main
 	
 	
 	!ELECTRONIC STRUCTURE
-	call MPI_BARRIER( MPI_COMM_WORLD, ierr )
 	if( mpiSuccess .and. doSolveHam ) then
 		!call cpu_time(T0)	
 		allocate(	En(						nSolve	, 	qChunk		)	)
 		allocate(	ck(			Gmax	,	nSolve 	,	qChunk	)	)
-		if( myID == root ) then
-			write(*,*)"[main]:**************************ELECTRONIC STRUCTURE PART*************************"
-			write(*,*)	"[main]: start electronic structure calculation now"
-		end if
+		if( myID == root ) 	write(*,*)"[main]:**************************ELECTRONIC STRUCTURE PART*************************"
+		call MPI_BARRIER( MPI_COMM_WORLD, ierr )	
+		!
+		!
 		call solveHam(ck, En)
 		if( myID == root ) then
 			write(*,*)"[main]: done solving Schroedinger eq."
@@ -117,23 +116,7 @@ program main
 			wT = T1-T0
 		end if
 	end if
-	
-
 	call MPI_BARRIER( MPI_COMM_WORLD, ierr )
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

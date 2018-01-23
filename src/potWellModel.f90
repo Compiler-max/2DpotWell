@@ -29,45 +29,42 @@ module potWellModel
 		!																
 		complex(dp),	allocatable		::	Hmat(:,:) , ctemp(:,:)
 		real(dp),		allocatable		::	EnT(:)
-		integer							:: 	qi, found, Gsize, nQloc, nQsum
+		integer							:: 	qi, qLoc, found, Gsize, nQloc, nQsum
+		!									qi: qpts grid index. qLoc: lcoal storage adress for alll quanties at qpts=qi
 		!
 		!
 		if( myID==root .and. debugHam )		write(*,*)	"[solveHam]: debugging ON. Will do additional tests of the results"
 			
-		
+
 		allocate(	Hmat(	Gmax,	Gmax	)			)
 		allocate(	ctemp(	Gmax, nSolve	)			)
 		allocate(	EnT(	Gmax			)			)	
 
+		qLoc = 1
 		do qi = myID*qChunk+1, myID*qChunk+nProcs
 			!
-			write(*,'(a,i3,a,i3)')"[solveHam]: myID=",myID," now solving qi=",qi
-
 			!!SETUP HAM
-			call populateH(qi, Hmat) 
+			call populateH(qLoc, qi, Hmat) 
 			!!
 			!SOLVE HAM
 			ctemp	= dcmplx(0.0_dp)
 			EnT		= 0.0_dp
-			Gsize 	= nGq(qi)
-			if( Gsize > Gmax) write(*,*)"[solveHam]: critical error in solveHam,",&
-									" please contact developer. (nobody but dev will ever read this^^)"
-			call eigSolverPART(Hmat(1:Gsize,1:Gsize),EnT(1:Gsize), ctemp(1:Gsize,:), found)!a, w ,z, m
+			Gsize 	= nGq(qLoc)
+			if( Gsize > Gmax	)	write(*,'(a,i3,a)'			)	"[#",myID,";solveHam]: critical error in solveHam, ",&
+																		"please contact developer. (nobody but dev will ever read this^^)"
+			call eigSolverPART(Hmat(1:Gsize,1:Gsize),EnT(1:Gsize), ctemp(1:Gsize,:), found)
 			!
 			!
 			!DEBUG TESTS
-			if( debugHam ) then
-				if(found /= nSolve )write(*,*)"[solveHam]: only found ",found," bands of required ",nSolve
-				if(nBands > found) write(*,*)"[solveHam]: warning did not found required amount of bands"
-				if( Gsize < nSolve ) write(*,*)"[solveHam]: cutoff to small to get ",nSolve," bands! only get",Gsize," basis functions"
-			end if
+			if( found /= nSolve )	write(*,'(a,i3,a,i5,a,i5)'	)	"[#",myID,";solveHam]: only found ",found," bands of required ",nSolve
+			if( nBands > found	)	write(*,'(a,i3,a)'			)	"[#",myID,";solveHam]: warning did not found required amount of bands"
+			if( Gsize < nSolve	) 	write(*,'(a,i3,a,i5,a,i5,a)')	"[#",myID,";solveHam]: cutoff to small to get ",nSolve,&
+																	" bands! only get",Gsize," basis functions"
 			!
-			!
-			write(*,*)"[#",myID,", solveHam]: done for qi=",qi
+			!FINALIZE
+			qLoc = qLoc + 1
+			write(*,'(a,i3,a,i5)')"[#",myID,", solveHam]: done for qi=",qi
 		end do
-		!
-
-		!call reduceWrite()
 		!
 		!
 		return
@@ -113,25 +110,25 @@ module potWellModel
 
 !private:
 	!POPULATION OF H MATRIX
-	subroutine populateH(qi, Hmat)
+	subroutine populateH(qLoc, qi, Hmat)
 		!populates the Hamiltonian matrix by adding 
 		!	1. kinetic energy terms (onSite)
 		!	2. potential terms V(qi,i,j)
 		!and checks if the resulting matrix is hermitian( for debugging)
-		integer,		intent(in)	:: qi
+		integer,		intent(in)	:: qLoc, qi
 		complex(dp), intent(inout) 	:: Hmat(:,:)
 		complex(dp)					:: onSite
 		integer						:: i, j
 		!init to zero
 		Hmat = dcmplx(0.0_dp) 
 		!
-		do j = 1, nGq(qi)
-			do i = 1, nGq(qi)
+		do j = 1, nGq(qLoc)
+			do i = 1, nGq(qLoc)
 					if(i == j )	then	
-						onSite	= 0.5_dp * 	dot_product(Gvec(:,i,qi),Gvec(:,i,qi))
-						Hmat(i,j)	=	V(qi, i,j)	+	onSite
+						onSite	= 0.5_dp * 	dot_product(Gvec(:,i,qLoc),Gvec(:,i,qLoc))
+						Hmat(i,j)	=	V(qLoc, i,j)	+	onSite
 					else
-						Hmat(i,j)	=	V(qi, i,j)
+						Hmat(i,j)	=	V(qLoc, i,j)
 					end if
 				!end if
 			end do
@@ -146,14 +143,14 @@ module potWellModel
 		return
 	end subroutine
 
-	complex(dp)	function V(qi, i,j)
-		integer,	intent(in)	::	qi, i, j
+	complex(dp)	function V(qLoc, i,j)
+		integer,	intent(in)	::	qLoc, i, j
 		!
 		V	= dcmplx(0.0_dp)
 		if( doVdesc ) then
-			V = Vdesc(qi, i,j)
+			V = Vdesc(qLoc, i,j)
 		else
-			V = Vconst(qi, i,j)
+			V = Vconst(qLoc, i,j)
 		end if
 		!
 		!
@@ -161,17 +158,17 @@ module potWellModel
 	end function
 
 
-	complex(dp) function Vconst(qi, i,j)
+	complex(dp) function Vconst(qLoc, i,j)
 		!calc potential matrix elements
 		!the integrals were solved analytical and are hard coded in this function
-		integer,	intent(in)	::	qi, i, j
+		integer,	intent(in)	::	qLoc,  i, j
 		integer					::	at
 		complex(dp)				::	Vpot
 		real(dp)				::  xL, yL, xR, yR, dGx, dGy
 		!
 		Vconst 	= dcmplx(0.0_dp)
-		dGx		= Gvec(1,j,qi) - Gvec(1,i,qi) 
-		dGy		= Gvec(2,j,qi) - Gvec(2,i,qi) 
+		dGx		= Gvec(1,j,qLoc) - Gvec(1,i,qLoc) 
+		dGy		= Gvec(2,j,qLoc) - Gvec(2,i,qLoc) 
 		!
 		do at = 1, nAt
 			Vpot	=	dcmplx(atPot(at))
@@ -195,17 +192,17 @@ module potWellModel
 	end function
 
 
-	complex(dp) function Vdesc(qi, i,j)
+	complex(dp) function Vdesc(qLoc, i,j)
 		!potential integration for a well linear descending in x direction
 		!it starts from V0 at xL till V0-dV at xR
-		integer,	intent(in)	::	qi, i, j
+		integer,	intent(in)	::	qLoc, i, j
 		integer					::	at
 		complex(dp)				::	Vpot
 		real(dp)				::  xL, yL, xR, yR, dGx, dGy, dV, fact
 		!
 		Vdesc 	= dcmplx(0.0_dp)
-		dGx		= Gvec(1,j,qi) - Gvec(1,i,qi) 
-		dGy		= Gvec(2,j,qi) - Gvec(2,i,qi) 
+		dGx		= Gvec(1,j,qLoc) - Gvec(1,i,qLoc) 
+		dGy		= Gvec(2,j,qLoc) - Gvec(2,i,qLoc) 
 		!
 		do at = 1, nAt
 			Vpot=	dcmplx(atPot(at))
