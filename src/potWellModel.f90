@@ -32,19 +32,9 @@ module potWellModel
 		integer							:: 	qi, found, Gsize, nQloc, nQsum
 		!
 		!
-		if(debugHam) then
-			write(*,*)	"[solveHam]: debugging ON. Will do additional tests of the results"
-		end if
-
-		!
-		!
-		nQloc = nQ/nProcs
-		if(root <  myID .and. myID <= mod(nQ,nProcs)	)	nQloc = nQloc +	1
-		write(*,*)	"myID",myID," will solve #",nQloc," qpts"
-
-		call MPI_Reduce(nQloc,nQsum, 1, MPI_INTEGER, MPI_SUM, root, MPI_COMM_WORLD, ierr)
-		if(myID == root .and. nQsum /= nQ) write(*,*)	"[thread#",myID,",solveHam]: warning qpts are not distributed correctly"
-
+		if( myID==root .and. debugHam )		write(*,*)	"[solveHam]: debugging ON. Will do additional tests of the results"
+			
+		
 		allocate(	Hmat(	Gmax,	Gmax	)			)
 		allocate(	ctemp(	Gmax, nSolve	)			)
 		allocate(	EnT(	Gmax			)			)	

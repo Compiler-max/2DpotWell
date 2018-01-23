@@ -595,21 +595,23 @@ module sysPara
 				tot		= tot + 1
 				if( norm2(kg) < Gcut ) then
 					nGq(i) = nGq(i) + 1
-					Gvec(:,nGq(i),qi) = kg(:)
+					Gvec(:,nGq(i),i) = kg(:)
 					inside = inside + 1
 					if( gi == 1)	write(*,*)	"[popGvec]: warning hit boundary of Gtest grid"
 				end if
 			end do
 			!DEBUG INFO
-			if(nGq(i) > nG) write(*,'(a,i4,a,i6)')	"[popGvec]: warning, somehow counted more basis functions at qi=",qi," limit nG=",nG	
-			write(*,'(a,i6,a,i4)')	"[popGvec]: using ",nGq(i), "basis functions at qi=",qi
+			if(nGq(i) > nG) write(*,'(a,i3,a,i4,a,i6)')	"[#",myID,&
+											";popGvec]: warning, somehow counted more basis functions at qi=",qi," limit nG=",nG	
+			write(*,'(a,i3,a,i6,a,i4)')	"[#",myID,";popGvec]: using ",nGq(i), "basis functions at qi=",qi
 			i = i + 1	
 		end do
 		!
 		Gmax = maxval(nGq)
-		write(*,*)	"[",myID,";popGvec]: maximum amount of basis functions is",Gmax
 		call MPI_ALLREDUCE(Gmax, GmaxGLOBAL, 1, MPI_INTEGER, MPI_MAX, MPI_COMM_WORLD, ierr)
-		if( myID == root ) write(*,*) "global Gmax=",GmaxGLOBAL
+		write(*,'(a,i3,a,i7)')	"[#",myID,";popGvec]: maximum amount of basis functions is",Gmax
+		call MPI_BARRIER( MPI_COMM_WORLD, ierr)
+		if( myID == root ) write(*,'(a,i3,a,i7)') "[#",myID,";popGvec]: global Gmax=",GmaxGLOBAL
 		!
 		!
 		return

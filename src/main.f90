@@ -31,12 +31,11 @@ program main
     call MPI_COMM_RANK (MPI_COMM_WORLD, myID, ierr)
     call MPI_COMM_SIZE (MPI_COMM_WORLD, nProcs, ierr)
     root = 0
+    mpiSuccess = .true.
     call MPI_Barrier( MPI_COMM_WORLD, ierr )
-
+    !
     !
     if( myID == root) then
-    	!
-    	!timing zero init
     	aT		= 0.0
     	kT		= 0.0
     	wT		= 0.0
@@ -44,22 +43,22 @@ program main
     	bT		= 0.0
     	oT 		= 0.0
     	mastT	= 0.0
-    	
-    	!INPUT & ALLOCATION SECTION
+    	!
    		write(*,*)"[main]:**************************setup Grids*************************"
    		call cpu_time(mastT0)
    		call cpu_time(T0)
     end if
 
-
+    !READ INPUT FILE & DISTRIBUTE
   	call readInp()
 	!
-	!
+	!CHECK IF QPTS CAN BE EQUALLY DISTRIBUTED -> if not break
 	if( mod(nQ,nProcs)/=0)  then
 		if(myID == root) write(*,*)"[main]: CRITICAL WARNING: mpi threads have to be integer fraction of nQ"
 		mpiSuccess = .false.
 	end if
-
+	!
+	!PRINT SOME INFO
 	if( myID == root) then
 		write(*,*)"*"
 		write(*,*)"*"
@@ -81,11 +80,11 @@ program main
 		aT = T1 - T0
 	end if
 	
-	write(*,*) "myID=",myID,": I will do qi= ",(myID*nQ/nProcs+1)," till" ,(myID*nQ/nProcs+nProcs)
-
-	call MPI_BARRIER( MPI_COMM_WORLD, ierr )
+		
+	
 	
 	!ELECTRONIC STRUCTURE
+	call MPI_BARRIER( MPI_COMM_WORLD, ierr )
 	if( mpiSuccess .and. doSolveHam ) then
 		!call cpu_time(T0)	
 		allocate(	En(						nSolve	, 	qChunk		)	)
@@ -94,7 +93,7 @@ program main
 			write(*,*)"[main]:**************************ELECTRONIC STRUCTURE PART*************************"
 			write(*,*)	"[main]: start electronic structure calculation now"
 		end if
-		!call solveHam(ck, En)
+		call solveHam(ck, En)
 		if( myID == root ) then
 			write(*,*)"[main]: done solving Schroedinger eq."
 			call cpu_time(T1)
