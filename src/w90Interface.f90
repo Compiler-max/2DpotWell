@@ -49,18 +49,15 @@ module w90Interface
 		!
 		!BCAST NEAREST NEIGHBOURS INFO
 		call bcastW90info()
-		!Todo: parallel
+
+
+
+		!
+		!CALC AND WRITE WANNIER FILES
 		!call w90prepMmat(ck)
 
-
+		call w90prepAmat(ck)
 		call w90prepEigVal(En)
-		
-		if( .not. useBloch )	then
-			call w90prepAmat(ck)
-			write(*,*)	"[w90Interf]: projection overlap matrix calculated"
-		else
-			write(*,*)	"[w90Interf]: projection disabled will use bloch phase"
-		end if
 		
 
 		if( myID == root ) then
@@ -364,7 +361,7 @@ module w90Interface
 			open(unit=110,file=seed_name//'.eig',action='write',access='stream',form='formatted', status='replace')
 			do qi = 1, num_kpts
 				do n = 1, num_bands
-					write(110,*)	n, ' ', qi, ' ', eigenvalues(n,qi)!* aUtoEv
+					write(110,*)	n, ' ', qi, ' ', eigenvalues(n,qi) * aUtoEv
 				end do
 			end do
 			close(110)
@@ -394,55 +391,70 @@ module w90Interface
 
 
 !M_MATRIX ROUTINES
-	subroutine w90prepMmat(ck)
-		complex(dp),	intent(in)		:: ck(:,:,:) 	 !ck(			nG		,	nBands  	,	nQ	)	
-		integer							:: qi, nn, n, m
-		complex(dp),	allocatable		:: M_matrix(:,:,:,:)
+	subroutine w90prepMmat(ck_loc)
+		complex(dp),	intent(in)		:: ck_loc(:,:,:) 	 !ck(			nG		,	nBands  	,	nQ	)	
+		integer							:: qi, nn, n, m, mesgSize
+		complex(dp),	allocatable		:: M_matrix(:,:,:,:), M_loc(:,:,:,:), ck(:,:,:)
 		real(dp)						:: gShift(2)
 		!
-		allocate(	M_matrix(		num_bands	,	num_bands	,	nntot	,	num_kpts	)		)
+							allocate(	ck(					Gmax	,	nSolve		,			nQ				)		)
+							allocate(	M_loc(			num_bands	,	num_bands	,	nntot	,	qChunk		)		)
+		if(myID == root)	allocate(	M_matrix(		num_bands	,	num_bands	,	nntot	,	num_kpts	)		)
+		if(myID /= root)	allocate(	M_matrix(			0		,		0		,		0	,		0		)		)
+							
 		!
-		!if(	size(ck,2)/= num_bands ) write(*,*)"[w90prepEigVal]: warning ab initio exp. coefficients have wrong number of bands"
-		if(	size(ck,3)/= num_kpts )  write(*,*)"[w90prepEigVal]: warning ab initio exp. coefficients have wrong numbers of kpts"
+		!ToDo: distribute ck of at least nn 
+		mesgSize = Gmax*nSolve*qChunk
+		call MPI_ALLGATHER(ck_loc, mesgSize, MPI_DOUBLE_COMPLEX, ck, mesgSize, MPI_DOUBLE_COMPLEX, MPI_COMM_WORLD, ierr)
+
 		!
 		!SETUP THE MATRIX
-		M_matrix	= dcmplx(0.0_dp)
+		M_loc	= dcmplx(0.0_dp)
 		write(*,*)	"[w90prepMmat]: use ",nntot," nearest neighbours per k point"
-		!$OMP PARALLEL DO SCHEDULE(STATIC) DEFAULT(SHARED) PRIVATE(qi, nn, gShift)
-		do qi = 1, num_kpts
+		do qi = myID*qChunk+1, myID*qChunk+qChunk
 			do nn = 1, nntot
 				!calc overlap of unks
 				if( nncell(3,qi,nn)/= 0 ) then
-					M_matrix(:,:,nn,qi)	= dcmplx(1.0_dp-5)
+					M_loc(:,:,nn,qi)	= dcmplx(1.0_dp-5)
 					write(*,*)	"[w90prepMmat]: WARNING nearest neighbours in z direction used!"
 					if(qi==1  ) write(*,*)	"[w90prepMmat]: oLap set to zero for nn=",nn
 				else
 					gShift(1)			= nncell(1,qi,nn) * 2.0_dp * PI_dp / aX
 					gShift(2)			= nncell(2,qi,nn) * 2.0_dp * PI_dp / aX
 					!oLap				= UNKoverlap(n,m, qi, nnlist(qi,nn), gShift, ck)
-					call calcMmat(qi,nnlist(qi,nn), gShift, ck, M_matrix(:,:,nn,qi))
+					call calcMmat(qi,nnlist(qi,nn), gShift, ck, M_loc(:,:,nn,qi))
 				end if
 			end do
 		end do
-		!$OMP END PARALLEL DO
+		!
+		!COLLECT
+		mesgSize = num_bands**2*nntot*qChunk
+		call MPI_GATHER(M_loc, mesgSize, MPI_DOUBLE_COMPLEX, M_matrix, mesgSize, MPI_DOUBLE_COMPLEX, root, MPI_COMM_WORLD, ierr )
+		!
 		!
 		!WRITE TO FILE
-		open(unit=120,file=seed_name//'.mmn',action='write',access='stream',form='formatted', status='replace')
-		write(120,*)	'overlap matrix'
-		write(120,*)	num_bands, ' ', num_kpts, ' ', nntot	
-		!
-		do qi = 1, num_kpts
-			do nn = 1, nntot
-				write(120,*)	qi,' ',nnlist(qi,nn),' ',nncell(1,qi,nn),' ',nncell(2,qi,nn),' ', nncell(3,qi,nn)
-				do n = 1, num_bands
-					do m = 1, num_bands
-						write(120,*)	dreal(M_matrix(m,n,nn,qi)), ' ', dimag(M_matrix(m,n,nn,qi))
+		if( myID == root ) then
+			open(unit=120,file=seed_name//'.mmn',action='write',access='stream',form='formatted', status='replace')
+			write(120,*)	'overlap matrix'
+			write(120,*)	num_bands, ' ', num_kpts, ' ', nntot	
+			!
+			do qi = 1, num_kpts
+				do nn = 1, nntot
+					write(120,*)	qi,' ',nnlist(qi,nn),' ',nncell(1,qi,nn),' ',nncell(2,qi,nn),' ', nncell(3,qi,nn)
+					do n = 1, num_bands
+						do m = 1, num_bands
+							write(120,*)	dreal(M_matrix(m,n,nn,qi)), ' ', dimag(M_matrix(m,n,nn,qi))
+						end do
 					end do
+					
 				end do
-				
 			end do
-		end do
-		close(120)	
+			close(120)
+			!
+			!
+			!ToDo: write ck to file
+		end if	
+		!
 		!
 		return
 	end subroutine
@@ -499,40 +511,52 @@ module w90Interface
 		integer							:: qi, n, m, qLoc, sendcount
 		complex(dp),	allocatable		:: A_matrix(:,:,:), A_loc(:,:,:)
 		!
-		if( myID==root )		allocate(	A_matrix(	num_bands	,	num_wann,	num_kpts	)		)
-		if( myID/=root )		allocate(	A_matrix(		0		,		0	,		0		)		)
-								allocate(	 A_loc( 	num_bands	,	num_wann,	qChunk		)		)
-		!
-		if(	size(ck,2)/= num_bands )	write(*,'(a,i3,a)')"[#",myID,";w90prepAmat]: warning ab initio exp. coefficients have wrong number of bands"
-		if(	size(ck,3)/= num_kpts )  	write(*,'(a,i3,a)')"[#",myID,";w90prepAmat]: warning ab initio exp. coefficients have wrong numbers of kpts"
-		if(	num_wann/nAt > 3) 			write(*,'(a,i3,a)')"[#",myID,";w90prepAmat]: can not handle more then 3 wfs per atom at the moment"
-		!
-		!MATRIX SETUP
-		!$OMP PARALLEL DO SCHEDULE(DYNAMIC) DEFAULT(SHARED) PRIVATE(qLoc)		
-		do qLoc = 1, qChunk
-			A_loc(:,:,qLoc)	= dcmplx(0.0_dp)
-			call calcAmatANA(qLoc,ck(:,:,qLoc), A_loc(:,:,qLoc))
-		end do
-		!$OMP END PARALLEL DO
-		!
-		!COLLECT
-		sendcount = num_bands*num_wann*qchunk
-		call MPI_GATHER(A_loc, sendcount, MPI_DOUBLE_COMPLEX, A_matrix, sendcount, MPI_DOUBLE_COMPLEX, root, MPI_COMM_WORLD, ierr )
-
-		!
-		!WRITE TO FILE
-		if( myID == root ) then
-			open(unit=120,file=seed_name//'.amn',action='write',access='stream',form='formatted', status='replace')
-			write(120,*)	'overlap matrix'
-			write(120,*)	num_bands, ' ', num_kpts, ' ', num_wann
-			do qi = 1, num_kpts
-				do n = 1, num_wann
-					do m = 1, num_bands	
-						write(120,*)	m, ' ', n, ' ', ' ', qi, ' ', dreal(A_matrix(m,n,qi)), ' ', dimag(A_matrix(m,n,qi))
+		if( .not. useBloch )	then
+			!
+			!
+			!
+			if( myID==root )		write(*,*)	"[w90Interf]: projection overlap matrix calculated"
+			if( myID==root )		allocate(	A_matrix(	num_bands	,	num_wann,	num_kpts	)		)
+			if( myID/=root )		allocate(	A_matrix(		0		,		0	,		0		)		)
+									allocate(	 A_loc( 	num_bands	,	num_wann,	qChunk		)		)
+			!
+			if(	size(ck,2)/= num_bands )	write(*,'(a,i3,a)')"[#",myID,";w90prepAmat]: warning ab initio exp. coefficients have wrong number of bands"
+			if(	size(ck,3)/= num_kpts )  	write(*,'(a,i3,a)')"[#",myID,";w90prepAmat]: warning ab initio exp. coefficients have wrong numbers of kpts"
+			if(	num_wann/nAt > 3) 			write(*,'(a,i3,a)')"[#",myID,";w90prepAmat]: can not handle more then 3 wfs per atom at the moment"
+			!
+			!MATRIX SETUP
+			!$OMP PARALLEL DO SCHEDULE(DYNAMIC) DEFAULT(SHARED) PRIVATE(qLoc)		
+			do qLoc = 1, qChunk
+				A_loc(:,:,qLoc)	= dcmplx(0.0_dp)
+				call calcAmatANA(qLoc,ck(:,:,qLoc), A_loc(:,:,qLoc))
+			end do
+			!$OMP END PARALLEL DO
+			!
+			!COLLECT
+			sendcount = num_bands*num_wann*qchunk
+			call MPI_GATHER(A_loc, sendcount, MPI_DOUBLE_COMPLEX, A_matrix, sendcount, MPI_DOUBLE_COMPLEX, root, MPI_COMM_WORLD, ierr )
+			!
+			!WRITE TO FILE
+			if( myID == root ) then
+				open(unit=120,file=seed_name//'.amn',action='write',access='stream',form='formatted', status='replace')
+				write(120,*)	'overlap matrix'
+				write(120,*)	num_bands, ' ', num_kpts, ' ', num_wann
+				do qi = 1, num_kpts
+					do n = 1, num_wann
+						do m = 1, num_bands	
+							write(120,*)	m, ' ', n, ' ', ' ', qi, ' ', dreal(A_matrix(m,n,qi)), ' ', dimag(A_matrix(m,n,qi))
+						end do
 					end do
 				end do
-			end do
+			end if
+			!
+			!
+			!
+		else
+			if( myID==root )	write(*,*)	"[w90Interf]: projection disabled will use bloch phase"
 		end if
+
+
 
 		return 
 	end subroutine
