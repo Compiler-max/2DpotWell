@@ -184,6 +184,23 @@ module output
 		if( size(ck,3) /= nQ )	write(*,*)	"[writeABiN_basCoeff]: wrong qpt size of ck detected"
 		allocate(	buffer(	size(ck,1), size(ck,2)	)		)
 		!REAL PART
+		!	open(unit=210, file='rawData/ckR.dat'		, form='unformatted', access='stream', action='write',status='replace') 
+		!do qi = 1, size(ck,3)
+		!	buffer	= dreal(ck(:,:,qi)) 
+		!	write(210)	buffer
+		!end do
+		!close(210)
+		!!
+		!open(unit=211, file='rawData/ckI.dat'		, form='unformatted', access='stream', action='write', status='replace')
+		!do qi = 1, size(ck,3)
+		!	buffer	= dimag(ck(:,:,qi)) 
+		!	write(211)	buffer
+		!end do
+		!close(211)
+
+
+
+
 		open(unit=210, file=raw_dir//'ckR.dat'		, form='unformatted', access='stream', action='write',status='replace') 
 		do qi = 1, size(ck,3)
 			buffer	= dreal(ck(:,:,qi)) 
