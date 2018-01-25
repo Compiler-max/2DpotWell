@@ -81,7 +81,7 @@ module planeWave
 		logical							:: notFound
 		!
 		Mmat	= dcmplx(0.0_dp)
-		cnt	= 0
+		cnt		= 0
 		do gi = 1, nGq(qi)
 			notFound 	= .true.
 			gj			= 1
@@ -211,31 +211,33 @@ module planeWave
 				!
 				!OVLERAPS:
 				!XL
+				!call calcMmat(qi, nnlist(qi,nn), gShift, nGq_glob, Gvec_glob, ck_glob, M_loc(:,:,nn,qi))
 				call calcMmat(qi, qxl, Gxl, nGq, Gvec, ck, Mtmp)
 				do n = 1, size(A,3)
 					do m = 1, size(A,2)
-						A(1:2,m,n,qi)	= A(1:2,m,n,qi) - wbx * bxl(1:2) * dimag( 	zlog(	Mtmp(m,n) )	 )
+						write(*,*)	Mtmp(m,n)
+						A(1:2,m,n,qi)	= A(1:2,m,n,qi) - wbx * bxl(1:2) * dimag( 	log(	Mtmp(m,n) )	 )
 					end do
 				end do
 				!XR
 				call calcMmat(qi, qxr, Gxr, nGq, Gvec, ck, Mtmp)
 				do n = 1, size(A,3)
 					do m = 1, size(A,2)
-						A(1:2,m,n,qi)	= A(1:2,m,n,qi) - wbx * bxr(1:2) * dimag( 	zlog(	Mtmp(m,n) )	 )
+						A(1:2,m,n,qi)	= A(1:2,m,n,qi) - wbx * bxr(1:2) * dimag( 	log(	Mtmp(m,n) )	 )
 					end do
 				end do
 				!YL
 				call calcMmat(qi, qyl, Gyl, nGq, Gvec, ck, Mtmp)
 				do n = 1, size(A,3)
 					do m = 1, size(A,2)
-						A(1:2,m,n,qi)	= A(1:2,m,n,qi) - wby * byl(1:2) * dimag( 	zlog(	Mtmp(m,n) )	 )
+						A(1:2,m,n,qi)	= A(1:2,m,n,qi) - wby * byl(1:2) * dimag( 	log(	Mtmp(m,n) )	 )
 					end do
 				end do
 				!YR
 				call calcMmat(qi, qyr, Gyr, nGq, Gvec, ck, Mtmp)
 				do n = 1, size(A,3)
 					do m = 1, size(A,2)
-						A(1:2,m,n,qi)	= A(1:2,m,n,qi) - wby * byr(1:2) * dimag( 	zlog(	Mtmp(m,n) )	 )
+						A(1:2,m,n,qi)	= A(1:2,m,n,qi) - wby * byr(1:2) * dimag( 	log(	Mtmp(m,n) )	 )
 					end do
 				end do
 				!

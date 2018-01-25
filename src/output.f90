@@ -167,10 +167,11 @@ module output
 	subroutine writeABiN_energy(En)
 		real(dp),		intent(in)		:: En(:,:)
 		!
+		if( size(En,2) /= nQ )	write(*,*)	"[writeABiN_energy]: bands have wrong qpt size"
 		open(unit=200, file=raw_dir//'bandStruct.dat', form='unformatted', access='stream', action='write', status='unknown')
 		write(200)	En
 		close(200)
-		write(*,*)	"[writeABiN_energy]: wrote basis coefficients to ckR (real part) and ckI (imag part)"
+		write(*,*)	"[writeABiN_energy]: wrote energy bands to file"
 		!
 		return
 	end subroutine
@@ -180,6 +181,7 @@ module output
 		real(dp),		allocatable		:: buffer(:,:)
 		integer							:: qi
 		!
+		if( size(ck,3) /= nQ )	write(*,*)	"[writeABiN_basCoeff]: wrong qpt size of ck detected"
 		allocate(	buffer(	size(ck,1), size(ck,2)	)		)
 		!REAL PART
 		open(unit=210, file=raw_dir//'ckR.dat'		, form='unformatted', access='stream', action='write',status='replace') 

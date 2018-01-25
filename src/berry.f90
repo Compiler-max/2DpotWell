@@ -61,7 +61,7 @@ module berry
 		call applyRot(ck, Uq, ckW)
 		!
 		!CONNECTION
-		call calcConnOnCoarse(ck, AconnQ)
+		call calcConnOnCoarse(ckW, AconnQ)
 		call calcPolViaA(AconnQ,pBerry)
 		write(*,*)"[berryMethod]: coarse rotated pol =(",pBerry(1),", ",pBerry(2),", ", pBerry(3),")."
 		!
@@ -179,7 +179,7 @@ module berry
 		allocate(	eBuff(size(En,1)				)		)
 		!
 		!
-		call readGvec()
+		!call readGvec()
 		!
 		!UNK REAL PART
 		open(unit=700, file=raw_dir//"ckR.dat",form='unformatted',access='stream',action='read')
@@ -270,18 +270,16 @@ module berry
 							ckW(gi,n,qi)	=  ckW(gi,n,qi) + Uq(m,n,qi)   * ck(gi,m,qi)	
 						end do		
 					end do	
+					do n = num_wann+1, nSolve
+							ckW(gi,n,qi)	= ck(gi,n,qi)
+					end do
 				end do
 			end do
 			write(*,*)	"[berry/applyRot]: applied U matrix to basis coefficients"
 		else 
-			if( nWfs <= nBands) then
-				ckW(:,:,:)	= ck(:,1:nWfs,:)
-				write(*,'(a,a)')	"[berry/applyRot]: rotations disabled.",&
-																" Will use initial electronic structure coeff"
-			else 
-				ckW	= dcmplx(0.0_dp)
-				write(*,*)	"[berry/applyRot]: critical error, less nBands then nWfs, coeff set to zero..."
-			end if
+			ckW	= ck
+			write(*,'(a,a)')	"[berry/applyRot]: rotations disabled.",&
+									" Will use initial electronic structure coeff"
 		end if
 		!
 		!
