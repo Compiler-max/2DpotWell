@@ -11,7 +11,7 @@
     relYpos     = 0.00 0.00
     atRx        = 1.01 1.01
     atRy        = 1.01 1.01
-    atPot       = -1.00 -1.20
+    atPot       = -3.00 -3.20
     dVpot       = 0.00 0.00
     Zion        = 1.00 1.00
 
@@ -24,7 +24,7 @@
     Bext        = 0.0 0.0 1.0  
 
 [numerics]
-    Gcut        = 12.0 # edited by statFlow
+    Gcut        = 5.0 # edited by statFlow
     nSolve      = 96 # edited by statFlow
     nQx         = 4 # edited by statFlow
     nQy         = 4 # edited by statFlow
@@ -37,11 +37,11 @@
     thres       = 0.1
 
 [methods]
-    doSolveHam  = f
+    doSolveHam  = t
     doMagHam    = f
     useBloch    = f
     doPw90      = f
-    doBerry     = t
+    doBerry     = f
     writeBin    = f
 
 [pw90]

@@ -61,7 +61,7 @@ module berry
 		call applyRot(ck, Uq, ckW)
 		!
 		!CONNECTION
-		call calcConnOnCoarse(ckW, AconnQ)
+		call calcConnOnCoarse(ck, AconnQ)
 		call calcPolViaA(AconnQ,pBerry)
 		write(*,*)"[berryMethod]: coarse rotated pol =(",pBerry(1),", ",pBerry(2),", ", pBerry(3),")."
 		!
@@ -180,10 +180,6 @@ module berry
 		!
 		!
 		call readGvec()
-		write(*,*) "read in Gvec"
-		do qi = 1 , nQ
-			write(*,*)	Gvec(:,:,qi)
-		end do
 		!
 		!UNK REAL PART
 		open(unit=700, file=raw_dir//"ckR.dat",form='unformatted',access='stream',action='read')
