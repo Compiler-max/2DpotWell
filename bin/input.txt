@@ -24,7 +24,7 @@
     Bext        = 0.0 0.0 1.0  
 
 [numerics]
-    Gcut        = 8.0 # edited by statFlow
+    Gcut        = 12.0 # edited by statFlow
     nSolve      = 96 # edited by statFlow
     nQx         = 4 # edited by statFlow
     nQy         = 4 # edited by statFlow

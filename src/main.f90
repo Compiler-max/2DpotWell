@@ -87,7 +87,7 @@ program main
 	if( mpiSuccess .and. doSolveHam ) then
 		!call cpu_time(T0)	
 		allocate(	En(						nSolve	, 	qChunk	)	)
-		allocate(	ck(			GmaxGLOBAL,	nSolve 	,	qChunk	)	)
+		allocate(	ck(			nG		,	nSolve 	,	qChunk	)	)
 		if( myID == root ) 	write(*,*)"[main]:**************************ELECTRONIC STRUCTURE PART*************************"
 		call MPI_BARRIER( MPI_COMM_WORLD, ierr )	
 		!

@@ -180,6 +180,10 @@ module berry
 		!
 		!
 		call readGvec()
+		write(*,*) "read in Gvec"
+		do qi = 1 , nQ
+			write(*,*)	Gvec(:,:,qi)
+		end do
 		!
 		!UNK REAL PART
 		open(unit=700, file=raw_dir//"ckR.dat",form='unformatted',access='stream',action='read')
@@ -272,15 +276,15 @@ module berry
 					end do	
 				end do
 			end do
-			write(*,*)	"[berryMethod]: applied U matrix to basis coefficients"
+			write(*,*)	"[berry/applyRot]: applied U matrix to basis coefficients"
 		else 
 			if( nWfs <= nBands) then
 				ckW(:,:,:)	= ck(:,1:nWfs,:)
-				write(*,'(a,a)')	"[berryMethod]: rotations disabled.",&
+				write(*,'(a,a)')	"[berry/applyRot]: rotations disabled.",&
 																" Will use initial electronic structure coeff"
 			else 
 				ckW	= dcmplx(0.0_dp)
-				write(*,*)	"[berryMethod]: critical error, less nBands then nWfs, coeff set to zero..."
+				write(*,*)	"[berry/applyRot]: critical error, less nBands then nWfs, coeff set to zero..."
 			end if
 		end if
 		!

@@ -422,7 +422,7 @@ module w90Interface
 		real(dp)						:: gShift(2)
 		!
 							allocate(	nGq_glob(			nQ													)		)
-							allocate(	ck_glob(		GmaxGLOBAL	,	nSolve		,			nQ				)		)
+							allocate(	ck_glob(		nG			,	nSolve		,			nQ				)		)
 							allocate(	Gvec_glob(		dim			,	nG			, 			nQ				)		)
 							allocate(	M_loc(			num_bands	,	num_bands	,	nntot	,	qChunk		)		)
 		if(myID == root)	allocate(	M_glob(			num_bands	,	num_bands	,	nntot	,	num_kpts	)		)

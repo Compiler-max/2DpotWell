@@ -82,11 +82,7 @@ module sysPara
 		!MAKE DIRECTORIES
 		if( myID == root ) then
 			inquire(directory=w90_dir, exist=dir_exists)
-			if( .not. dir_exists )	then
-				call system(mkdir//w90_dir)
-			else
-				call system("rm -r ./"//w90_dir//"*")
-			end if
+			if( .not. dir_exists )	call system(mkdir//w90_dir)
 			!
 			inquire(directory=info_dir, exist=dir_exists)
 			if( .not. dir_exists )	call system(mkdir//info_dir)
