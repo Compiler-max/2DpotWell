@@ -3,7 +3,7 @@ module postW90
 	use mathematics,	only:	dp, PI_dp, i_dp, acc, machineP,  & 
 								aUtoAngstrm, aUtoEv, & 
 								myExp, myLeviCivita, isHermitian
-	use sysPara,		only:	nK, writeBin, seedname, prefactF3, aX, aY, Bext, vol ! aX, aY, Bext, vol only needed for output file here
+	use sysPara,		only:	nK, writeBin, seedname, prefactF3, aX, aY, Bext, vol, w90_dir, info_dir ! aX, aY, Bext, vol only needed for output file here
 	use wannInterp,		only:	DoWannInterpol
 	use polarization,	only:	calcPolWannCent, calcPolViaA
 	use semiclassics,	only:	calcFirstOrdP
@@ -87,7 +87,7 @@ module postW90
 		integer						:: 	stat, cnt, offset, R, n, m, i, mn(2), dumI(3), line15(15)
 		real(dp)					::	real2(2), real6(6), real3(3)
 		!try opening file
-		open(unit=310, iostat=stat, file=seed_name//'_tb.dat', status='old', action='read' )
+		open(unit=310, iostat=stat, file=w90_dir//seed_name//'_tb.dat', status='old', action='read' )
 		if( stat /= 0)  then
 			write(*,*) "[readTBsingle]: warning, file seedname_tb.dat not found"
 			readSuccess 	= .false.
@@ -242,7 +242,7 @@ module postW90
 		real(dp),		intent(in)		::	pWann(3), pConn(3), pNiuF2(3), pNiuF3(3), pPei(3)
 		real(dp)						:: 	pNiu(3)
 		!
-		open(unit=600,file='pW90pol.txt',action='write')
+		open(unit=600,file=info_dir//'pW90pol.txt',action='write')
 		write(600,*)"**************POST W90 POLARIZATION**********************"
 		write(600,*)"via effective tight binding model"
 		write(600,*)"*"
@@ -308,7 +308,7 @@ module postW90
 		complex(dp),	intent(in)		::	A_mat(:,:,:,:)
 		integer							::	qi, n, m
 		!
-		open(unit=350,file='AconnTB.txt',action='write', status='replace')
+		open(unit=350,file=info_dir//'AconnTB.txt',action='write', status='replace')
 		write(350,*)	"connection calculated via berryMethod"
 		write(350,*)	"n m real(A_x) imag(A_x) real(A_y) imag(A_y) real(A_z) imag(A_z)"
 		do qi = 1, size(A_mat,4)

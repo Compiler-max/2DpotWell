@@ -176,7 +176,7 @@ module berry
 		!todo
 		seed_name	= seedName
 		!READ U MATRIX
-		open(unit=300,iostat=stat, file=seed_name//'_u.mat', status='old',action='read')
+		open(unit=300,iostat=stat, file=w90_dir//seed_name//'_u.mat', status='old',action='read')
 		if( stat /= 0)	write(*,*)	"[readUmatrix]: warning did not file _u.mat file"
 		read(300,*)
 		read(300,*) dumI(1:3)
@@ -222,7 +222,7 @@ module berry
 		!
 		!
 		!UNK REAL PART
-		open(unit=700, file="./rawData/ckR.dat",form='unformatted',access='stream',action='read')
+		open(unit=700, file=raw_dir//"ckR.dat",form='unformatted',access='stream',action='read')
 		do qi = 1 , size(ck,3)
 			read(700) buffer
 			ck(:,:,qi)	= dcmplx(buffer)
@@ -230,7 +230,7 @@ module berry
 		close(700)
 		!
 		!UNK IMAG PART
-		open(unit=710, file="./rawData/ckI.dat",form='unformatted',access='stream',action='read')
+		open(unit=710, file=raw_dir//"ckI.dat",form='unformatted',access='stream',action='read')
 		do qi = 1 , size(ck,3)
 			read(710) buffer
 			ck(:,:,qi)	= ck(:,:,qi) + i_dp * dcmplx(buffer)
@@ -238,7 +238,7 @@ module berry
 		close(710)
 		!
 		!BAND ENERGIES
-		open(unit=720, file="./rawData/bandStruct.dat",form='unformatted',access='stream',action='read')
+		open(unit=720, file=raw_dir//"bandStruct.dat",form='unformatted',access='stream',action='read')
 		do qi = 1, size(En,2)	
 				read(720) eBuff
 				En(1:nSolve,qi)	= eBuff(1:nSolve)
@@ -352,7 +352,7 @@ module berry
 		integer							::	stat, qi, n, qInd
 		!
 		write(*,*)  seed_name//'_geninterp.dat'
-		open(unit=320,iostat=stat, file=seedName//'_geninterp.dat',form='formatted', status='old',action='read')
+		open(unit=320,iostat=stat, file=w90_dir//seedName//'_geninterp.dat',form='formatted', status='old',action='read')
 		if( stat/= 0 ) then 
 			v_vec = 0.0_dp
 			write(*,*)	"[readBandVelo]: could not find _geninterp.dat file.. velocities set to zero"
@@ -383,7 +383,7 @@ module berry
 		complex(dp),	intent(in)		::	A_mat(:,:,:,:)
 		integer							::	qi, n, m
 		!
-		open(unit=350,file='AconnBerry.txt',action='write', status='replace')
+		open(unit=350,file=info_dir//'AconnBerry.txt',action='write', status='replace')
 		write(350,*)	"connection calculated via berryMethod"
 		write(350,*)	"n m real(A_x) imag(A_x) real(A_y) imag(A_y) real(A_z) imag(A_z)"
 		do qi = 1, size(A_mat,4)

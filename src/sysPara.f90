@@ -15,7 +15,7 @@ module sysPara
 				nBands, nWfs,   &
 				atPos, atR, qpts, rpts, Rcell, kpts, Zion, recpLatt, &
 				Bext, prefactF3, &
-				seedName, &
+				seedName, w90_dir, info_dir, mkdir, raw_dir,&
 				debugProj, debugHam, debugWann, doSolveHam, useBloch, doPw90, pw90GaugeB, doVdesc,  &
 				doBerry, useRot, doWanni, doVeloNUM, doNiu, doPei, doGaugBack, writeBin, &
 				myID, nProcs, root, ierr, qChunk
@@ -31,6 +31,9 @@ module sysPara
 	real(dp) 										::	aX=0.0_dp, aY=0.0_dp,vol=0.0_dp, Gcut=2*PI_dp, thres,& 
 														dx, dy, dqx, dqy, dkx, dky, B0, Bext(3)	, prefactF3, recpLatt(2,2)
 	character(len=3)								::	seedName										
+	character(len=9)								::	w90_dir	="w90files/"
+	character(len=7)								::	info_dir="output/"
+	character(len=8)								::	raw_dir	="rawData/", mkdir="mkdir ./"	!to use with system(mkdir//$dir_path) 
 	integer,	allocatable,	dimension(:)		::	nGq
 	real(dp),	allocatable,	dimension(:)		::	relXpos, relYpos, atRx, atRy, atPot, dVpot, Zion
 	real(dp),	allocatable,	dimension(:,:)		::	Gtest , atPos, atR, qpts, rpts, Rcell, kpts 
@@ -49,6 +52,7 @@ module sysPara
 		!calls mesh generation subroutines
 		!and bcasts everything around
 		!the first array index is always the x,y value of the vector
+		logical				:: dir_exists
 		!
 		dim = 	2
 		!
@@ -75,18 +79,26 @@ module sysPara
 		call calcRcell()
 		call kWmeshGen()
 		!
+		!MAKE DIRECTORIES
+		if( myID == root ) then
+			inquire(directory=w90_dir, exist=dir_exists)
+			if( .not. dir_exists )	then
+				call system(mkdir//w90_dir)
+			else
+				call system("rm -r ./"//w90_dir//"*")
+			end if
+			!
+			inquire(directory=info_dir, exist=dir_exists)
+			if( .not. dir_exists )	call system(mkdir//info_dir)
+			!
+			inquire(directory=raw_dir, exist=dir_exists) 
+			if( .not. dir_exists )	call system(mkdir//raw_dir)
+		end if
+
+		!
 		return
 	end subroutine
 
-
-
-	subroutine distributeQpts()
-
-
-
-
-		return
-	end subroutine
 
 
 	

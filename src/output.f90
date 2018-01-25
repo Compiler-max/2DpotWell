@@ -44,7 +44,7 @@ module output
 		!
 		!
 		integer		:: i
-		open(unit=100,file='meshInfo.txt',action='write')
+		open(unit=100,file=info_dir//'meshInfo.txt',action='write')
 		!
 		!R MESH
 		write(100,*)"*******************R POINT MESH******************************"
@@ -94,7 +94,7 @@ module output
 	subroutine writeMeshBin()
 		!SYS PARA
 		integer				:: stat
-		open(unit=300, iostat=stat, file='rawData/sysPara.dat', status='old')
+		open(unit=300, iostat=stat, file=raw_dir//'sysPara.dat', status='old')
 		if (stat == 0) close(300, status='delete')
 		open(unit=300,file='rawData/sysPara.dat',form='unformatted',access='stream',action='write')
 		write(300) nAt
@@ -116,7 +116,7 @@ module output
 		close(300)
 		!
 		!CELL INFO
-		open(unit=305, iostat=stat, file='rawData/cellInfo.dat', status='old')
+		open(unit=305, iostat=stat, file=raw_dir//'cellInfo.dat', status='old')
 		if (stat == 0) close(305, status='delete')
 		open(unit=305,file='rawData/cellInfo.dat',form='unformatted',access='stream',action='write')
 		write(305) aX
@@ -125,13 +125,13 @@ module output
 		!
 		!
 		!ATOM INFORMATION
-		open(unit=306, iostat=stat, file='rawData/atPos.dat', status='old')
+		open(unit=306, iostat=stat, file=raw_dir//'atPos.dat', status='old')
 		if (stat == 0) close(306, status='delete')
 		open(unit=306,file='rawData/atPos.dat',form='unformatted',access='stream',action='write')
 		write(306) atPos
 		close(306)
 		!
-		open(unit=307, iostat=stat, file='rawData/atR.dat', status='old')
+		open(unit=307, iostat=stat, file=raw_dir//'atR.dat', status='old')
 		if (stat == 0) close(307, status='delete')
 		open(unit=307,file='rawData/atR.dat',form='unformatted',access='stream',action='write')
 		write(307) atR
@@ -139,21 +139,21 @@ module output
 		!
 		!
 		!R MESH
-		open(unit=310, iostat=stat, file='rawData/rpts.dat', status='old')
+		open(unit=310, iostat=stat, file=raw_dir//'rpts.dat', status='old')
 		if (stat == 0) close(310, status='delete')
 		open(unit=310,file='rawData/rpts.dat',form='unformatted',access='stream',action='write')
 		write(310) rpts
 		close(310)
 		!
 		!K MESH
-		open(unit=320, iostat=stat, file='rawData/qpts.dat', status='old')
+		open(unit=320, iostat=stat, file=raw_dir//'qpts.dat', status='old')
 		if (stat == 0) close(320, status='delete')
 		open(unit=320,file='rawData/qpts.dat',form='unformatted',access='stream',action='write')
 		write(320) qpts
 		close(320)
 		!
 		!K INTERPOLATION
-		open(unit=325, iostat=stat, file='rawData/kpts.dat', status='old')
+		open(unit=325, iostat=stat, file=raw_dir//'kpts.dat', status='old')
 		if (stat == 0) close(325, status='delete')
 		open(unit=325,file='rawData/kpts.dat',form='unformatted',access='stream',action='write')
 		write(325) kpts
@@ -167,7 +167,7 @@ module output
 	subroutine writeABiN_energy(En)
 		real(dp),		intent(in)		:: En(:,:)
 		!
-		open(unit=200, file='rawData/bandStruct.dat', form='unformatted', access='stream', action='write', status='replace')
+		open(unit=200, file=raw_dir//'bandStruct.dat', form='unformatted', access='stream', action='write', status='unknown')
 		write(200)	En
 		close(200)
 		write(*,*)	"[writeABiN_energy]: wrote basis coefficients to ckR (real part) and ckI (imag part)"
@@ -182,14 +182,14 @@ module output
 		!
 		allocate(	buffer(	size(ck,1), size(ck,2)	)		)
 		!REAL PART
-		open(unit=210, file='rawData/ckR.dat'		, form='unformatted', access='stream', action='write',status='replace') 
+		open(unit=210, file=raw_dir//'ckR.dat'		, form='unformatted', access='stream', action='write',status='replace') 
 		do qi = 1, size(ck,3)
 			buffer	= dreal(ck(:,:,qi)) 
 			write(210)	buffer
 		end do
 		close(210)
 		!IMAG PART
-		open(unit=211, file='rawData/ckI.dat'		, form='unformatted', access='stream', action='write', status='replace')
+		open(unit=211, file=raw_dir//'ckI.dat'		, form='unformatted', access='stream', action='write', status='replace')
 		do qi = 1, size(ck,3)
 			buffer	= dimag(ck(:,:,qi)) 
 			write(211)	buffer
@@ -206,11 +206,11 @@ module output
 		integer							::	qi
 		!
 		!NGQ
-		open(unit=215, file='rawData/nGq.dat'		, form='unformatted', access='stream', action='write', status='replace')
+		open(unit=215, file=raw_dir//'nGq.dat'		, form='unformatted', access='stream', action='write', status='replace')
 		write(215)	nGq
 		close(215)
 		!REAL GVEC
-		open(unit=220, file='rawData/Gvec.dat'		, form='unformatted', access='stream', action='write',status='replace') 
+		open(unit=220, file=raw_dir//'Gvec.dat'		, form='unformatted', access='stream', action='write',status='replace') 
 		do qi = 1, size(Gvec,3)
 			write(220)	Gvec(:,:,qi)
 		end do
@@ -230,7 +230,7 @@ module output
 
 		Ederiv	= aUtoEv * aUtoAngstrm
 
-		open(unit=800,file='veloBerry.txt',action='write')
+		open(unit=800,file=info_dir//'veloBerry.txt',action='write')
 		write(800,*)"*******************berry velocities******************************"
 		write(800,*)"nQ  = ",size(velo,4)
 		write(800,*)"nWfs= ",size(velo,2)
@@ -282,7 +282,7 @@ module output
 		integer							::	qi, n, m
 		complex(dp)						:: vSum
 
-		open(unit=800,file='veloTB.txt',action='write')
+		open(unit=800,file=info_dir//'veloTB.txt',action='write')
 		write(800,*)"*******************eff TB velocities******************************"
 		write(800,*)"nQ  = ",size(velo,4)
 		write(800,*)"nWfs= ",size(velo,2)
@@ -340,7 +340,7 @@ module output
 		allocate(	buffer( size(Aconn,1),size(Aconn,2),size(Aconn,3) )		)
 		!
 		!CONNECTION
-		open(unit=410,file='rawData/AconnR.dat',form='unformatted',access='stream',action='write')
+		open(unit=410,file=raw_dir//'AconnR.dat',form='unformatted',access='stream',action='write')
 		do ki = 1, size(Aconn,4)
 			buffer	= dreal(Aconn(:,:,:,ki))
 			write(410)	buffer
@@ -349,7 +349,7 @@ module output
 		!
 		!
 		!CURVATURE
-		open(unit=420,file='rawData/FcurvR.dat',form='unformatted',access='stream',action='write')
+		open(unit=420,file=raw_dir//'FcurvR.dat',form='unformatted',access='stream',action='write')
 		do ki = 1, size(Fcurv,4)
 			buffer	= dreal(Fcurv(:,:,:,ki))
 			write(420) buffer
@@ -376,27 +376,27 @@ module output
 		wnfI	= dimag(wnF)
 		!
 		!WANNIER FUNCTIONS:
-		open(unit=500,file='rawData/wnfR.dat',form='unformatted',access='stream',action='write')
+		open(unit=500,file=raw_dir//'wnfR.dat',form='unformatted',access='stream',action='write')
 		write(500)	wnfR
 		close(500)
 		!
-		open(unit=505,file='rawData/wnfI.dat',form='unformatted',access='stream',action='write')
+		open(unit=505,file=raw_dir//'wnfI.dat',form='unformatted',access='stream',action='write')
 		write(505)	wnfI
 		close(505)
 		!
 		!
 		!
 		!CENTERS AND SPREADS:
-		open(unit=510,file='rawData/wCent.dat',form='unformatted',access='stream',action='write')
+		open(unit=510,file=raw_dir//'wCent.dat',form='unformatted',access='stream',action='write')
 		write(510)	wCent
 		close(510)
 		!
-		open(unit=515,file='rawData/wSprd.dat',form='unformatted',access='stream',action='write')
+		open(unit=515,file=raw_dir//'wSprd.dat',form='unformatted',access='stream',action='write')
 		write(515)	wCent
 		close(515)
 		!
 		!TEXT FILE
-		open(unit=516,file='wannier.txt',action='write')
+		open(unit=516,file=info_dir//'wannier.txt',action='write')
 		write(516,'(a)')	"****************atom positions****************************"
 		do n = 1, nAt
 			write(516,'(a,i3,a,f6.3,a,f6.3,a)')	"atom=,",n,	"centered at (",atPos(1,n),", ",atPos(2,n),")."
@@ -430,14 +430,14 @@ module output
 		
 		!real(UNK)
 		
-		open(unit=700,file='rawData/ckPeiR.dat',form='unformatted',access='stream',action='write')
+		open(unit=700,file=raw_dir//'ckPeiR.dat',form='unformatted',access='stream',action='write')
 		do qi = 1, size(ckP,3)
 			buffer	= dreal(ckP(:,:,qi))
 			write(700)	buffer
 		end do
 		close(700)
 		!imag(UNK)
-		open(unit=705,file='rawData/ckPeiI.dat',form='unformatted',access='stream',action='write')
+		open(unit=705,file=raw_dir//'ckPeiI.dat',form='unformatted',access='stream',action='write')
 		do qi = 1, size(ckP,3)
 			buffer	= dimag(ckP(:,:,qi))
 			write(700)	buffer
@@ -445,7 +445,7 @@ module output
 		close(705)
 		!
 		!Conn
-		open(unit=710,file='rawData/EnPei.dat',form='unformatted',access='stream',action='write')
+		open(unit=710,file=raw_dir//'EnPei.dat',form='unformatted',access='stream',action='write')
 		write(710)	EnP
 		close(710)
 		!
@@ -462,7 +462,7 @@ module output
 		!	
 		aUtoConv = 1.602176565_dp / 5.2917721092_dp * 1e-4_dp  ! converts from [a.u.] to  [mücro C / cm]
 		!	
-		open(unit=600,file='polOutput.txt',action='write')
+		open(unit=600,file=info_dir//'polOutput.txt',action='write')
 		write(600,*)"**************POLARIZATION OUTPUT FILE**********************"
 		write(600,*)" via wavefunction method"
 		write(600,*)"Gcut=",Gcut

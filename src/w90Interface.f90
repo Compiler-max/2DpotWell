@@ -32,8 +32,8 @@ module w90Interface
 
 !public:
 	subroutine w90Interf(ck, En)
-		complex(dp),	intent(in)		:: ck(:,:,:)	
-		real(dp),		intent(in)		:: En(:,:)
+		complex(dp),	intent(in)		:: 	ck(:,:,:)	
+		real(dp),		intent(in)		:: 	En(:,:)
 		!
 		!WRITE AND EXECUTE INITIAL WANNIER90
 		seed_name	= seedName
@@ -41,7 +41,9 @@ module w90Interface
 			call writeW90input()
 			!
 			write(*,*)	"[w90Interf]: wrote w90 input file"
+			call chdir(w90_Dir)
 			call w90setup()
+			call chdir("..")
 			write(*,*)	"[w90Interf]: done with w90 setup"
 			write(*,*)	"[w90Interf]: will use num_bands= ",num_bands, " bands"
 			write(*,*)	"[w90Interf]: to gen   num_wann=  ",num_wann, " wnfs"
@@ -55,7 +57,7 @@ module w90Interface
 
 		!
 		!CALC AND WRITE WANNIER FILES
-		!call w90prepMmat(ck)
+		call w90prepMmat(ck)
 
 		call w90prepAmat(ck)
 		call w90prepEigVal(En)
@@ -105,16 +107,16 @@ module w90Interface
 		seed_name			= 'wf1'
 		!
 		!Delete old input file
-		open(unit=200, iostat=stat, file=seed_name//'.win', status='old')
+		open(unit=200, iostat=stat, file=w90_Dir//seed_name//'.win', status='old')
 		if (stat == 0) close(200, status='delete')
 		!Delete old wout file
-		open(unit=210, iostat=stat, file=seed_name//'.wout', status='old')
+		open(unit=210, iostat=stat, file=w90_Dir//seed_name//'.wout', status='old')
 		if (stat == 0) close(210, status='delete')
 		!		
 		!
 		!
 		!create new
-		open(unit=100,file=seed_name//'.win',action='write', status='new')
+		open(unit=100,file=w90_Dir//seed_name//'.win',action='write', status='new')
 		!
 		!BASIC INFO
 		write(100,*)	'num_wann  = ',nWfs
@@ -269,7 +271,7 @@ module w90Interface
 		integer				:: qi, at
 		!
 		!create new
-		open(unit=100,file=seed_name//'.win',action='write',access='stream',form='formatted', status='replace')
+		open(unit=100,file=w90_Dir//seed_name//'.win',action='write',access='stream',form='formatted', status='replace')
 		!
 		!BASIC INFO
 		write(100,*)	'num_wann  = ',nWfs
@@ -332,6 +334,8 @@ module w90Interface
   		!
 		write(100,*)	
 		close(100)
+		!
+		!
 		return
 	end subroutine
 
@@ -360,7 +364,7 @@ module w90Interface
 		!WRITE FILE
 		if( myID == root ) then
 			!W90 input
-			open(unit=110,file=seed_name//'.eig',action='write',access='stream',form='formatted', status='replace')
+			open(unit=110,file=w90_Dir//seed_name//'.eig',action='write',access='stream',form='formatted', status='replace')
 			do qi = 1, num_kpts
 				do n = 1, num_bands
 					write(110,*)	n, ' ', qi, ' ', En(n,qi) * aUtoEv
@@ -369,6 +373,7 @@ module w90Interface
 			close(110)
 			!POST W90 input
 			call writeABiN_energy(En)
+			write(*,'(a,i3,a)')	"[#",myID,";w90prepEigVal]: wrote .eig file"
 		end if
 
 		!
@@ -381,7 +386,7 @@ module w90Interface
 		!input file for post w90 module( energy and band derivative interpoltation)
 		integer						:: ki
 		!
-		open(unit=115,file=seed_name//'_geninterp.kpt',action='write',access='stream',form='formatted', status='replace')
+		open(unit=115,file=w90_Dir//seed_name//'_geninterp.kpt',action='write',access='stream',form='formatted', status='replace')
 		write(115,*)	'post w90 input file, gives info about interpolation mesh'
 		write(115,*)	"frac"
 		write(115,*)	nK
@@ -413,9 +418,9 @@ module w90Interface
 							
 		!
 		!ToDo: distribute ck of at least nn 
+		call MPI_ALLGATHER(	nGq		, 	qChunk, 	MPI_INTEGER, 		nGq_glob, 	qChunk, 		MPI_INTEGER		, 	MPI_COMM_WORLD, ierr)
 		mesgSize = GmaxGLOBAL*nSolve*qChunk
 		call MPI_ALLGATHER(	ck_loc	,	mesgSize, MPI_DOUBLE_COMPLEX, 	ck_glob, 	mesgSize, MPI_DOUBLE_COMPLEX	, 	MPI_COMM_WORLD, ierr)	
-		call MPI_ALLGATHER(	nGq		, 	qChunk, 	MPI_INTEGER, 		nGq_glob, 	qChunk, 		MPI_INTEGER		, 	MPI_COMM_WORLD, ierr)
 		mesgSize = dim*nG*qChunk
 		call MPI_ALLGATHER(	Gvec	,	mesgSize, MPI_DOUBLE_PRECISION, Gvec_glob, 	mesgSize, MPI_DOUBLE_PRECISION	, 	MPI_COMM_WORLD, ierr)	
 
@@ -448,7 +453,7 @@ module w90Interface
 		!WRITE TO FILE
 		if( myID == root ) then
 			!W90 input
-			open(unit=120,file=seed_name//'.mmn',action='write',access='stream',form='formatted', status='replace')
+			open(unit=120,file=w90_Dir//seed_name//'.mmn',action='write',access='stream',form='formatted', status='replace')
 			write(120,*)	'overlap matrix'
 			write(120,*)	num_bands, ' ', num_kpts, ' ', nntot	
 			!
@@ -459,14 +464,17 @@ module w90Interface
 						do m = 1, num_bands
 							write(120,*)	dreal(M_matrix(m,n,nn,qi)), ' ', dimag(M_matrix(m,n,nn,qi))
 						end do
-					end do
-					
+					end do		
 				end do
 			end do
 			close(120)
+			write(*,'(a,i3,a)')	"[#",myID,";w90prepMmat]: wrote .mmn file"
+			
 			!POST W90 input
 			call writeABiN_basCoeff(ck_glob)
+			write(*,'(a,i3,a)')	"[#",myID,";w90prepMmat]: wrote  basis coeff"
 			call writeABiN_basis(nGq, Gvec)
+			write(*,'(a,i3,a)')	"[#",myID,";w90prepMmat]: wrote  basis"
 		end if	
 		!
 		!
@@ -534,17 +542,17 @@ module w90Interface
 			if( myID/=root )		allocate(	A_matrix(		0		,		0	,		0		)		)
 									allocate(	 A_loc( 	num_bands	,	num_wann,	qChunk		)		)
 			!
-			if(	size(ck,2)/= num_bands )	write(*,'(a,i3,a)')"[#",myID,";w90prepAmat]: warning ab initio exp. coefficients have wrong number of bands"
-			if(	size(ck,3)/= num_kpts )  	write(*,'(a,i3,a)')"[#",myID,";w90prepAmat]: warning ab initio exp. coefficients have wrong numbers of kpts"
+			if(	size(ck,2) < num_bands )	write(*,'(a,i3,a)')"[#",myID,";w90prepAmat]: warning not enough abInitio coeff, try to increase nSolve in inpupt"
+			if(	size(ck,3)/= qChunk )  	write(*,'(a,i3,a)')"[#",myID,";w90prepAmat]: warning ab initio exp. coefficients have wrong numbers of kpts"
 			if(	num_wann/nAt > 3) 			write(*,'(a,i3,a)')"[#",myID,";w90prepAmat]: can not handle more then 3 wfs per atom at the moment"
 			!
 			!MATRIX SETUP
-			!$OMP PARALLEL DO SCHEDULE(DYNAMIC) DEFAULT(SHARED) PRIVATE(qLoc)		
+			!!!!$OMP PARALLEL DO SCHEDULE(DYNAMIC) DEFAULT(SHARED) PRIVATE(qLoc)		
 			do qLoc = 1, qChunk
 				A_loc(:,:,qLoc)	= dcmplx(0.0_dp)
 				call calcAmatANA(qLoc,ck(:,:,qLoc), A_loc(:,:,qLoc))
 			end do
-			!$OMP END PARALLEL DO
+			!!!!!$OMP END PARALLEL DO
 			!
 			!COLLECT
 			sendcount = num_bands*num_wann*qchunk
@@ -552,7 +560,7 @@ module w90Interface
 			!
 			!WRITE TO FILE
 			if( myID == root ) then
-				open(unit=120,file=seed_name//'.amn',action='write',access='stream',form='formatted', status='replace')
+				open(unit=120,file=w90_Dir//seed_name//'.amn',action='write',access='stream',form='formatted', status='replace')
 				write(120,*)	'overlap matrix'
 				write(120,*)	num_bands, ' ', num_kpts, ' ', num_wann
 				do qi = 1, num_kpts
@@ -562,6 +570,7 @@ module w90Interface
 						end do
 					end do
 				end do
+				write(*,'(a,i3,a)')	"[#",myID,";w90prepAmat]: wrote .amn file"
 			end if
 			!
 			!
