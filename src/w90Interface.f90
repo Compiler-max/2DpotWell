@@ -431,7 +431,7 @@ module w90Interface
 		!
 		!GATHER _glob ARRAYS 
 		call MPI_ALLGATHER(	nGq		, 	qChunk, 	MPI_INTEGER, 		nGq_glob, 	qChunk, 		MPI_INTEGER		, 	MPI_COMM_WORLD, ierr)
-		mesgSize = GmaxGLOBAL*nSolve*qChunk
+		mesgSize = nG*nSolve*qChunk
 		call MPI_ALLGATHER(	ck_loc	,	mesgSize, MPI_DOUBLE_COMPLEX, 	ck_glob, 	mesgSize, MPI_DOUBLE_COMPLEX	, 	MPI_COMM_WORLD, ierr)	
 		mesgSize = dim*nG*qChunk
 		call MPI_ALLGATHER(	Gvec	,	mesgSize, MPI_DOUBLE_PRECISION, Gvec_glob, 	mesgSize, MPI_DOUBLE_PRECISION	, 	MPI_COMM_WORLD, ierr)	
