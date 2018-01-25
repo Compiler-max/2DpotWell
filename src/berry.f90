@@ -4,12 +4,11 @@ module berry
 	use omp_lib
 	use mathematics,	only:	dp, PI_dp, i_dp, acc, machineP,  myExp, myLeviCivita, aUtoAngstrm, aUtoEv
 	use sysPara
-	use blochWf,		only:	calcVeloGrad, calcConnOnCoarse
+	use planeWave,		only:	calcVeloGrad, calcConnOnCoarse
 	use polarization,	only:	calcPolViaA
 	use semiClassics,	only:	calcFirstOrdP
 	use peierls,		only:	peierlsMethod
-	use output,			only:	writeCkASunk, writePolFile, writeVeloHtxt, writeUmat, writeBerryInterpU, &
-								writeHtbBerry, writeRtbBerry, writeEnBerry, writeEnH
+	use output,			only:	writePolFile, writeVeloHtxt
 
 	implicit none
 
@@ -105,9 +104,7 @@ module berry
 		call writePolFile(pWann, pBerry, pNiuF2, pNiuF3, pPei )
 		call writeConnTxt( AconnQ )
 		call writeVeloHtxt( veloQ)!*aUtoEv*aUtoAngstrm )				
-		call writeUmat(Uq)
 		!if( writeBin )	call write(ck, ckW)
-		if( writeBin )	call writeEnH(EnQ)
 
 		write(*,*)	"[berrryMethod]: all done"
 		!

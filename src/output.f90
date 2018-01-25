@@ -2,17 +2,19 @@ module output
 	!module contains several routines for printing and writing data
 	use omp_lib
 	use mathematics,	only:	dp, PI_dp, machineP, aUtoEv, aUtoAngstrm
-	use blochWf,		only:	calcBasis
+	use planeWave,		only:	calcBasis
 	use sysPara 
 
 
 	implicit none
 	private
 
-	public ::	writeMeshInfo, writeMeshBin, writeEnAndCK, writeCkASunk, writeConnCurv, writeWannFiles, writePolFile, &
-				printMat, printTiming , writePeierls,  writeInterpBands, writeEnH, printBasisInfo, & 
-				writeVeloHtxt, writeVeloEffTB, writeUmat, writeInterpU, writeBerryInterpU,& 
-				writeHtb, writeHtbBerry, writeRtbBerry, writeEnEffTB, writeEnBerry, writeEnAbInitio
+	public ::	writeMeshInfo, writeMeshBin, & 
+				writeABiN_energy, writeABiN_basis, writeABiN_basCoeff, &
+				writeConnCurv, writeWannFiles, writePolFile, &
+				printMat, printTiming,  printBasisInfo, & 
+				writeVeloHtxt, writeVeloEffTB, writePeierls  
+				
 
 
 	interface printMat
@@ -37,10 +39,6 @@ module output
 
 
 !public:
-
-
-
-
 	subroutine writeMeshInfo()
 		!writes the generated meshes to readable txt file for debuggin purpose
 		!
@@ -166,285 +164,59 @@ module output
 	end subroutine
 
 
-	subroutine writeEnAndCK(EnT, ck, nGq)
-		real(dp),		intent(in)		:: EnT(:,:)
+	subroutine writeABiN_energy(En)
+		real(dp),		intent(in)		:: En(:,:)
+		!
+		open(unit=200, file='rawData/bandStruct.dat', form='unformatted', access='stream', action='write', status='replace')
+		write(200)	En
+		close(200)
+		write(*,*)	"[writeABiN_energy]: wrote basis coefficients to ckR (real part) and ckI (imag part)"
+		!
+		return
+	end subroutine
+
+	subroutine writeABiN_basCoeff(ck)
 		complex(dp),	intent(in)		:: ck(:,:,:)
-		integer,		intent(in)		:: nGq(:)
 		real(dp),		allocatable		:: buffer(:,:)
 		integer							:: qi
 		!
-		!
 		allocate(	buffer(	size(ck,1), size(ck,2)	)		)
-		!
-		open(unit=200, file='rawData/bandStruct.dat', form='unformatted', access='stream', action='write', status='replace')
-		write(200)	EnT
-		close(200)
-		!
-	
+		!REAL PART
 		open(unit=210, file='rawData/ckR.dat'		, form='unformatted', access='stream', action='write',status='replace') 
 		do qi = 1, size(ck,3)
 			buffer	= dreal(ck(:,:,qi)) 
 			write(210)	buffer
 		end do
 		close(210)
-		!
+		!IMAG PART
 		open(unit=211, file='rawData/ckI.dat'		, form='unformatted', access='stream', action='write', status='replace')
 		do qi = 1, size(ck,3)
 			buffer	= dimag(ck(:,:,qi)) 
 			write(211)	buffer
 		end do
 		close(211)
+		write(*,*)	"[writeABiN_basCoeff]: wrote basis coefficients to ckR (real part) and ckI (imag part)"
 		!
+		return
+	end subroutine
+
+	subroutine writeABiN_basis(nGq, Gvec)
+		integer,		intent(in)		::	nGq(:)
+		real(dp),		intent(in)		::	Gvec(:,:,:)
+		integer							::	qi
+		!
+		!NGQ
 		open(unit=215, file='rawData/nGq.dat'		, form='unformatted', access='stream', action='write', status='replace')
 		write(215)	nGq
 		close(215)
-
-		write(*,*)	"[writeEnAndCK]: wrote eigenvalues and eigencoefficients and nGq info"
-		!
-		return
-	end subroutine
-
-
-	subroutine writeCkASunk(ck, ckW)
-		complex(dp),	intent(in)		:: ck(:,:,:), ckW(:,:,:)
-		complex(dp),	allocatable		:: basVec(:), unk(:,:,:), unkW(:,:,:)
-		integer							:: qi, ri, stat, Gmax
-		!
-		allocate( unk(nR,nBands,nQ)	)
-		allocate( unkW(nR,nWfs,nQ)	)
-		write(*,*)"[writeCkASunk]: allocated arrays "
-		!
-		!CALCULATE UNKs on real space grid
-		!$OMP PARALLEL DEFAULT(SHARED) PRIVATE(qi, ri, basVec, Gmax ) 
-		allocate(	basVec(nG)		)
-		!$OMP DO SCHEDULE(STATIC) COLLAPSE(1) 
-		do qi = 1, nQ
-			Gmax	= nGq(qi)
-			do ri = 1, nR
-				call calcBasis(qi, ri, basVec)
-				unk(ri,:,qi) = matmul(basVec(1:Gmax),  ck(1:Gmax,:,qi)	)
-				unkW(ri,:,qi)= matmul(basVec(1:Gmax), ckW(1:Gmax,:,qi)	)
-			end do
+		!REAL GVEC
+		open(unit=220, file='rawData/Gvec.dat'		, form='unformatted', access='stream', action='write',status='replace') 
+		do qi = 1, size(Gvec,3)
+			write(220)	Gvec(:,:,qi)
 		end do
-		!$OMP END DO
-		!$OMP END PARALLEL
-		write(*,*)"[writeCkASunk]: calculated unks on real space grid"
+		close(220)
+		write(*,*)	"[writeABiN_basis]: wrote nGq and Gvec to binary files"
 		!
-		!WRITE RESULTS
-		!UNK
-		open(unit=400, iostat=stat, file='rawData/unkR.dat', status='old')
-		if (stat == 0) close(400, status='delete')
-		open(unit=405, iostat=stat, file='rawData/unkI.dat', status='old')
-		if (stat == 0) close(405, status='delete')
-		open(unit=410, iostat=stat, file='rawData/ROTunkR.dat', status='old')
-		if (stat == 0) close(410, status='delete')
-		open(unit=415, iostat=stat, file='rawData/ROTunkI.dat', status='old')
-		if (stat == 0) close(415, status='delete')
-
-
-		open(unit=400,file='rawData/unkR.dat',form='unformatted',access='stream',action='write')
-		open(unit=405,file='rawData/unkI.dat',form='unformatted',access='stream',action='write')
-		open(unit=410,file='rawData/ROTunkR.dat',form='unformatted',access='stream',action='write')
-		open(unit=415,file='rawData/ROTunkI.dat',form='unformatted',access='stream',action='write')
-		do qi = 1, nQ
-			write(400) dreal(unk(:,:,qi))
-			write(405) dimag(unk(:,:,qi))
-			!
-			write(410) dreal(unkW(:,:,qi))
-			write(415) dimag(unkW(:,:,qi))
-			!buffer(:,:,qi)	= dreal(unk(:,:,qi))
-		end do
-		close(400)
-		close(405)
-		close(410)
-		close(415)
-		!
-		write(*,*)"[writeCkASunk]: wrote all files"
-		!
-		!
-		return
-	end subroutine
-
-
-
-	subroutine writeUmat(U_mat)	
-		complex(dp),		intent(in)		:: U_mat(:,:,:)
-		integer								:: qi, n, m
-		!
-		open(unit=800,file='U_mat.txt',action='write')
-		write(800,*)	"U_mat after read in from berry"
-		do qi = 1, size(U_mat,3)
-			write(800,*)	qpts(1,qi)/recpLatt(1,1)," ",qpts(2,qi)/recpLatt(2,2)
-			do n = 1, size(U_mat,2)
-				do m = 1, size(U_mat,1)
-					write(800,'(a,i3,a,i3,a,f14.10,a,f14.10)')	" ",m," ",n," ",dreal(U_mat(m,n,qi))," ",dimag(U_mat(m,n,qi))
-				end do
-			end do
-			write(800,*)
-		end do 
-		close(800)
-		!
-		return
-	end subroutine
-
-
-	subroutine writeInterpU(U_mat)
-		complex(dp),	intent(in)		:: U_mat(:,:,:)
-		integer								:: ki, n, m
-		!
-		open(unit=805,file='U_matTB.txt',action='write')
-		write(805,*)	"U_mat interpolated by effTB"
-		do ki = 1, size(U_mat,3)
-			write(805,*)	kpts(1,ki)/recpLatt(1,1)," ",kpts(2,ki)/recpLatt(2,2)
-			do n = 1, size(U_mat,2)
-				do m = 1, size(U_mat,1)
-					write(805,'(a,i3,a,i3,a,f14.10,a,f14.10)')	" ",m," ",n," ",dreal(U_mat(m,n,ki))," ",dimag(U_mat(m,n,ki))
-				end do
-			end do
-			write(805,*)
-		end do 
-		close(805)
-		!
-		return
-	end subroutine
-
-
-	subroutine writeBerryInterpU( U_mat)
-		complex(dp),	intent(in)		:: U_mat(:,:,:)
-		integer								:: ki, n, m
-		!
-		open(unit=805,file='U_matBerryInterp.txt',action='write')
-		write(805,*)	"U_mat interpolated by berry"
-		do ki = 1, size(U_mat,3)
-			write(805,*)	kpts(1,ki)/recpLatt(1,1)," ",kpts(2,ki)/recpLatt(2,2)
-			do n = 1, size(U_mat,2)
-				do m = 1, size(U_mat,1)
-					write(805,'(a,i3,a,i3,a,f14.10,a,f14.10)')	" ",m," ",n," ",dreal(U_mat(m,n,ki))," ",dimag(U_mat(m,n,ki))
-				end do
-			end do
-			write(805,*)
-		end do 
-		close(805)
-		!
-		return
-	end subroutine
-
-	subroutine writeEnAbInitio(En)
-		real(dp),		intent(in)			:: En(:,:)
-		integer								:: ki, n
-		!
-		open(unit=805,file='En_AbInitio.txt',action='write')
-		write(805,*)	"energies from solver"
-		write(805,*)	size(En,2)
-		do ki = 1, size(En,2)
-			write(805,*)	"#ki=",ki
-			do n = 1, size(En,1)
-				write(805,*)	En(n,ki)
-			end do
-		end do
-		close(805)
-		!
-		return
-	end subroutine
-
-	subroutine writeEnEffTB( En)
-		real(dp),		intent(in)			:: En(:,:)
-		integer								:: ki, n
-		!
-		open(unit=805,file='En_InterpTB.txt',action='write')
-		write(805,*)	"interpolated energies by pW90 in a.u."
-		write(805,*)	size(En,2)
-		do ki = 1, size(En,2)
-			write(805,*)	"#ki=",ki
-			do n = 1, size(En,1)
-				write(805,*)	En(n,ki)
-			end do
-		end do
-		close(805)
-		!
-		return
-	end subroutine
-
-	subroutine writeEnBerry(En)
-		real(dp),		intent(in)			:: En(:,:)
-		integer								:: ki, n
-		!
-		open(unit=805,file='En_InterpBerry.txt',action='write')
-		write(805,*)	"interpolated energies by berry in a.u."
-		write(805,*)	size(En,2)
-		do ki = 1, size(En,2)
-			write(805,*)	"#ki=",ki
-			do n = 1, size(En,1)
-				write(805,*)	En(n,ki)
-			end do
-		end do
-		close(805)
-		!	
-		return
-	end subroutine
-
-
-	subroutine writeHtb( H_tb )
-		complex(dp),		intent(in)		:: 	H_tb(:,:,:)
-		integer								::	R, n, m
-
-		open(unit=805,file='H_tb.txt',action='write')
-		write(805,*)	"H_tb (eV) read in by effTB"
-		do R = 1, size(H_tb,3)
-			write(805,*)	Rcell(1,R), " ", Rcell(2,R)
-			do n = 1, size(H_tb,2)
-				do m = 1, size(H_tb,1)
-					write(805,'(a,i3,a,i3,a,e16.8,a,e16.8)')	" ",m," ",n," ",dreal(H_tb(m,n,R)*aUtoEv)," ",dimag(H_tb(m,n,R)*aUtoEv)
-				end do
-			end do
-			write(805,*)
-		end do 
-		close(805)
-
-		return
-	end subroutine
-
-	subroutine writeHtbBerry( H_tb )
-		complex(dp),		intent(in)		:: 	H_tb(:,:,:)
-		integer								::	R, n, m
-
-		open(unit=807,file='H_tbBerry.txt',action='write')
-		write(807,*)	"H_tb (eV) calculated by Berry"
-		do R = 1, size(H_tb,3)
-			write(807,*)	Rcell(1,R), " ", Rcell(2,R)
-			do n = 1, size(H_tb,2)
-				do m = 1, size(H_tb,1)
-					write(807,'(a,i3,a,i3,a,e16.8,a,e16.8)')	" ",m," ",n," ",dreal(H_tb(m,n,R)*aUtoEv)," ",dimag(H_tb(m,n,R)*aUtoEv)
-				end do
-			end do
-			write(807,*)
-		end do 
-		close(805)
-
-		return
-	end subroutine
-
-
-	subroutine writeRtbBerry( r_tb )
-		complex(dp),		intent(in)		:: 	r_tb(:,:,:,:)
-		integer								::	R, n, m
-
-		open(unit=807,file='r_tbBerry.txt',action='write')
-		write(807,*)	"r_tb (angstroem) calculated by Berry"
-		do R = 1, size(r_tb,4)
-			write(807,*)	Rcell(1,R), " ", Rcell(2,R)
-			do n = 1, size(r_tb,3)
-				do m = 1, size(r_tb,2)
-					write(807,'(a,i3,a,i3,a,e16.8,a,e16.8,a,e16.8,a,e16.8,a,e16.8,a,e16.8)')	&
-							" ",m," ",n," ",dreal(r_tb(1,m,n,R)*aUtoAngstrm)," ",dimag(r_tb(1,m,n,R)*aUtoAngstrm),&
-										" ",dreal(r_tb(2,m,n,R)*aUtoAngstrm)," ",dimag(r_tb(2,m,n,R)*aUtoAngstrm),&
-										" ",dreal(r_tb(3,m,n,R)*aUtoAngstrm)," ",dimag(r_tb(3,m,n,R)*aUtoAngstrm)
-				end do
-			end do
-			write(807,*)
-		end do 
-		close(805)
-
 		return
 	end subroutine
 
@@ -647,16 +419,6 @@ module output
 	end subroutine
 
 
-	subroutine writeInterpBands(Ew)
-		real(dp),		intent(in)		:: Ew(:,:)
-		open(unit=520,file='rawData/EnTB.dat',form='unformatted',access='stream',action='write')
-		write(520)	Ew
-		close(520)
-		!
-		!
-		return
-	end subroutine
-
 
 	subroutine writePeierls(ckP, EnP)
 		complex(dp),	intent(in)		:: ckP(:,:,:)
@@ -692,16 +454,6 @@ module output
 		return
 	end subroutine
 
-
-	subroutine writeEnH(EnH)
-		real(dp),		intent(in)		:: EnH(:,:)
-		!
-		open(unit=800,file='rawData/EnBerry.dat',form='unformatted',access='stream',action='write')
-		write(800)	EnH
-		close(800)
-		!
-		return
-	end subroutine
 
 
 	subroutine writePolFile(pWann, pBerry, pNiuF2, pNiuF3, pPei )	!writePolFile(pWann, pBerry, pNiu, pPei )

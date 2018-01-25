@@ -3,8 +3,7 @@ module effTB
 	use omp_lib
 	use mathematics,	only:	dp, PI_dp, i_dp, acc, machineP, myExp, isHermitian
 	use sysPara
-	use blochWf,		only:	calcConnOnCoarse
-	use output,			only:	writeInterpU
+	use planeWave,		only:	calcConnOnCoarse
 
 	implicit none
 

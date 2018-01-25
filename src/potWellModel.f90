@@ -6,7 +6,6 @@ module potWellModel
 	use mathematics,	only:	dp, PI_dp,i_dp, machineP, myExp, myLeviCivita, &
 								eigSolverPART, isUnit, isHermitian
 	use sysPara				
-	use output,			only:	writeEnAndCK, writeEnAbInitio
 	implicit none	
 	
 	private

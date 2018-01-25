@@ -582,11 +582,12 @@ module sysPara
 		real(dp)					:: kg(2)
 		!^
 		!fill array
+		write(*,'(a,i3,a,i6)')	"[#",myID,";popGvec]: my qChunk=",qChunk
 		allocate(	nGq(					qChunk		)		)
 		allocate(	Gvec(	dim,	nG ,	qChunk		)		)
 		!
 		qLoc = 1
-		do qi = myID*qChunk+1, myID*qChunk+nProcs
+		do qi = myID*qChunk+1, myID*qChunk+qChunk
 			nGq(qLoc)	= 0
 			inside 		= 0
 			tot 		= 0

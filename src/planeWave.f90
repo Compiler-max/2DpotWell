@@ -1,4 +1,4 @@
-module blochWf
+module planeWave
 	!generates bloch and lattice periodidc functions given a basCoeff matrix
 	use omp_lib
 	use mathematics,	only:	dp, PI_dp,i_dp, acc, machineP,& 
@@ -71,10 +71,10 @@ module blochWf
 	end subroutine
 
 
-	subroutine calcMmat(qi,knb,gShift, ck, Mmat)
-		integer,		intent(in)		:: qi, knb
-		real(dp),		intent(in)		:: gShift(2)
-		complex(dp),	intent(in)		:: ck(:,:,:)  !ck(			nG		,	nBands  	,	nQ	)	
+	subroutine calcMmat(qi,knb,gShift, nGq, Gvec, ck, Mmat)
+		integer,		intent(in)		:: qi, knb, nGq(:)
+		real(dp),		intent(in)		:: gShift(2),  Gvec(:,:,:)
+		complex(dp),	intent(in)		:: ck(:,:,:)
 		complex(dp),	intent(out)		:: Mmat(:,:)
 		integer							:: gi, gj, n, m, cnt
 		real(dp)						:: delta(2)
@@ -125,6 +125,9 @@ module blochWf
 		real(dp)						:: wbx,wby, bxl(2), bxr(2), byl(2), byr(2), delta, &
 											Gxl(2), Gyl(2), Gxr(2), Gyr(2)
 		!
+		if( size(nGq) 		/= nQ ) write(*,*)"[#",myID,";calcConnOnCoarse]: critical WARNING: basis array nGq has wrong size"
+		if(	size(Gvec,3)	/= nQ ) write(*,*)"[#",myID,";calcConnOnCoarse]: critical WARNING: basis array Gvec has wrong size"
+
 		A 		= dcmplx(0.0_dp)
 		Z 		= 4	!amount of nearest neighbours( 2 for 2D cubic unit cell)
 		wbx 	= 2.0_dp / 		( real(Z,dp) * dqx**2 )
@@ -208,28 +211,28 @@ module blochWf
 				!
 				!OVLERAPS:
 				!XL
-				call calcMmat(qi, qxl, Gxl, ck, Mtmp)
+				call calcMmat(qi, qxl, Gxl, nGq, Gvec, ck, Mtmp)
 				do n = 1, size(A,3)
 					do m = 1, size(A,2)
 						A(1:2,m,n,qi)	= A(1:2,m,n,qi) - wbx * bxl(1:2) * dimag( 	zlog(	Mtmp(m,n) )	 )
 					end do
 				end do
 				!XR
-				call calcMmat(qi, qxr, Gxr, ck, Mtmp)
+				call calcMmat(qi, qxr, Gxr, nGq, Gvec, ck, Mtmp)
 				do n = 1, size(A,3)
 					do m = 1, size(A,2)
 						A(1:2,m,n,qi)	= A(1:2,m,n,qi) - wbx * bxr(1:2) * dimag( 	zlog(	Mtmp(m,n) )	 )
 					end do
 				end do
 				!YL
-				call calcMmat(qi, qyl, Gyl, ck, Mtmp)
+				call calcMmat(qi, qyl, Gyl, nGq, Gvec, ck, Mtmp)
 				do n = 1, size(A,3)
 					do m = 1, size(A,2)
 						A(1:2,m,n,qi)	= A(1:2,m,n,qi) - wby * byl(1:2) * dimag( 	zlog(	Mtmp(m,n) )	 )
 					end do
 				end do
 				!YR
-				call calcMmat(qi, qyr, Gyr, ck, Mtmp)
+				call calcMmat(qi, qyr, Gyr, nGq, Gvec, ck, Mtmp)
 				do n = 1, size(A,3)
 					do m = 1, size(A,2)
 						A(1:2,m,n,qi)	= A(1:2,m,n,qi) - wby * byr(1:2) * dimag( 	zlog(	Mtmp(m,n) )	 )
@@ -324,5 +327,5 @@ module blochWf
 		return
 	end function
 
-end module blochWf 
+end module planeWave 
 

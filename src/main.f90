@@ -9,7 +9,7 @@ program main
 	use postW90,		only:		effTBmodel
 	use berry,			only:		berryMethod
 
-	use output,		 	only:		writeMeshInfo, writeMeshBin, writeCkASunk, writePolFile,& 
+	use output,		 	only:		writeMeshInfo, writeMeshBin, writePolFile,& 
 									printTiming, printBasisInfo	!printMat, printInp, printWannInfo,writeSysInfo  
 
 
@@ -86,8 +86,8 @@ program main
 	!ELECTRONIC STRUCTURE
 	if( mpiSuccess .and. doSolveHam ) then
 		!call cpu_time(T0)	
-		allocate(	En(						nSolve	, 	qChunk		)	)
-		allocate(	ck(			Gmax	,	nSolve 	,	qChunk	)	)
+		allocate(	En(						nSolve	, 	qChunk	)	)
+		allocate(	ck(			GmaxGLOBAL,	nSolve 	,	qChunk	)	)
 		if( myID == root ) 	write(*,*)"[main]:**************************ELECTRONIC STRUCTURE PART*************************"
 		call MPI_BARRIER( MPI_COMM_WORLD, ierr )	
 		!
@@ -105,7 +105,7 @@ program main
 			write(*,*)"*"
 			write(*,*)"[main]:**************************WANNIER90 SETUP*************************"
 		end if
-		!call w90Interf( ck,En)
+		call w90Interf( ck,En)
 		if( myID == root ) then
 			write(*,*)"[main]: done setting up wannier. please execute wannier90 now"
 			write(*,*)"*"

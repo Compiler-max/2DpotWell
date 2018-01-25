@@ -1,9 +1,8 @@
 module peierls
 	use mathematics,	only:	dp, PI_dp, i_dp, myExp, crossP, eigSolverFULL, isUnit, aUtoAngstrm, aUtoEv
 	use sysPara
-	use blochWf,		only:	calcConnOnCoarse
+	use planeWave,		only:	calcConnOnCoarse
 	use	polarization,	only:	calcPolViaA
-	use output,			only:	writePeierls, writeHtb
 	implicit none
 	
 
@@ -153,9 +152,6 @@ module peierls
 		!CALC POL
 		call calcPolViaA(AconnP, pPei)
 		!
-		!WRITE UNKs & ENERGIES
-		if( writeBin ) call writePeierls(ckP, EnP)
-		!
 		!
 		return
 	end subroutine
@@ -293,7 +289,7 @@ module peierls
 				R_real(3,R)	= R_vect(3,R)	* 0
 			end do
 			!
-			call writeHtb(H_tb)
+			!call writeHtb(H_tb)
 			!
 		end if
 		!

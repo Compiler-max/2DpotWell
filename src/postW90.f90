@@ -7,7 +7,7 @@ module postW90
 	use wannInterp,		only:	DoWannInterpol
 	use polarization,	only:	calcPolWannCent, calcPolViaA
 	use semiclassics,	only:	calcFirstOrdP
-	use output,			only:	writeInterpBands, writeVeloEffTB, writeInterpU, writeHtb, writeEnEffTB
+	use output,			only:	writeVeloEffTB
 
 	implicit none
 
@@ -67,10 +67,6 @@ module postW90
 		!output file
 		call writePw90pol( pWann, pConn, pNiuF2, pNiuF3, pPei)
 		call writeConnTxt( A_mat )
-		call writeEnEffTB( En_vec)
-		call writeVeloEffTB(v_mat)
-		call writeInterpU(U_int)
-		if( writeBin ) call writeInterpBands(En_vec)
 		!
 		!
 		return
@@ -204,7 +200,6 @@ module postW90
 				!!if( abs(R_real(2,R)-Rcell(2,R)) > machineP ) write(*,*) "[readTB]: warning Rcell and R_real dont match(y comp)"
 			end do
 			!
-			call writeHtb(H_tb)
 			!
 		end if
 		!
