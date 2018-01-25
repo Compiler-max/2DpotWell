@@ -27,6 +27,7 @@ bin/**
 *.sh
 **/todo.txt
 **/CMakeFiles
+
 *CMakeCache.txt
 **thirdparty/Makefile
 **/wannier90

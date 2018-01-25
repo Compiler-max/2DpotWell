@@ -5,7 +5,7 @@ module projection
 	use omp_lib
 	use mathematics, 	only: 	dp, PI_dp, i_dp, acc, machineP, myExp
 	use sysPara
-	use blochWf,		only:	calcBasis
+	use planeWave,		only:	calcBasis
 	implicit none	
 	
 	private
