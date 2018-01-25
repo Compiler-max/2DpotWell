@@ -55,6 +55,7 @@ module potWellModel
 			!
 			!
 			!COPY TO TARGET ARRAYS
+			ck(:,:,qLoc) = dcmplx(0.0_dp)
 			ck(1:Gmax,1:nSolve,qLoc)	= ctemp(1:Gmax,1:nSolve)
 			En(1:nSolve,qLoc)			= EnT(1:nSolve)
 

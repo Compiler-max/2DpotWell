@@ -354,11 +354,11 @@ module w90Interface
 		!
 		!ALLOCATE TARGET
 		allocate( send_buff(num_bands, qChunk))
-		if( 	myID == root 	)	allocate(	En( num_bands	, num_kpts	)		)
+		if( 	myID == root 	)	allocate(	En( nSolve		, num_kpts	)		)
 		if(		myID /= root	)	allocate( 	En( 	0		,	0		)		)
 		!
 		!SEND TO TARGET
-		send_buff = En_loc(1:num_bands,:)
+		send_buff = En_loc(1:nSolve,:)
 		call MPI_GATHER(send_buff, num_bands*qChunk, MPI_DOUBLE_PRECISION, En, num_bands*qChunk, MPI_DOUBLE_PRECISION, root, MPI_COMM_WORLD, ierr)
 		!
 		!WRITE FILE
@@ -473,7 +473,7 @@ module w90Interface
 			!POST W90 input
 			call writeABiN_basCoeff(ck_glob)
 			write(*,'(a,i3,a)')	"[#",myID,";w90prepMmat]: wrote  basis coeff"
-			call writeABiN_basis(nGq, Gvec)
+			call writeABiN_basis(nGq_glob, Gvec_glob)
 			write(*,'(a,i3,a)')	"[#",myID,";w90prepMmat]: wrote  basis"
 		end if	
 		!

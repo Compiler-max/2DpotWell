@@ -6,7 +6,7 @@ module sysPara
 	implicit none
 
 	private
-	public :: 	readInp,  insideAt, getRindex, getRleftX, getRrightX, getRleftY, getRrightY,& 
+	public :: 	readInp, readGvec, insideAt, getRindex, getRleftX, getRrightX, getRleftY, getRrightY,& 
 				getKindex, getGammaPoint, getPot, &
 				dim, aX, aY, vol, nAt, relXpos, relYpos, atRx, atRy, atPot, dVpot, &
 				nG, nGq, nG0, Gmax, GmaxGLOBAL, Gcut, Gvec, Gtest, R0, nSolve, &
@@ -16,7 +16,7 @@ module sysPara
 				atPos, atR, qpts, rpts, Rcell, kpts, Zion, recpLatt, &
 				Bext, prefactF3, &
 				seedName, w90_dir, info_dir, mkdir, raw_dir,&
-				debugProj, debugHam, debugWann, doSolveHam, useBloch, doPw90, pw90GaugeB, doVdesc,  &
+				debugProj, debugHam, debugWann, doSolveHam, doMagHam, useBloch, doPw90, pw90GaugeB, doVdesc,  &
 				doBerry, useRot, doWanni, doVeloNUM, doNiu, doPei, doGaugBack, writeBin, &
 				myID, nProcs, root, ierr, qChunk
 
@@ -40,7 +40,7 @@ module sysPara
 
 	real(dp),	allocatable,	dimension(:,:,:)	::	Gvec
 	logical											::	debugHam, debugWann, debugProj, &
-														doSolveHam, doPw90, pw90GaugeB, useBloch, doVdesc , &
+														doSolveHam, doMagHam, doPw90, pw90GaugeB, useBloch, doVdesc , &
 														doBerry, useRot, doWanni, doVeloNUM, doNiu, doPei, doGaugBack, &
 														writeBin 
 
@@ -100,6 +100,24 @@ module sysPara
 	end subroutine
 
 
+	subroutine readGvec()
+		!
+		open(unit=800, file=raw_dir//"nGq.dat",form='unformatted',access='stream',action='read')
+		read(800) nGq
+		close(800)
+		write(*,'(a,i3,a)')	"[#",myID,";readGvec]: read nGq"
+		!
+		!
+		open(unit=805, file=raw_dir//"Gvec.dat",form='unformatted',access='stream',action='read')
+		read(805) Gvec
+		close(805)
+		write(*,'(a,i3,a)')	"[#",myID,";readGvec]: read Gvec"
+		!
+		!
+		return
+	end subroutine
+
+
 
 	
 !READ & DISTRIBUTION ROUTINES
@@ -136,6 +154,7 @@ module sysPara
 		call CFG_add_get(my_cfg,	"numerics%thres"    ,	thres      	,	"threshold for overlap warnings"		)
 		![methods]
 		call CFG_add_get(my_cfg,	"methods%doSolveHam",	doSolveHam	,	"solve electronic structure or read in"	)
+		call CFG_add_get(my_cfg,	"methods%doMagHam"	,	doMagHam	,	"include B-field via peierls in ham."	)
 		call CFG_add_get(my_cfg,	"methods%useBloch"	,	useBloch	,	"use bloch phase for projections	"	)
 		call CFG_add_get(my_cfg,	"methods%doPw90"	,	doPw90		,	"read in the matrices in wann base	"	)	
 		call CFG_add_get(my_cfg,	"methods%doBerry"	,	doBerry		,	"switch on/off 	berry( unk) method "	)
@@ -220,6 +239,7 @@ module sysPara
 		call MPI_Bcast(	thres		,		1	,	MPI_DOUBLE_PRECISION	,	root,	MPI_COMM_WORLD, ierr)
 		![methods]
 		call MPI_Bcast( doSolveHam	,		1	,	MPI_LOGICAL				,	root,	MPI_COMM_WORLD, ierr)
+		call MPI_Bcast(	doMagHam	,		1	,	MPI_LOGICAL				,	root,	MPI_COMM_WORLD, ierr)
 		call MPI_Bcast( useBloch	,		1	,	MPI_LOGICAL				,	root,	MPI_COMM_WORLD, ierr)
 		call MPI_Bcast( doPw90		,		1	,	MPI_LOGICAL				,	root,	MPI_COMM_WORLD, ierr)
 		call MPI_Bcast( doBerry		,		1	,	MPI_LOGICAL				,	root,	MPI_COMM_WORLD, ierr)

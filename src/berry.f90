@@ -44,8 +44,8 @@ module berry
 		real(dp),		allocatable		::	v_Band(:,:,:)
 		!					
 		!COARSE
-		allocate(			ck(			Gmax	,	nSolve				,	nQ		)			)
-		allocate(			ckW(		Gmax	, 	nWfs				,  	nQ		)			)
+		allocate(			ck(			nG		,	nSolve				,	nQ		)			)
+		allocate(			ckW(		nG		, 	nSolve				,  	nQ		)			)
 		allocate(			EnQ(		nSolve							,	nQ		)			)
 		allocate(			AconnQ(		3		, 	nWfs	,	nWfs	,	nQ		)			)
 		allocate(			FcurvQ(		3		,	nWfs	,	nWfs	,	nQ		)			)
@@ -162,8 +162,51 @@ module berry
 		end if
 		!
 		!READ ABINITIO
-		call readHam(ck, EnQ)
+		call readAbIn(ck, EnQ)
 		!
+		!
+		return
+	end subroutine
+
+
+	subroutine	readAbIn(ck, En)
+		complex(dp),	intent(out)		:: ck(:,:,:)
+		real(dp),		intent(out)		:: En(:,:)
+		real(dp),		allocatable		:: buffer(:,:), eBuff(:)
+		integer							:: qi
+		!
+		allocate(	buffer( size(ck,1), size(ck,2) 	)		)
+		allocate(	eBuff(size(En,1)				)		)
+		!
+		!
+		call readGvec()
+		!
+		!UNK REAL PART
+		open(unit=700, file=raw_dir//"ckR.dat",form='unformatted',access='stream',action='read')
+		do qi = 1 , size(ck,3)
+			read(700) buffer
+			ck(:,:,qi)	= dcmplx(buffer)
+		end do
+		close(700)
+		!
+		!UNK IMAG PART
+		open(unit=710, file=raw_dir//"ckI.dat",form='unformatted',access='stream',action='read')
+		do qi = 1 , size(ck,3)
+			read(710) buffer
+			ck(:,:,qi)	= ck(:,:,qi) + i_dp * dcmplx(buffer)
+		end do
+		close(710)
+		!
+		!BAND ENERGIES
+		open(unit=720, file=raw_dir//"bandStruct.dat",form='unformatted',access='stream',action='read')
+		do qi = 1, size(En,2)	
+				read(720) eBuff
+				En(1:nSolve,qi)	= eBuff(1:nSolve)
+		end do
+		close(720)
+		!
+		!
+	
 		!
 		return
 	end subroutine
@@ -210,46 +253,6 @@ module berry
 	end subroutine
 
 
-	subroutine	readHam(ck, En)
-		complex(dp),	intent(out)		:: ck(:,:,:)
-		real(dp),		intent(out)		:: En(:,:)
-		real(dp),		allocatable		:: buffer(:,:), eBuff(:)
-		integer							:: qi
-		!
-		allocate(	buffer( size(ck,1), size(ck,2) 	)		)
-		allocate(	eBuff(size(En,1)				)		)
-		!
-		!
-		!
-		!UNK REAL PART
-		open(unit=700, file=raw_dir//"ckR.dat",form='unformatted',access='stream',action='read')
-		do qi = 1 , size(ck,3)
-			read(700) buffer
-			ck(:,:,qi)	= dcmplx(buffer)
-		end do
-		close(700)
-		!
-		!UNK IMAG PART
-		open(unit=710, file=raw_dir//"ckI.dat",form='unformatted',access='stream',action='read')
-		do qi = 1 , size(ck,3)
-			read(710) buffer
-			ck(:,:,qi)	= ck(:,:,qi) + i_dp * dcmplx(buffer)
-		end do
-		close(710)
-		!
-		!BAND ENERGIES
-		open(unit=720, file=raw_dir//"bandStruct.dat",form='unformatted',access='stream',action='read')
-		do qi = 1, size(En,2)	
-				read(720) eBuff
-				En(1:nSolve,qi)	= eBuff(1:nSolve)
-		end do
-		close(720)
-		!
-		!
-	
-		!
-		return
-	end subroutine
 
 
 	subroutine applyRot(ck, Uq, ckW)
