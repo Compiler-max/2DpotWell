@@ -56,7 +56,7 @@ module potWellModel
 			!
 			!COPY TO TARGET ARRAYS
 			ck(:,:,qLoc) = dcmplx(0.0_dp)
-			ck(1:Gmax,1:nSolve,qLoc)	= ctemp(1:Gmax,1:nSolve)
+			ck(1:Gsize,1:nSolve,qLoc)	= ctemp(1:GsizeS,1:nSolve)
 			En(1:nSolve,qLoc)			= EnT(1:nSolve)
 
 			!DEBUG TESTS
@@ -93,13 +93,15 @@ module potWellModel
 		!
 		do j = 1, nGq(qLoc)
 			do i = 1, nGq(qLoc)
-					if(i == j )	then	
-						onSite	= 0.5_dp * 	dot_product(Gvec(:,i,qLoc),Gvec(:,i,qLoc))
-						Hmat(i,j)	=	V(qLoc, i,j)	+	onSite
-					else
-						Hmat(i,j)	=	V(qLoc, i,j)
-					end if
-				!end if
+				!STANDARD HAM
+				if(i == j )	then	
+					onSite	= 0.5_dp * 	dot_product(Gvec(:,i,qLoc),Gvec(:,i,qLoc))
+					Hmat(i,j)	=	V(qLoc, i,j)	+	onSite
+				else
+					Hmat(i,j)	=	V(qLoc, i,j)
+				end if
+				!ADD PEIERLS
+				if( doMagHam )	 call addMagHam(	qLoc, i, j, Hmat(i,j)	)
 			end do
 		end do
 		!
@@ -111,6 +113,18 @@ module potWellModel
 
 		return
 	end subroutine
+
+
+	subroutine addMagHam( qLoc, i, j, H0)
+		integer,		intent(in)		:: qLoc, i, j
+		complex(dp),	intent(inout)	:: H0
+		!
+		H0 = H0 + dcmplx(0.0_dp)
+		!
+		return
+	end subroutine
+
+
 
 	complex(dp)	function V(qLoc, i,j)
 		integer,	intent(in)	::	qLoc, i, j
