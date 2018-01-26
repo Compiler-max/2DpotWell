@@ -56,7 +56,7 @@ module potWellModel
 			!
 			!COPY TO TARGET ARRAYS
 			ck(:,:,qLoc) = dcmplx(0.0_dp)
-			ck(1:Gsize,1:nSolve,qLoc)	= ctemp(1:GsizeS,1:nSolve)
+			ck(1:Gsize,1:nSolve,qLoc)	= ctemp(1:Gsize,1:nSolve)
 			En(1:nSolve,qLoc)			= EnT(1:nSolve)
 
 			!DEBUG TESTS
@@ -67,7 +67,7 @@ module potWellModel
 			!
 			!FINALIZE
 			qLoc = qLoc + 1
-			write(*,'(a,i3,a,i5)')"[#",myID,", solveHam]: done for qi=",qi
+			write(*,'(a,i3,a,i5,a,i5)')"[#",myID,", solveHam]: done for qi=",qi," qLoc=",qLoc
 		end do
 		!
 		!
@@ -93,39 +93,34 @@ module potWellModel
 		!
 		do j = 1, nGq(qLoc)
 			do i = 1, nGq(qLoc)
-				!STANDARD HAM
+				!KINETIC ENERGY + POTENTIAL WELLS
 				if(i == j )	then	
 					onSite	= 0.5_dp * 	dot_product(Gvec(:,i,qLoc),Gvec(:,i,qLoc))
 					Hmat(i,j)	=	V(qLoc, i,j)	+	onSite
 				else
 					Hmat(i,j)	=	V(qLoc, i,j)
 				end if
-				!ADD PEIERLS
-				if( doMagHam )	 call addMagHam(	qLoc, i, j, Hmat(i,j)	)
 			end do
 		end do
 		!
+		!ADD PEIERLS
+		if( doMagHam )	 call addMagHam( qLoc, Hmat)
+		!
+		!DEBUG
 		if(debugHam) then
 			if ( .not.	isHermitian(Hmat)	) then
 				write(*,*)"[populateH]: Hamiltonian matrix is not Hermitian :"
 			end if
 		end if
-
-		return
-	end subroutine
-
-
-	subroutine addMagHam( qLoc, i, j, H0)
-		integer,		intent(in)		:: qLoc, i, j
-		complex(dp),	intent(inout)	:: H0
 		!
-		H0 = H0 + dcmplx(0.0_dp)
-		!
+		!		
 		return
 	end subroutine
 
 
 
+
+!POTENTIAL WELLS	
 	complex(dp)	function V(qLoc, i,j)
 		integer,	intent(in)	::	qLoc, i, j
 		!
@@ -229,22 +224,72 @@ module potWellModel
 	end function
 
 
-	integer function countBandsSubZero(EnT)
-		real(dp),		intent(in)		:: EnT(:,:)
-		integer							:: gammaP, cnt, n
+
+
+
+
+
+
+!EXTERNAL MAGNETIC FIELD ( OSCILLATING )
+	subroutine addMagHam( qLoc, Hmat)
+		!Performs Peierls substitution on plane wave basis.
 		!
-		cnt	= 0
-		gammaP	= getGammaPoint()
-		do n = 1, size(EnT,1)
-			if( EnT(n,gammaP) < 0.0_dp )	then
-				cnt	= cnt + 1
-			end if
+		!neglects terms which are second order in the external field
+		!
+		!only contribtutions if i/=j, i.e. to off-diagonal terms
+		! no contribution for dGx = 0
+		integer,		intent(in)		::	qLoc
+		complex(dp),	intent(inout)	::	Hmat(:,:)
+		integer							::	i, j
+		real(dp)						::	H_prefact, qX_Period, dGx, dGy
+		!
+		!period of oscillating B field
+		qX_period	=	2.0_dp * PI_dp / aX 
+		H_prefact 	= 	0.5_dp * Bext(3) / qX_period
+		!
+		!Add to Hamiltonian
+		do j = 1, nGq(qLoc)
+			do i = 1, nGq(qLoc)
+				if( i/=j ) then
+						dGx		= Gvec(1,j,qLoc) - Gvec(1,i,qLoc) 
+						dGy		= Gvec(2,j,qLoc) - Gvec(2,i,qLoc) 
+						if( abs(dGx) > machineP  ) then
+							if( abs(dGy) < machineP ) then
+								Hmat(i,j)	= Hmat(i,j) + H_prefact * h1_gyZero( dGx, qX_period)
+							else 
+								Hmat(i,j)	= Hmat(i,j) + H_prefact * h1_gyFull( dGx, dGy, qX_period)
+							end if 
+						end if
+				end if
+			end do
 		end do
-		countBandsSubZero	= cnt
+		!
+		!DEBUG
+		if( myID == root .and. qLoc == 1) 	write(*,'(a,i3,a)')	"[#",myID,";addMagHam]: hello there"		
+		if( norm2(Bext(1:2)) > machineP ) 	write(*,'(a,i3,a)') "[#",myID,";addMagHam]: warning found non zero x or y component. External field should be along z direction! "
+		!
+		return
+	end subroutine
+
+
+
+	complex(dp)	function h1_gyZero( dGx, qX )
+		!matrix element for dGy==0
+		real(dp),		intent(in)		:: dGx, qX
+		!
+		h1_gyZero	= 	qX 		*	( myExp(dGx*aX) - 1.0_dp )		*	aY
 		!
 		return
 	end function
 
+	complex(dp)	function h1_gyFull( dGx, dGy, qX)
+		!matrix element for dGy/=0
+		real(dp),		intent(in)		:: dGx, dGy, qX
+		!
+		h1_gyFull	=	qX		*	( myExp(dGx*aX) - 1.0_dp )		* 	( myExp(dGy*aY) - 1.0_dp )
+		!
+		return
+	end function
 
 
 end module potWellModel
