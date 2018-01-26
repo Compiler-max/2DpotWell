@@ -265,12 +265,14 @@ module sysPara
 		call MPI_Bcast( vol			,		1	,	MPI_DOUBLE_PRECISION	,	root,	MPI_COMM_WORLD,	ierr)
 		!
 		!
-		nG 	= 	nGdim**2
-		nR 	= 	nRx 	*	nRy
-		nQ 	= 	nQx 	*	nQy
-		nSC =	nSCx	*	nSCy
-		nK 	=	nKx		*	nKy
-		Bext=	B0 		* 	Bext
+		if( myID /= root ) then
+			nG 	= 	nGdim**2
+			nR 	= 	nRx 	*	nRy
+			nQ 	= 	nQx 	*	nQy
+			nSC =	nSCx	*	nSCy
+			nK 	=	nKx		*	nKy
+			Bext=	B0 		* 	Bext
+		end if
 		!
 		!
 		if( myID /= root ) call allocateArrays()
