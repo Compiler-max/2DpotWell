@@ -488,33 +488,23 @@ module w90Interface
 !A_MATRIX ROUTINES
 	subroutine w90prepAmat(ck)
 		complex(dp),	intent(in)		:: ck(:,:,:) 	 !ck(			nG		,	nBands  	,	nQ	)
-		integer							:: qi, n, m, qLoc, sendcount
-		complex(dp),	allocatable		:: A_glob(:,:,:), A_loc(:,:,:)
+		integer							:: qi, n, m
+		complex(dp),	allocatable		:: A_mat(:,:,:)
 		!
 		if( .not. useBloch )	then
 			!
-			!
-			!
-			if( myID==root )		write(*,*)	"[w90Interf]: projection overlap matrix calculated"
-			if( myID==root )		allocate(	A_glob(	num_bands	,	num_wann,	num_kpts	)		)
-			if( myID/=root )		allocate(	A_glob(		0		,		0	,		0		)		)
-									allocate(	 A_loc( num_bands	,	num_wann,	qChunk		)		)
+			allocate(	 A_mat( num_bands	,	num_wann,	num_kpts		)		)
 			!
 			if(	size(ck,2) < num_bands )	write(*,'(a,i3,a)')"[#",myID,";w90prepAmat]: warning not enough abInitio coeff, try to increase nSolve in inpupt"
 			if(	size(ck,3)/= qChunk )  	write(*,'(a,i3,a)')"[#",myID,";w90prepAmat]: warning ab initio exp. coefficients have wrong numbers of kpts"
 			if(	num_wann/nAt > 3) 			write(*,'(a,i3,a)')"[#",myID,";w90prepAmat]: can not handle more then 3 wfs per atom at the moment"
 			!
 			!MATRIX SETUP
-			!!!!$OMP PARALLEL DO SCHEDULE(DYNAMIC) DEFAULT(SHARED) PRIVATE(qLoc)		
-			do qLoc = 1, qChunk
-				A_loc(:,:,qLoc)	= dcmplx(0.0_dp)
-				call calcAmatANA(qLoc,ck(:,:,qLoc), A_loc(:,:,qLoc))
+			!$OMP PARALLEL DO SCHEDULE(DYNAMIC) DEFAULT(SHARED) PRIVATE(qi)		
+			do qi = 1, nQ
+				call calcAmatANA(qi,ck(:,:,qi), A_mat(:,:,qi))
 			end do
-			!!!!!$OMP END PARALLEL DO
-			!
-			!COLLECT
-			sendcount = num_bands*num_wann*qchunk
-			call MPI_GATHER(A_loc, sendcount, MPI_DOUBLE_COMPLEX, A_glob, sendcount, MPI_DOUBLE_COMPLEX, root, MPI_COMM_WORLD, ierr )
+			!$OMP END PARALLEL DO
 			!
 			!WRITE TO FILE
 			if( myID == root ) then
@@ -524,7 +514,7 @@ module w90Interface
 				do qi = 1, num_kpts
 					do n = 1, num_wann
 						do m = 1, num_bands	
-							write(120,*)	m, ' ', n, ' ', ' ', qi, ' ', dreal(A_glob(m,n,qi)), ' ', dimag(A_glob(m,n,qi))
+							write(120,*)	m, ' ', n, ' ', ' ', qi, ' ', dreal(A_mat(m,n,qi)), ' ', dimag(A_mat(m,n,qi))
 						end do
 					end do
 				end do
