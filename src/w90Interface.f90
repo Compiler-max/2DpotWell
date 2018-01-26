@@ -5,7 +5,6 @@ module w90Interface
 	use sysPara
 	use planeWave,		only:	calcMmat
 	use projection,		only:	calcAmatANA
-	use output,			only:	writeABiN_energy, writeABiN_basis, writeABiN_basCoeff
 
 	implicit none
 
@@ -37,22 +36,18 @@ module w90Interface
 		!
 		!WRITE AND EXECUTE INITIAL WANNIER90
 		seed_name	= seedName
-		if(myID == root) then
-			call writeW90input()
-			!
-			write(*,*)	"[w90Interf]: wrote w90 input file"
-			call chdir(w90_Dir)
-			call w90setup()
-			call chdir("..")
-			write(*,*)	"[w90Interf]: done with w90 setup"
-			write(*,*)	"[w90Interf]: will use num_bands= ",num_bands, " bands"
-			write(*,*)	"[w90Interf]: to gen   num_wann=  ",num_wann, " wnfs"
-			write(*,*)	"[w90Interf]: start preparing wannierisation"
-		end if
+		call writeW90input()
 		!
-		!BCAST NEAREST NEIGHBOURS INFO
-		call bcastW90info()
-
+		write(*,*)	"[w90Interf]: wrote w90 input file"
+		call chdir(w90_Dir)
+		call w90setup()
+		call chdir("..")
+		write(*,*)	"[w90Interf]: done with w90 setup"
+		write(*,*)	"[w90Interf]: will use num_bands= ",num_bands, " bands"
+		write(*,*)	"[w90Interf]: to gen   num_wann=  ",num_wann, " wnfs"
+		write(*,*)	"[w90Interf]: start preparing wannierisation"
+		!
+	
 
 
 		!
@@ -63,18 +58,16 @@ module w90Interface
 		call w90prepEigVal(En)
 		
 
-		if( myID == root ) then
-			call writeW90inputPost()
-			write(*,*)	"[w90Interf]: done preparing wannierization input matrices"
-			call writeW90KinterpMesh()
-			write(*,*)	"[w90Interf]: wrote interpolation mesh file"
+		call writeW90inputPost()
+		write(*,*)	"[w90Interf]: done preparing wannierization input matrices"
+		call writeW90KinterpMesh()
+		write(*,*)	"[w90Interf]: wrote interpolation mesh file"
 	
-			!call wannier_run(seed_name,mp_grid,num_kpts,real_lattice,recip_lattice, &
-			!					kpt_latt,num_bands,num_wann,nntot,num_atoms,atom_symbols, &
-			!					atoms_cart,gamma_only,M_matrix_orig,A_matrix,eigenvalues, &
-			!					U_matrix,U_matrix_opt,lwindow,wann_centres,wann_spreads, &
-			!					spread)
-		end if
+		!call wannier_run(seed_name,mp_grid,num_kpts,real_lattice,recip_lattice, &
+		!					kpt_latt,num_bands,num_wann,nntot,num_atoms,atom_symbols, &
+		!					atoms_cart,gamma_only,M_matrix_orig,A_matrix,eigenvalues, &
+		!					U_matrix,U_matrix_opt,lwindow,wann_centres,wann_spreads, &
+		!					spread)
 
 	end subroutine
 
@@ -108,6 +101,8 @@ module w90Interface
 		!
 		call MPI_BCAST( nncell		,	3*num_kpts*num_nnmax	,	MPI_INTEGER,	root,	MPI_COMM_WORLD,		ierr)
 		call MPI_BCAST( nnlist		,	  num_kpts*num_nnmax	,	MPI_INTEGER,	root,	MPI_COMM_WORLD,		ierr)
+		!
+		if(myID==root) write(*,'(a,i3,a)')	"[#",myID,";bcastW90info]: info broadcasted"
 		!
 		return
 	end subroutine
@@ -373,39 +368,22 @@ module w90Interface
 	end subroutine
 
 
-	subroutine w90prepEigVal(En_loc)
+	subroutine w90prepEigVal(En)
 		!convert eigenvalues from atomic units to eV
-		real(dp),		intent(in)		:: En_loc(:,:)
-		integer							:: qi, n
-		real(dp),		allocatable		:: En_glob(:,:), send_buff(:,:)
-		!
+		real(dp),		intent(in)		:: En(:,:)
+		integer							:: qi, n		!
 		!DEBUG
-		if(	size(En_loc,2) /= qChunk 	)	write(*,'(a,i3,a)')		"[#",myID,";w90prepEigVal]: warning En has wrong numbers of kpts"
-		!
-		!ALLOCATE TARGET
-		allocate( send_buff(num_bands, qChunk))
-		if( 	myID == root 	)	allocate(	En_glob( nSolve		, num_kpts	)		)
-		if(		myID /= root	)	allocate( 	En_glob( 	0		,	0		)		)
-		!
-		!SEND TO TARGET
-		send_buff = En_loc(1:nSolve,:)
-		call MPI_GATHER(send_buff, num_bands*qChunk, MPI_DOUBLE_PRECISION, En_glob, num_bands*qChunk, MPI_DOUBLE_PRECISION, root, MPI_COMM_WORLD, ierr)
-		!
+		if(	size(En_loc,2) /= nQ	)	write(*,'(a,i3,a)')		"[#",myID,";w90prepEigVal]: warning En has wrong numbers of kpts"
+		
 		!WRITE FILE
-		if( myID == root ) then
-			!W90 input
-			open(unit=110,file=w90_Dir//seed_name//'.eig',action='write',access='stream',form='formatted', status='replace')
-			do qi = 1, num_kpts
-				do n = 1, num_bands
-					write(110,*)	n, ' ', qi, ' ', En_glob(n,qi) * aUtoEv
-				end do
+		open(unit=110,file=w90_Dir//seed_name//'.eig',action='write',access='stream',form='formatted', status='replace')
+		do qi = 1, num_kpts
+			do n = 1, num_bands
+				write(110,*)	n, ' ', qi, ' ', En(n,qi) * aUtoEv
 			end do
-			close(110)
-			!POST W90 input
-			call writeABiN_energy(En_glob)
-			write(*,'(a,i3,a)')	"[#",myID,";w90prepEigVal]: wrote .eig file"
-		end if
-
+		end do
+		close(110)
+		write(*,'(a,i3,a)')	"[#",myID,";w90prepEigVal]: wrote .eig file"
 		!
 		!
 		return
@@ -418,24 +396,37 @@ module w90Interface
 		integer							:: qi, nn, n, m, mesgSize
 		integer,		allocatable		:: nGq_glob(:)
 		complex(dp),	allocatable		:: M_glob(:,:,:,:), M_loc(:,:,:,:), ck_glob(:,:,:)
-		real(dp),		allocatable		:: Gvec_glob(:,:,:)
+		real(dp),		allocatable		:: Gvec_glob(:,:,:), G_send(:,:,:)
 		real(dp)						:: gShift(2)
 		!
 							allocate(	nGq_glob(			nQ													)		)
-							allocate(	ck_glob(		nG			,	nSolve		,			nQ				)		)
-							allocate(	Gvec_glob(		dim			,	nG			, 			nQ				)		)
+							allocate(	ck_glob(		GmaxGLOBAL	,	nSolve		,			nQ				)		)
+							allocate(	Gvec_glob(		dim			,	GmaxGLOBAL	, 			nQ				)		)
+							allocate(	G_send(			dim			,	GmaxGLOBAL	,			nQ				)		)
 							allocate(	M_loc(			num_bands	,	num_bands	,	nntot	,	qChunk		)		)
 		if(myID == root)	allocate(	M_glob(			num_bands	,	num_bands	,	nntot	,	num_kpts	)		)
 		if(myID /= root)	allocate(	M_glob(				0		,		0		,		0	,		0		)		)
 							
 		!
 		!GATHER _glob ARRAYS 
-		call MPI_ALLGATHER(	nGq		, 	qChunk, 	MPI_INTEGER, 		nGq_glob, 	qChunk, 		MPI_INTEGER		, 	MPI_COMM_WORLD, ierr)
-		mesgSize = nG*nSolve*qChunk
-		call MPI_ALLGATHER(	ck_loc	,	mesgSize, MPI_DOUBLE_COMPLEX, 	ck_glob, 	mesgSize, MPI_DOUBLE_COMPLEX	, 	MPI_COMM_WORLD, ierr)	
-		mesgSize = dim*nG*qChunk
-		call MPI_ALLGATHER(	Gvec	,	mesgSize, MPI_DOUBLE_PRECISION, Gvec_glob, 	mesgSize, MPI_DOUBLE_PRECISION	, 	MPI_COMM_WORLD, ierr)	
+		call MPI_ALLGATHER(	nGq							, 	qChunk					, 	MPI_INTEGER			, &
+							nGq_glob					, 	qChunk					, 	MPI_INTEGER			, 	MPI_COMM_WORLD, ierr)
+		if(myID==root) write(*,'(a,i3,a)')	"[#",myID,";w90prepMmat: bcasted nGq"
 
+		
+			G_send(1:dim, 1:GmaxGLOBAL,1:qChunk) = Gvec(1:dim, 1:GmaxGLOBAL, 1:qChunk)
+		call MPI_ALLGATHER(	G_send						,	dim*GmaxGLOBAL*qChunk	,	MPI_DOUBLE_PRECISION, &
+							Gvec_glob					,  	dim*GmaxGLOBAL*qChunk	,	MPI_DOUBLE_PRECISION, 	MPI_COMM_WORLD, ierr)	
+		if(myID==root) write(*,'(a,i3,a)')	"[#",myID,";w90prepMmat: bcasted Gvec"
+
+
+		call MPI_ALLGATHER(	ck_loc						,	GmaxGLOBAL*nSolve*qChunk, 	MPI_DOUBLE_COMPLEX	, &	
+							ck_glob(1:GmaxGLOBAL, :,:)	,  	GmaxGLOBAL*nSolve*qChunk, 	MPI_DOUBLE_COMPLEX	, 	MPI_COMM_WORLD, ierr)	
+		if(myID==root) write(*,'(a,i3,a)')	"[#",myID,";w90prepMmat: bcasted basis coeff"
+	
+
+
+		if(myID==root) write(*,'(a,i3,a)')	"[#",myID,";w90prepMmat: basis broadcasted"
 		!
 		!FILL THE MATRIX
 		M_loc	= dcmplx(0.0_dp)
@@ -458,8 +449,9 @@ module w90Interface
 		end do
 		!
 		!COLLECT
-		mesgSize = num_bands**2*nntot*qChunk
+		mesgSize = num_bands**2 * nntot * qChunk
 		call MPI_GATHER(M_loc, mesgSize, MPI_DOUBLE_COMPLEX, M_glob, mesgSize, MPI_DOUBLE_COMPLEX, root, MPI_COMM_WORLD, ierr )
+		if(myID==root) write(*,'(a,i3,a)')	"[#",myID,";w90prepMmat]: overlap matrix collected"
 		!
 		!
 		!WRITE TO FILE
@@ -593,3 +585,104 @@ module w90Interface
 
 
 end module
+
+
+
+
+
+!ALL GATHER M_MATRIX: 
+
+!!!!M_MATRIX ROUTINES
+!!!	subroutine w90prepMmat(ck_loc)
+!!!		complex(dp),	intent(in)		:: ck_loc(:,:,:) 	 !ck(			nG		,	nBands  	,	nQ	)	
+!!!		integer							:: qi, nn, n, m, mesgSize
+!!!		integer,		allocatable		:: nGq_glob(:)
+!!!		complex(dp),	allocatable		:: M_glob(:,:,:,:), M_loc(:,:,:,:), ck_glob(:,:,:)
+!!!		real(dp),		allocatable		:: Gvec_glob(:,:,:), G_send(:,:,:)
+!!!		real(dp)						:: gShift(2)
+!!!		!
+!!!							allocate(	nGq_glob(			nQ													)		)
+!!!							allocate(	ck_glob(		GmaxGLOBAL	,	nSolve		,			nQ				)		)
+!!!							allocate(	Gvec_glob(		dim			,	GmaxGLOBAL	, 			nQ				)		)
+!!!							allocate(	G_send(			dim			,	GmaxGLOBAL	,			nQ				)		)
+!!!							allocate(	M_loc(			num_bands	,	num_bands	,	nntot	,	qChunk		)		)
+!!!		if(myID == root)	allocate(	M_glob(			num_bands	,	num_bands	,	nntot	,	num_kpts	)		)
+!!!		if(myID /= root)	allocate(	M_glob(				0		,		0		,		0	,		0		)		)
+!!!							
+!!!		!
+!!!		!GATHER _glob ARRAYS 
+!!!		call MPI_ALLGATHER(	nGq							, 	qChunk					, 	MPI_INTEGER			, &
+!!!							nGq_glob					, 	qChunk					, 	MPI_INTEGER			, 	MPI_COMM_WORLD, ierr)
+!!!		if(myID==root) write(*,'(a,i3,a)')	"[#",myID,";w90prepMmat: bcasted nGq"
+!!!
+!!!		
+!!!			G_send(1:dim, 1:GmaxGLOBAL,1:qChunk) = Gvec(1:dim, 1:GmaxGLOBAL, 1:qChunk)
+!!!		call MPI_ALLGATHER(	G_send						,	dim*GmaxGLOBAL*qChunk	,	MPI_DOUBLE_PRECISION, &
+!!!							Gvec_glob					,  	dim*GmaxGLOBAL*qChunk	,	MPI_DOUBLE_PRECISION, 	MPI_COMM_WORLD, ierr)	
+!!!		if(myID==root) write(*,'(a,i3,a)')	"[#",myID,";w90prepMmat: bcasted Gvec"
+!!!
+!!!
+!!!		call MPI_ALLGATHER(	ck_loc						,	GmaxGLOBAL*nSolve*qChunk, 	MPI_DOUBLE_COMPLEX	, &	
+!!!							ck_glob(1:GmaxGLOBAL, :,:)	,  	GmaxGLOBAL*nSolve*qChunk, 	MPI_DOUBLE_COMPLEX	, 	MPI_COMM_WORLD, ierr)	
+!!!		if(myID==root) write(*,'(a,i3,a)')	"[#",myID,";w90prepMmat: bcasted basis coeff"
+!!!	
+!!!
+!!!
+!!!		if(myID==root) write(*,'(a,i3,a)')	"[#",myID,";w90prepMmat: basis broadcasted"
+!!!		!
+!!!		!FILL THE MATRIX
+!!!		M_loc	= dcmplx(0.0_dp)
+!!!		write(*,*)	"[w90prepMmat]: use ",nntot," nearest neighbours per k point"
+!!!		do qi = myID*qChunk+1, myID*qChunk+qChunk
+!!!			do nn = 1, nntot
+!!!				!calc overlap of unks
+!!!				if( nncell(3,qi,nn)/= 0 ) then
+!!!					M_loc(:,:,nn,qi)	= dcmplx(1.0_dp-5)
+!!!					write(*,*)	"[w90prepMmat]: WARNING nearest neighbours in z direction used!"
+!!!					if(qi==1  ) write(*,*)	"[w90prepMmat]: oLap set to zero for nn=",nn
+!!!				else
+!!!					gShift(1)			= nncell(1,qi,nn) * 2.0_dp * PI_dp / aX
+!!!					gShift(2)			= nncell(2,qi,nn) * 2.0_dp * PI_dp / aX
+!!!					!oLap				= UNKoverlap(n,m, qi, nnlist(qi,nn), gShift, ck)
+!!!					!call calcMmat(qi,nnlist(qi,nn), gShift, ck, M_loc(:,:,nn,qi))
+!!!					call calcMmat(qi, nnlist(qi,nn), gShift, nGq_glob, Gvec_glob, ck_glob, M_loc(:,:,nn,qi))
+!!!				end if
+!!!			end do
+!!!		end do
+!!!		!
+!!!		!COLLECT
+!!!		mesgSize = num_bands**2 * nntot * qChunk
+!!!		call MPI_GATHER(M_loc, mesgSize, MPI_DOUBLE_COMPLEX, M_glob, mesgSize, MPI_DOUBLE_COMPLEX, root, MPI_COMM_WORLD, ierr )
+!!!		if(myID==root) write(*,'(a,i3,a)')	"[#",myID,";w90prepMmat]: overlap matrix collected"
+!!!		!
+!!!		!
+!!!		!WRITE TO FILE
+!!!		if( myID == root ) then
+!!!			!W90 input
+!!!			open(unit=120,file=w90_Dir//seed_name//'.mmn',action='write',access='stream',form='formatted', status='replace')
+!!!			write(120,*)	'overlap matrix'
+!!!			write(120,*)	num_bands, ' ', num_kpts, ' ', nntot	
+!!!			!
+!!!			do qi = 1, num_kpts
+!!!				do nn = 1, nntot
+!!!					write(120,*)	qi,' ',nnlist(qi,nn),' ',nncell(1,qi,nn),' ',nncell(2,qi,nn),' ', nncell(3,qi,nn)
+!!!					do n = 1, num_bands
+!!!						do m = 1, num_bands
+!!!							write(120,*)	dreal(M_glob(m,n,nn,qi)), ' ', dimag(M_glob(m,n,nn,qi))
+!!!						end do
+!!!					end do		
+!!!				end do
+!!!			end do
+!!!			close(120)
+!!!			write(*,'(a,i3,a)')	"[#",myID,";w90prepMmat]: wrote .mmn file"
+!!!			
+!!!			!POST W90 input
+!!!			call writeABiN_basCoeff(ck_glob)
+!!!			write(*,'(a,i3,a)')	"[#",myID,";w90prepMmat]: wrote  basis coeff"
+!!!			call writeABiN_basis(nGq_glob, Gvec_glob)
+!!!			write(*,'(a,i3,a)')	"[#",myID,";w90prepMmat]: wrote  basis"
+!!!		end if	
+!!!		!
+!!!		!
+!!!		return
+!!!	end subroutine
