@@ -23,7 +23,7 @@ program main
     complex(dp),	allocatable,	dimension(:,:,:)	:: 	ck
     real(dp),		allocatable,	dimension(:,:)		:: 	En    														
     real												:: 	mastT0, mastT1, mastT, T0, T1, &
-    															aT,kT,wT,pwT, oT, bT	
+    															alloT,hamT,wT,pwT, outT, berryT	
     logical												::	mpiSuccess		
 
     !MPI INIT
@@ -36,12 +36,12 @@ program main
     !
     !
     if( myID == root) then
-    	aT		= 0.0
-    	kT		= 0.0
+    	alloT	= 0.0
+    	hamT	= 0.0
     	wT		= 0.0
     	pwT		= 0.0
-    	bT		= 0.0
-    	oT 		= 0.0
+    	berryT	= 0.0
+    	outT 	= 0.0
     	mastT	= 0.0
     	!
    		write(*,*)"[main]:**************************setup Grids*************************"
@@ -77,7 +77,7 @@ program main
 		write(*,*)"*"
 		!
 		call cpu_time(T1)
-		aT = T1 - T0
+		alloT = T1 - T0
 	end if
 	
 		
@@ -86,42 +86,38 @@ program main
 	!ELECTRONIC STRUCTURE
 	if( mpiSuccess .and. doSolveHam ) then
 		!call cpu_time(T0)	
-		allocate(	En(						nSolve	, 	qChunk	)	)
-		allocate(	ck(			nG		,	nSolve 	,	qChunk	)	)
-		if( myID == root ) 	write(*,*)"[main]:**************************ELECTRONIC STRUCTURE PART*************************"
+		
 		call MPI_BARRIER( MPI_COMM_WORLD, ierr )	
+		if( myID == root )	call cpu_time(T0)
+		if( myID == root ) 	write(*,*)"[main]:**************************ELECTRONIC STRUCTURE PART*************************"
+	
 		!
 		!
-		call solveHam(ck, En)
+		call solveHam()
+		call MPI_BARRIER( MPI_COMM_WORLD, ierr )
 		if( myID == root ) then
 			write(*,*)"[main]: done solving Schroedinger eq."
 			call cpu_time(T1)
-			kT = T1-T0
-			!W90
-			call cpu_time(T0)	
-			write(*,*)"*"
-			write(*,*)"*"
-			write(*,*)"*"
-			write(*,*)"*"
-			write(*,*)"[main]:**************************WANNIER90 SETUP*************************"
-		end if
-		call w90Interf( ck,En)
-		if( myID == root ) then
-			write(*,*)"[main]: done setting up wannier. please execute wannier90 now"
-			write(*,*)"*"
-			write(*,*)"*"
-			write(*,*)"*"
-			write(*,*)"*"
-			call cpu_time(T1)
-			wT = T1-T0
+			hamT = T1-T0
 		end if
 	end if
-	call MPI_BARRIER( MPI_COMM_WORLD, ierr )
+	
 
 
 
 
-	if( myID == root ) then		
+	!POST HAM SOLVER
+	if( .not. doSolveHam .and. myID == root ) then	
+		allocate(	En(						nSolve	, 	nQ	)	)
+		allocate(	ck(			GmaxGLOBAL,	nSolve 	,	nQ	)	)
+
+		!Todo: read in ck, En, Gvec, nGq
+		!Todo: try to run wannier 90 in library mode, pass En, ck, U_matrix to berryMethod
+
+
+
+		call w90Interf(ck,En)
+
 		!EFF TB - post w90
 		call cpu_time(T0)
 		write(*,*)"[main]:**************************POST WANNIER90 *************************"
@@ -157,7 +153,7 @@ program main
 		write(*,*)"*"
 		write(*,*)"*"
 		call cpu_time(T1)
-		bT	= T1 - T0
+		berryT	= T1 - T0
 
 		!OUTPUT
 		write(*,*)"[main]:**************************WRITE OUTPUT*************************"
@@ -176,7 +172,7 @@ program main
 		write(*,*)"*"
 		write(*,*)"*"
 		call cpu_time(T1)
-		oT = T1 - T0
+		outT = T1 - T0
 		
 		
 		!WARNINGS IF GCUT IS TO HIGH
@@ -194,7 +190,7 @@ program main
 		call cpu_time(mastT1)
 		mastT= mastT1-mastT0
 		write(*,*) '**************TIMING INFORMATION************************'
-		call printTiming(aT,kT,wT,pwT,bT,oT,mastT)
+		call printTiming(alloT,hamT,wT,pwT,berryT,outT,mastT)
 		write(*,*)"*"
 		write(*,*)"*"
 		write(*,*)"*"
