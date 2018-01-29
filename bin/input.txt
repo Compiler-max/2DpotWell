@@ -41,7 +41,7 @@
     doMagHam    = f
     useBloch    = f
     doPw90      = f
-    doBerry     = f
+    doBerry     = t
     writeBin    = f
 
 [pw90]
@@ -51,10 +51,10 @@
     pw90GaugeB  = f
 
 [berry]
-    useRot      = f
+    useRot      = t
     doVeloNUM   = f
     doNiu       = t
-    doPei       = t
+    doPei       = f
     doWanni     = f
     doGaugBack  = f
 

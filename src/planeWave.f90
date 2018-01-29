@@ -165,9 +165,9 @@ module planeWave
 		!
 		write(*,'(a,f6.3,a,f6.3)')	"[calcConnOnCoarse]: dqx=",dqx," dqy=",dqy
 		!
-		!!!$OMP PARALLEL DEFAULT(SHARED) PRIVATE(m,n,qx,qy, qxl, qxr, qyl, qyr, qi, Gxl, Gxr, Gyl, Gyr, Mtmp)
+		!$OMP PARALLEL DEFAULT(SHARED) PRIVATE(m,n,qx,qy, qxl, qxr, qyl, qyr, qi, Gxl, Gxr, Gyl, Gyr, Mtmp)
 		allocate(	Mtmp( size(A,2), size(A,3) )		)
-		!!!$OMP DO COLLAPSE(2)  SCHEDULE(DYNAMIC)
+		!$OMP DO COLLAPSE(2)  SCHEDULE(STATIC)
 		do qx = 1, nQx
 			do qy = 1, nQy
 				!GET NEIGHBOURS
@@ -243,8 +243,8 @@ module planeWave
 				!
 			end do
 		end do
-		!!!$OMP END DO
-		!!!$OMP END PARALLEL
+		!$OMP END DO
+		!$OMP END PARALLEL
 		!
 		!
 		return

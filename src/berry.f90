@@ -81,22 +81,16 @@ module berry
 
 
 		!PEIERLS SUBSTITUTION
-		if(doPei) then
-			write(*,*)	"[berrryMethod]: now calc first order pol via peierls sub."
-			call peierlsMethod(ckW, pPei)
-			write(*,'(a,e17.10,a,e17.10,a,e17.10,a)')	"[berryMethod]: pPei=(",pPei(1),", ",pPei(2),", ",pPei(3),")."
-		else
-			pPei = 0.0_dp
-		end if
+		!if(doPei) then
+		!	write(*,*)	"[berrryMethod]: now calc first order pol via peierls sub."
+		!	call peierlsMethod(ckW, pPei)
+		!	write(*,'(a,e17.10,a,e17.10,a,e17.10,a)')	"[berryMethod]: pPei=(",pPei(1),", ",pPei(2),", ",pPei(3),")."
+		!else
+		!	pPei = 0.0_dp
+		!end if
 
 		!WANNIER
-		!if(doWanni) then
-		!	write(*,*) "[berryMethod]: now calc the Wannier functions by hand"
-		!	!call wannMethod(ckW, pWann)
-		!	write(*,'(a,f8.4,a,f8.4,a,f8.4,a)')	"[berryMethod]: pWann=(",pWann(1),", ",pWann(2),", ",pWann(3),")."
-		!else
-		!	pWann	= 0.0_dp
-		!end if
+		!todo: read w90 output
 		pWann = 0.0_dp
 
 		!OUTPUT

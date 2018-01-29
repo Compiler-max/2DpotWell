@@ -413,7 +413,7 @@ module w90Interface
 		!FILL THE MATRIX
 		M_mat	= dcmplx(0.0_dp)
 		write(*,*)	"[w90prepMmat]: use ",nntot," nearest neighbours per k point"
-		!!$OMP PARALLEL DO SCHEDULE(STATIC) DEFAULT(SHARED) PRIVATE(qi, nn, gShift)
+		!$OMP PARALLEL DO SCHEDULE(STATIC) DEFAULT(SHARED) PRIVATE(qi, nn, gShift)
 		do qi = 1, nQ
 			do nn = 1, nntot
 				!calc overlap of unks
@@ -430,7 +430,7 @@ module w90Interface
 				end if
 			end do
 		end do
-		!!$OMP END PARALLEL DO	
+		!$OMP END PARALLEL DO	
 		!
 		!WRITE TO FILE
 		open(unit=120,file=w90_Dir//seed_name//'.mmn',action='write',access='stream',form='formatted', status='replace')
