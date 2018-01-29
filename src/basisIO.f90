@@ -169,7 +169,6 @@ module basisIO
 		!UNK REAL PART
 		do qi = 1 , size(ck,3)
 			write(filename, format) raw_dir//'ckR.',qi
-			write(*,*)	"try to read: ",filename
 			open(unit=700, file=filename ,form='unformatted',access='stream',action='read')
 			read(700) buffer
 			ck(:,:,qi)	= dcmplx(buffer)
@@ -179,7 +178,6 @@ module basisIO
 		!UNK IMAG PART
 		do qi = 1 , size(ck,3)
 			write(filename, format) raw_dir//'ckI.',qi
-			write(*,*)	"try to read: ",filename
 			open(unit=710, file=filename,form='unformatted',access='stream',action='read')
 			read(710) buffer
 			ck(:,:,qi)	= ck(:,:,qi) + i_dp * dcmplx(buffer)
