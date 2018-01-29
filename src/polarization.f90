@@ -70,7 +70,9 @@ module polarization
 				!
 				!INTEGRATE
 				
-				val(:) = sum(A_mat(:,n,n,:)) / size(A_mat,4)
+				val(1) = sum(A_mat(1,n,n,:)) / size(A_mat,4)
+				val(2) = sum(A_mat(2,n,n,:)) / size(A_mat,4)
+				if(size(A_mat,1)==3)	val(3) = sum(A_mat(3,n,n,:)) / size(A_mat,4)
 				!val	= dcmplx(0.0_dp)
 				!do qi = 1, size(A_mat,4)
 				!	val(:)	= val(:) + A_mat(:,n,n,qi) 

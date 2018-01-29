@@ -215,7 +215,6 @@ module planeWave
 				call calcMmat(qi, qxl, Gxl, nGq, Gvec, ck, Mtmp)
 				do n = 1, size(A,3)
 					do m = 1, size(A,2)
-						write(*,*)	Mtmp(m,n)
 						A(1:2,m,n,qi)	= A(1:2,m,n,qi) - wbx * bxl(1:2) * dimag( 	log(	Mtmp(m,n) )	 )
 					end do
 				end do
