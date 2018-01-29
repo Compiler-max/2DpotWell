@@ -66,7 +66,7 @@ module potWellModel
 			!WRITE COEFF TO FILE
 			call writeABiN_basCoeff(qi, ck_temp)
 			!FINALIZE
-			write(*,'(a,i3,a,i5,a,i5,a,i5,a)')"[#",myID,", solveHam]: done for qi=",qi," qLoc=(",qLoc,"/",qChunk,")"
+			write(*,'(a,i3,a,i5,a,i5,a,i5,a)')"[#",myID,", solveHam]: done for qi=",qi," done tasks=(",qLoc,"/",qChunk,")"
 			qLoc = qLoc + 1		
 		end do
 		!		
