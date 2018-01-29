@@ -24,24 +24,24 @@
     Bext        = 0.0 0.0 1.0  
 
 [numerics]
-    Gcut        = 20.0 # edited by statFlow
+    Gcut        = 15.0 # edited by statFlow
     nSolve      = 96 # edited by statFlow
-    nQx         = 4 # edited by statFlow
-    nQy         = 4 # edited by statFlow
-    nSCx        = 5 # edited by statFlow
-    nSCy        = 5 # edited by statFlow
-    nKx         = 5 # edited by statFlow
-    nKy         = 5 # edited by statFlow
+    nQx         = 8 # edited by statFlow
+    nQy         = 8 # edited by statFlow
+    nSCx        = 9 # edited by statFlow
+    nSCy        = 9 # edited by statFlow
+    nKx         = 9 # edited by statFlow
+    nKy         = 9 # edited by statFlow
     nRx         = 10   
     nRy         = 10
     thres       = 0.1
 
 [methods]
-    doSolveHam  = f
+    doSolveHam  = t
     doMagHam    = f
     useBloch    = f
     doPw90      = f
-    doBerry     = t
+    doBerry     = f
     writeBin    = f
 
 [pw90]

@@ -79,7 +79,7 @@ module polarization
 				!
 				!SUBSTRACT AT CENT
 				rVal(:)	= dreal(val(:))
-				call substractAtPos(n,rVal)
+				!call substractAtPos(n,rVal)
 				!
 				!SUM TOTAL POL
 				pelA(:)	= pElA(:) + rVal(:)
