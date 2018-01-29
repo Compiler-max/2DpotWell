@@ -34,10 +34,11 @@ module w90Interface
 		complex(dp),	intent(in)		:: 	ck(:,:,:)	
 		real(dp),		intent(in)		:: 	En(:,:)
 		!
-		!WRITE AND EXECUTE INITIAL WANNIER90
+		!PREP W90 INIT
 		seed_name	= seedName
 		call writeW90input()
 		!
+		!W90 
 		write(*,*)	"[w90Interf]: wrote w90 input file"
 		call chdir(w90_Dir)
 		call w90setup()
@@ -47,28 +48,25 @@ module w90Interface
 		write(*,*)	"[w90Interf]: to gen   num_wann=  ",num_wann, " wnfs"
 		write(*,*)	"[w90Interf]: start preparing wannierisation"
 		!
-	
-
-
-		!
-		!CALC AND WRITE WANNIER FILES
+		!CALC W90 INPUT 
 		call w90prepMmat(ck)
-
 		call w90prepAmat(ck)
 		call w90prepEigVal(En)
 		
-
+		!PREP W90
 		call writeW90inputPost()
 		write(*,*)	"[w90Interf]: done preparing wannierization input matrices"
 		call writeW90KinterpMesh()
 		write(*,*)	"[w90Interf]: wrote interpolation mesh file"
 	
-		!call wannier_run(seed_name,mp_grid,num_kpts,real_lattice,recip_lattice, &
-		!					kpt_latt,num_bands,num_wann,nntot,num_atoms,atom_symbols, &
-		!					atoms_cart,gamma_only,M_matrix_orig,A_matrix,eigenvalues, &
-		!					U_matrix,U_matrix_opt,lwindow,wann_centres,wann_spreads, &
-		!					spread)
-
+		!WANNIERISE
+		call chdir(w90_Dir)
+		call wannier_run(seed_name,mp_grid,num_kpts,real_lattice,recip_lattice, &
+							kpt_latt,num_bands,num_wann,nntot,num_atoms,atom_symbols, &
+							atoms_cart,gamma_only,M_matrix_orig,A_matrix,eigenvalues, &
+							U_matrix,U_matrix_opt,lwindow,wann_centres,wann_spreads, &
+							spread)
+		call chdir("..")
 	end subroutine
 
 
@@ -372,9 +370,7 @@ module w90Interface
 		!convert eigenvalues from atomic units to eV
 		real(dp),		intent(in)		:: En(:,:)
 		integer							:: qi, n		!
-		!DEBUG
-		if(	size(En_loc,2) /= nQ	)	write(*,'(a,i3,a)')		"[#",myID,";w90prepEigVal]: warning En has wrong numbers of kpts"
-		
+		!
 		!WRITE FILE
 		open(unit=110,file=w90_Dir//seed_name//'.eig',action='write',access='stream',form='formatted', status='replace')
 		do qi = 1, num_kpts
@@ -384,6 +380,9 @@ module w90Interface
 		end do
 		close(110)
 		write(*,'(a,i3,a)')	"[#",myID,";w90prepEigVal]: wrote .eig file"
+		!
+		!DEBUG
+		if(	size(En,2) /= nQ	)	write(*,'(a,i3,a)')		"[#",myID,";w90prepEigVal]: warning En has wrong numbers of kpts"
 		!
 		!
 		return
@@ -473,12 +472,6 @@ module w90Interface
 			end do
 			close(120)
 			write(*,'(a,i3,a)')	"[#",myID,";w90prepMmat]: wrote .mmn file"
-			
-			!POST W90 input
-			call writeABiN_basCoeff(ck_glob)
-			write(*,'(a,i3,a)')	"[#",myID,";w90prepMmat]: wrote  basis coeff"
-			call writeABiN_basis(nGq_glob, Gvec_glob)
-			write(*,'(a,i3,a)')	"[#",myID,";w90prepMmat]: wrote  basis"
 		end if	
 		!
 		!

@@ -313,8 +313,6 @@ module sysPara
 	subroutine bcastArrays()
 		!basis
 		call MPI_Bcast(	Gtest		, dim*nG	,	MPI_DOUBLE_PRECISION	, 	root,	MPI_COMM_WORLD, ierr)
-		!call MPI_Bcast( nGq			, nQ		,		MPI_INTEGER			,	root,	MPI_COMM_WORLD, ierr)
-		!call MPI_Bcast(	Gvec		, dim*nG*nQ ,	MPI_DOUBLE_PRECISION	,	root,	MPI_COMM_WORLD, ierr)
 		!atoms
 		call MPI_Bcast(	relXpos		, nAt 		,	MPI_DOUBLE_PRECISION	,	root,	MPI_COMM_WORLD, ierr)
 		call MPI_Bcast(	relYpos		, nAt		,	MPI_DOUBLE_PRECISION	,	root,	MPI_COMM_WORLD, ierr)

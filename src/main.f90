@@ -5,6 +5,7 @@ program main
 
 	use sysPara
 	use potWellModel, 	only: 		solveHam
+	use basisIO,		only:		readAbIn, readBasis
 	use w90Interface,	only:		w90Interf
 	use postW90,		only:		effTBmodel
 	use berry,			only:		berryMethod
@@ -111,9 +112,12 @@ program main
 		allocate(	En(						nSolve	, 	nQ	)	)
 		allocate(	ck(			GmaxGLOBAL,	nSolve 	,	nQ	)	)
 
-		!Todo: read in ck, En, Gvec, nGq
-		!Todo: try to run wannier 90 in library mode, pass En, ck, U_matrix to berryMethod
+		!READ IN ELECTRONIC STRUCTURE
+		call readAbIn(ck, En)
+		!call readBasis() !reads in Gvec, nGq (optiónal)
 
+
+	
 
 
 		call w90Interf(ck,En)
@@ -142,7 +146,7 @@ program main
 		call cpu_time(T0)
 		write(*,*)"[main]:**************************WAVEFUNCTION METHOD*************************"
 		if ( doBerry ) then
-			call berryMethod()
+			call berryMethod(ck, En)
 			write(*,*)"[main]: done with wavefunction method "
 		else
 			write(*,*)"[main]: berry method disabled"
@@ -198,7 +202,7 @@ program main
 	end if
 
 	call MPI_Barrier( MPI_COMM_WORLD, ierr )
-	write(*,*)	"[",myID,";main]: all done, exit"
+	write(*,'(a,i3,a)')	"[#",myID,";main]: all done, exit"
 
 
 	call MPI_FINALIZE ( ierr )
