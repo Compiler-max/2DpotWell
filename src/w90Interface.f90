@@ -9,7 +9,7 @@ module w90Interface
 	implicit none
 
 	private
-	public ::					w90Interf, seed_name, U_matrix, wann_centres, wann_spreads, spread
+	public ::					run_w90, seed_name, U_matrix, wann_centres, wann_spreads, spread
 
 	!public var
 	character(len=3)					:: 	seed_name
@@ -36,7 +36,7 @@ module w90Interface
 
 
 !public:
-	subroutine w90Interf(ck, En)
+	subroutine run_w90(ck, En)
 		complex(dp),	intent(in)		:: 	ck(:,:,:)	
 		real(dp),		intent(in)		:: 	En(:,:)
 		complex(dp),	allocatable		::	M_matrix_orig(:,:,:,:), A_matrix(:,:,:), U_matrix_opt(:,:,:)

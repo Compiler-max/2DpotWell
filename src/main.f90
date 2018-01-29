@@ -6,7 +6,7 @@ program main
 	use sysPara
 	use potWellModel, 	only: 		solveHam
 	use basisIO,		only:		readAbIn, readBasis
-	use w90Interface,	only:		w90Interf
+	use w90Interface,	only:		run_w90
 	use postW90,		only:		effTBmodel
 	use berry,			only:		berryMethod
 
@@ -122,7 +122,7 @@ program main
 
 		call cpu_time(T0)
 		write(*,*)"[main]:**************************WANNIER90 INTERFACE*************************"
-		call w90Interf(ck,En)
+		call run_w90(ck,En)
 
 		!EFF TB - post w90
 		call cpu_time(T0)
