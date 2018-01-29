@@ -109,6 +109,7 @@ program main
 
 	!POST HAM SOLVER
 	if( .not. doSolveHam .and. myID == root ) then	
+		write(*,*)"[main]:**************************READ E-STRUCTURE*************************"
 		allocate(	En(						nSolve	, 	nQ	)	)
 		allocate(	ck(			GmaxGLOBAL,	nSolve 	,	nQ	)	)
 
@@ -119,7 +120,8 @@ program main
 
 	
 
-
+		call cpu_time(T0)
+		write(*,*)"[main]:**************************WANNIER90 INTERFACE*************************"
 		call w90Interf(ck,En)
 
 		!EFF TB - post w90
@@ -144,7 +146,7 @@ program main
 	
 		!K SPACE METHOD
 		call cpu_time(T0)
-		write(*,*)"[main]:**************************WAVEFUNCTION METHOD*************************"
+		write(*,*)"[main]:**************************BERRY METHOD*************************"
 		if ( doBerry ) then
 			call berryMethod(ck, En)
 			write(*,*)"[main]: done with wavefunction method "

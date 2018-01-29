@@ -183,6 +183,7 @@ module basisIO
 			ck(:,:,qi)	= ck(:,:,qi) + i_dp * dcmplx(buffer)
 			close(710)
 		end do
+		write(*,*)	"[readAbIn]: read the basis coefficients"
 		!
 		!BAND ENERGIES
 		open(unit=720, file=raw_dir//"bandStruct.dat",form='unformatted',access='stream',action='read')
@@ -191,6 +192,7 @@ module basisIO
 				En(1:nSolve,qi)	= eBuff(1:nSolve)
 		end do
 		close(720)
+		write(*,*)	"[readAbIn]: read eigenvalues"
 		!
 		!
 		return
