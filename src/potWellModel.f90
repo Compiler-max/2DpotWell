@@ -6,6 +6,7 @@ module potWellModel
 	use mathematics,	only:	dp, PI_dp,i_dp, machineP, myExp, myLeviCivita, &
 								eigSolverPART, isUnit, isHermitian
 	use sysPara				
+	use basisIO,		only:	writeABiN_energy, writeABiN_basis, writeABiN_basCoeff
 	implicit none	
 	
 	private
@@ -20,55 +21,62 @@ module potWellModel
 
 	contains
 !public:
-	subroutine solveHam(ck, En)   !call solveHam(wnF, unk, EnW, VeloBwf)
+	subroutine solveHam()   !call solveHam(wnF, unk, EnW, VeloBwf)
 		!solves Hamiltonian at each k point
 		!also generates the Wannier functions on the fly (sum over all k)
-		complex(dp),	intent(out)		::	ck(:,:,:)
-		real(dp),		intent(out)		::	En(:,:)	
 		!																
-		complex(dp),	allocatable		::	Hmat(:,:) , ctemp(:,:)
-		real(dp),		allocatable		::	EnT(:)
+		complex(dp),	allocatable		::	Hmat(:,:) , ck_temp(:,:)
+		real(dp),		allocatable		::	En_loc(:,:), En_temp(:), En_glob(:,:)
 		integer							:: 	qi, qLoc, found, Gsize
-		!									qi: qpts grid index. qLoc: lcoal storage adress for alll quanties at qpts=qi
 		!
 		!
 		if( myID==root .and. debugHam )		write(*,*)	"[solveHam]: debugging ON. Will do additional tests of the results"
-			
-
-		allocate(	Hmat(	Gmax,	Gmax	)			)
-		allocate(	ctemp(	Gmax, nSolve	)			)
-		allocate(	EnT(	Gmax			)			)	
-
+		!
+		allocate(	Hmat(				Gmax,	Gmax				)	)
+		allocate(	ck_temp(		GmaxGLOBAL, nSolve				)	)
+		allocate(	En_temp(				Gmax					)	)	
+		allocate(	En_loc(						nSolve	, 	qChunk	)	)
+		!
+		if( myID == root ) 		allocate(	En_glob(		nSolve, 			nQ		)	)
+		if( myID /= root )		allocate(	En_glob(		0,					0		)	)
+		!
 		qLoc = 1
 		do qi = myID*qChunk +1, myID*qChunk + qChunk
 			!
 			!!SETUP HAM
 			call populateH(qLoc, Hmat) 
-			!!
-			!SOLVE HAM
-			ctemp	= dcmplx(0.0_dp)
-			EnT		= 0.0_dp
-			Gsize 	= nGq(qLoc)
-			if( Gsize > Gmax	)	write(*,'(a,i3,a)'			)	"[#",myID,";solveHam]: critical error in solveHam, ",&
-																		"please contact developer. (nobody but dev will ever read this^^)"
-			call eigSolverPART(Hmat(1:Gsize,1:Gsize),EnT(1:Gsize), ctemp(1:Gsize,:), found)
 			!
+			!SOLVE HAM
+			ck_temp	= dcmplx(0.0_dp)
+			En_temp	= 0.0_dp
+			Gsize 	= nGq(qLoc)
+			call eigSolverPART(Hmat(1:Gsize,1:Gsize),En_temp(1:Gsize), ck_temp(1:Gsize,:), found)
 			!
 			!COPY TO TARGET ARRAYS
-			ck(:,:,qLoc) = dcmplx(0.0_dp)
-			ck(1:Gsize,1:nSolve,qLoc)	= ctemp(1:Gsize,1:nSolve)
-			En(1:nSolve,qLoc)			= EnT(1:nSolve)
-
+			En_loc(1:nSolve,qLoc)			= En_temp(1:nSolve)
+			!
 			!DEBUG TESTS
 			if( found /= nSolve )	write(*,'(a,i3,a,i5,a,i5)'	)	"[#",myID,";solveHam]: only found ",found," bands of required ",nSolve
 			if( nBands > found	)	write(*,'(a,i3,a)'			)	"[#",myID,";solveHam]: warning did not found required amount of bands"
 			if( Gsize < nSolve	) 	write(*,'(a,i3,a,i5,a,i5,a)')	"[#",myID,";solveHam]: cutoff to small to get ",nSolve,&
 																	" bands! only get",Gsize," basis functions"
+			if( Gsize > Gmax	)	write(*,'(a,i3,a)'			)	"[#",myID,";solveHam]: critical error in solveHam, ",&
+																	"please contact developer. (nobody but dev will ever read this^^)"
 			!
+			!WRITE COEFF TO FILE
+			call writeABiN_basCoeff(qi, ck_temp)
 			!FINALIZE
-			qLoc = qLoc + 1
-			write(*,'(a,i3,a,i5,a,i5)')"[#",myID,", solveHam]: done for qi=",qi," qLoc=",qLoc
+			write(*,'(a,i3,a,i5,a,i5,a,i5,a)')"[#",myID,", solveHam]: done for qi=",qi," qLoc=(",qLoc,"/",qChunk,")"
+			qLoc = qLoc + 1		
 		end do
+		!		
+		!GATHER ON ROOT
+		call MPI_GATHER(	En_loc,	nSolve*qChunk,	MPI_DOUBLE_PRECISION,	En_glob,	nSolve*qChunk,	MPI_DOUBLE_PRECISION,	root,	MPI_COMM_WORLD,	ierr)
+		!WRITE TO FILE
+		if( myID == root ) then
+			write(*,*) "root received data, will write to file now"
+			call writeABiN_energy(En_glob)
+		end if
 		!
 		!
 		return
