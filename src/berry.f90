@@ -67,7 +67,6 @@ module berry
 		!1st ORDER SEMICLASSICS
 		if(doNiu) then
 			write(*,*)	"[berrryMethod]: now calc first order pol"
-			veloQ	= dcmplx(0.0_dp)
 			FcurvQ	= dcmplx(0.0_dp)	!does not matter since <FcurvQ,AconnQ> is always zero in 2D
 			call calcVelo(ck , Uq , AconnQ, EnQ ,  veloQ)
 			!
