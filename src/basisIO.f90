@@ -11,7 +11,7 @@ module basisIO
 					readAbIn, readBasis
 
 
-
+	character(len=1024)				::	format='(a,i7.7)'
 
 
 	contains
@@ -21,18 +21,8 @@ module basisIO
 
 
 !WRITE
-	subroutine writeABiN_energy(En_loc)
-		real(dp),		intent(in)		:: 	En_loc(:,:)
-		real(dp),		allocatable		:: 	En_glob(:,:)
-		integer							::	mesgSize
-		!
-		!ALLOCATE TARGET
-		if(myID == root )	allocate(	En_glob( size(En_loc,1), nQ	)		)
-		if(myID /= root )	allocate(	En_glob(		0,		0	)		)
-		!
-		!GATHER
-		mesgSize = size(En_loc,1)*size(En_loc,2)
-		call MPI_GATHER( En_loc, mesgSize, MPI_DOUBLE_PRECISION, En_glob, mesgSize, MPI_DOUBLE_PRECISION, root, MPI_COMM_WORLD, ierr)
+	subroutine writeABiN_energy(En_glob)
+		real(dp),		intent(in)		:: 	En_glob(:,:)
 		!
 		!WRITE TO FILE
 		if(myID == root ) then
@@ -43,7 +33,28 @@ module basisIO
 		end if
 		!
 		!DEBUG
-		if( size(En_loc,2) /= qChunk )	write(*,'(a,i3,a)')		"[#",myID,";writeABiN_energy]: bands have wrong qpt size"
+		if( size(En_glob,2) /= nQ )	write(*,'(a,i3,a)')		"[#",myID,";writeABiN_energy]: bands have wrong qpt size"
+		!
+		return
+	end subroutine
+
+
+	subroutine writeABiN_basCoeff(qi, ck)
+		integer,		intent(in)		::	qi
+		complex(dp),	intent(in)		::	ck(:,:)
+		character(len=20)				::	filename
+		!
+		!REAL
+		write(filename, format) raw_dir//'ckR.',qi
+		open(unit=210, file=filename		, form='unformatted', access='stream', action='write',status='replace') 
+		write(210)	dreal(ck)
+		close(210)
+		!
+		!IMAG
+		write(filename, format) raw_dir//'ckI.',qi
+		open(unit=215, file=filename		, form='unformatted', access='stream', action='write',status='replace') 
+		write(215)	dimag(ck)
+		close(215)
 		!
 		return
 	end subroutine
@@ -51,50 +62,50 @@ module basisIO
 
 
 
-	subroutine writeABiN_basCoeff(ck_loc)
-		complex(dp),	intent(in)		::	ck_loc(:,:,:)
-		real(dp),		allocatable		::	buffer(:,:)
-		complex(dp),	allocatable		:: 	ck_glob(:,:,:)
-		integer							:: 	qi, mesgSize
-		!
-		!ALLOCATE TARGET
-		if( myID == root ) then
-			allocate(	ck_glob( size(ck_loc,1), size(ck_loc,2), nQ		)		)
-			allocate(	buffer(	size(ck_glob,1), size(ck_glob,2)		)		)
-		else
-			allocate(	ck_glob(0,0,0)	)
-		end if
-		!
-		!GATHER
-		mesgSize = size(ck_loc,1) * size(ck_loc,2) * size(ck_loc,3)
-		call MPI_GATHER(	ck_loc, mesgSize, MPI_DOUBLE_COMPLEX, ck_glob, mesgSize, MPI_DOUBLE_COMPLEX, MPI_COMM_WORLD, ierr )
-		!
-		!WRITE TO FILE
-		if(myID == root ) then
-			!REAL PART
-			open(unit=210, file=raw_dir//'ckR.dat'		, form='unformatted', access='stream', action='write',status='replace') 
-			do qi = 1, size(ck_glob,3)
-				buffer	= dreal(ck_glob(:,:,qi)) 
-				write(210)	buffer
-			end do
-			close(210)
-			!IMAG PART
-			open(unit=211, file=raw_dir//'ckI.dat'		, form='unformatted', access='stream', action='write', status='replace')
-			do qi = 1, size(ck_glob,3)
-				buffer	= dimag(ck_glob(:,:,qi)) 
-				write(211)	buffer
-			end do
-			close(211)
-			write(*,*)	"[writeABiN_basCoeff]: wrote basis coefficients to ckR (real part) and ckI (imag part)"
-			!
-		end if
-		!
-		!DEBUG
-		if( size(ck_loc,3) /= qChunk )	write(*,'(a,i3,a)')	"[#",myID,";writeABiN_basCoeff]: wrong qpt size of ck detected"
-		!
-		!
-		return
-	end subroutine
+	!subroutine writeABiN_basCoeff(ck_loc)
+	!	complex(dp),	intent(in)		::	ck_loc(:,:,:)
+	!	real(dp),		allocatable		::	buffer(:,:)
+	!	complex(dp),	allocatable		:: 	ck_glob(:,:,:)
+	!	integer							:: 	qi, mesgSize
+	!	!
+	!	!ALLOCATE TARGET
+	!	if( myID == root ) then
+	!		allocate(	ck_glob( size(ck_loc,1), size(ck_loc,2), nQ		)		)
+	!		allocate(	buffer(	size(ck_glob,1), size(ck_glob,2)		)		)
+	!	else
+	!		allocate(	ck_glob(0,0,0)	)
+	!	end if
+	!	!
+	!	!GATHER
+	!	mesgSize = size(ck_loc,1) * size(ck_loc,2) * size(ck_loc,3)
+	!	call MPI_GATHER(	ck_loc, mesgSize, MPI_DOUBLE_COMPLEX, ck_glob, mesgSize, MPI_DOUBLE_COMPLEX, MPI_COMM_WORLD, ierr )
+	!	!
+	!	!WRITE TO FILE
+	!	if(myID == root ) then
+	!		!REAL PART
+	!		open(unit=210, file=raw_dir//'ckR.dat'		, form='unformatted', access='stream', action='write',status='replace') 
+	!		do qi = 1, nQ
+	!			buffer	= dreal(ck_glob(:,:,qi)) 
+	!			write(210)	buffer
+	!		end do
+	!		close(210)
+	!		!IMAG PART
+	!		open(unit=211, file=raw_dir//'ckI.dat'		, form='unformatted', access='stream', action='write', status='replace')
+	!		do qi = 1, nQ
+	!			buffer	= dimag(ck_glob(:,:,qi)) 
+	!			write(211)	buffer
+	!		end do
+	!		close(211)
+	!		write(*,*)	"[writeABiN_basCoeff]: wrote basis coefficients to ckR (real part) and ckI (imag part)"
+	!		!
+	!	end if
+	!	!
+	!	!DEBUG
+	!	if( size(ck_loc,3) /= qChunk )	write(*,'(a,i3,a)')	"[#",myID,";writeABiN_basCoeff]: wrong qpt size of ck detected"
+	!	!
+	!	!
+	!	return
+	!end subroutine
 
 
 
@@ -119,8 +130,8 @@ module basisIO
 		end if
 		!
 		!GATHER
-		call MPI_GATHER( nGq_loc	, qChunk, MPI_INTEGER, nGq_glob		, qChunk, MPI_INTEGER, MPI_COMM_WORLD, ierr)	
-		call MPI_GATHER( Gvec_loc	, qChunk, MPI_INTEGER, Gvec_glob	, qChunk, MPI_INTEGER, MPI_COMM_WORLD, ierr)	
+		!call MPI_GATHER( nGq_loc	, qChunk, MPI_INTEGER, nGq_glob		, qChunk, MPI_INTEGER, MPI_COMM_WORLD, ierr)	
+		call MPI_GATHER( Gvec_loc	, qChunk, MPI_DOUBLE_PRECISION, Gvec_glob	, qChunk, MPI_DOUBLE_PRECISION, MPI_COMM_WORLD, ierr)	
 		!
 		!WRITE TO FILE
 		if( myID == root ) then
@@ -150,28 +161,30 @@ module basisIO
 		real(dp),		intent(out)		:: En(:,:)
 		real(dp),		allocatable		:: buffer(:,:), eBuff(:)
 		integer							:: qi
+		character(len=20)				:: filename
 		!
 		allocate(	buffer( size(ck,1), size(ck,2) 	)		)
 		allocate(	eBuff(size(En,1)				)		)
 		!
-		!
-		!call readGvec()
-		!
 		!UNK REAL PART
-		open(unit=700, file=raw_dir//"ckR.dat",form='unformatted',access='stream',action='read')
 		do qi = 1 , size(ck,3)
+			write(filename, format) raw_dir//'ckR.',qi
+			write(*,*)	"try to read: ",filename
+			open(unit=700, file=filename ,form='unformatted',access='stream',action='read')
 			read(700) buffer
 			ck(:,:,qi)	= dcmplx(buffer)
+			close(700)
 		end do
-		close(700)
 		!
 		!UNK IMAG PART
-		open(unit=710, file=raw_dir//"ckI.dat",form='unformatted',access='stream',action='read')
 		do qi = 1 , size(ck,3)
+			write(filename, format) raw_dir//'ckI.',qi
+			write(*,*)	"try to read: ",filename
+			open(unit=710, file=filename,form='unformatted',access='stream',action='read')
 			read(710) buffer
 			ck(:,:,qi)	= ck(:,:,qi) + i_dp * dcmplx(buffer)
+			close(710)
 		end do
-		close(710)
 		!
 		!BAND ENERGIES
 		open(unit=720, file=raw_dir//"bandStruct.dat",form='unformatted',access='stream',action='read')
@@ -181,8 +194,6 @@ module basisIO
 		end do
 		close(720)
 		!
-		!
-	
 		!
 		return
 	end subroutine
