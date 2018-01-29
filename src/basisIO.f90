@@ -130,7 +130,7 @@ module basisIO
 		end if
 		!
 		!GATHER
-		!call MPI_GATHER( nGq_loc	, qChunk, MPI_INTEGER, nGq_glob		, qChunk, MPI_INTEGER, MPI_COMM_WORLD, ierr)	
+		call MPI_GATHER( nGq_loc	, qChunk, MPI_INTEGER, nGq_glob		, qChunk, MPI_INTEGER, MPI_COMM_WORLD, ierr)	
 		call MPI_GATHER( Gvec_loc	, qChunk, MPI_DOUBLE_PRECISION, Gvec_glob	, qChunk, MPI_DOUBLE_PRECISION, MPI_COMM_WORLD, ierr)	
 		!
 		!WRITE TO FILE
@@ -200,7 +200,6 @@ module basisIO
 
 
 	subroutine readBasis()
-		real(dp),		allocatable		:: buffer(:,:)
 		!
 		open(unit=730, file=raw_dir//"nGq.dat" ,form='unformatted',access='stream',action='read')
 		read(730)	nGq

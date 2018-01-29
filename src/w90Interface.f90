@@ -43,7 +43,7 @@ module w90Interface
 		real(dp),		allocatable		::	eigenvalues(:,:)
 		logical,		allocatable		::	lwindow(:,:)
 		logical							::	w90success
-		integer							::	n, ierr
+		integer							::	ierr
 		!
 		!PREP W90 INIT
 		seed_name	= seedName
@@ -102,7 +102,6 @@ module w90Interface
 		end if
 		!
 		!
-		end do
 	end subroutine
 
 
