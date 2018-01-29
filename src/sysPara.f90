@@ -310,35 +310,6 @@ module sysPara
 
 
 
-	subroutine bcastArrays()
-		!basis
-		call MPI_Bcast(	Gtest		, dim*nG	,	MPI_DOUBLE_PRECISION	, 	root,	MPI_COMM_WORLD, ierr)
-		!atoms
-		call MPI_Bcast(	relXpos		, nAt 		,	MPI_DOUBLE_PRECISION	,	root,	MPI_COMM_WORLD, ierr)
-		call MPI_Bcast(	relYpos		, nAt		,	MPI_DOUBLE_PRECISION	,	root,	MPI_COMM_WORLD, ierr)
-		call MPI_Bcast(	atRx		, nAt		,	MPI_DOUBLE_PRECISION	,	root,	MPI_COMM_WORLD, ierr)
-		call MPI_Bcast(	atRy		, nAt		,	MPI_DOUBLE_PRECISION	,	root,	MPI_COMM_WORLD, ierr)
-		call MPI_Bcast(	atPot		, nAt		,	MPI_DOUBLE_PRECISION	,	root,	MPI_COMM_WORLD, ierr)
-		call MPI_Bcast(	dVpot		, nAt		,	MPI_DOUBLE_PRECISION	,	root,	MPI_COMM_WORLD, ierr)
-		call MPI_Bcast(	atPos		, dim*nAt 	,	MPI_DOUBLE_PRECISION	,	root,	MPI_COMM_WORLD, ierr)
-		call MPI_Bcast(	atR			, dim*nAt	,	MPI_DOUBLE_PRECISION	,	root,	MPI_COMM_WORLD, ierr)
-		call MPI_Bcast(	Zion		, nAt		,	MPI_DOUBLE_PRECISION	,	root,	MPI_COMM_WORLD, ierr)
-		!meshes
-		call MPI_Bcast( qpts		, dim*nQ	,	MPI_DOUBLE_PRECISION	,	root,	MPI_COMM_WORLD, ierr)		
-		call MPI_Bcast( rpts		, dim*nR	,	MPI_DOUBLE_PRECISION	,	root,	MPI_COMM_WORLD, ierr)
-		call MPI_Bcast( Rcell		, dim*nSc	,	MPI_DOUBLE_PRECISION	,	root,	MPI_COMM_WORLD, ierr)
-		call MPI_Bcast(	kpts		, dim*nK	,	MPI_DOUBLE_PRECISION	,	root,	MPI_COMM_WORLD, ierr)		
-		!
-		if(myID == root ) write(*,*) "finished broadcasting input parameters"
-		!
-		return
-	end subroutine
-
-
-
-
-
-
 
 
 	logical function insideAt(at, r)
@@ -589,7 +560,9 @@ module sysPara
 		b2(1)	= 0.0_dp
 		b2(2)	= 2.0_dp * PI_dp * aX / vol
 
-		if( myID == root ) then
+		call MPI_Bcast(recpLatt, dim**2, MPI_DOUBLE_PRECISION, root, MPI_COMM_WORLD, ierr )
+
+		!if( myID == root ) then
 			call testG( a1, a2, b1, b2)
 			do ix = 1, nGdim
 				do iy = 1, nGdim
@@ -597,8 +570,9 @@ module sysPara
 					Gtest(:,i)	= (ix-1-nGdim/2) * recpLatt(:,1) + (iy-1-nGdim/2) * recpLatt(:,2)
 				end do
 			end do
-		end if
-		call MPI_Bcast(Gtest, size(Gtest,1)*size(Gtest,2), MPI_DOUBLE_PRECISION, root, MPI_COMM_WORLD, ierr)
+		!end if
+		!call MPI_Bcast(Gtest, size(Gtest,1)*size(Gtest,2), MPI_DOUBLE_PRECISION, root, MPI_COMM_WORLD, ierr)
+		call MPI_BARRIER( MPI_COMM_WORLD, ierr)
 		!
 		return
 	end subroutine
