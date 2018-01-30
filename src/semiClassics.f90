@@ -51,9 +51,9 @@ module semiClassics
 
 		pF2 = 0.0_dp
 		pF3 = 0.0_dp
-		!$OMP PARALLEL REDUCTION(+:pF2,pF3)  DEFAULT(SHARED)  &
-		!$OMP PRIVATE(n, ki, i, j, densCorr, F2, F2k, F3, F3k)
-		!$OMP DO SCHEDULE(STATIC)
+		!!!$OMP PARALLEL REDUCTION(+:pF2,pF3)  DEFAULT(SHARED)  &
+		!!!$OMP PRIVATE(n, ki, i, j, densCorr, F2, F2k, F3, F3k)
+		!!!$OMP DO SCHEDULE(STATIC)
 		do n = 1, nWfs
 			!
 			write(*,*)	"hello from omp thread", OMP_GET_THREAD_NUM()," of",OMP_GET_NUM_THREADS()
@@ -90,8 +90,8 @@ module semiClassics
 			write(*,'(a,i5,a,e12.5,a,e12.5,a,e12.5,a)')	"[calcFirstOrdP]: pNiuF2(n=", n, ") =(" ,pF2(1), ", ", pF2(2), ", ", pF2(3),")."
 			write(*,'(a,i5,a,e12.5,a,e12.5,a,e12.5,a)')	"[calcFirstOrdP]: pNiuF3(n=", n, ") =(" ,pF3(1), ", ", pF3(2), ", ", pF3(3),")."
 		end do
-		!$OMP END DO
-		!$OMP END PARALLEL
+		!!!$OMP END DO
+		!!!$OMP END PARALLEL
 		!
 		write(*,'(a,e12.5,a,e12.5,a,e12.5,a)')	"[calcFirstOrdP]: pNiuF2 =(" ,pF2(1), ", ", pF2(2), ", ", pF2(3),")."
 		write(*,'(a,e12.5,a,e12.5,a,e12.5,a)')	"[calcFirstOrdP]: pNiuF3 =(" ,pF3(1), ", ", pF3(2), ", ", pF3(3),")."

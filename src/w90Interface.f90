@@ -9,7 +9,8 @@ module w90Interface
 	implicit none
 
 	private
-	public ::					run_w90, seed_name, U_matrix, wann_centres, wann_spreads, spread
+	public ::					run_w90, read_U_matrix, readBandVelo, & 
+								seed_name, wann_centres, wann_spreads, spread
 
 	!public var
 	character(len=3)					:: 	seed_name
@@ -106,6 +107,58 @@ module w90Interface
 
 
 
+	subroutine read_U_matrix(R_real, U_matrix, krel)
+		real(dp),		intent(out)		:: 	R_real(:,:), krel(:,:)
+		complex(dp),	intent(out)		::	U_matrix(:,:,:)
+		integer							::	R
+		!
+		!INIT SUPERCELL
+		R_real(3,:)	= 0.0_dp
+		do R = 1, nSC
+			R_real(1:2,R)	= Rcell(1:2,R)
+		end do 
+		!
+		!READ U FROM W90
+		call Umat_reader(U_matrix, krel)
+		!
+		!
+		return
+	end subroutine
+
+
+	subroutine readBandVelo( v_vec )
+		real(dp),		intent(out)		::	v_vec(:,:,:)
+		real(dp)						::	buffer(7)
+		integer							::	stat, qi, n, qInd
+		!
+		write(*,*)  seed_name//'_geninterp.dat'
+		open(unit=320,iostat=stat, file=w90_dir//seedName//'_geninterp.dat',form='formatted', status='old',action='read')
+		if( stat/= 0 ) then 
+			v_vec = 0.0_dp
+			write(*,*)	"[readBandVelo]: could not find _geninterp.dat file.. velocities set to zero"
+		else 
+			read(320,*)
+			read(320,*)
+			read(320,*)
+			do qi = 1, nQ
+				do n = 1, nWfs
+					read(320,*)	qInd, buffer
+					v_vec(1,n,qInd)	= buffer(5)
+					v_vec(2,n,qInd)	= buffer(6)
+					v_vec(3,n,qInd)	= buffer(7) 
+				end do
+			end do
+			close(320)
+		end if
+		!
+		!ATOMIC UNITS CONVERSION:
+		v_vec 	= v_vec  / (aUtoEv  * aUtoAngstrm)	 ! [v_vec] = eV / Angstroem
+		!
+		!	
+		return
+	end subroutine
+
+
 
 
 
@@ -120,6 +173,7 @@ module w90Interface
 
 
 !prviate
+!PREPARE & RUN W90
 	subroutine write_W90setup_input()
 		integer				:: stat
 		integer				:: qx, qy, qi, qxl, qxr, qyl, qyr, Gxl(3), Gxr(3), Gyl(3), Gyr(3)
@@ -340,6 +394,7 @@ module w90Interface
 		write(100,*)	'write_u_matrices = .true.'
 		write(100,*)	'write_tb = .true.'
 		write(100,*)	'write_hr = .true.'
+		write(100,*)	'write_XYZ = .true.'
 		write(100,*)	
 		!
 		!PLOTTING JOBS
@@ -532,6 +587,45 @@ module w90Interface
 		return
 	end function
 
+
+
+
+
+!READ RESULTS
+	subroutine Umat_reader(U_matrix, krel)
+		complex(dp),	intent(out)	:: U_matrix(:,:,:)
+		real(dp),		intent(out)	:: krel(:,:)
+		integer						:: stat, qi, n, m, dumI(3)
+		real(dp)					:: val(2)
+		!
+		!READ U MATRIX
+		open(unit=300,iostat=stat, file=w90_dir//seed_name//'_u.mat', status='old',action='read')
+		if( stat /= 0)	write(*,*)	"[readUmatrix]: warning did not file _u.mat file"
+		read(300,*)
+		read(300,*) dumI(1:3)
+		if( dumI(1) /= nQ ) write(*,*)	"[readUmatrix]: warning num_kpts=",dumI(1)," nQ=",nQ
+		if(	dumI(2)	/= nWfs) write(*,*)	"[readUmatrix]: warning num_wann=",dumI(2)," nWfs=",nWfs
+		!
+		do qi = 1,  num_kpts
+			read(300,*)
+			read(300,*) krel(1:3,qi)
+			do n = 1, num_wann
+				do m = 1, num_wann
+					read(300,*)	val(1:2)
+					U_matrix(m,n,qi)	= dcmplx(val(1))	+	i_dp	*	dcmplx(val(2))
+				end do
+			end do
+			!DEBUG
+			if( abs( krel(1,qi)*2.0_dp*PI_dp/aX - qpts(1,qi)) > machineP) then
+				write(*,*)	"[readUmatrix]: warning k meshes are ordered diffferently"
+				write(*,*)	"				x: k_w90= ",krel(1,qi)*2.0_dp*PI_dp/aX, " qpts=",qpts(1,qi)
+				write(*,*)	"				y: k_w90= ",krel(2,qi)*2.0_dp*PI_dp/aY, " qpts=",qpts(2,qi)
+			end if
+		end do
+		close(300)
+
+		return
+	end subroutine
 
 
 

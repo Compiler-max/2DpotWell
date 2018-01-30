@@ -1,59 +1,59 @@
 #Input for 2D pot well code
 
 [unitCell]
-    aX          = 10  
+    aX          = 20  
     aY          = 10
 
 [atoms]
     doVdesc     = f
-    nAt         = 2      
-    relXpos     = 0.25 0.75    
-    relYpos     = 0.00 0.00
-    atRx        = 1.01 1.01
-    atRy        = 1.01 1.01
-    atPot       = -3.00 -3.20
-    dVpot       = 0.00 0.00
-    Zion        = 1.00 1.00
+    nAt         = 4      
+    relXpos     = 0.125 0.375 0.625 0.875     
+    relYpos     = 0.500 0.500 0.500 0.500
+    atRx        = 1.010 1.010 1.010 1.010
+    atRy        = 1.010 1.010 1.010 1.010
+    atPot       = -3.20 -3.00 -3.20 -3.00 
+    dVpot       = 0.000 0.000 0.000 0.000 
+    Zion        = 1.000 1.000 1.000 1.000
 
 [wann]
-    nBands      = 2
-    nWfs        = 2
+    nBands      = 12
+    nWfs        = 12
 
 [perturbation]
     B0          = 0.0               #hbar/(e*a0**2) = 2.35 * 10**5  T
     Bext        = 0.0 0.0 1.0  
 
 [numerics]
-    Gcut        = 15.0 # edited by statFlow
+    Gcut        = 12.0 # edited by statFlow
     nSolve      = 96 # edited by statFlow
-    nQx         = 8 # edited by statFlow
-    nQy         = 8 # edited by statFlow
-    nSCx        = 9 # edited by statFlow
-    nSCy        = 9 # edited by statFlow
-    nKx         = 9 # edited by statFlow
-    nKy         = 9 # edited by statFlow
+    nQx         = 4 # edited by statFlow
+    nQy         = 4 # edited by statFlow
+    nSCx        = 5 # edited by statFlow
+    nSCy        = 5 # edited by statFlow
+    nKx         = 5 # edited by statFlow
+    nKy         = 5 # edited by statFlow
     nRx         = 10   
     nRy         = 10
     thres       = 0.1
 
 [methods]
-    doSolveHam  = f
+    doSolveHam  = t
     doMagHam    = f
     useBloch    = f
     doPw90      = f
-    doBerry     = t
+    doBerry     = f
     writeBin    = f
 
 [pw90]
     seedName    = 'wf1'
-    shell       =  2 # edited by statFlow
+    shell       =  3 # edited by statFlow
     nw90it      = 1000
     pw90GaugeB  = f
 
 [berry]
     useRot      = t
     doVeloNUM   = f
-    doNiu       = t
+    doNiu       = f
     doPei       = f
     doWanni     = f
     doGaugBack  = f

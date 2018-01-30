@@ -13,7 +13,7 @@ module output
 	public ::	writeMeshInfo, writeMeshBin, & 
 				writeConnCurv, writeWannFiles, writePolFile, &
 				printMat, printTiming,  printBasisInfo, & 
-				writeVeloHtxt, writeVeloEffTB, writePeierls  
+				writeVeloHtxt, writeConnTxt, writeVeloEffTB, writePeierls  
 				
 
 
@@ -395,6 +395,30 @@ module output
 		close(710)
 		!
 		
+		!
+		return
+	end subroutine
+
+
+	subroutine writeConnTxt( A_mat )
+		complex(dp),	intent(in)		::	A_mat(:,:,:,:)
+		integer							::	qi, n, m
+		!
+		open(unit=350,file=info_dir//'AconnBerry.txt',action='write', status='replace')
+		write(350,*)	"connection calculated via berryMethod"
+		write(350,*)	"n m real(A_x) imag(A_x) real(A_y) imag(A_y) real(A_z) imag(A_z)"
+		do qi = 1, size(A_mat,4)
+			write(350,*)	"qi=",	qi
+			do m = 1, size(A_mat,3)
+				do n = 1, size( A_mat,2)
+					write(350,'(i3,a,i3,a,f8.4,a,f8.4,a,f8.4,a,f8.4,a,f8.4,a,f8.4)')	n," ",m,&	
+													"   ",dreal(A_mat(1,n,m,qi))," ",dimag(A_mat(1,n,m,qi)),&
+													"   ",dreal(A_mat(2,n,m,qi))," ",dimag(A_mat(2,n,m,qi)),&
+													"   ",dreal(A_mat(3,n,m,qi))," ",dimag(A_mat(3,n,m,qi))
+				end do
+			end do
+		end do
+		close(350)
 		!
 		return
 	end subroutine
