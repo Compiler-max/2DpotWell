@@ -412,7 +412,7 @@ module w90Interface
 		!
 		!FILL THE MATRIX
 		M_mat	= dcmplx(0.0_dp)
-		write(*,*)	"[w90prepMmat]: use ",nntot," nearest neighbours per k point"
+		write(*,'(a,i3,a)')	"[w90prepMmat]: use ",nntot," nearest neighbours per k point"
 		!$OMP PARALLEL DO SCHEDULE(STATIC) DEFAULT(SHARED) PRIVATE(qi, nn, gShift)
 		do qi = 1, nQ
 			do nn = 1, nntot
