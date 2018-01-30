@@ -91,16 +91,16 @@ module w90Interface
 
 		!note: the library modus gives different results compared to executing w90 manually, why is currently unclear
 
-		inquire(file="../thirdparty/wannier90/wannier90.x ", exist=w90success)
-		if( w90success ) then
-			call chdir(w90_Dir)
-			call execute_command_line ("../../thirdparty/wannier90/wannier90.x "//seed_name, exitstat=ierr)
- 	 		print *, "Exit status of wannier90 was ", ierr
-			call chdir("..")
-			write(*,*)	"[w90Interf]: wannierization finished"
-		else
-			write(*,*)	"[w90Interf]: please provide wannier90.x in /thirdpary/wannier90/ or execute wannier90 manually"
-		end if
+		!inquire(file="../thirdparty/wannier90/wannier90.x ", exist=w90success)
+		!if( w90success ) then
+		!	call chdir(w90_Dir)
+		!	call execute_command_line ("../../thirdparty/wannier90/wannier90.x "//seed_name, exitstat=ierr)
+ 	 	!	print *, "Exit status of wannier90 was ", ierr
+		!	call chdir("..")
+		!	write(*,*)	"[w90Interf]: wannierization finished"
+		!else
+		!	write(*,*)	"[w90Interf]: please provide wannier90.x in /thirdpary/wannier90/ or execute wannier90 manually"
+		!end if
 		!
 		!
 	end subroutine
