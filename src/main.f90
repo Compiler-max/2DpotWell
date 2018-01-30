@@ -61,21 +61,21 @@ program main
 	!
 	!PRINT SOME INFO
 	if( myID == root) then
-		write(*,*)"*"
-		write(*,*)"*"
-		write(*,*)"[main]:**************************Infos about this run*************************"
-		write(*,*)"[main]: electronic structure mesh nQ=",nQ
-		write(*,*)"[main]: interpolation mesh        nK=",nK
-		write(*,*)"[main]: basis cutoff parameter  Gcut=",Gcut
-		write(*,*)"[main]: basis function   maximum  nG=",GmaxGLOBAL," of ",nG," trial basis functions"
-		write(*,*)"[main]: only solve for        nSolve=",nSolve
-    	write(*,*)"[main]: nBands=", nBands
-		write(*,*)"[main]: nWfs  =", nWfs
-		write(*,*)"[main]: w90 seed_name= ", seedName	
-		write(*,*)"*"
-		write(*,*)"*"
-		write(*,*)"*"
-		write(*,*)"*"
+		write(*,*)					"*"
+		write(*,*)					"*"
+		write(*,*)					"[main]:**************************Infos about this run*************************"
+		write(*,*)					"[main]: electronic structure mesh nQ=",nQ
+		write(*,*)					"[main]: interpolation mesh        nK=",nK
+		write(*,*)					"[main]: basis cutoff parameter  Gcut=",Gcut
+		write(*,'(a,i7,a,i7,a)')	"[main]: basis function   maximum  nG=",GmaxGLOBAL," of ",nG," trial basis functions"
+		write(*,*)					"[main]: only solve for        nSolve=",nSolve
+    	write(*,*)					"[main]: nBands=", nBands
+		write(*,*)					"[main]: nWfs  =", nWfs
+		write(*,*)					"[main]: w90 seed_name= ", seedName	
+		write(*,*)					"*"
+		write(*,*)					"*"
+		write(*,*)					"*"
+		write(*,*)					"*"
 		!
 		call cpu_time(T1)
 		alloT = T1 - T0
@@ -90,7 +90,7 @@ program main
 		
 		call MPI_BARRIER( MPI_COMM_WORLD, ierr )	
 		if( myID == root )	call cpu_time(T0)
-		if( myID == root ) 	write(*,*)"[main]:**************************ELECTRONIC STRUCTURE PART*************************"
+		if( myID == root ) 	write(*,*)"[main]:**************************ELECTRONIC STRUCTURE RUN*************************"
 	
 		!
 		!
