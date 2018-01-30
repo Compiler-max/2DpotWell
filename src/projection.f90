@@ -26,64 +26,59 @@ module projection
 
 	contains
 !public:
-		subroutine calcAmatANA(qi,ckH, A)
+		subroutine calcAmatANA(qi,ckH, A_matrix)
 		!analytic projection with hard coded integrals
 		!	projection onto sin**2, sin cos, cos sin
-		integer,		intent(in)	:: qi
-		complex(dp),	intent(in)	:: ckH(:,:)
-		complex(dp),	intent(out)	:: A(:,:) !A(nBands,nWfs)
-		integer						:: n, m
+		integer,		intent(in)	:: 	qi
+		complex(dp),	intent(in)	:: 	ckH(:,:)
+		complex(dp),	intent(out)	:: 	A_matrix(:,:) !A(nBands,nWfs)
+		real(dp)					::	r_state
+		integer						:: 	n, m, perAtom, at, state
 		!
-		A	= dcmplx(0.0_dp)
-		!reminder: use dconjg on ckH
+		A_matrix	= dcmplx(0.0_dp)
 		!
+		perAtom	= nWfs / nAt
+		if( qi == 1 )	write(*,'(a,i2,a,i2,a)')	"[calcAmatANA]: projecting onto ",nWfs," states, distributed over ",nAt," atoms"
+		if( qi == 1 )	write(*,'(a,i2,a)')			"[calcAmatANA]: projecting onto ",perAtom," states per atom"
 		!
-		!SINGLE ATOM
-		if( nAt == 1 ) then
+		if( perAtom == 1 ) then
 			do n = 1, nWfs
 				do m = 1, nBands
-					select case( n )
-					case(1)
-						A(m,n)	= g1Int(qi,m,1, ckH)
-					case(2)
-						A(m,n)	= g2Int(qi,m,1, ckH)
-					case(3)
-						A(m,n)	= g3Int(qi,m,1, ckH)
-					case default
-						write(*,*)"[calcAmatANA]: Warning hit default in single atom switch"
-						A(m,n)	= dcmplx(0.0_dp)
-					end select
+					at	= n
+					A_matrix(m,n)	= g1Int(qi,m, at, ckH)
 				end do
 			end do
-		!DUAL ATOMS
-		else if( nAt == 2 ) then
+		else if( perAtom == 3 ) then
 			do n = 1, nWfs
 				do m = 1, nBands
-					select case( n )
-					case(1)
-						A(m,n)	= g1Int(qi,m,1,ckH)
-					case(2)
-						A(m,n)	= g1Int(qi,m,2,ckH)
-					case(3)
-						A(m,n)	= g2Int(qi,m,1,ckH)
-					case(4)
-						A(m,n)	= g2Int(qi,m,2,ckH)
-					case(5)
-						A(m,n)	= g3Int(qi,m,1,ckH)
-					case(6)
-						A(m,n)	= g3Int(qi,m,2,ckH)
-					case default
-						write(*,*)"[calcAmatANA]: Warning hit default in dual atom switch"
-						A(m,n)	= dcmplx(0.0_dp)
-					end select
+					!DETERMINE ATOM AND STATE TO PROJECT
+					at 		= mod(n, nAt)
+					if( at == 0) 	at = nAt
+					r_state	= real(n,dp) / real(nAt,dp)
+					if(	r_state <= 1) then
+						state = 1
+					else if( r_state <= 2) then
+						state = 2
+					else if( r_state <= 3) then
+						state = 3
+					else 
+						state = 0
+						write(*,*)	"[calcAmatANA]: error while determining the state to project on. n=",n
+						write(*,*)	"[calcAmatANA]: error! will set A_matrix component to zero"
+					end if
+					!
+					!DO PROJECTION
+					if(	state == 1 ) A_matrix(m,n) 	= g1Int(qi,m, at, ckH)
+					if( state == 2 ) A_matrix(m,n)	= g2Int(qi,m, at, ckH)
+					if( state == 3 ) A_matrix(m,n)	= g3Int(qi,m, at, ckH)
+					if( state == 0 ) A_matrix(m,n)	= dcmplx(0.0_dp)
 				end do
 			end do
-		!FALLBACK
 		else
-			write(*,*)	"[calcAmatANA]: more then two atoms per unit cell. I can only handle two tough"
-		end if 
-		
-
+			write(*,*)	"[calcAmatANA]: only 1 or 3 states per atom supported. set A_mat to zero"
+			A_matrix = dcmplx(0.0_dp)
+		end if
+		!
 		!
 		return
 	end subroutine
