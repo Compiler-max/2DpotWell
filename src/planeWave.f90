@@ -110,7 +110,52 @@ module planeWave
 	end subroutine
 
 
-	subroutine calcConnOnCoarse(ck, A)
+
+
+
+
+	subroutine calcConnOnCoarse(ck, nntot, nnlist, nncell, b_k, w_b, A_conn)
+		complex(dp),	intent(in)			:: 	ck(:,:,:)
+		integer,		intent(in)			::	nntot, nnlist(:,:), nncell(:,:,:)
+		real(dp),		intent(in)			::	b_k(:,:), w_b(:)
+		complex(dp),	intent(out)			::	A_conn(:,:,:,:)
+		complex(dp),	allocatable			::	M_matrix(:,:)
+		real(dp)							::	gShift(2), gX, gY, wbx, wby
+		integer								::	qi, nn
+		!
+		allocate(	M_matrix( size(A_conn,2), size(A_conn,3) )			)
+		!
+		gX = 2.0_dp * PI_dp / aX
+		gY = 2.0_dp * PI_dp / aY
+		!
+		wbx 	= 2.0_dp / 		( real(4,dp) * dqx**2 )
+		wby		= 2.0_dp / 		( real(4,dp) * dqy**2 )
+		write(*,*)	"[calcConnOnCoarse]: my weights w_x=",wbx,"; w_y=",wby
+		write(*,*)	"[calcConnOnCoarse]: wannier weights:"
+		do nn = 1, nntot
+			write(*,*) w_b(nn)
+		end do 
+		!
+		do qi = 1, nQ
+			do nn = 1, nntot
+				!GET OVERLAP MATRIX
+				gShift(1)	= real(nncell(1,qi,nn),dp) * gX
+				gShift(2)	= real(nncell(2,qi,nn),dp) * gY
+				call calcMmat(qi, nnlist(qi, nn), gshift, nGq, Gvec, ck, M_matrix)
+				!
+				!WEIGHT OVERLAPS
+				A_conn(1,:,:,qi)	= w_b(nn) * b_k(1,nn) * dimag( log(M_matrix(:,:)))
+				A_conn(2,:,:,qi)	= w_b(nn) * b_k(2,nn) * dimag( log(M_matrix(:,:)))
+				A_conn(3,:,:,qi)	= w_b(nn) * b_k(3,nn) * dimag( log(M_matrix(:,:)))
+
+			end do
+		end do
+		!
+		return
+	end subroutine
+
+
+	subroutine calcConnOnCoarseQUADRATIC(ck, A)
 		!finite difference on lattice periodic unk to calculate the Berry connection A
 		!	A_n(k) 	= <u_n(k)|i \nabla_k|u_n(k)>
 		!		 	= i  <u_n(k)| \sum_b{ w_b * b * [u_n(k+b)-u_n(k)]}
