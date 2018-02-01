@@ -3,8 +3,7 @@ module w90Interface
 	use mpi
 	use mathematics,	only:	dp, PI_dp, i_dp, machineP, aUtoAngstrm, aUtoEv, myExp
 	use sysPara
-	use planeWave,		only:	calcMmat
-	use projection,		only:	calcAmatANA
+	use planeWave,		only:	calcMmat, calcAmatANA
 
 	implicit none
 

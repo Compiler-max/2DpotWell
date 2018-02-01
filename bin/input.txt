@@ -37,18 +37,18 @@
     thres       =   0.1
 
 [methods]
-    doSolveHam  =   t
+    doSolveHam  =   f
     doMagHam    =   f
     doPrepW90   =   f
     useBloch    =   f
     doPw90      =   f
-    doBerry     =   f
+    doBerry     =   t
     writeBin    =   f
 
 [w90]
     seedName    =   'wf1'
-    nShells     =   2
-    shells      =   1 2 # edited by statFlow
+    nShells     =   1
+    shells      =   3 # edited by statFlow
     nw90it      =   1000
     pw90GaugeB  =   f
 

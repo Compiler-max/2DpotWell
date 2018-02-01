@@ -1,0 +1,145 @@
+
+CODING:
+
+
+- in calcconnoncoarse read nnlist etc. form .nnkp file
+	-> dann händelt wannier komplett die nearest neighbour selection
+
+
+
+- WANNIERISE VIA LIBRARY MODE	: debug
+
+
+- in berry read in wannier centers etc. , i.e. w90 output files
+	- also read in qpts
+
+
+- subfolder for .txt info files
+
+
+
+
+
+
+
+
+
+- match array size when allocating the read in arrays in berry
+
+
+
+
+- timing info for new structure
+
+
+- warning readIn of Gvec in berry/readAbiN currently commented(line 182) 
+
+
+- update workflows (substream) for the new folder structure
+
+
+
+
+
+ANALYSIS:
+
+
+- test magnetic hamiltonian 
+
+
+- robustness of analytic velocities,
+	-> what influence has the cutoff on the velocities?
+
+
+
+
+
+- compare berry polarization (integral over connection) with w90_centers
+	-> write w90_centers to pol file
+	-> pol file should be state resolved (only look at displacement!!!)
+		- atom and state listed, state 1 's', state 2-3 'p_'
+
+
+
+
+- try to converge a 3 and a 9 cell supercell
+
+
+
+
+
+
+
+
+- compare dH/dk with gradient approach of the velocities
+
+
+
+
+- tool für auswertung der konvergenzruns
+		-> pPei vs. (pBerry + pNiu)
+		-> velocities (x and y) plot
+		-> band structure
+		- visualize Gvec
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+- k convergence - assume converged if useRot does not affect zero order pol anymore
+
+- automatisation: python script which generates subfolders and input files inside subfolders
+
+
+
+postW90:
+	- read interpolation k mesh from file, similar to fleur, w90
+
+PEIERLS:
+-	debug:			 peierls for zero magnetic field solution should be same as zero pBerry!!!
+
+
+
+- 	niu debug plus/minus for Fmatrix 
+-	velocities - if not matching with peierls, try introduce volume prefactor to veloctities
+
+
+BEYOND:
+
+	- yuriy also mentioned playing around with non collinearity, talk to frank about that again
+		-> maybe only do that in FLEUR	
+

@@ -3,6 +3,7 @@ module effTB
 	use omp_lib
 	use mathematics,	only:	dp, PI_dp, i_dp, acc, machineP, myExp, isHermitian
 	use sysPara
+	use w90Interface,	only:	readFDscheme
 	use planeWave,		only:	calcConnOnCoarse
 
 	implicit none
@@ -13,19 +14,24 @@ module effTB
 
 
 	subroutine TBviaKspace(ckQ, EnQ, Uq, tHopp, rHopp)
-		complex(dp),		intent(in)		:: ckQ(:,:,:), Uq(:,:,:)
-		real(dp),			intent(in)		:: EnQ(:,:)
-		complex(dp),		intent(out)		:: tHopp(:,:,:), rHopp(:,:,:,:)
-		complex(dp),		allocatable		:: Atmp(:,:,:,:)
-		complex(dp),		allocatable		:: Htmp(:,:,:)
-		complex(dp)							:: phase
-		integer								:: R, qi
+		complex(dp),		intent(in)		:: 	ckQ(:,:,:), Uq(:,:,:)
+		real(dp),			intent(in)		:: 	EnQ(:,:)
+		complex(dp),		intent(out)		:: 	tHopp(:,:,:), rHopp(:,:,:,:)
+		complex(dp),		allocatable		:: 	Atmp(:,:,:,:)
+		complex(dp),		allocatable		:: 	Htmp(:,:,:)
+		real(dp),			allocatable		::	b_k(:,:), w_b(:)
+		integer,			allocatable		:: 	nnlist(:,:), nncell(:,:,:)
+		complex(dp)							:: 	phase
+		integer								:: 	nntot, R, qi
 		!
 		allocate(	Atmp(	2,		nWfs,	nWfs,	nQ	)			)
 		allocate(	Htmp(			nWfs,	nWfs,	nQ	)			)
 		
+
+		
 		!SET UP K SPACE QUANTITIES
-		call calcConnOnCoarse(ckQ, Atmp)
+		call readFDscheme(nntot, nnlist, nncell, b_k, w_b)
+		call calcConnOnCoarse(ckQ, nntot, nnlist, nncell, b_k, w_b, Atmp)
 		call calcHtmp(EnQ, Uq, Htmp)
 		!FT TO REAL SPACE
 		rHopp	= dcmplx(0.0_dp)
