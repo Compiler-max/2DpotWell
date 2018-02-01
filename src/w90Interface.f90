@@ -118,6 +118,7 @@ module w90Interface
 		!
 		!READ U FROM W90
 		call Umat_reader(U_matrix, krel)
+		write(*,*)	"[read_U_matrix]: read the U_matrix"
 		!
 		!
 		return
@@ -718,7 +719,7 @@ module w90Interface
 			end if
 		end do
 		close(300)
-
+		!
 		return
 	end subroutine
 
