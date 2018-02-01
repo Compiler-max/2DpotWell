@@ -43,8 +43,6 @@ module w90Interface
 		complex(dp),	allocatable		::	M_matrix_orig(:,:,:,:), A_matrix(:,:,:), U_matrix_opt(:,:,:)
 		real(dp),		allocatable		::	eigenvalues(:,:)
 		logical,		allocatable		::	lwindow(:,:)
-		logical							::	w90success
-		integer							::	ierr
 		!
 		!PREP W90 INIT
 		seed_name	= seedName
