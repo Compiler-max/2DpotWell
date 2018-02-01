@@ -9,7 +9,7 @@ module w90Interface
 	implicit none
 
 	private
-	public ::					prep_w90, read_U_matrix, readBandVelo, & 
+	public ::					prep_w90, read_U_matrix, readBandVelo, readFDscheme, & 
 								seed_name, wann_centres, wann_spreads, spread
 
 	!public var
@@ -60,8 +60,6 @@ module w90Interface
 		write(*,*)	"[w90Interf]: to gen   num_wann=  ",num_wann, " wnfs"
 		write(*,*)	"[w90Interf]: start preparing wannierisation"
 		!
-		write(*,*)	"nnlist:"
-		write(*,*) nnlist
 		!ALLOCATE
 		allocate(	M_matrix_orig(	num_bands	,	num_bands	,	nntot	,	num_kpts	)		)
 		allocate(	 A_matrix( 		num_bands	,	num_wann				,	num_kpts	)		)
@@ -133,7 +131,7 @@ module w90Interface
 		real(dp)						::	buffer(7)
 		integer							::	stat, qi, n, qInd
 		!
-		write(*,*)  seed_name//'_geninterp.dat'
+		write(*,*)  seedName//'_geninterp.dat'
 		open(unit=320,iostat=stat, file=w90_dir//seedName//'_geninterp.dat',form='formatted', status='old',action='read')
 		if( stat/= 0 ) then 
 			v_vec = 0.0_dp
@@ -159,6 +157,139 @@ module w90Interface
 		!	
 		return
 	end subroutine
+
+
+
+
+	subroutine readFDscheme(nntot, nnlist, nncell, b_k, w_b)
+		!call after w90 is finished
+		!reads seedname.nnkp & seedname.wout
+		integer, 					intent(out)		::	nntot
+		integer,	allocatable, 	intent(out)		::	nnlist(:,:), nncell(:,:,:)
+		real(dp),	allocatable,	intent(out)		::	b_k(:,:), w_b(:)
+		integer										::	stat, qi, qnn, iLine(5), nn, start, end
+		real(dp)									::	b_vec(3), weight
+		character(len=*), 			parameter 		::	search_nnkp = "begin nnkpts", final_nnkp = "end nnkpts" 
+		character(len=*), 			parameter 		::	search_wout=" |                  b_k Vectors (Ang^-1) and Weights (Ang^2)                  |"
+
+		character(len=100)							::	line
+		logical										::	finished
+
+		
+
+		!READ .nnkp 
+		finished = .false.
+		open(unit=330, iostat=stat, file=w90_dir//seedName//'.nnkp', form='formatted', status='old', action='read')
+		do while( .not. finished .and. stat==0)
+			read(330,"(a)",iostat=stat) line
+			!find the block
+			if(line == search_nnkp) then
+				!GET nntot				
+				read(330,*)	nntot
+				allocate(	nnlist(		nQ, nntot)		)
+				allocate(	nncell(	3, 	nQ, nntot)		)
+				allocate(	b_k(	3,		nntot)		)
+				allocate(	w_b(			nntot)		)
+				!read data
+				do qi = 1, nQ
+					do qnn = 1, nntot
+						read(330, *) iLine
+						nnlist( iLine(1), qnn )		= iLine(2)
+						nncell(	1:3, iLine(1), qnn)	= iLine(3:5)
+					end do
+				end do
+				finished = .true.
+			end if
+		end do 
+		close(330)
+		if( finished ) then
+			write(*,*)	"[readFDscheme]: read the .nnkp file"
+		else
+			write(*,*)	"[readFDscheme]: did not find search string: '",search_nnkp,"' in .nnkp file"
+		end if
+		!
+		!
+		!READ .wout
+		finished = .false.
+		open(unit=335, iostat=stat, file=w90_dir//seedName//'.wout', form='formatted', status='old', action='read')
+		do while( .not. finished .and. stat==0)
+			read(335,"(a)",iostat=stat) line
+			!find the block
+			if( line == search_wout) then
+				read(335,*)
+				read(335,*)
+				read(335,*)
+				do qnn = 1, nntot
+					!read line
+					read(335,"(a)",iostat=stat) line
+					!remove "|" from line  (this is neccessary to use pattern matching on string)
+					start 	= scan(line,"|" ) 			+1
+					end 	= scan(line,"|", .true.)	-1
+					!extract values from substring
+					read(line(start:end),*)	nn, b_vec, weight 
+					!convert to a.u.
+					b_k(1:3, nn) 	= b_vec(1:3)*aUtoAngstrm			![b_k] = (Ang^-1)
+					w_b(nn)			= weight / aUtoAngstrm**2			![w_b] = (Ang^2)
+					!debug
+					!write(*,'(i2,a,f6.4,a,f6.4,a,f6.4,a,f6.4)') nn," ",b_k(1,nn)," ",b_k(2,nn)," ",b_k(3,nn)," ",w_b(nn)
+					if( qnn /= nn ) write(*,*) "[readFDscheme]: warning, possibly mismatched nearest neighbours"
+				end do
+				finished = .true.
+			end if
+			!
+		end do
+		close(335)
+		if( finished ) then
+			write(*,*)	"[readFDscheme]: read the .wout file"
+		else
+			write(*,*)	"[readFDscheme]: did not find search string: '",search_wout,"' in .wout file"
+		end if
+		
+
+		!DEBUG TEST FILE
+		open(unit=635, iostat=stat, file=w90_dir//'clone.nnkp', form='formatted', status='replace', action='write')
+		write(635, *)	"clone of the ",seedName,".nnkp file. This tests if the read in of the file is working"
+		write(635, *) search_nnkp
+		write(635, *)	nntot
+		do qi = 1, nQ
+			do qnn = 1, nntot
+				write(635, '(a,i3,a,i3,a,i3,a,i3,a,i3)')	"	",qi," ",nnlist(qi,qnn)," ",nncell(1,qi,qnn)," ",nncell(2,qi,qnn)," ",nncell(3,qi,qnn)
+			end do
+		end do
+		write(635, *) final_nnkp
+		write(635, *)	
+		write(635, *)	"nn ,		b_k (a0^-1) , w_b(a0^2)"
+		do qnn = 1, nntot
+			write(635, '(i3,a,f6.4,a,f6.4,a,f6.4,a,f6.4)')	qnn," ",b_k(1,qnn)," ",b_k(2,qnn)," ",b_k(3,qnn)," ",w_b(qnn)
+		end do
+		close(635)
+
+		return
+	end subroutine
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -444,7 +575,7 @@ module w90Interface
 					if(qi==1  ) write(*,*)	"[w90prepMmat]: oLap set to zero for nn=",nn
 				else
 					gShift(1)			= nncell(1,qi,nn) * 2.0_dp * PI_dp / aX
-					gShift(2)			= nncell(2,qi,nn) * 2.0_dp * PI_dp / aX
+					gShift(2)			= nncell(2,qi,nn) * 2.0_dp * PI_dp / aY
 					!oLap				= UNKoverlap(n,m, qi, nnlist(qi,nn), gShift, ck)
 					!call calcMmat(qi,nnlist(qi,nn), gShift, ck, M_loc(:,:,nn,qi))
 					call calcMmat(qi, nnlist(qi,nn), gShift, nGq, Gvec, ck, M_mat(:,:,nn,qi))
@@ -559,13 +690,13 @@ module w90Interface
 
 !READ RESULTS
 	subroutine Umat_reader(U_matrix, krel)
-		complex(dp),	intent(out)	:: U_matrix(:,:,:)
-		real(dp),		intent(out)	:: krel(:,:)
-		integer						:: stat, qi, n, m, dumI(3)
-		real(dp)					:: val(2)
+		complex(dp),	intent(out)	:: 	U_matrix(:,:,:)
+		real(dp),		intent(out)	:: 	krel(:,:)
+		integer						:: 	stat, qi, n, m, dumI(3)
+		real(dp)					:: 	val(2)
 		!
 		!READ U MATRIX
-		open(unit=300,iostat=stat, file=w90_dir//seed_name//'_u.mat', status='old',action='read')
+		open(unit=300,iostat=stat, file=w90_dir//seedName//'_u.mat', status='old',action='read')
 		if( stat /= 0)	write(*,*)	"[readUmatrix]: warning did not file _u.mat file"
 		read(300,*)
 		read(300,*) dumI(1:3)
