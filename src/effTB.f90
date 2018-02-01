@@ -3,7 +3,7 @@ module effTB
 	use omp_lib
 	use mathematics,	only:	dp, PI_dp, i_dp, acc, machineP, myExp, isHermitian
 	use sysPara
-	use w90Interface,	only:	readFDscheme
+	use w90Interface,	only:	read_FD_scheme
 	use planeWave,		only:	calcConnOnCoarse
 
 	implicit none
@@ -30,7 +30,7 @@ module effTB
 
 		
 		!SET UP K SPACE QUANTITIES
-		call readFDscheme(nntot, nnlist, nncell, b_k, w_b)
+		call read_FD_scheme(nntot, nnlist, nncell, b_k, w_b)
 		call calcConnOnCoarse(ckQ, nntot, nnlist, nncell, b_k, w_b, Atmp)
 		call calcHtmp(EnQ, Uq, Htmp)
 		!FT TO REAL SPACE

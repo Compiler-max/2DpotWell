@@ -24,7 +24,7 @@ program main
     complex(dp),	allocatable,	dimension(:,:,:)	:: 	ck
     real(dp),		allocatable,	dimension(:,:)		:: 	En    														
     real												:: 	mastT0, mastT1, mastT, T0, T1, &
-    															alloT,hamT,wT,pwT, outT, berryT	
+    															alloT,hamT,wannT,postWT, outT, berryT	
     logical												::	mpiSuccess		
 
     !MPI INIT
@@ -35,12 +35,12 @@ program main
     mpiSuccess = .true.
     call MPI_Barrier( MPI_COMM_WORLD, ierr )
     !
-    !
+    !SETUP
     if( myID == root) then
     	alloT	= 0.0
     	hamT	= 0.0
-    	wT		= 0.0
-    	pwT		= 0.0
+    	wannT	= 0.0
+    	postWT	= 0.0
     	berryT	= 0.0
     	outT 	= 0.0
     	mastT	= 0.0
@@ -50,16 +50,16 @@ program main
    		call cpu_time(T0)
     end if
 
-    !READ INPUT FILE & DISTRIBUTE
+    !read & distribute input
   	call readInp()
 	!
-	!CHECK IF QPTS CAN BE EQUALLY DISTRIBUTED -> if not break
+	!check if equal kpt distribution among mpi procs is possible -> if not break
 	if( mod(nQ,nProcs)/=0)  then
 		if(myID == root) write(*,*)"[main]: CRITICAL WARNING: mpi threads have to be integer fraction of nQ"
 		mpiSuccess = .false.
 	end if
 	!
-	!PRINT SOME INFO
+	!print info
 	if( myID == root) then
 		write(*,*)					"*"
 		write(*,*)					"*"
@@ -79,12 +79,23 @@ program main
 		!
 		call cpu_time(T1)
 		alloT = T1 - T0
+
+
+		!try to print some warnings for to small Gcut
+		write(*,*)"[main]:**************************BASIS SET DEBUG*************************"
+		call printBasisInfo()
+		write(*,*)"[main]: ...wrote basis set debug info"
+		write(*,*)"*"
+		write(*,*)"*"
+		write(*,*)"*"
+		write(*,*)"*"
+		call cpu_time(T1)
+		outT = T1 - T0
 	end if
+
 	
-	write(*,*)"[#",myID,"]: my shells:", shells
 	
-	
-	!ELECTRONIC STRUCTURE
+	!HAM SOLVER
 	if( mpiSuccess .and. doSolveHam ) then
 		!call cpu_time(T0)	
 		
@@ -126,6 +137,8 @@ program main
 			call prep_w90(ck,En)
 			write(*,*)	"[main]: please run w90 now"
 		end if
+		call cpu_time(T1)
+		wannT = T1 - T0
 
 
 
@@ -143,7 +156,7 @@ program main
 			write(*,*)"*"
 		end if
 		call cpu_time(T1)
-		pwT	= T1-T0
+		postWT	= T1-T0
 	
 	
 		!K SPACE METHOD
@@ -177,36 +190,21 @@ program main
 		write(*,*)"*"
 		write(*,*)"*"
 		write(*,*)"*"
-		call cpu_time(T1)
-		outT = T1 - T0
-		
-		
-		!WARNINGS IF GCUT IS TO HIGH
-		write(*,*)"[main]:**************************BASIS SET DEBUG*************************"
-		call printBasisInfo()
-		write(*,*)"[main]: ...wrote basis set debug info"
-		write(*,*)"*"
-		write(*,*)"*"
-		write(*,*)"*"
-		write(*,*)"*"
-	
-	
-	
+		!
 		!TIMING INFO SECTION
 		call cpu_time(mastT1)
 		mastT= mastT1-mastT0
 		write(*,*) '**************TIMING INFORMATION************************'
-		call printTiming(alloT,hamT,wT,pwT,berryT,outT,mastT)
+		call printTiming(alloT,hamT,wannT,postWT,berryT,outT,mastT)
 		write(*,*)"*"
 		write(*,*)"*"
 		write(*,*)"*"
 		write(*,*)"*"
 	end if
 
+	!MPI FINALIZE
 	call MPI_Barrier( MPI_COMM_WORLD, ierr )
 	write(*,'(a,i3,a)')	"[#",myID,";main]: all done, exit"
-
-
 	call MPI_FINALIZE ( ierr )
 	!
 	!

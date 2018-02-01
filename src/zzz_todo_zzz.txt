@@ -1,41 +1,31 @@
 
 CODING:
 
-
-- in calcconnoncoarse read nnlist etc. form .nnkp file
-	-> dann händelt wannier komplett die nearest neighbour selection
+- 	write nwF resolved centers to pol Output file
 
 
+-	 write sh script which plots wannier centers based on _centres.xyz file
+		- check wannier documentation: for compatible  plotting routines
+	
+	
+	
 
-- WANNIERISE VIA LIBRARY MODE	: debug
+	
+	-	 subfolder for .txt info files
+	
+	
+	
+	
+	
 
-
-- in berry read in wannier centers etc. , i.e. w90 output files
-	- also read in qpts
-
-
-- subfolder for .txt info files
-
-
-
-
-
-
-
-
-
-- match array size when allocating the read in arrays in berry
-
-
-
-
-- timing info for new structure
-
-
-- warning readIn of Gvec in berry/readAbiN currently commented(line 182) 
-
-
-- update workflows (substream) for the new folder structure
+	
+	-	 timing info for new structure
+	
+	
+	-	 warning readIn of Gvec in berry/readAbiN currently commented(line 182) 
+	
+	
+-	 update workflows (substream) for the new folder structure
 
 
 
@@ -44,43 +34,50 @@ CODING:
 ANALYSIS:
 
 
-- test magnetic hamiltonian 
+	- test magnetic hamiltonian 
+	
+	
+	- robustness of analytic velocities,
+		-> what influence has the cutoff on the velocities?
+	
+	
+	
+	
+	
+	- compare berry polarization (integral over connection) with w90_centers
+		-> write w90_centers to pol file
+		-> pol file should be state resolved (only look at displacement!!!)
+			- atom and state listed, state 1 's', state 2-3 'p_'
+	
+	
+	
+	
+	- try to converge a 3 and a 9 cell supercell
+	
+	
+	
+	
+	
+	
+	
+	
+	- compare dH/dk with gradient approach of the velocities
+	
+	
+	
+	
+	- tool für auswertung der konvergenzruns
+			-> pPei vs. (pBerry + pNiu)
+			-> velocities (x and y) plot
+			-> band structure
+			- visualize Gvec
 
 
-- robustness of analytic velocities,
-	-> what influence has the cutoff on the velocities?
 
 
+SONSTIGES
 
-
-
-- compare berry polarization (integral over connection) with w90_centers
-	-> write w90_centers to pol file
-	-> pol file should be state resolved (only look at displacement!!!)
-		- atom and state listed, state 1 's', state 2-3 'p_'
-
-
-
-
-- try to converge a 3 and a 9 cell supercell
-
-
-
-
-
-
-
-
-- compare dH/dk with gradient approach of the velocities
-
-
-
-
-- tool für auswertung der konvergenzruns
-		-> pPei vs. (pBerry + pNiu)
-		-> velocities (x and y) plot
-		-> band structure
-		- visualize Gvec
+	- WANNIERISE VIA LIBRARY MODE	: debug
 
 
 

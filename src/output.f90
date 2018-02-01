@@ -434,6 +434,7 @@ module output
 		open(unit=600,file=info_dir//'polOutput.txt',action='write')
 		write(600,*)"**************POLARIZATION OUTPUT FILE**********************"
 		write(600,*)" via wavefunction method"
+		if(doMagHam )	write(600,*)"magnetic hamiltonian used"
 		write(600,*)"Gcut=",Gcut
 		write(600,*)"nQ=",nQx,"x",nQy
 		write(600,*)"*"
@@ -532,7 +533,7 @@ module output
 
 
 
-	subroutine printTiming(aT,kT,wT,pwT,bT,oT,mastT)
+	subroutine printTiming(aT,kT,wT,pwT,bT,oT,mastT) !call printTiming(alloT,hamT,wannT,postWT,berryT,outT,mastT)
 		real,	intent(in)	:: aT,kT,wT,pwT,bT,oT,mastT
 		!
 		print '    ("r&alloc  time spend     = ",f16.4," seconds = ",f16.4,"% of overall time")',& 
