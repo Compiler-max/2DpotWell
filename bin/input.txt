@@ -1,71 +1,73 @@
 #Input for 2D pot well code
 
 [unitCell]
-    aX          = 20  
-    aY          = 10
+    aX          =   10  
+    aY          =   10
 
 [atoms]
-    doVdesc     = f
-    nAt         = 4      
-    relXpos     = 0.125 0.375 0.625 0.875     
-    relYpos     = 0.500 0.500 0.500 0.500
-    atRx        = 1.010 1.010 1.010 1.010
-    atRy        = 1.010 1.010 1.010 1.010
-    atPot       = -3.20 -3.00 -3.20 -3.00 
-    dVpot       = 0.000 0.000 0.000 0.000 
-    Zion        = 1.000 1.000 1.000 1.000
+    doVdesc     =   f
+    nAt         =   2      
+    relXpos     =   0.250 0.750     
+    relYpos     =   0.500 0.500
+    atRx        =   1.010 1.010
+    atRy        =   1.010 1.010
+    atPot       =   -3.20 -3.00
+    dVpot       =   0.000 0.000
+    Zion        =   1.000 1.000
 
 [wann]
-    nBands      = 12
-    nWfs        = 12
+    nBands      =   6
+    nWfs        =   6
 
 [perturbation]
-    B0          = 0.0               #hbar/(e*a0**2) = 2.35 * 10**5  T
-    Bext        = 0.0 0.0 1.0  
+    B0          =   0.0               #hbar/(e*a0**2) = 2.35 * 10**5  T
+    Bext        =   0.0 0.0 1.0  
 
 [numerics]
-    Gcut        = 12.0 # edited by statFlow
-    nSolve      = 96 # edited by statFlow
-    nQx         = 4 # edited by statFlow
-    nQy         = 4 # edited by statFlow
-    nSCx        = 5 # edited by statFlow
-    nSCy        = 5 # edited by statFlow
-    nKx         = 5 # edited by statFlow
-    nKy         = 5 # edited by statFlow
-    nRx         = 10   
-    nRy         = 10
-    thres       = 0.1
+    Gcut        =   8.0 # edited by statFlow
+    nSolve      =   96 # edited by statFlow
+    nQx         =   4 # edited by statFlow
+    nQy         =   4 # edited by statFlow
+    nSCx        =   5 # edited by statFlow
+    nSCy        =   5 # edited by statFlow
+    nKx         =   5 # edited by statFlow
+    nKy         =   5 # edited by statFlow
+    nRx         =   10   
+    nRy         =   10
+    thres       =   0.1
 
 [methods]
-    doSolveHam  = t
-    doMagHam    = f
-    useBloch    = f
-    doPw90      = f
-    doBerry     = f
-    writeBin    = f
+    doSolveHam  =   t
+    doMagHam    =   f
+    doPrepW90   =   f
+    useBloch    =   f
+    doPw90      =   f
+    doBerry     =   f
+    writeBin    =   f
 
-[pw90]
-    seedName    = 'wf1'
-    shell       =  3 # edited by statFlow
-    nw90it      = 1000
-    pw90GaugeB  = f
+[w90]
+    seedName    =   'wf1'
+    nShells     =   2
+    shells      =   1 2 # edited by statFlow
+    nw90it      =   1000
+    pw90GaugeB  =   f
 
 [berry]
-    useRot      = t
-    doVeloNUM   = f
-    doNiu       = f
-    doPei       = f
-    doWanni     = f
-    doGaugBack  = f
+    useRot      =   t
+    doVeloNUM   =   f
+    doNiu       =   f
+    doPei       =   f
+    doWanni     =   f
+    doGaugBack  =   f
 
 [semiclassics]
-    prefactF3   = 1.0
+    prefactF3   =   1.0
   
 
 [debug]
-    debugHam    = f
-    debugProj   = f
-    debugWann   = f
+    debugHam    =   f
+    debugProj   =   f
+    debugWann   =   f
 
 
 

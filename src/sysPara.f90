@@ -11,12 +11,13 @@ module sysPara
 				dim, aX, aY, vol, nAt, relXpos, relYpos, atRx, atRy, atPot, dVpot, &
 				nG, nGq, nG0, Gmax, GmaxGLOBAL, Gcut, Gvec, Gtest, R0, nSolve, &
 				nQ, nQx, nQy, nKx, nKy, nK, nSC, nSCx, nSCy, dqx, dqy, dkx, dky, &
-				nR, nRx, nRy,  dx, dy,nw90it, shell, &
+				nR, nRx, nRy,  dx, dy, &
+				nShells, nw90it, shells, &
 				nBands, nWfs,   &
 				atPos, atR, qpts, rpts, Rcell, kpts, Zion, recpLatt, &
 				Bext, prefactF3, &
 				seedName, w90_dir, info_dir, mkdir, raw_dir,&
-				debugProj, debugHam, debugWann, doSolveHam, doMagHam, useBloch, doPw90, pw90GaugeB, doVdesc,  &
+				debugProj, debugHam, debugWann, doSolveHam, doMagHam, doPrepW90, useBloch, doPw90, pw90GaugeB, doVdesc,  &
 				doBerry, useRot, doWanni, doVeloNUM, doNiu, doPei, doGaugBack, writeBin, &
 				myID, nProcs, root, ierr, qChunk
 
@@ -25,7 +26,7 @@ module sysPara
 	integer  										:: 	dim=2, nAt=0, nG, nGdim, Gmax, GmaxGLOBAL,nSolve=20, nG0,&  
 														nQx=1, nQy=1,nQ , nSCx=1, nSCy=1,& 
 														nKx=1, nKy=1, nK, R0,  &
-														nw90it, shell, &
+														nShells, nw90it,  &
 														nRx=10, nRy=10, nR, nBands=1,nWfs=1, nSC, &
 														myID, nProcs, root, ierr, qChunk
 	real(dp) 										::	aX=0.0_dp, aY=0.0_dp,vol=0.0_dp, Gcut=2*PI_dp, thres,& 
@@ -34,13 +35,13 @@ module sysPara
 	character(len=9)								::	w90_dir	="w90files/"
 	character(len=7)								::	info_dir="output/"
 	character(len=8)								::	raw_dir	="rawData/", mkdir="mkdir ./"	!to use with system(mkdir//$dir_path) 
-	integer,	allocatable,	dimension(:)		::	nGq
+	integer,	allocatable,	dimension(:)		::	nGq, shells
 	real(dp),	allocatable,	dimension(:)		::	relXpos, relYpos, atRx, atRy, atPot, dVpot, Zion
 	real(dp),	allocatable,	dimension(:,:)		::	Gtest , atPos, atR, qpts, rpts, Rcell, kpts 
 
 	real(dp),	allocatable,	dimension(:,:,:)	::	Gvec
 	logical											::	debugHam, debugWann, debugProj, &
-														doSolveHam, doMagHam, doPw90, pw90GaugeB, useBloch, doVdesc , &
+														doSolveHam, doMagHam, doPrepW90,doPw90, pw90GaugeB, useBloch, doVdesc , &
 														doBerry, useRot, doWanni, doVeloNUM, doNiu, doPei, doGaugBack, &
 														writeBin 
 
@@ -151,15 +152,16 @@ module sysPara
 		![methods]
 		call CFG_add_get(my_cfg,	"methods%doSolveHam",	doSolveHam	,	"solve electronic structure or read in"	)
 		call CFG_add_get(my_cfg,	"methods%doMagHam"	,	doMagHam	,	"include B-field via peierls in ham."	)
+		call CFG_add_get(my_cfg,	"methods%doPrepW90"	,	doPrepW90	,	"prepare input files for wannier90"		)
 		call CFG_add_get(my_cfg,	"methods%useBloch"	,	useBloch	,	"use bloch phase for projections	"	)
 		call CFG_add_get(my_cfg,	"methods%doPw90"	,	doPw90		,	"read in the matrices in wann base	"	)	
 		call CFG_add_get(my_cfg,	"methods%doBerry"	,	doBerry		,	"switch on/off 	berry( unk) method "	)
 		call CFG_add_get(my_cfg,	"methods%writeBin"	,	writeBin	,	"switch for writing binary files"		)
-		![pw90]
-		call CFG_add_get(my_cfg,	"pw90%seedName"		, 	 seedName	,	"seedName for wannier files(char len=3)")
-		call CFG_add_get(my_cfg,	"pw90%shell"		, 	 shell		,	"manually set the shell to use for FD  ")
-		call CFG_add_get(my_cfg,	"pw90%nw90it"		, 	 nw90it		,	"number of iterations for wannnierisat,")
-		call CFG_add_get(my_cfg,	"pw90%pw90GaugeB"	,	pw90GaugeB	,	"logical for switching gauge trafo	   ")
+		![w90]
+		call CFG_add_get(my_cfg,	"w90%seedName"		, 	seedName	,	"seedName for wannier files(char len=3)")
+		call CFG_add_get(my_cfg,	"w90%nShells"		,	nShells		,	"number of shells to use for FD k-space")
+		call CFG_add_get(my_cfg,	"w90%nw90it"		, 	 nw90it		,	"number of iterations for wannnierisat,")
+		call CFG_add_get(my_cfg,	"w90%pw90GaugeB"	,	pw90GaugeB	,	"logical for switching gauge trafo	   ")
 		![berry]
 		call CFG_add_get(my_cfg,	"berry%useRot"		,	useRot		,	"logical for switching on/off rotation	")
 		call CFG_add_get(my_cfg,	"berry%doVeloNUM"	,	doVeloNUM	,	"if true tb velocities, else analyitcal")
@@ -199,6 +201,8 @@ module sysPara
 		call CFG_add_get(my_cfg,	"atoms%atPot"		,	atPot		,	"potential depth in hartree"			)
 		call CFG_add_get(my_cfg,	"atoms%dVpot"		,	dVpot		,	"potential gradient"					)
 		call CFG_add_get(my_cfg,	"atoms%Zion"		,	Zion		,	"effective charge of the ions"			)
+		![w90]
+		call CFG_add_get(my_cfg,	"w90%shells"		, 	shells		,	"list of shells used for FD connection"	)
 		!
 		!
 		return
@@ -236,13 +240,14 @@ module sysPara
 		![methods]
 		call MPI_Bcast( doSolveHam	,		1	,	MPI_LOGICAL				,	root,	MPI_COMM_WORLD, ierr)
 		call MPI_Bcast(	doMagHam	,		1	,	MPI_LOGICAL				,	root,	MPI_COMM_WORLD, ierr)
+		call MPI_Bcast(	doPrepW90	,		1	,	MPI_LOGICAL				,	root,	MPI_COMM_WORLD, ierr)
 		call MPI_Bcast( useBloch	,		1	,	MPI_LOGICAL				,	root,	MPI_COMM_WORLD, ierr)
 		call MPI_Bcast( doPw90		,		1	,	MPI_LOGICAL				,	root,	MPI_COMM_WORLD, ierr)
 		call MPI_Bcast( doBerry		,		1	,	MPI_LOGICAL				,	root,	MPI_COMM_WORLD, ierr)
 		call MPI_Bcast( writeBin	,		1	,	MPI_LOGICAL				,	root,	MPI_COMM_WORLD, ierr)
-		![pw90]
+		![w90]
 		call MPI_Bcast( seedName	,		3	, 	MPI_CHARACTER			,	root,	MPI_COMM_WORLD, ierr)
-		call MPI_Bcast( shell		,		1	,	MPI_INTEGER				,	root,	MPI_COMM_WORLD, ierr)
+		call MPI_Bcast( nShells		,		1	,	MPI_INTEGER				,	root,	MPI_COMM_WORLD, ierr)
 		call MPI_Bcast( nw90it		,		1	,	MPI_INTEGER				,	root,	MPI_COMM_WORLD, ierr)		
 		call MPI_Bcast( pw90GaugeB	,		1	,	MPI_LOGICAL				,	root,	MPI_COMM_WORLD, ierr)
 		![berry]
@@ -277,6 +282,10 @@ module sysPara
 		!
 		if( myID /= root ) call allocateArrays()
 		!
+		!
+		call MPI_BARRIER(MPI_COMM_WORLD, ierr)
+		call MPI_Bcast(	shells	,		nShells,	MPI_INTEGER				,	root,	MPI_COMM_WORLD, ierr)
+		!
 		return
 	end subroutine
 
@@ -303,6 +312,8 @@ module sysPara
 		allocate(	rpts(dim,nR)		)
 		allocate(	Rcell(dim,nSC)		)
 		allocate(	kpts(dim,nK)		)
+		!w90
+		allocate(	shells(nShells)		)
 		!
 		!
 		return

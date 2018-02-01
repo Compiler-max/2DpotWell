@@ -9,7 +9,7 @@ module w90Interface
 	implicit none
 
 	private
-	public ::					run_w90, read_U_matrix, readBandVelo, & 
+	public ::					prep_w90, read_U_matrix, readBandVelo, & 
 								seed_name, wann_centres, wann_spreads, spread
 
 	!public var
@@ -37,7 +37,7 @@ module w90Interface
 
 
 !public:
-	subroutine run_w90(ck, En)
+	subroutine prep_w90(ck, En)
 		complex(dp),	intent(in)		:: 	ck(:,:,:)	
 		real(dp),		intent(in)		:: 	En(:,:)
 		complex(dp),	allocatable		::	M_matrix_orig(:,:,:,:), A_matrix(:,:,:), U_matrix_opt(:,:,:)
@@ -60,6 +60,8 @@ module w90Interface
 		write(*,*)	"[w90Interf]: to gen   num_wann=  ",num_wann, " wnfs"
 		write(*,*)	"[w90Interf]: start preparing wannierisation"
 		!
+		write(*,*)	"nnlist:"
+		write(*,*) nnlist
 		!ALLOCATE
 		allocate(	M_matrix_orig(	num_bands	,	num_bands	,	nntot	,	num_kpts	)		)
 		allocate(	 A_matrix( 		num_bands	,	num_wann				,	num_kpts	)		)
@@ -175,8 +177,8 @@ module w90Interface
 !prviate
 !PREPARE & RUN W90
 	subroutine write_W90setup_input()
+		!write input file for wannier_setup call
 		integer				:: stat
-		integer				:: qx, qy, qi, qxl, qxr, qyl, qyr, Gxl(3), Gxr(3), Gyl(3), Gyr(3)
 		!
 		seed_name			= 'wf1'
 		!
@@ -200,60 +202,20 @@ module w90Interface
 		write(100,*)	
 		!
 
-
-		!write(100,*)	'shell_list = ',1
+		!write(100,*)	'search_shells = 200'
+		write(100,*)	'shell_list = ',shells
+		write(100,*)	'skip_b1_tests = .true.'
 		!
-		!k points
-		!write(100,*)"begin kpoints"
-        !do qi=1,nQ
-        !    write(100,*)qpts(:,qi),0.0_dp
-        !end do
-        !write(100,*)"end kpoints"
-        !write(100,*)
 
 		! k point neighbours
 		write(100,*)	'postproc_setup = .true.'
-		write(100,*)	'begin nnkpts'
-		!get neighbours and write to file
-		do qx = 1, nQx
-			do qy = 1, nQy
-				qxl	= getLeft( qx,nQx)
-				qxr	= getRight(qx,nQx)
-				qyl	= getLeft(  qy,nQy)
-				qyr = getRight( qy,nQy)
-				!
-				!GET GRID POSITION OF NEIGHBOURS
-				qi	= getkindex(qx,qy)
-				qxl	= getkindex(qxl,qy)
-				qxr	= getkindex(qxr,qy)
-				qyl	= getkindex(qx,qyl)
-				qyr	= getkindex(qx,qyr)
-				!
-				!SHIFT NEIGHBOURS BACK TO FIRST BZ
-				Gxl(:)	= 0
-				Gxr(:)	= 0
-				Gyl(:)	= 0
-				Gyr(:)	= 0
-				if( qx == 1 ) 	Gxl(1)	= - 1
-				if( qx == nQx)	Gxr(1)	= + 1
-				if( qy == 1 ) 	Gyl(2)	= - 1
-				if( qy == nQy)	Gyr(2)	= + 1
-				!
-				write(100,*)	qi,' ',qxl,' ',Gxl(1),' ',Gxl(2),' ', Gxl(3)
-				write(100,*)	qi,' ',qxr,' ',Gxr(1),' ',Gxr(2),' ', Gxr(3)
-				write(100,*)	qi,' ',qyl,' ',Gyl(1),' ',Gyl(2),' ', Gyl(3)
-				write(100,*)	qi,' ',qyr,' ',Gyr(1),' ',Gyr(2),' ', Gyr(3)
-				!
-			end do 
-		end do
-		write(100,*)	'end nnkpts'
 		write(100,*)
 		!
 		!PROJECTIONS
 		write(100,*)	'Begin Projections'
 		!write(100,*)	'H: l=',0,';l=',1,',mr=',1,';l=',1,',mr=',2
-		if(nWfs == 6) write(100,*)	'H: l=0;l=1,mr=2,3'
-		if(nWfs == 2) write(100,*)	'H: l=0'
+		if(nWfs / nAt == 3) write(100,*)	'H: l=0;l=1,mr=2,3'
+		if(nWfs / nAt == 1) write(100,*)	'H: l=0'
 		
 		!write(100,*)	'He: l=0;l=1,mr=1,2'
 		write(100,*)	'End Projections'
@@ -285,7 +247,7 @@ module w90Interface
 		real_lattice		= 0.0_dp
 		real_lattice(1,1)	= aX * aUtoAngstrm 
 		real_lattice(2,2)	= aY * aUtoAngstrm
-		real_lattice(3,3)	= aX * aY * aUtoAngstrm
+		real_lattice(3,3)	= min(aX,aY) * aUtoAngstrm
 		!reciprocal cell
 		recip_lattice		= 0.0_dp
 		recip_lattice(1,1)	= 2.0_dp * PI_dp / real_lattice(1,1) 	
@@ -352,23 +314,23 @@ module w90Interface
 		write(100,*)	'mp_grid   = ', mp_grid(1) , ' ', mp_grid(2), ' ', mp_grid(3)
 		write(100,*)	'num_iter  = ', nW90it
 		write(100,*)	
-		write(100,*)	'shell_list =',shell
+		write(100,*)	'shell_list =',shells
 		write(100,*)	'skip_b1_tests = .true.'
 		if( useBloch )	write(100,*)	'use_bloch_phases = true '
 		write(100,*)	
 		!
 		!real lattice
 		write(100,*)	'begin unit_cell_cart'
-		write(100,*)	'ang'
-		write(100,*)	real_lattice(1,1), ' ', real_lattice(1,2), ' ', real_lattice(1,3)	
-		write(100,*)	real_lattice(2,1), ' ', real_lattice(2,2), ' ', real_lattice(2,3)	
-		write(100,*)	real_lattice(3,1), ' ', real_lattice(3,2), ' ', real_lattice(3,3)		
+			write(100,*)	'ang'
+			write(100,*)	real_lattice(1,1), ' ', real_lattice(1,2), ' ', real_lattice(1,3)	
+			write(100,*)	real_lattice(2,1), ' ', real_lattice(2,2), ' ', real_lattice(2,3)	
+			write(100,*)	real_lattice(3,1), ' ', real_lattice(3,2), ' ', real_lattice(3,3)		
 		write(100,*)	'end unit_cell_cart'
 		write(100,*)	
 		!
-		!atom cart
+		!atom cartesian
 		write(100,*)	'begin atoms_cart'
-		write(100,*)	'ang'
+			write(100,*)	'ang'
 			do at = 1, num_atoms
 				write(100,*) atom_symbols(at), atoms_cart(:,at)
 			end do
@@ -377,20 +339,24 @@ module w90Interface
 		!
 		!k points
 		write(100,*)"begin kpoints"
-        do qi=1,num_kpts
-            write(100,*)	kpt_latt(:,qi)
-        end do
+        	do qi=1,num_kpts
+        	    write(100,*)	kpt_latt(:,qi)
+        	end do
         write(100,*)"end kpoints"
         write(100,*)
+
+    
+
+		
         !
         !PROJECTIONS
 		write(100,*)	'Begin Projections'
-		if(nWfs/nAt == 3)	write(100,*)	'H: l=0;l=1,mr=2,3'	
-		if(nWfs/nAt == 1)	write(100,*)	'H: l=0'
+		if( nWfs/ nAt == 3)	write(100,*)	'H: l=0;l=1,mr=2,3'	
+		if( nWfs/ nAt == 1)	write(100,*)	'H: l=0'
 		write(100,*)	'End Projections'
 		write(100,*)
 		!
-		!JOBS for TB basis
+		!OUTPUT JOBS
 		write(100,*)	'write_u_matrices = .true.'
 		write(100,*)	'write_tb = .true.'
 		write(100,*)	'write_hr = .true.'

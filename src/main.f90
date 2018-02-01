@@ -6,7 +6,7 @@ program main
 	use sysPara
 	use potWellModel, 	only: 		solveHam
 	use basisIO,		only:		readAbIn, readBasis
-	use w90Interface,	only:		run_w90
+	use w90Interface,	only:		prep_w90
 	use postW90,		only:		effTBmodel
 	use berry,			only:		berryMethod
 
@@ -81,7 +81,7 @@ program main
 		alloT = T1 - T0
 	end if
 	
-		
+	write(*,*)"[#",myID,"]: my shells:", shells
 	
 	
 	!ELECTRONIC STRUCTURE
@@ -121,43 +121,43 @@ program main
 	
 
 		call cpu_time(T0)
-		write(*,*)"[main]:**************************WANNIER90 INTERFACE*************************"
-		call run_w90(ck,En)
+		if( doPrepW90 )	 then
+			write(*,*)	"[main]:**************************WANNIER90 INTERFACE*************************"
+			call prep_w90(ck,En)
+			write(*,*)	"[main]: please run w90 now"
+		end if
+
+
+
 
 		!EFF TB - post w90
 		call cpu_time(T0)
-		write(*,*)"[main]:**************************POST WANNIER90 *************************"
 		if(	doPw90 ) then
-			
+			write(*,*)"[main]:**************************POST WANNIER90 *************************"
 			write(*,*)	"[main]: start with eff TB model calculations"
 			call effTBmodel()
 			write(*,*)	"[main]: done with effective tight binding calculations"
-		else
-			write(*,*)	"[main]: effective TB model disabled"
+			write(*,*)"*"
+			write(*,*)"*"
+			write(*,*)"*"
+			write(*,*)"*"
 		end if
-		!
-		write(*,*)"*"
-		write(*,*)"*"
-		write(*,*)"*"
-		write(*,*)"*"
 		call cpu_time(T1)
 		pwT	= T1-T0
 	
 	
 		!K SPACE METHOD
 		call cpu_time(T0)
-		write(*,*)"[main]:**************************BERRY METHOD*************************"
+		
 		if ( doBerry ) then
+			write(*,*)"[main]:**************************BERRY METHOD*************************"
 			call berryMethod(ck, En)
 			write(*,*)"[main]: done with wavefunction method "
-		else
-			write(*,*)"[main]: berry method disabled"
+			write(*,*)"*"
+			write(*,*)"*"
+			write(*,*)"*"
+			write(*,*)"*"
 		end if
-		!
-		write(*,*)"*"
-		write(*,*)"*"
-		write(*,*)"*"
-		write(*,*)"*"
 		call cpu_time(T1)
 		berryT	= T1 - T0
 
