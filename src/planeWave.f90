@@ -115,6 +115,10 @@ module planeWave
 
 
 	subroutine calcConnOnCoarse(ck, nntot, nnlist, nncell, b_k, w_b, A_conn)
+		!calculates the Berry connection, based on finite differences
+		!nntot, nnlist, nncell list the nearest neighbours (k-space)
+		!b_k:	 non zero if qi at boundary of bz and nn accross bz
+		!w_b:	 weight of nn 
 		complex(dp),	intent(in)			:: 	ck(:,:,:)
 		integer,		intent(in)			::	nntot, nnlist(:,:), nncell(:,:,:)
 		real(dp),		intent(in)			::	b_k(:,:), w_b(:)
@@ -127,14 +131,13 @@ module planeWave
 		!
 		gX = 2.0_dp * PI_dp / aX
 		gY = 2.0_dp * PI_dp / aY
-		!
-		wbx 	= 2.0_dp / 		( real(4,dp) * dqx**2 )
-		wby		= 2.0_dp / 		( real(4,dp) * dqy**2 )
-		write(*,*)	"[calcConnOnCoarse]: my weights w_x=",wbx,"; w_y=",wby
-		write(*,*)	"[calcConnOnCoarse]: wannier weights:"
-		do nn = 1, nntot
-			write(*,*) w_b(nn)
-		end do 
+
+		!DEBUG
+		if( B1condition(b_k, w_b) )	 then
+			write(*,*)	"[calcConnOnCoarse]: B1 condition fullfilled. FD scheme accepted"
+		else
+			write(*,*)	"[calcConnOnCoarse]: warning B1 condition not fullfilled" 
+		end if
 		!
 		do qi = 1, nQ
 			do nn = 1, nntot
@@ -150,12 +153,36 @@ module planeWave
 
 			end do
 		end do
+
 		!
 		return
 	end subroutine
 
 
+	logical function B1condition(b_k, w_b)
+		! test if
+		!		sum_b{w_b * b_a * b_b}	= \delta_ab 
+		! is true for all a,b
+		real(dp),		intent(in)		:: 	b_k(:,:), w_b(:)
+		logical							:: 	xx, xy, yy
+		!
+		xx	= .true.
+		xy	= .true.
+		yy	= .true.
+		!
+		if(		abs(	sum(w_b(:)*b_k(1,:)*b_k(1,:)) - 1.0_dp	)		< 0.1_dp				) 			xx = .true.
+		if(		abs(	sum(w_b(:)*b_k(2,:)*b_k(2,:)) - 1.0_dp	)		< 0.1_dp				) 			yy = .true.
+		if(		abs(	sum(w_b(:)*b_k(1,:)*b_k(2,:)) 			)		< 0.1_dp				)			xy = .true.
+		!
+		B1condition = xx .and. yy .and. xy
+		!
+		return
+	end function
+
+
+
 	subroutine calcConnOnCoarseQUADRATIC(ck, A)
+		!	deprecated, use calcConnOnCoarse
 		!finite difference on lattice periodic unk to calculate the Berry connection A
 		!	A_n(k) 	= <u_n(k)|i \nabla_k|u_n(k)>
 		!		 	= i  <u_n(k)| \sum_b{ w_b * b * [u_n(k+b)-u_n(k)]}
