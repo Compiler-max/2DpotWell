@@ -8,8 +8,9 @@ module w90Interface
 	implicit none
 
 	private
-	public ::					prep_w90, read_U_matrix, readBandVelo, readFDscheme, & 
-								seed_name, wann_centres, wann_spreads, spread
+	public ::					prep_w90, &
+								read_U_matrix, readBandVelo, read_FD_scheme, read_wann_centers, & 
+								seed_name
 
 	!public var
 	character(len=3)					:: 	seed_name
@@ -159,7 +160,7 @@ module w90Interface
 
 
 
-	subroutine readFDscheme(nntot, nnlist, nncell, b_k, w_b)
+	subroutine read_FD_scheme(nntot, nnlist, nncell, b_k, w_b)
 		!call after w90 is finished
 		!reads seedname.nnkp & seedname.wout
 		integer, 					intent(out)		::	nntot
@@ -262,6 +263,45 @@ module w90Interface
 		end do
 		close(635)
 
+		return
+	end subroutine
+
+
+	subroutine	read_wann_centers(w_centers)
+		real(dp),		intent(out)			:: 	w_centers(:,:)
+		integer								::	wannF, ntot, at, stat, start
+		character(len=100)					::	line
+		!
+		!
+		open(unit=340, iostat=stat, file=w90_dir//seedName//'_centres.xyz', form='formatted', status='old', action='read')
+		if( stat == 0) then
+			!read header
+			read(340, *)	 ntot
+			read(340, *)	
+			if( ntot - nAt /= nWfs )	write(*,*)"[read_wann_centers]: warning _centres.xyz has wrong nWfs"
+			!
+			!read centers
+			do wannF = 1,  size(w_centers,2)
+				read(340,"(a)",iostat=stat) line
+				start 	= scan(line,"X" ) 			+1
+				!read everything after "X"
+				read(line(start:100), *)	w_centers(1:3, wannF)
+			end do
+			!make sure correct amount of atoms is given (could also read atom positions here)
+			do at = 1, nAt
+				read(340, *)
+			end do
+		else
+			write(*,*)	"[read_wann_centers]: could not read _centres.xyz file"
+			w_centers = 0.0_dp
+		end if
+		close(340)
+		!
+		!
+		!convert to [a.u.]
+		w_centers 	= w_centers 	/ aUtoAngstrm
+		!
+		!
 		return
 	end subroutine
 
