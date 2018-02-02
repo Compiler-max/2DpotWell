@@ -44,13 +44,13 @@ module polarization
 
 
 
-	subroutine calcPolViaA(A_mat, pElA)
+	subroutine calcPolViaA(A_mat, pElA, p_array)
 		!calculates the polarization by integrating connection over the brillouin zone
 		! r_n 	= <0n|r|0n> 
 		!		=V/(2pi)**2 \integrate_BZ <unk|i \nabla_k|unk>
 		!		=V/(2pi)**2 \integrate_BZ A(k)
 		complex(dp),		intent(in)		:: A_mat(:,:,:,:)			!A(2,	 nWfs, nWfs, nQ	)	
-		real(dp),			intent(out)		:: pElA(:)
+		real(dp),			intent(out)		:: pElA(:), p_array(:,:)
 		complex(dp)	,		allocatable		:: val(:)
 		real(dp),			allocatable		:: rVal(:)
 		integer								:: n
@@ -80,8 +80,9 @@ module polarization
 				!val(:)	= val(:) / real(size(A_mat,4),dp)
 				!
 				!SUBSTRACT AT CENT
-				rVal(:)	= dreal(val(:))
+				rVal(:)			= dreal(val(:))
 				!call substractAtPos(n,rVal)
+				p_array(:,n) 	= rVal(:)	
 				!
 				!SUM TOTAL POL
 				pelA(:)	= pElA(:) + rVal(:)
