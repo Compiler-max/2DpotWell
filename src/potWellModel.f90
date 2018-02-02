@@ -26,11 +26,9 @@ module potWellModel
 		!also generates the Wannier functions on the fly (sum over all k)
 		!																
 		complex(dp),	allocatable		::	Hmat(:,:) , ck_temp(:,:)
-		real(dp),		allocatable		::	En_loc(:), En_temp(:)
+		real(dp),		allocatable		::	En_temp(:)
 		integer							:: 	qi, qLoc, found, Gsize
 		!
-		!
-		if( myID==root .and. debugHam )		write(*,*)	"[solveHam]: debugging ON. Will do additional tests of the results"
 		!
 		allocate(	Hmat(				Gmax,	Gmax				)	)
 		allocate(	ck_temp(		GmaxGLOBAL, nSolve				)	)
@@ -49,9 +47,6 @@ module potWellModel
 			Gsize 	= nGq(qLoc)
 			call eigSolverPART(Hmat(1:Gsize,1:Gsize),En_temp(1:Gsize), ck_temp(1:Gsize,:), found)
 			!
-			!COPY TO TARGET ARRAYS
-			En_loc(1:nSolve) = En_temp(1:nSolve)
-			!
 			!DEBUG TESTS
 			if( found /= nSolve )	write(*,'(a,i3,a,i5,a,i5)'	)	"[#",myID,";solveHam]: only found ",found," bands of required ",nSolve
 			if( nBands > found	)	write(*,'(a,i3,a)'			)	"[#",myID,";solveHam]: warning did not found required amount of bands"
@@ -62,7 +57,7 @@ module potWellModel
 			!
 			!WRITE COEFF TO FILE
 			call writeABiN_basCoeff(qi, ck_temp)
-			call writeABiN_energy(qi, En_loc)
+			call writeABiN_energy(qi, En_temp(1:nSolve))
 			!FINALIZE
 			write(*,'(a,i3,a,i5,a,i5,a,i5,a)')"[#",myID,", solveHam]: done for qi=",qi," done tasks=(",qLoc,"/",qChunk,")"
 			qLoc = qLoc + 1		
