@@ -165,20 +165,13 @@ module planeWave
 		real(dp),		intent(in)			::	b_k(:,:), w_b(:)
 		complex(dp),	intent(out)			::	A_conn(:,:,:,:)
 		complex(dp),	allocatable			::	M_matrix(:,:)
-		real(dp)							::	gShift(2), gX, gY, wbx, wby
+		real(dp)							::	gShift(2), gX, gY
 		integer								::	qi, nn
 		!
 		allocate(	M_matrix( size(A_conn,2), size(A_conn,3) )			)
 		!
 		gX = 2.0_dp * PI_dp / aX
 		gY = 2.0_dp * PI_dp / aY
-
-		!DEBUG
-		if( B1condition(b_k, w_b) )	 then
-			write(*,*)	"[calcConnOnCoarse]: B1 condition fullfilled. FD scheme accepted"
-		else
-			write(*,*)	"[calcConnOnCoarse]: warning B1 condition not fullfilled" 
-		end if
 		!
 		do qi = 1, nQ
 			do nn = 1, nntot
@@ -194,7 +187,13 @@ module planeWave
 
 			end do
 		end do
-
+		!
+		!DEBUG
+		if( B1condition(b_k, w_b) )	 then
+			write(*,*)	"[calcConnOnCoarse]: B1 condition fullfilled. FD scheme accepted"
+		else
+			write(*,*)	"[calcConnOnCoarse]: warning B1 condition not fullfilled" 
+		end if
 		!
 		return
 	end subroutine

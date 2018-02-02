@@ -23,34 +23,25 @@ module semiClassics
 
 
 !public
-	subroutine	calcFirstOrdP(Fcurv, Aconn, Velo, En, cent_F2, cent_F3)
+	subroutine	calcFirstOrdP(Fcurv, Aconn, Velo, En, pol_F2, pol_F3)
 		!calculates the first order polarization p1 according to
 		!	P'= -int_dk [0.5 (Curv.Velo)*B_ext + a']
 		complex(dp),	intent(in)		::	Fcurv(:,:,:,:), Aconn(:,:,:,:), Velo(:,:,:,:)	
 		real(dp),		intent(in)		::	En(:,:)			
-		real(dp),		intent(out)		::  cent_F2(:,:), cent_F3(:,:)
+		real(dp),		intent(out)		::  pol_F2(:,:), pol_F3(:,:)
 		!real(dp)						::	pnF2(3), pnF3(3)
 		real(dp)						:: 	F2(3,3), F3(3,3), F2k(3,3), F3k(3,3)
 		real(dp)						:: 	densCorr(3)
-		integer							:: 	n, ki, kSize, i, j
+		integer							:: 	n, ki, kSize
 		!
 		kSize	= size(Velo,4)
-		!
-		write(*,*)	"read ub energies at q=1"
-		do n = 1, size(En,1)
-			write(*,*)	En(n,2)
-		end do
-		!
-		if(		kSize /= size(En,2)		) then
-			write(*,*)"[calcFirstOrdP]: WARNING Energy and velocities live on different k meshes!"
-		end if
 		!
 		!
 		write(*,*)"[calcFirstOrdP]: start calculating P' via semiclassic approach"
 		write(*,*)"[calcFirstOrdP]: will use ",size(Velo,3)," states"
 
-		cent_F2 = 0.0_dp
-		cent_F3 = 0.0_dp
+		pol_F2 = 0.0_dp
+		pol_F3 = 0.0_dp
 		
 		!!!$OMP PARALLEL DEFAULT(SHARED)  &
 		!!!$OMP PRIVATE(n, ki, i, j, densCorr, F2, F2k, F3, F3k)
@@ -81,12 +72,15 @@ module semiClassics
 			F3 = F3  / real(kSize,dp)
 		
 			!APPLY FIELD 
-			cent_F2(:,n) = matmul(F2,Bext) 
-			cent_F3(:,n) = matmul(F3,Bext) 
+			pol_F2(:,n) = matmul(F2,Bext) 
+			pol_F3(:,n) = matmul(F3,Bext) 
 			!
 		end do
 		!!!$OMP END DO
 		!!!$OMP END PARALLEL
+		!
+		!DEBUG
+		if(	kSize /= size(En,2)	)	 write(*,*)"[calcFirstOrdP]: WARNING Energy and velocities live on different k meshes!"
 		!
 		!
 		return

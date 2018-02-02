@@ -44,57 +44,40 @@ module polarization
 
 
 
-	subroutine calcPolViaA(A_mat, pElA, p_array)
+	subroutine calcPolViaA(A_mat, centers)
 		!calculates the polarization by integrating connection over the brillouin zone
 		! r_n 	= <0n|r|0n> 
 		!		=V/(2pi)**2 \integrate_BZ <unk|i \nabla_k|unk>
 		!		=V/(2pi)**2 \integrate_BZ A(k)
 		complex(dp),		intent(in)		:: A_mat(:,:,:,:)			!A(2,	 nWfs, nWfs, nQ	)	
-		real(dp),			intent(out)		:: pElA(:), p_array(:,:)
+		real(dp),			intent(out)		:: centers(:,:)
 		complex(dp)	,		allocatable		:: val(:)
 		real(dp),			allocatable		:: rVal(:)
 		integer								:: n
 		!
-		pelA = 0.0_dp
 		allocate(	val(  size(A_mat,1) )	)
 		allocate(	rVal( size(A_mat,1) )	)
 		!
 		!
-		if( size(A_mat,1) /= size(pElA) ) then 
-			write(*,*)	"[calcPolViaA]: dimension of A_mat and output val dont fit, el. pol. set to zero"
-		else
+		do n 	= 1, size(A_mat,2)
 			!
-			!SUM OVER  STATES
-			pElA	= 0.0_dp
-			do n 	= 1, size(A_mat,2)
-				!
-				!INTEGRATE
-				
-				val(1) = sum(A_mat(1,n,n,:)) / size(A_mat,4)
-				val(2) = sum(A_mat(2,n,n,:)) / size(A_mat,4)
-				if(size(A_mat,1)==3)	val(3) = sum(A_mat(3,n,n,:)) / size(A_mat,4)
-				!val	= dcmplx(0.0_dp)
-				!do qi = 1, size(A_mat,4)
-				!	val(:)	= val(:) + A_mat(:,n,n,qi) 
-				!end do
-				!val(:)	= val(:) / real(size(A_mat,4),dp)
-				!
-				!SUBSTRACT AT CENT
-				rVal(:)			= dreal(val(:))
-				!call substractAtPos(n,rVal)
-				p_array(:,n) 	= rVal(:)	
-				!
-				!SUM TOTAL POL
-				pelA(:)	= pElA(:) + rVal(:)
-				!
-				!DEBUG MESSAGE
-				write(*,'(a,i3,a,f8.4,a,f8.4,a)')	"[calcPolViaA]: n=",n,"p_n=",rVal(1),",",rVal(2),")."
-				if( abs(dimag(val(1))) > acc .or. abs(dimag(val(2))) > acc .or. abs(dimag(val(3))) > acc	) then
-					write(*,*)	"[calcPolViaA]: found non zero imaginary contribution from band n=",n 
-				end if	
-			end do
+			!INTEGRATE
+			val(1) = sum(A_mat(1,n,n,:)) / size(A_mat,4)
+			val(2) = sum(A_mat(2,n,n,:)) / size(A_mat,4)
+			if(size(A_mat,1)==3)	val(3) = sum(A_mat(3,n,n,:)) / size(A_mat,4)
 			!
-		end if
+			!COLLECT REAL PART
+			centers(:,n) 	= dreal(val(:))
+			!
+			!
+			!DEBUG MESSAGE
+			write(*,'(a,i3,a,f8.4,a,f8.4,a)')	"[calcPolViaA]: n=",n,"p_n=",dreal(val(1)),",",dreal(val(2)),")."
+			if( abs(dimag(val(1))) > acc .or. abs(dimag(val(2))) > acc .or. abs(dimag(val(3))) > acc	) then
+				write(*,*)	"[calcPolViaA]: found non zero imaginary contribution from band n=",n 
+			end if	
+			!
+			!
+		end do
 		!
 		!		
 		return

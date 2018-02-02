@@ -37,11 +37,10 @@ module berry
 	subroutine berryMethod(ck, EnQ)
 		complex(dp),	intent(in)		::	ck(:,:,:)
 		real(dp),		intent(in)		::	EnQ(:,:)
-		real(dp)						:: 	pBerry(3), pNiuF2(3), pNiuF3(3), pPei(3)
-		real(dp),		allocatable		:: 	R_real(:,:)
-		complex(dp),	allocatable		:: 	U_matrix(:,:,:),	ck_wann(:,:,:), AconnQ(:,:,:,:), FcurvQ(:,:,:,:),veloQ(:,:,:,:) 		
-		real(dp)						::	pWann(3)
-		real(dp),		allocatable		::	v_Band(:,:,:), krel(:,:), b_k(:,:), w_b(:), w_centers(:,:), b_centers(:,:), niu_centers(:,:)
+		complex(dp),	allocatable		:: 	U_matrix(:,:,:), ck_wann(:,:,:), &
+											AconnQ(:,:,:,:), FcurvQ(:,:,:,:),veloQ(:,:,:,:) 		
+		real(dp),		allocatable		::	R_real(:,:), v_Band(:,:,:), krel(:,:), b_k(:,:), w_b(:), &
+											w_centers(:,:), b_centers(:,:), niu_polF2(:,:), niu_polF3(:,:)
 		integer							::	nntot
 		integer,		allocatable		:: 	nnlist(:,:), nncell(:,:,:)
 		!					
@@ -56,7 +55,8 @@ module berry
 		allocate(			U_matrix(					nWfs	,	nWfs	,	nQ		)			)
 		allocate(			w_centers(		3,					nWfs					)			)
 		allocate(			b_centers(		3,					nWfs					)			)
-		allocate(			niu_centers(	3,					nWfs					)			)
+		allocate(			niu_polF2(		3,					nWfs					)			)
+		allocate(			niu_polF3(		3,					nWfs					)			)
 		!
 		!READ IN QUANTITIES
 		num_wann = nWfs
@@ -71,7 +71,7 @@ module berry
 		!!CONNECTION (via K space)
 		!call calcConnOnCoarse(ck_wann, nntot, nnlist, nncell, b_k, w_b, AconnQ)
 
-		call calcPolViaA(AconnQ,pBerry)
+		call calcPolViaA(AconnQ, b_centers)
 		!write(*,*)"[berryMethod]: coarse rotated pol =(",pBerry(1),", ",pBerry(2),", ", pBerry(3),")."
 		!!
 		!!1st ORDER SEMICLASSICS
@@ -79,20 +79,19 @@ module berry
 			write(*,*)	"[berrryMethod]: now calc first order pol"
 			FcurvQ	= dcmplx(0.0_dp)	!does not matter since <FcurvQ,AconnQ> is always zero in 2D
 			call calcVelo(ck , U_matrix , AconnQ, EnQ ,  veloQ)
-			!
-			call calcFirstOrdP(FcurvQ, AconnQ, veloQ, EnQ, pNiuF2, pNiuF3)
-			write(*,'(a,e17.10,a,e17.10,a,e17.10,a)')	"[berryMethod]: pNiuF2=(",pNiuF2(1),", ",pNiuF2(2),", ",pNiuF2(3),")."
-			write(*,'(a,e17.10,a,e17.10,a,e17.10,a)')	"[berryMethod]: pNiuF3=(",pNiuF3(1),", ",pNiuF3(2),", ",pNiuF3(3),")."
+			call calcFirstOrdP(FcurvQ, AconnQ, veloQ, EnQ, niu_polF2, niu_polF3)
 		else
-			niu_centers = 0.0_dp
-			pNiuF2 = 0.0_dp
-			pNiuF3 = 0.0_dp
+			niu_polF2 = 0.0_dp
+			niu_polF3 = 0.0_dp
 		end if
 		!!
 	
 		!!
 		!!OUTPUT
-		call writePolFile(pWann, pBerry, pNiuF2, pNiuF3, pPei )
+		!TODO :  call writePolFile(pWann, pBerry, pNiuF2, pNiuF3, pPei )
+
+
+
 		call writeConnTxt( AconnQ )
 		call writeVeloHtxt( veloQ)	!*aUtoEv*aUtoAngstrm )				
 		!!

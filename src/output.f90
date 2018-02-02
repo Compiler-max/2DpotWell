@@ -425,16 +425,32 @@ module output
 
 
 
-	subroutine writePolFile(pWann, pBerry, pNiuF2, pNiuF3, pPei )	!writePolFile(pWann, pBerry, pNiu, pPei )
-		real(dp),		intent(in)		:: pWann(2), pBerry(3), pNiuF2(3), pNiuF3(3), pPei(3)
-		real(dp)						:: pNiu(3), aUtoConv, pFirst(3)
+	subroutine writePolFile(w_centers, b_centers, niu_polF2, niu_polF3)	!writePolFile(pWann, pBerry, pNiu, pPei )
+		real(dp),		intent(in)		::	w_centers(:,:), b_centers(:,:), niu_polF2(:,:), niu_polF3(:,:)
+		real(dp)						:: 	aUtoConv, &
+											pWann(3), pBerry(3), &
+											pNiuF2(3), pNiuF3(3), pNiu(3), pFirst(3)
+		integer							::	n
+		!look at substract centers in module polarization
+
+		!SUM OVER STATES
+		pWann(1:3)	= sum(	w_centers(1:3,:)	)
+		pBerry(1:3)	= sum(	b_centers(1:3,:)	)
+		pNiuF2(1:3)	= sum(	niu_polF2(1:3,:)	)
+		pNiuF3(1:3) = sum(	niu_polF3(1:3,:)	)
+
+		!
+		pNiu 	=	pNiuF2 + pNiuF3
+		pFirst 	=	pBerry + pNiu 
+
+
 		!	
 		aUtoConv = 1.602176565_dp / 5.2917721092_dp * 1e-4_dp  ! converts from [a.u.] to  [mücro C / cm]
 		!	
 		open(unit=600,file=info_dir//'polOutput.txt',action='write')
 		write(600,*)"**************POLARIZATION OUTPUT FILE**********************"
 		write(600,*)" via wavefunction method"
-		if(doMagHam )	write(600,*)"magnetic hamiltonian used"
+		if(doMagHam )	write(600,*)"MAGNETIC HAMILTONIAN USED!!!"
 		write(600,*)"Gcut=",Gcut
 		write(600,*)"nQ=",nQx,"x",nQy
 		write(600,*)"*"
@@ -456,13 +472,6 @@ module output
 		write(600,'(a,f16.7,a,f16.7,a,f16.7,a,a,f16.7,a,f16.7,a)')	"pBerry=  (",		pBerry(1)	,	", ",&	
 																					pBerry(2), " ,", pBerry(3)	,	") [a.u.],",& 
 												" moded=(",dmod(pBerry(1),aX/vol)*aUtoConv,", ",dmod(pBerry(2),aY/vol)*aUtoConv,") [muC/cm]."
-		!write(600,'(a,e16.9,a,f16.12,a,f16.12,a)')	"pInt= ",norm2(pInt)," * (", &	
-		!														pInt(1)/norm2(pInt),	", ",	pInt(2)/norm2(pInt),	")"
-		!write(600,'(a,e16.9,a,f16.12,a,f16.12,a)')	"pIon= ",norm2(pIon)," * (", &	
-		!														pIon(1)/norm2(pIon)	,	", ",	pIon(2)/norm2(pIon),	")"
-		!write(600,'(a,e16.9,a,f16.12,a,f16.12,a)')	"pTot= ",norm2(pTot)," * (", &	
-		!														pTot(1)/norm2(pTot),	", ",	pTot(2)/norm2(pTot),	")"
-		!
 		!
 		write(600,*)"**************PERTURBATION:"
 		write(600,*) "states considered for perturbation nStates=",nSolve
@@ -483,21 +492,59 @@ module output
 		!
 		write(600,'(a,e16.7,a,e16.7,a,e16.7,a,a,e16.7,a,e16.7,a)')	"pNiuF3= (", 	pNiuF3(1),	", ",	pNiuF3(2),", ", pNiuF3(3),	")[a.u.]",&
 														" moded=(",dmod(pNiuF3(1),aX/vol)*aUtoConv,", ",dmod(pNiuF3(2),aY/vol)*aUtoConv,") [muC/cm]."
-		!
-		pNiu(:)	= pNiuF2(:) + pNiuF3(:)
+	
 		!												
 		write(600,'(a,e16.7,a,e16.7,a,e16.7,a,a,e16.7,a,e16.7,a)')	"pNiu  = (", 	pNiu(1),	", ",	pNiu(2),", ", pNiu(3),	")[a.u.]",&
 														" moded=(",dmod(pNiu(1),aX/vol)*aUtoConv,", ",dmod(pNiu(2),aY/vol)*aUtoConv,") [muC/cm]."
-		
-		!PEIERLS													
-		write(600,'(a,e16.7,a,e16.7,a,e16.7,a,a,e16.7,a,e16.7,a)')	"pPei  = (", 	pPei(1),	", ",	pPei(2),", ", pPei(3),	")[a.u.]",&
-																" moded=(",dmod(pPei(1),aX/vol)*aUtoConv,", ",dmod(pPei(2),aY/vol)*aUtoConv,") [muC/cm]."
+	
 		
 		!0 + 1 order
 		pFirst = pBerry + pNiu
 		write(600,'(a,e16.7,a,e16.7,a,e16.7,a,a,e16.7,a,e16.7,a)')	"p0+1  = (", 	pFirst(1),	", ",	pFirst(2),", ", pFirst(3),	")[a.u.]",&
 																" moded=(",dmod(pFirst(1),aX/vol)*aUtoConv,", ",dmod(pFirst(2),aY/vol)*aUtoConv,") [muC/cm]."
 		write(600,*)" p0+1 = pBerry + pNiu"
+
+
+
+
+
+		!STATE RESOLVED
+		write(600,*)	"*"
+		write(600,*)	"*"
+		write(600,*)	"*"
+		write(600,*)	"********wannier90 centers***********************"
+		do n = 1, size(w_centers,2)
+			write(600,'(a,i3,a,e16.7,a,e16.7,a,e16.7,a)')	"pWann(n=",n,")=	( ",w_centers(1,n),", ",w_centers(2,n),", ",w_centers(3,n)," )"
+		end do
+
+		write(600,*)	"*"
+		write(600,*)	"*"
+		write(600,*)	"*"
+		write(600,*)	"********Berry centers (k-space integral)***********************"
+		do n = 1, size(b_centers,2)
+			write(600,'(a,i3,a,e16.7,a,e16.7,a,e16.7,a)')	"pBerr(n=",n,")=	( ",b_centers(1,n),", ",b_centers(2,n),", ",b_centers(3,n)," )"
+		end do
+
+
+		write(600,*)	"*"
+		write(600,*)	"*"
+		write(600,*)	"*"
+		write(600,*)	"********Niu F2 (first order contribution)***********************"
+		do n = 1, size(niu_polF2,2)
+			write(600,'(a,i3,a,e16.7,a,e16.7,a,e16.7,a)')	"pNiuF2(n=",n,")=	( ",niu_polF2(1,n),", ", niu_polF2(2,n),", ", niu_polF2(3,n)," )"
+		end do
+	
+		write(600,*)	"*"
+		write(600,*)	"*"
+		write(600,*)	"*"
+		write(600,*)	"********Niu F3 (first order contribution)***********************"
+		do n = 1, size(niu_polF3,2)
+			write(600,'(a,i3,a,e16.7,a,e16.7,a,e16.7,a)')	"pNiuF3(n=",n,")=	( ",niu_polF3(1,n),", ",niu_polF3(2,n),", ",niu_polF3(3,n)," )"
+		end do
+
+
+
+
 
 		close(600)
 		!

@@ -211,6 +211,9 @@ module postW90
 
 	subroutine polWrapper(pWann, pConn, pNiuF2, pNiuF3, pPei)
 		real(dp),		intent(out)		:: pWann(3), pConn(3), pNiuF2(3), pNiuF3(3), pPei(3)
+		real(dp),		allocatable		:: dummy(:,:), niu_polF2(:,:), niu_polF3(:,:)
+		!
+		allocate(	dummy(3,num_wann)	)
 		!
 		pWann	= 0.0_dp
 		pConn	= 0.0_dp
@@ -225,10 +228,11 @@ module postW90
 		!0th order pol
 		call calcPolWannCent( wCent, pWann )
 		write(*,'(a,f10.4,a,f10.4,a,f10.4,a)')	"[effTBmodel]: pWann=(",pWann(1),", ",pWann(2),", ",pWann(3),")."
-		call calcPolViaA(A_mat, pConn)
+		call calcPolViaA(A_mat, dummy)
+		pConn(1:3) = sum(dummy(1:3,:))
 		write(*,'(a,f10.5,a,f10.5,a,f10.5,a)')	"[effTBmodel]: pConn=(",pConn(1),", ",pConn(2),", ",pConn(3),")."
 		!1st order pol
-		call calcFirstOrdP(Om_mat,A_mat,v_mat,En_vec,pNiuF2, pNiuF3) !calcFirstOrdP(Fcurv, Aconn, Velo, En, p1F2, p1F3)
+		call calcFirstOrdP(Om_mat,A_mat,v_mat,En_vec,niu_polF2, niu_polF3) !calcFirstOrdP(Fcurv, Aconn, Velo, En, p1F2, p1F3)
 		write(*,'(a,e17.10,a,e17.10,a,e17.10,a)')	"[effTBmodel]: pNiuF2=(",pNiuF2(1),", ",pNiuF2(2),", ",pNiuF2(3),")."
 		write(*,'(a,e17.10,a,e17.10,a,e17.10,a)')	"[effTBmodel]: pNiuF3=(",pNiuF3(1),", ",pNiuF3(2),", ",pNiuF3(3),")."
 		!
