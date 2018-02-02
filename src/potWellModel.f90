@@ -71,7 +71,7 @@ module potWellModel
 		end do
 		!		
 		!GATHER ON ROOT
-		call MPI_GATHER(	En_loc,	nSolve*qChunk,	MPI_DOUBLE_PRECISION,	En_glob,	nSolve*qChunk,	MPI_DOUBLE_PRECISION,	root,	MPI_COMM_WORLD,	ierr)
+		!call MPI_GATHER(	En_loc,	nSolve*qChunk,	MPI_DOUBLE_PRECISION,	En_glob,	nSolve*qChunk,	MPI_DOUBLE_PRECISION,	root,	MPI_COMM_WORLD,	ierr)
 		!WRITE TO FILE
 		if( myID == root ) then
 			write(*,*) "root received data, will write to file now"
