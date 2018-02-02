@@ -33,7 +33,6 @@ module potWellModel
 		allocate(	Hmat(				Gmax,	Gmax				)	)
 		allocate(	ck_temp(		GmaxGLOBAL, nSolve				)	)
 		allocate(	En_temp(				Gmax					)	)	
-		allocate(	En_loc(						nSolve				)	)
 		!
 		qLoc = 1
 		call MPI_BARRIER( MPI_COMM_WORLD, ierr)
