@@ -23,12 +23,12 @@ module semiClassics
 
 
 !public
-	subroutine	calcFirstOrdP(Fcurv, Aconn, Velo, En, pF2, pF3)
+	subroutine	calcFirstOrdP(Fcurv, Aconn, Velo, En, cent_F2, cent_F3)
 		!calculates the first order polarization p1 according to
 		!	P'= -int_dk [0.5 (Curv.Velo)*B_ext + a']
 		complex(dp),	intent(in)		::	Fcurv(:,:,:,:), Aconn(:,:,:,:), Velo(:,:,:,:)	
 		real(dp),		intent(in)		::	En(:,:)			
-		real(dp),		intent(out)		:: 	pF2(3), pF3(3)
+		real(dp),		intent(out)		::  cent_F2(:,:), cent_F3(:,:)
 		!real(dp)						::	pnF2(3), pnF3(3)
 		real(dp)						:: 	F2(3,3), F3(3,3), F2k(3,3), F3k(3,3)
 		real(dp)						:: 	densCorr(3)
@@ -49,15 +49,13 @@ module semiClassics
 		write(*,*)"[calcFirstOrdP]: start calculating P' via semiclassic approach"
 		write(*,*)"[calcFirstOrdP]: will use ",size(Velo,3)," states"
 
-		pF2 = 0.0_dp
-		pF3 = 0.0_dp
-		!!!$OMP PARALLEL REDUCTION(+:pF2,pF3)  DEFAULT(SHARED)  &
+		cent_F2 = 0.0_dp
+		cent_F3 = 0.0_dp
+		
+		!!!$OMP PARALLEL DEFAULT(SHARED)  &
 		!!!$OMP PRIVATE(n, ki, i, j, densCorr, F2, F2k, F3, F3k)
 		!!!$OMP DO SCHEDULE(STATIC)
 		do n = 1, nWfs
-			!
-			write(*,*)	"hello from omp thread", OMP_GET_THREAD_NUM()," of",OMP_GET_NUM_THREADS()
-
 			F2 = 0.0_dp
 			F3 = 0.0_dp
 			!
@@ -83,18 +81,13 @@ module semiClassics
 			F3 = F3  / real(kSize,dp)
 		
 			!APPLY FIELD 
-			pF2 = matmul(F2,Bext) 
-			pF3 = matmul(F3,Bext) 
+			cent_F2(:,n) = matmul(F2,Bext) 
+			cent_F3(:,n) = matmul(F3,Bext) 
 			!
-			!write to standard out
-			write(*,'(a,i5,a,e12.5,a,e12.5,a,e12.5,a)')	"[calcFirstOrdP]: pNiuF2(n=", n, ") =(" ,pF2(1), ", ", pF2(2), ", ", pF2(3),")."
-			write(*,'(a,i5,a,e12.5,a,e12.5,a,e12.5,a)')	"[calcFirstOrdP]: pNiuF3(n=", n, ") =(" ,pF3(1), ", ", pF3(2), ", ", pF3(3),")."
 		end do
 		!!!$OMP END DO
 		!!!$OMP END PARALLEL
 		!
-		write(*,'(a,e12.5,a,e12.5,a,e12.5,a)')	"[calcFirstOrdP]: pNiuF2 =(" ,pF2(1), ", ", pF2(2), ", ", pF2(3),")."
-		write(*,'(a,e12.5,a,e12.5,a,e12.5,a)')	"[calcFirstOrdP]: pNiuF3 =(" ,pF3(1), ", ", pF3(2), ", ", pF3(3),")."
 		!
 		return
 	end subroutine
