@@ -259,7 +259,7 @@ module w90Interface
 		write(635, *)	
 		write(635, *)	"nn ,		b_k (a0^-1) , w_b(a0^2)"
 		do qnn = 1, nntot
-			write(635, '(i3,a,f6.4,a,f6.4,a,f6.4,a,f6.4)')	qnn," ",b_k(1,qnn)," ",b_k(2,qnn)," ",b_k(3,qnn)," ",w_b(qnn)
+			write(635, '(i3,a,f7.4,a,f7.4,a,f7.4,a,f7.4)')	qnn," ",b_k(1,qnn)," ",b_k(2,qnn)," ",b_k(3,qnn)," ",w_b(qnn)
 		end do
 		close(635)
 
