@@ -28,7 +28,7 @@ module potWellModel
 		complex(dp),	allocatable		::	Hmat(:,:) , ck_temp(:,:)
 		real(dp),		allocatable		::	En_temp(:)
 		integer							:: 	qi, qLoc, found, Gsize
-		!
+		!	
 		!
 		allocate(	Hmat(				Gmax,	Gmax				)	)
 		allocate(	ck_temp(		GmaxGLOBAL, nSolve				)	)
@@ -36,6 +36,7 @@ module potWellModel
 		allocate(	En_loc(						nSolve				)	)
 		!
 		qLoc = 1
+		call MPI_BARRIER( MPI_COMM_WORLD, ierr)
 		do qi = myID*qChunk +1, myID*qChunk + qChunk
 			!
 			!!SETUP HAM
