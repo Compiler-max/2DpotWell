@@ -58,23 +58,25 @@ module berry
 		allocate(			niu_polF2(		3,					nWfs					)			)
 		allocate(			niu_polF3(		3,					nWfs					)			)
 		!
+		!
 		!READ IN QUANTITIES
 		num_wann = nWfs
 		num_kpts = nQ
 		call read_FD_scheme(nntot, nnlist, nncell, b_k, w_b)
+		call read_U_matrix(R_real, U_matrix, krel)
 		call read_wann_centers(w_centers)
 		!
+		!
 		!ROTATE
-		call read_U_matrix(R_real, U_matrix, krel)
 		call applyRot(ck, U_matrix, ck_wann)
 		!
-		!!CONNECTION (via K space)
-		!call calcConnOnCoarse(ck_wann, nntot, nnlist, nncell, b_k, w_b, AconnQ)
-
+		!
+		!CONNECTION (via K space)
+		call calcConnOnCoarse(ck_wann, nntot, nnlist, nncell, b_k, w_b, AconnQ)
 		call calcPolViaA(AconnQ, b_centers)
-		!write(*,*)"[berryMethod]: coarse rotated pol =(",pBerry(1),", ",pBerry(2),", ", pBerry(3),")."
-		!!
-		!!1st ORDER SEMICLASSICS
+		!
+		!
+		!1st ORDER SEMICLASSICS
 		if(doNiu) then
 			write(*,*)	"[berrryMethod]: now calc first order pol"
 			FcurvQ	= dcmplx(0.0_dp)	!does not matter since <FcurvQ,AconnQ> is always zero in 2D
@@ -84,19 +86,12 @@ module berry
 			niu_polF2 = 0.0_dp
 			niu_polF3 = 0.0_dp
 		end if
-		!!
-	
-		!!
-		!!OUTPUT
-		!TODO :  call writePolFile(pWann, pBerry, pNiuF2, pNiuF3, pPei )
-
-
-
+		!
+		!
+		!OUTPUT
+		call writePolFile(w_centers, b_centers, niu_polF2, niu_polF3)
 		call writeConnTxt( AconnQ )
 		call writeVeloHtxt( veloQ)	!*aUtoEv*aUtoAngstrm )				
-		!!
-		!write(*,*)	"[berrryMethod]: all done"
-		!
 		!
 		!
 		return
