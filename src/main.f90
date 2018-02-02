@@ -96,14 +96,11 @@ program main
 	
 	
 	!HAM SOLVER
+	call MPI_BARRIER( MPI_COMM_WORLD, ierr )	
 	if( mpiSuccess .and. doSolveHam ) then
-		!call cpu_time(T0)	
-		
-		call MPI_BARRIER( MPI_COMM_WORLD, ierr )	
+		!
 		if( myID == root )	call cpu_time(T0)
 		if( myID == root ) 	write(*,*)"[main]:**************************ELECTRONIC STRUCTURE RUN*************************"
-	
-		!
 		!
 		call solveHam()
 		call MPI_BARRIER( MPI_COMM_WORLD, ierr )
@@ -112,6 +109,7 @@ program main
 			call cpu_time(T1)
 			hamT = T1-T0
 		end if
+		!
 	end if
 	
 

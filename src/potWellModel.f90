@@ -26,7 +26,7 @@ module potWellModel
 		!also generates the Wannier functions on the fly (sum over all k)
 		!																
 		complex(dp),	allocatable		::	Hmat(:,:) , ck_temp(:,:)
-		real(dp),		allocatable		::	En_loc(:,:), En_temp(:), En_glob(:,:)
+		real(dp),		allocatable		::	En_loc(:), En_temp(:)
 		integer							:: 	qi, qLoc, found, Gsize
 		!
 		!
@@ -35,10 +35,7 @@ module potWellModel
 		allocate(	Hmat(				Gmax,	Gmax				)	)
 		allocate(	ck_temp(		GmaxGLOBAL, nSolve				)	)
 		allocate(	En_temp(				Gmax					)	)	
-		allocate(	En_loc(						nSolve	, 	qChunk	)	)
-		!
-		if( myID == root ) 		allocate(	En_glob(		nSolve, 			nQ		)	)
-		if( myID /= root )		allocate(	En_glob(		0,					0		)	)
+		allocate(	En_loc(						nSolve				)	)
 		!
 		qLoc = 1
 		do qi = myID*qChunk +1, myID*qChunk + qChunk
@@ -53,7 +50,7 @@ module potWellModel
 			call eigSolverPART(Hmat(1:Gsize,1:Gsize),En_temp(1:Gsize), ck_temp(1:Gsize,:), found)
 			!
 			!COPY TO TARGET ARRAYS
-			En_loc(1:nSolve,qLoc)			= En_temp(1:nSolve)
+			En_loc(1:nSolve) = En_temp(1:nSolve)
 			!
 			!DEBUG TESTS
 			if( found /= nSolve )	write(*,'(a,i3,a,i5,a,i5)'	)	"[#",myID,";solveHam]: only found ",found," bands of required ",nSolve
@@ -65,18 +62,11 @@ module potWellModel
 			!
 			!WRITE COEFF TO FILE
 			call writeABiN_basCoeff(qi, ck_temp)
+			call writeABiN_energy(qi, En_loc)
 			!FINALIZE
 			write(*,'(a,i3,a,i5,a,i5,a,i5,a)')"[#",myID,", solveHam]: done for qi=",qi," done tasks=(",qLoc,"/",qChunk,")"
 			qLoc = qLoc + 1		
 		end do
-		!		
-		!GATHER ON ROOT
-		!call MPI_GATHER(	En_loc,	nSolve*qChunk,	MPI_DOUBLE_PRECISION,	En_glob,	nSolve*qChunk,	MPI_DOUBLE_PRECISION,	root,	MPI_COMM_WORLD,	ierr)
-		!WRITE TO FILE
-		if( myID == root ) then
-			write(*,*) "root received data, will write to file now"
-			call writeABiN_energy(En_glob)
-		end if
 		!
 		!
 		return

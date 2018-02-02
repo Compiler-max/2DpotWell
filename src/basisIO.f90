@@ -21,19 +21,17 @@ module basisIO
 
 
 !WRITE
-	subroutine writeABiN_energy(En_glob)
-		real(dp),		intent(in)		:: 	En_glob(:,:)
+	subroutine writeABiN_energy(qi, En_loc)
+		integer,		intent(in)		::	qi
+		real(dp),		intent(in)		:: 	En_loc(:)
+		character(len=20)				::	filename
 		!
 		!WRITE TO FILE
-		if(myID == root ) then
-			open(unit=200, file=raw_dir//'bandStruct.dat', form='unformatted', access='stream', action='write', status='unknown')
-			write(200)	En_glob
-			close(200)
-			write(*,'(a,i3,a)')		"[#",myID,";writeABiN_energy]: wrote energy bands to file"
-		end if
+		write(filename, format) raw_dir//'enK.',qi
+		open(unit=200, file=filename, form='unformatted', access='stream', action='write', status='unknown')
+		write(200)	En_loc
+		close(200)
 		!
-		!DEBUG
-		if( size(En_glob,2) /= nQ )	write(*,'(a,i3,a)')		"[#",myID,";writeABiN_energy]: bands have wrong qpt size"
 		!
 		return
 	end subroutine
@@ -159,12 +157,11 @@ module basisIO
 	subroutine	readAbIn(ck, En)
 		complex(dp),	intent(out)		:: ck(:,:,:)
 		real(dp),		intent(out)		:: En(:,:)
-		real(dp),		allocatable		:: buffer(:,:), eBuff(:)
+		real(dp),		allocatable		:: buffer(:,:)
 		integer							:: qi
 		character(len=20)				:: filename
 		!
 		allocate(	buffer( size(ck,1), size(ck,2) 	)		)
-		allocate(	eBuff(size(En,1)				)		)
 		!
 		!UNK REAL PART
 		do qi = 1 , size(ck,3)
@@ -186,12 +183,12 @@ module basisIO
 		write(*,*)	"[readAbIn]: read the basis coefficients"
 		!
 		!BAND ENERGIES
-		open(unit=720, file=raw_dir//"bandStruct.dat",form='unformatted',access='stream',action='read')
 		do qi = 1, size(En,2)	
-				read(720) eBuff
-				En(1:nSolve,qi)	= eBuff(1:nSolve)
+				write(filename, format) raw_dir//'enK.',qi
+				open(unit=720, file=filename, form='unformatted', access='stream', action='read')
+				read(720)	En(:,qi)
+				close(720)
 		end do
-		close(720)
 		write(*,*)	"[readAbIn]: read eigenvalues"
 		!
 		!
