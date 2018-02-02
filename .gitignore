@@ -25,7 +25,7 @@ bin/**
 *.mod
 *.tar.gz
 *.sh
-**/todo.txt
+**/zzz_todo_zzz.txt
 **/CMakeFiles
 
 *CMakeCache.txt

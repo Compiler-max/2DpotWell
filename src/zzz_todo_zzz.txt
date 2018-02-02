@@ -3,18 +3,15 @@ CODING:
 
 - 	write wannier function resolved centers to pol Output file
 
+- 	automatically plot band structure	
+	
+	
+	
+	
+-	 warning readIn of Gvec in berry/readAbiN currently commented(line 182) 
+	
+	
 
--	 write sh script which plots wannier centers based on _centres.xyz file
-		- check wannier documentation: for compatible  plotting routines
--	 update workflows (substream) for the new folder structure
-	
-	
-	
-	
-	-	 warning readIn of Gvec in berry/readAbiN currently commented(line 182) 
-	
-	
-	
 
 
 
