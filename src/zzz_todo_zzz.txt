@@ -1,31 +1,20 @@
 
 CODING:
 
-- 	write nwF resolved centers to pol Output file
+- 	write wannier function resolved centers to pol Output file
 
 
 -	 write sh script which plots wannier centers based on _centres.xyz file
 		- check wannier documentation: for compatible  plotting routines
+-	 update workflows (substream) for the new folder structure
 	
 	
-	
-
-	
-	-	 subfolder for .txt info files
-	
-	
-	
-	
-	
-
-	
-	-	 timing info for new structure
 	
 	
 	-	 warning readIn of Gvec in berry/readAbiN currently commented(line 182) 
 	
 	
--	 update workflows (substream) for the new folder structure
+	
 
 
 
@@ -35,6 +24,7 @@ ANALYSIS:
 
 
 	- test magnetic hamiltonian 
+			1,3, 9 supercells
 	
 	
 	- robustness of analytic velocities,
@@ -78,6 +68,8 @@ ANALYSIS:
 SONSTIGES
 
 	- WANNIERISE VIA LIBRARY MODE	: debug
+
+	- play around with google/xi
 
 
 
