@@ -59,7 +59,7 @@ module potWellModel
 			call writeABiN_basCoeff(qi, ck_temp)
 			call writeABiN_energy(qi, En_temp(1:nSolve))
 			!FINALIZE
-			write(*,'(a,i3,a,i5,a,i5,a,i5,a)')"[#",myID,", solveHam]: done for qi=",qi," done tasks=(",qLoc,"/",qChunk,")"
+			write(*,'(a,i3,a,i5,a,f6.2,a,i5,a,i5,a)')"[#",myID,", solveHam]: done for qi=",qi," lowest energy=",En_temp(1),"[Hatree] done tasks=(",qLoc,"/",qChunk,")"
 			qLoc = qLoc + 1		
 		end do
 		!
