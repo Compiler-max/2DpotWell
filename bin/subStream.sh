@@ -4,6 +4,7 @@
 #VARS
 wannDIR=$work/thirdparty/wannier90
 infoString='# edited by subStream'
+nprocs=4
 
 
 #FUNCTIONS
@@ -29,25 +30,27 @@ function prepareInput {
 
 	mkdir -p oldInput
 	rm -r -f oldInput/*
-	#i1
-	sed -i "/doSolveHam/c\    doSolveHam  = t $infoString" ./input.txt
-	sed -i "/doPrepW90/c\    doPrepW90 = f $infoString" ./input.txt
-	sed -i "/doPw90/c\    doPw90      = f $infoString" ./input.txt
-	sed -i "/doBerry/c\    doBerry     = f $infoString" ./input.txt
-	sed -i "/useRot/c\    useRot     = f $infoString" ./input.txt
-	#i2
+	#e-Structure
+	sed -i "/doSolveHam/c\    doSolveHam  = t $infoString" 	./input.txt
+	sed -i "/doPrepW90/c\    doPrepW90 = f $infoString" 	./input.txt
+	sed -i "/doPw90/c\    doPw90      = f $infoString" 		./input.txt
+	sed -i "/doBerry/c\    doBerry     = f $infoString" 	./input.txt
+	
+	#prep w90
 	cp input.txt input2.txt
-	sed -i "/doSolveHam/c\    doSolveHam  = f $infoString" ./input2.txt
+	sed -i "/doSolveHam/c\    doSolveHam  = f $infoString" 	./input2.txt
 	sed -i "/doPrepW90/c\     doPrepW90 = t $infoString"	./input2.txt
-	sed -i "/doPw90/c\    doPw90      = f $infoString" ./input2.txt
-	sed -i "/doBerry/c\    doBerry     = f $infoString" ./input2.txt
-	#i3
+	sed -i "/doPw90/c\    doPw90      = f $infoString" 		./input2.txt
+	sed -i "/doBerry/c\    doBerry     = f $infoString" 	./input2.txt
+	#(H) gauge
 	cp input2.txt input3.txt
 	sed -i "/doPrepW90/c\     doPrepW90 = f $infoString"	./input3.txt
-	sed -i "/doBerry/c\    doBerry     = t $infoString" ./input3.txt
-	
+	sed -i "/doBerry/c\    doBerry     = t $infoString" 	./input3.txt
+	sed -i "/useRot/c\    useRot     = f $infoString"		./input3.txt
+	sed -i "/doNiu/c\        doNiu = t $infoString" 		./input3.txt
+	#(W) gauge
 	cp input3.txt input4.txt
-	sed -i "/useRot/c\    useRot      = t $infoString" ./input4.txt
+	sed -i "/useRot/c\    useRot      = t $infoString" 		./input4.txt
 
 }
 
@@ -57,7 +60,7 @@ function runCalc {
 	
 
 	#electronic structure
-	mpirun -n 4 ./main.exe > outABin.txt
+	mpirun -np $nprocs ./main.exe > outABin.txt
 	wait
 	echo '['$(date +"%T")']: finished electronic structure'
 	
