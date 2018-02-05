@@ -371,8 +371,9 @@ module w90Interface
 		write(100,*)	
 		!
 
+		!PICK SHELLS FOR FINITE DIFFERENCE
 		!write(100,*)	'search_shells = 200'
-		write(*,*)	"shell_list size= ",size(shells)
+		write(*,*)	"nShells=",nShells
 		write(100,*)	'shell_list = ', shells(1)
 		write(100,*)	'skip_b1_tests = .true.'
 		!
