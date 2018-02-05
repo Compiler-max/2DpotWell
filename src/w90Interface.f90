@@ -372,6 +372,7 @@ module w90Interface
 		!
 
 		!write(100,*)	'search_shells = 200'
+		write(*,*)	"shell_list = ",shells
 		write(100,*)	'shell_list = ', shells(1)
 		write(100,*)	'skip_b1_tests = .true.'
 		!
