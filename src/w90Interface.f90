@@ -46,6 +46,32 @@ module w90Interface
 		!
 		!PREP W90 INIT
 		seed_name	= seedName
+		!general info
+		gamma_only			= .false.
+		if( nQ==1 )			gamma_only	= .true.
+		spinors				= .false.
+		!
+		!q point grid
+		mp_grid(1)			= nQx
+		mp_grid(2)			= nQy
+		mp_grid(3)			= 1
+		num_kpts			= nQ
+		num_nnmax			= 12
+		!unit cell
+		real_lattice		= 0.0_dp
+		real_lattice(1,1)	= aX * aUtoAngstrm 
+		real_lattice(2,2)	= aY * aUtoAngstrm
+		real_lattice(3,3)	= min(aX,aY) * aUtoAngstrm
+		!reciprocal cell
+		recip_lattice		= 0.0_dp
+		recip_lattice(1,1)	= 2.0_dp * PI_dp / real_lattice(1,1) 	
+		recip_lattice(2,2)	= 2.0_dp * PI_dp / real_lattice(2,2)
+		recip_lattice(3,3)	= 2.0_dp * PI_dp / real_lattice(3,3) 		
+		!atoms
+		num_bands_tot		= nBands
+		num_atoms			= nAt
+
+		!WRITE INPUT FILE (wann setup)
 		call write_W90setup_input()
 		!
 		!W90 
@@ -73,7 +99,7 @@ module w90Interface
 		call w90prepAmat(ck, A_matrix)
 		call w90prepEigVal(En, eigenvalues)
 		
-		!PREP W90
+		!WRITE INPUT FILE (wann run)
 		call write_W90run_input()
 		write(*,*)	"[w90Interf]: done preparing wannierization input matrices"
 		!PREP PW90
@@ -349,8 +375,6 @@ module w90Interface
 		!write input file for wannier_setup call
 		integer				:: stat
 		!
-		seed_name			= 'wf1'
-		!
 		!Delete old input file
 		open(unit=200, iostat=stat, file=w90_Dir//seed_name//'.win', status='old')
 		if (stat == 0) close(200, status='delete')
@@ -366,7 +390,7 @@ module w90Interface
 		!BASIC INFO
 		write(100,*)	'num_wann  = ',nWfs
 		write(100,*)	'num_bands = ',nBands
-		!write(100,*)	'mp_grid   = ', mp_grid(1) , ' ', mp_grid(2), ' ', mp_grid(3)
+		write(100,*)	'mp_grid   = ', mp_grid(1) , ' ', mp_grid(2), ' ', mp_grid(3)
 		if( useBloch )	write(100,*)	'use_bloch_phases = true '
 		write(100,*)	
 		!
@@ -398,32 +422,7 @@ module w90Interface
 
 	subroutine run_w90setup()
 		integer							:: at, n
-		!
-		!general info
-		gamma_only			= .false.
-		if( nQ==1 )			gamma_only	= .true.
-		spinors				= .false.
-		!
-		!q point grid
-		mp_grid(1)			= nQx
-		mp_grid(2)			= nQy
-		mp_grid(3)			= 1
-		num_kpts			= nQ
-		num_nnmax			= 12
-		!unit cell
-		real_lattice		= 0.0_dp
-		real_lattice(1,1)	= aX * aUtoAngstrm 
-		real_lattice(2,2)	= aY * aUtoAngstrm
-		real_lattice(3,3)	= min(aX,aY) * aUtoAngstrm
-		!reciprocal cell
-		recip_lattice		= 0.0_dp
-		recip_lattice(1,1)	= 2.0_dp * PI_dp / real_lattice(1,1) 	
-		recip_lattice(2,2)	= 2.0_dp * PI_dp / real_lattice(2,2)
-		recip_lattice(3,3)	= 2.0_dp * PI_dp / real_lattice(3,3) 		
-		!atoms
-		num_bands_tot		= nBands
-		num_atoms			= nAt
-		!		
+		!	
 		!
 		allocate(	atom_symbols(					num_atoms						)			)
 		allocate(	kpt_latt(			3	,		num_kpts						)			)
