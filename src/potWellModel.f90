@@ -102,9 +102,7 @@ module potWellModel
 		!
 		!DEBUG
 		if(debugHam) then
-			if ( .not.	isHermitian(Hmat)	) then
-				write(*,*)"[populateH]: Hamiltonian matrix is not Hermitian :"
-			end if
+			if ( .not.	isHermitian(Hmat)	) 	write(*,'(a,i3,a,i3)')	"[#",myID,";populateH]: Hamiltonian matrix is not Hermitian at qLoc=",qLoc
 		end if
 		!
 		!		
@@ -122,7 +120,6 @@ module potWellModel
 			V = Vdesc(qLoc, i,j)
 		else	
 			V = Vconst(qLoc, i,j)
-
 		end if
 		!
 		!
@@ -148,14 +145,6 @@ module potWellModel
 			xR	=	atPos(1,at) + atR(1,at) 
 			yL	=	atPos(2,at) - atR(2,at)
 			yR	=	atPos(2,at) + atR(2,at) 
-
-			if( i==1 .and. j==1 ) write(*,*)	"[#",myID,";Vconst]: Vpot= ",Vpot
-			if( i==1 .and. j==1 ) write(*,*)	"[#",myID,";Vconst]: xL = ",xL
-			if( i==1 .and. j==1 ) write(*,*)	"[#",myID,";Vconst]: xR = ",xR
-			if( i==1 .and. j==1 ) write(*,*)	"[#",myID,";Vconst]: yL = ",yL
-			if( i==1 .and. j==1 ) write(*,*)	"[#",myID,";Vconst]: yR = ",yR
-			if( i==1 .and. j==1 ) write(*,*)	"[#",myID,";Vconst]: vol= ",vol
-			!
 			!
 			if( i == j) then		
 				Vconst	= Vconst + Vpot 			*	( xR - xL ) * 	( yR - yL )			 			/ vol
