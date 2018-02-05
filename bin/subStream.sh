@@ -30,6 +30,10 @@ function prepareInput {
 
 	mkdir -p oldInput
 	rm -r -f oldInput/*
+
+	#save initial input file
+	cp input.txt input.orig
+
 	#e-Structure
 	sed -i "/doSolveHam/c\    doSolveHam  = t $infoString" 	./input.txt
 	sed -i "/doPrepW90/c\    doPrepW90 = f $infoString" 	./input.txt
@@ -100,6 +104,7 @@ function runCalc {
 	mv input.txt oldInput/inputROT.txt
 	mv output/polOutput.txt output/polOutputROT.txt
 	mv out*.txt output
+	mv input.orig input.txt
 	wait
 	rm -r rawData 
 	echo '['$(date +"%T")']: all done'	
