@@ -37,9 +37,9 @@
     thres       =   0.1
 
 [methods]
-    doSolveHam  =   t
+    doSolveHam  =   f
     doMagHam    =   t
-    doPrepW90   =   f
+    doPrepW90   =   t
     useBloch    =   f
     doPw90      =   f
     doBerry     =   f

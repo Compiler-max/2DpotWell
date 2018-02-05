@@ -34,6 +34,7 @@ bin/**
 **/CMakeFiles
 
 *CMakeCache.txt
+*sublimeMake.sh
 **thirdparty/Makefile
 **/wannier90
 **/w90files
