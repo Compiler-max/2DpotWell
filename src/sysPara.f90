@@ -4,6 +4,7 @@ module sysPara
 	use mathematics, only: dp, PI_dp, setAcc, acc, machineP
 	use m_config
 	implicit none
+	!#include "mpif.h"
 
 	private
 	public :: 	readInp, readGvec, insideAt, getRindex, getRleftX, getRrightX, getRleftY, getRrightY,& 
@@ -226,6 +227,7 @@ module sysPara
 		call MPI_Bcast(	B0 			,		1	,	MPI_DOUBLE_PRECISION	,	root,	MPI_COMM_WORLD, ierr)		
 		call MPI_Bcast(	Bext 		,		3	,	MPI_DOUBLE_PRECISION	,	root,	MPI_COMM_WORLD, ierr)
 		![numerics]
+		call MPI_Bcast(	nGdim		, 		1	, 		MPI_INTEGER			,	root, 	MPI_COMM_WORLD, ierr)
 		call MPI_Bcast(	Gcut		,		1	,	MPI_DOUBLE_PRECISION	,	root,	MPI_COMM_WORLD, ierr)
 		call MPI_Bcast(	nSolve		,		1	,		MPI_INTEGER			,	root,	MPI_COMM_WORLD, ierr)
 		call MPI_Bcast(	nQx			,		1	,		MPI_INTEGER			,	root,	MPI_COMM_WORLD, ierr)
@@ -285,6 +287,8 @@ module sysPara
 		!
 		call MPI_BARRIER(MPI_COMM_WORLD, ierr)
 		call MPI_Bcast(	shells	,		nShells,	MPI_INTEGER				,	root,	MPI_COMM_WORLD, ierr)
+		call MPI_Bcast(	atPot	,		nAt		,	MPI_DOUBLE_PRECISION	,	root,	MPI_COMM_WORLD, ierr)
+		
 		!
 		return
 	end subroutine
@@ -571,7 +575,9 @@ module sysPara
 		b2(1)	= 0.0_dp
 		b2(2)	= 2.0_dp * PI_dp * aX / vol
 
+		
 		call MPI_Bcast(recpLatt, dim**2, MPI_DOUBLE_PRECISION, root, MPI_COMM_WORLD, ierr )
+
 
 		!if( myID == root ) then
 			call testG( a1, a2, b1, b2)
@@ -622,9 +628,8 @@ module sysPara
 		end do
 		!
 		Gmax = maxval(nGq)
-		call MPI_ALLREDUCE(Gmax, GmaxGLOBAL, 1, MPI_INTEGER, MPI_MAX, MPI_COMM_WORLD, ierr)
 		write(*,'(a,i3,a,i7)')	"[#",myID,";popGvec]: maximum amount of basis functions is",Gmax
-		call MPI_BARRIER( MPI_COMM_WORLD, ierr)
+		call MPI_ALLREDUCE(Gmax, GmaxGLOBAL, 1, MPI_INTEGER, MPI_MAX, MPI_COMM_WORLD, ierr)
 		if( myID == root ) write(*,'(a,i3,a,i7)') "[#",myID,";popGvec]: global Gmax=",GmaxGLOBAL
 		!
 		!

@@ -26,23 +26,23 @@
 [numerics]
     Gcut        =   8.0 # edited by statFlow
     nSolve      =   96 # edited by statFlow
-    nQx         =   4 # edited by statFlow
-    nQy         =   4 # edited by statFlow
-    nSCx        =   5 # edited by statFlow
-    nSCy        =   5 # edited by statFlow
-    nKx         =   5 # edited by statFlow
-    nKy         =   5 # edited by statFlow
+    nQx         =   2 # edited by statFlow
+    nQy         =   2 # edited by statFlow
+    nSCx        =   3 # edited by statFlow
+    nSCy        =   3 # edited by statFlow
+    nKx         =   3 # edited by statFlow
+    nKy         =   3 # edited by statFlow
     nRx         =   10   
     nRy         =   10
     thres       =   0.1
 
 [methods]
-    doSolveHam  =   f
+    doSolveHam  =   t
     doMagHam    =   f
     doPrepW90   =   f
     useBloch    =   f
     doPw90      =   f
-    doBerry     =   t
+    doBerry     =   f
     writeBin    =   f
 
 [w90]
@@ -65,7 +65,7 @@
   
 
 [debug]
-    debugHam    =   f
+    debugHam    =   t
     debugProj   =   f
     debugWann   =   f
 

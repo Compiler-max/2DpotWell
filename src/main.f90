@@ -17,7 +17,7 @@ program main
 							
 
 	implicit none
-
+	!#include "mpif.h"
 	
 
 

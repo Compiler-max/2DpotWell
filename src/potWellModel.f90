@@ -8,7 +8,8 @@ module potWellModel
 	use sysPara				
 	use basisIO,		only:	writeABiN_energy, writeABiN_basis, writeABiN_basCoeff
 	implicit none	
-	
+	!#include "mpif.h"
+
 	private
 	public ::					solveHam
 
@@ -117,11 +118,11 @@ module potWellModel
 	complex(dp)	function V(qLoc, i,j)
 		integer,	intent(in)	::	qLoc, i, j
 		!
-		V	= dcmplx(0.0_dp)
 		if( doVdesc ) then
 			V = Vdesc(qLoc, i,j)
-		else
+		else	
 			V = Vconst(qLoc, i,j)
+
 		end if
 		!
 		!
@@ -147,6 +148,14 @@ module potWellModel
 			xR	=	atPos(1,at) + atR(1,at) 
 			yL	=	atPos(2,at) - atR(2,at)
 			yR	=	atPos(2,at) + atR(2,at) 
+
+			if( i==1 .and. j==1 ) write(*,*)	"[#",myID,";Vconst]: Vpot= ",Vpot
+			if( i==1 .and. j==1 ) write(*,*)	"[#",myID,";Vconst]: xL = ",xL
+			if( i==1 .and. j==1 ) write(*,*)	"[#",myID,";Vconst]: xR = ",xR
+			if( i==1 .and. j==1 ) write(*,*)	"[#",myID,";Vconst]: yL = ",yL
+			if( i==1 .and. j==1 ) write(*,*)	"[#",myID,";Vconst]: yR = ",yR
+			if( i==1 .and. j==1 ) write(*,*)	"[#",myID,";Vconst]: vol= ",vol
+			!
 			!
 			if( i == j) then		
 				Vconst	= Vconst + Vpot 			*	( xR - xL ) * 	( yR - yL )			 			/ vol
