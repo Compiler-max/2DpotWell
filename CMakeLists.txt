@@ -9,7 +9,8 @@ set (cmakeTest_VERSION_MAJOR 1)
 set (cmakeTest_VERSION_MINOR 0)
 
 #set (MPI_Fortran_COMPILER mpiifort)
-
+#add_custom_target("/opt/intel/compilers_and_libraries_2018/linux/bin/compilervars.sh intel64")
+#add_custom_command(source /opt/intel/compilers_and_libraries_2018/linux/bin/compilervars.sh intel64)
 #set some directions
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
