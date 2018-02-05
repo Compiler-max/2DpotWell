@@ -366,13 +366,13 @@ module w90Interface
 		!BASIC INFO
 		write(100,*)	'num_wann  = ',nWfs
 		write(100,*)	'num_bands = ',nBands
-		write(100,*)	'mp_grid   = ', mp_grid(1) , ' ', mp_grid(2), ' ', mp_grid(3)
+		!write(100,*)	'mp_grid   = ', mp_grid(1) , ' ', mp_grid(2), ' ', mp_grid(3)
 		if( useBloch )	write(100,*)	'use_bloch_phases = true '
 		write(100,*)	
 		!
 
 		!write(100,*)	'search_shells = 200'
-		write(100,*)	'shell_list = ',shells(1)
+		write(100,*)	'shell_list = ', shells(1)
 		write(100,*)	'skip_b1_tests = .true.'
 		!
 
@@ -382,11 +382,8 @@ module w90Interface
 		!
 		!PROJECTIONS
 		write(100,*)	'Begin Projections'
-		!write(100,*)	'H: l=',0,';l=',1,',mr=',1,';l=',1,',mr=',2
 		if(nWfs / nAt == 3) write(100,*)	'H: l=0;l=1,mr=2,3'
 		if(nWfs / nAt == 1) write(100,*)	'H: l=0'
-		
-		!write(100,*)	'He: l=0;l=1,mr=1,2'
 		write(100,*)	'End Projections'
 		write(100,*)
 		!
