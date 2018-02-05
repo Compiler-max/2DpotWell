@@ -35,7 +35,6 @@ program main
     mpiSuccess = .true.
     call MPI_Barrier( MPI_COMM_WORLD, ierr )
     !
-    forceError = 10
     !SETUP
     if( myID == root) then
     	alloT	= 0.0
