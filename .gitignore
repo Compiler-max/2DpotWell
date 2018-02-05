@@ -8,6 +8,11 @@ bin/**
 !bin/myENERGYplot.py
 !bin/myUNKplot.py
 !bin/myWNFplot.py
+!bin/magnStream.sh
+!bin/subStream.sh
+!bin/convFlow.sh
+!bin/statFlow.sh
+!bin/masterFlow.sh
 
 **/vTune
 *.o
