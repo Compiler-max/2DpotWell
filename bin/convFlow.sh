@@ -78,7 +78,7 @@ for g in ${gVal[*]}; do
 		sed -i 	"/nKx/c\    nKx         = $nK $infoString" 			./input.txt
 		sed -i 	"/nKy/c\    nKy         = $nK $infoString" 			./input.txt
 		#
-		sed -i 	"/shell/c\    shell       = $nShell $infoString" 	./input.txt
+		sed -i 	"/shells/c\    shells       = $nShell $infoString" 	./input.txt
 		wait
 		#	
 		#execute calculation
