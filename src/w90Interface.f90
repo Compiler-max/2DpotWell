@@ -462,7 +462,7 @@ module w90Interface
 		integer				:: qi, at
 		!
 		!create new
-		open(unit=100,file=w90_Dir//seed_name//'.win',action='write',access='stream',form='formatted', status='replace')
+		open(unit=100,file=w90_Dir//seed_name//'.win',action='write',access='stream',form='formatted', status='new')
 		!
 		!BASIC INFO
 		write(100,*)	'num_wann  = ',nWfs
