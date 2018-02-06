@@ -158,26 +158,26 @@ module w90Interface
 		real(dp),		intent(out)		::	v_vec(:,:,:)
 		real(dp)						::	buffer(7)
 		integer							::	stat, qi, n, qInd
+		logical							::	file_exists
 		!
-		write(*,*)  seedName//'_geninterp.dat'
+		!write(*,*)  seedName//'_geninterp.dat'
+		!check if exists
+		inquire(file=w90_dir//seedName//'_geninterp.dat', exist=file_exists)
+		if( .not. file_exists ) stop 'geninterp.dat file not found'
+		!read
 		open(unit=320,iostat=stat, file=w90_dir//seedName//'_geninterp.dat',form='formatted', status='old',action='read')
-		if( stat/= 0 ) then 
-			v_vec = 0.0_dp
-			write(*,*)	"[readBandVelo]: could not find _geninterp.dat file.. velocities set to zero"
-		else 
-			read(320,*)
-			read(320,*)
-			read(320,*)
-			do qi = 1, nQ
-				do n = 1, nWfs
-					read(320,*)	qInd, buffer
-					v_vec(1,n,qInd)	= buffer(5)
-					v_vec(2,n,qInd)	= buffer(6)
-					v_vec(3,n,qInd)	= buffer(7) 
-				end do
+		read(320,*)
+		read(320,*)
+		read(320,*)
+		do qi = 1, nQ
+			do n = 1, nWfs
+				read(320,*)	qInd, buffer
+				v_vec(1,n,qInd)	= buffer(5)
+				v_vec(2,n,qInd)	= buffer(6)
+				v_vec(3,n,qInd)	= buffer(7) 
 			end do
-			close(320)
-		end if
+		end do
+		close(320)
 		!
 		!ATOMIC UNITS CONVERSION:
 		v_vec 	= v_vec  / (aUtoEv  * aUtoAngstrm)	 ! [v_vec] = eV / Angstroem
@@ -201,13 +201,15 @@ module w90Interface
 		character(len=*), 			parameter 		::	search_wout=" |                  b_k Vectors (Ang^-1) and Weights (Ang^2)                  |"
 
 		character(len=100)							::	line
-		logical										::	finished
-
-		
-
-		!READ .nnkp 
-		finished = .false.
+		logical										::	finished, file_exists
+		!
+		!inquire file
+		inquire(file=w90_dir//seedName//'.nnkp',exist=file_exists)
+		if( .not. file_exists	) stop '[read_FD_scheme]: could not find .nnkp file'
+		!
+		!read file
 		open(unit=330, iostat=stat, file=w90_dir//seedName//'.nnkp', form='formatted', status='old', action='read')
+		finished = .false.
 		do while( .not. finished .and. stat==0)
 			read(330,"(a)",iostat=stat) line
 			!find the block
@@ -300,8 +302,13 @@ module w90Interface
 		real(dp),		intent(out)			:: 	w_centers(:,:)
 		integer								::	wannF, ntot, at, stat, start
 		character(len=100)					::	line
+		logical								::	file_exists
 		!
+		!inquire file
+		inquire(file=w90_dir//seedName//'_centres.xyz', exist=file_exists)
+		if( .not. file_exists ) stop '[read_wann_centers]: could not find centres.xyz file'
 		!
+		!read file
 		open(unit=340, iostat=stat, file=w90_dir//seedName//'_centres.xyz', form='formatted', status='old', action='read')
 		if( stat == 0) then
 			!read header
@@ -598,17 +605,12 @@ module w90Interface
 		do qi = 1, nQ
 			do nn = 1, nntot
 				!calc overlap of unks
-				if( nncell(3,qi,nn)/= 0 ) then
-					M_mat(:,:,nn,qi)	= dcmplx(1.0_dp-5)
-					write(*,*)	"[w90prepMmat]: WARNING nearest neighbours in z direction used!"
-					if(qi==1  ) write(*,*)	"[w90prepMmat]: oLap set to zero for nn=",nn
-				else
-					gShift(1)			= nncell(1,qi,nn) * 2.0_dp * PI_dp / aX
-					gShift(2)			= nncell(2,qi,nn) * 2.0_dp * PI_dp / aY
-					!oLap				= UNKoverlap(n,m, qi, nnlist(qi,nn), gShift, ck)
-					!call calcMmat(qi,nnlist(qi,nn), gShift, ck, M_loc(:,:,nn,qi))
-					call calcMmat(qi, nnlist(qi,nn), gShift, nGq, Gvec, ck, M_mat(:,:,nn,qi))
-				end if
+				if( nncell(3,qi,nn)/= 0 ) stop '[w90prepMmat]: out of plane nearest neighbour found. '
+			
+				gShift(1)			= nncell(1,qi,nn) * 2.0_dp * PI_dp / aX
+				gShift(2)			= nncell(2,qi,nn) * 2.0_dp * PI_dp / aY
+				!oLap				= UNKoverlap(n,m, qi, nnlist(qi,nn), gShift, ck)
+				call calcMmat(qi, nnlist(qi,nn), gShift, nGq, Gvec, ck, M_mat(:,:,nn,qi))
 			end do
 		end do
 		!$OMP END PARALLEL DO	
@@ -679,52 +681,19 @@ module w90Interface
 
 
 
-
-
-
-
-
-	integer function getLeft(i,N)
-		!HELPER for calcConn
-		!gets left (lower) neighbour, using the periodicity at boundary
-		!
-		integer,	intent(in)	:: i,N
-		if(i.eq.1) then
-			getLeft = N
-		else
-			getLeft = i-1
-		end if
-		!
-		return
-	end function
-
-
-	integer function getRight(i,N)
-		!HELPER for calcConn
-		!gets right (upper) neighbour, using the periodicity at boundary
-		!
-		integer,	intent(in)	:: i,N
-		if(i.eq.N) then
-			getRight = 1
-		else
-			getRight = i+1
-		end if
-		!
-		return
-	end function
-
-
-
-
-
 !READ RESULTS
 	subroutine Umat_reader(U_matrix, krel)
 		complex(dp),	intent(out)	:: 	U_matrix(:,:,:)
 		real(dp),		intent(out)	:: 	krel(:,:)
 		integer						:: 	stat, qi, n, m, dumI(3)
 		real(dp)					:: 	val(2)
+		logical						::	file_exists
 		!
-		!READ U MATRIX
+		!inquire file
+		inquire(file=w90_dir//seedName//'_u.mat',exist=file_exists)
+		if(.not. file_exists )	stop '[Umat_reader]: did not find U matrix'
+		!
+		!read file
 		open(unit=300,iostat=stat, file=w90_dir//seedName//'_u.mat', status='old',action='read')
 		if( stat /= 0)	write(*,*)	"[readUmatrix]: WARNING did not file _u.mat file"
 		read(300,*)
