@@ -25,7 +25,7 @@ function prepareInput {
 	#setup workDir & tasks for the input files
 	#
 	#create working directory
-	mkdir -p rawData
+	mkdir rawData
 	rm -r -f rawData/*
 
 	mkdir -p oldInput
