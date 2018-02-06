@@ -55,7 +55,7 @@ module semiClassics
 				!
 				!PHASE SPACE DENSITY CORRECTION
 				densCorr	= 0.5_dp * dot_product(		dreal(Fcurv(:,n,n,ki)), dreal(Aconn(:,n,n,ki) )	)		* Bext
-				if( norm2(densCorr) > acc ) write(*,*)	"[calcFirstOrdP]: warning the densCorr is none zero, norm2(densCorr)=",norm2(densCorr)
+				if( norm2(densCorr) > acc ) write(*,*)	"[calcFirstOrdP]: WARNING the densCorr is none zero, norm2(densCorr)=",norm2(densCorr)
 				!
 				!POSITIONAL SHIFT
 				call getF2(n,ki,Velo,En, F2k)
@@ -154,8 +154,8 @@ module semiClassics
 									!F2(i,j) 	= F2(i,j) +   myLeviCivita(j,k,l) *  dreal( Vtmp )  / eDiff	
 									!DEGENERATE WARNING
 									if( abs(eDiff) < machineP )  then
-										write(*,*)	"[addF2]: warning for k point = ",ki
-										write(*,'(a,i3,a,i3,a,i3,a,e14.6)') "[addF2]: warning degenerate bands n0=",nZero,"n=",n," m=",m," eDiff=",eDiff
+										write(*,*)	"[addF2]: WARNING for k point = ",ki
+										write(*,'(a,i3,a,i3,a,i3,a,e14.6)') "[addF2]: WARNING degenerate bands n0=",nZero,"n=",n," m=",m," eDiff=",eDiff
 										write(*,'(a,i3,a,i3,a,e14.6)')	"[addF2]: ( E(",nZero,")-E(",n,") )**2=", eDiff1
 										write(*,'(a,i3,a,i3,a,e14.6)')	"[addF2]: ( E(",nZero,")-E(",m,") )   =", eDiff2
 										write(*,*)	"[addF2]: E(nZero=",nZero,")=",En(nZero,ki)
@@ -212,7 +212,7 @@ module semiClassics
 								F3(i,j) 	= F3(i,j) + real(prefactF3,dp) * real(myLeviCivita(j,k,l),dp) *	 dreal( Vtmp ) / eDiff
 								!F3(i,j) 	= F3(i,j) + prefactF3 * myLeviCivita(j,k,l) *	 dreal( Vtmp ) / eDiff
 								!DEGENERATE WARNING
-								if( abs(eDiff) < machineP ) write(*,*) "[addF3]: warning degenerate bands n0=",nZero,"n=",n," eDiff=",eDiff
+								if( abs(eDiff) < machineP ) write(*,*) "[addF3]: WARNING degenerate bands n0=",nZero,"n=",n," eDiff=",eDiff
 							end do								!
 						end do
 						!

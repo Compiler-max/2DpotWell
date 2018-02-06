@@ -154,7 +154,7 @@ module berry
 			call calcVeloGrad( ck, v_mat)
 			!BLOUNT
 		else
-			write(*,*)	"[beryMethod/calcVelo]: velo via blount formula - warning this is deprecated please set doVeloNum = f"
+			write(*,*)	"[beryMethod/calcVelo]: velo via blount formula - WARNING this is deprecated please set doVeloNum = f"
 			allocate(			Abar(		3		,	nWfs	,	nWfs				)			)
 			allocate(			tmp(					nWfs	,	nWfs				)			)
 			allocate(			U(						nWfs	,	nWfs				)			)

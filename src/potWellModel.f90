@@ -50,7 +50,7 @@ module potWellModel
 			!
 			!DEBUG TESTS
 			if( found /= nSolve )	write(*,'(a,i3,a,i5,a,i5)'	)	"[#",myID,";solveHam]: only found ",found," bands of required ",nSolve
-			if( nBands > found	)	write(*,'(a,i3,a)'			)	"[#",myID,";solveHam]: warning did not found required amount of bands"
+			if( nBands > found	)	write(*,'(a,i3,a)'			)	"[#",myID,";solveHam]: WARNING did not found required amount of bands"
 			if( Gsize < nSolve	) 	write(*,'(a,i3,a,i5,a,i5,a)')	"[#",myID,";solveHam]: cutoff to small to get ",nSolve,&
 																	" bands! only get",Gsize," basis functions"
 			if( Gsize > Gmax	)	write(*,'(a,i3,a)'			)	"[#",myID,";solveHam]: critical error in solveHam, ",&
@@ -257,7 +257,7 @@ module potWellModel
 		!
 		!DEBUG
 		if( myID == root .and. qLoc == 1) 	write(*,'(a,i3,a)')	"[#",myID,";addMagHam]: hello there"		
-		if( norm2(Bext(1:2)) > machineP ) 	write(*,'(a,i3,a)') "[#",myID,";addMagHam]: warning found non zero x or y component. External field should be along z direction! "
+		if( norm2(Bext(1:2)) > machineP ) 	write(*,'(a,i3,a)') "[#",myID,";addMagHam]: WARNING found non zero x or y component. External field should be along z direction! "
 		!
 		return
 	end subroutine

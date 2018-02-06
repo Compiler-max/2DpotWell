@@ -123,7 +123,7 @@ module wannInterp
 		!
 		!ENERGY INTERPOLATION
 		U_mat(:,:)	= H_mat(:,:)
-		if( .not. isHermitian(U_mat)	)		 	write(*,*)	"[wannInterpolator]: warning Ham is not hermitian"
+		if( .not. isHermitian(U_mat)	)		 	write(*,*)	"[wannInterpolator]: WARNING Ham is not hermitian"
 		call eigSolverFULL(U_mat(:,:),	En_vec(:))
 		U_mat	= transpose( dconjg(U_mat))
 		if( .not. isUnit(U_mat) ) 					write(*,*)	"[wannInterpolator]: eigen solver gives non unitary U matrix"

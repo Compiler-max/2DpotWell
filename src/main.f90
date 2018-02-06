@@ -82,7 +82,7 @@ program main
 		alloT = T1 - T0
 
 
-		!try to print some warnings for to small Gcut
+		!try to print some WARNINGs for to small Gcut
 		write(*,*)"[main]:**************************BASIS SET DEBUG*************************"
 		call printBasisInfo()
 		write(*,*)"[main]: ...wrote basis set debug info"

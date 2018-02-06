@@ -89,7 +89,7 @@ module postW90
 		!try opening file
 		open(unit=310, iostat=stat, file=w90_dir//seed_name//'_tb.dat', status='old', action='read' )
 		if( stat /= 0)  then
-			write(*,*) "[readTBsingle]: warning, file seedname_tb.dat not found"
+			write(*,*) "[readTBsingle]: WARNING, file seedname_tb.dat not found"
 			readSuccess 	= .false.
 			recip_latt		= 0.0_dp
 			R_real			= 0.0_dp
@@ -99,7 +99,7 @@ module postW90
 			readSuccess	= .true.
 			!
 			read(310,*)
-			!recip lattice (read into buffer, avoids compiler warning)
+			!recip lattice (read into buffer, avoids compiler WARNING)
 			read(310,*) 		real3(:)
 			recip_latt(1,:)	= 	real3(:)
 			read(310,*)			real3(:)
@@ -163,7 +163,7 @@ module postW90
 				!second line fractional real6 of R
 				read(310,*)	dumI(1:3)
 				if( dumI(1) /= R_vect(1,R) .or. dumI(2) /= R_vect(2,R) .or. dumI(3) /= R_vect(3,R) ) then
-					write(*,*)	"[readTBsingle]: warning, detected R vector ordering issue while reading positions"
+					write(*,*)	"[readTBsingle]: WARNING, detected R vector ordering issue while reading positions"
 				end if
 				!
 				do n = 1, num_wann
@@ -193,11 +193,11 @@ module postW90
 				R_real(3,R)	= R_vect(3,R)	* 0
 				!!DEBUG
 				!if( abs(R_real(1,R)-Rcell(1,R)) > machineP ) then
-				!	write(*,*) "[readTB]: warning  Rcell and R_real dont match (x comp)" 
+				!	write(*,*) "[readTB]: WARNING  Rcell and R_real dont match (x comp)" 
 				!	write(*,*) "			R_real(x)=",R_real(1,R)," Rcell=",Rcell(1,R)
 				!	write(*,*) "			R_real(y)=",R_real(2,R)," Rcell=",Rcell(2,R)
 				!end if
-				!!if( abs(R_real(2,R)-Rcell(2,R)) > machineP ) write(*,*) "[readTB]: warning Rcell and R_real dont match(y comp)"
+				!!if( abs(R_real(2,R)-Rcell(2,R)) > machineP ) write(*,*) "[readTB]: WARNING Rcell and R_real dont match(y comp)"
 			end do
 			!
 			!

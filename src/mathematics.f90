@@ -197,7 +197,7 @@ module mathematics
             integer                                  :: n, info,lwork,lrwork,liwork
             n		= size(A,1)
             if(n /= size(A,2)) then
-            	write(*,*)"[eigSolver]: warning the matrix to solve is not a square matrix"
+            	write(*,*)"[eigSolver]: WARNING the matrix to solve is not a square matrix"
             end if
             lwork  	=   n*n + 2*n
             lrwork 	= 2*n*n + 5*n + 1
@@ -343,7 +343,7 @@ module mathematics
 		m 		= size(	Mat	,	1 )
 		n 		= size(	Mat	,	2 )	
 		if(m /= n) then
-			write(*,*)"[myMatInvSqrt]: warning not square matrix"
+			write(*,*)"[myMatInvSqrt]: WARNING not square matrix"
 		end if
 		allocate(	 U(  m , max(1,m)   )		)
 		allocate(	Vt(  n , max(1,n)   )		)
@@ -357,7 +357,7 @@ module mathematics
 		maxS	= maxval(s)
 		minS	= minval(s)
 		if( minS < 1e-15_dp) then
-			write(*,'(a,e16.9,a,e16.9)')	"[myMatInvSqrt]: warning, minimum eigenvalue close to zero, minS=",&
+			write(*,'(a,e16.9,a,e16.9)')	"[myMatInvSqrt]: WARNING, minimum eigenvalue close to zero, minS=",&
 												minS," maxS=",maxS
 		else
 			write(*,'(a,e16.9,a,e16.9)')	"[myMatInvSqrt]: minS=",minS," maxS=",maxS
@@ -676,7 +676,7 @@ module mathematics
 		character*1, intent(in) :: jobz
 		!
 		if(info > 0) then
-		      write(*,*) '[solver/errCheck]: warning, Problem solving the eigenvalue problem: '
+		      write(*,*) '[solver/errCheck]: WARNING, Problem solving the eigenvalue problem: '
 		      if(jobz .EQ. 'N') write(*,*) '[solver/errCheck]: the algorithm failed to converge; ', info ,&
 		      				' off-diagonal elements of an intermediate tridiagonal form did not converge to zero;'
 		      if(jobz .EQ. 'V') write(*,*) '[solver/errCheck]: the algorithm failed to compute an',&
@@ -701,7 +701,7 @@ module mathematics
 		            tmp = tmp + dconjg(eigVec(i1,i2))*eigVec(i1,i2)
 		      end do
 		      if(abs(tmp)-1.0_dp>1e-12_dp) then
-		            write(*,*)"[solver/normalCheck]: warning eigVec not normal: ",dsqrt(tmp)
+		            write(*,*)"[solver/normalCheck]: WARNING eigVec not normal: ",dsqrt(tmp)
 		      end if
 		end do
 		!

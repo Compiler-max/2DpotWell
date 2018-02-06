@@ -71,6 +71,9 @@ module w90Interface
 		num_bands_tot		= nBands
 		num_atoms			= nAt
 
+		!debug
+		if(	abs(dqx-dqy) > 1e-7_dp ) 	write(*,*)	"[w90setup]: WARNING - q mesh has non uniform grid spacing (required by w90)"
+
 		!WRITE INPUT FILE (wann setup)
 		call write_W90setup_input()
 		!
@@ -257,7 +260,7 @@ module w90Interface
 					w_b(nn)			= weight / aUtoAngstrm**2			![w_b] = (Ang^2)
 					!debug
 					!write(*,'(i2,a,f6.4,a,f6.4,a,f6.4,a,f6.4)') nn," ",b_k(1,nn)," ",b_k(2,nn)," ",b_k(3,nn)," ",w_b(nn)
-					if( qnn /= nn ) write(*,*) "[readFDscheme]: warning, possibly mismatched nearest neighbours"
+					if( qnn /= nn ) write(*,*) "[readFDscheme]: WARNING, possibly mismatched nearest neighbours"
 				end do
 				finished = .true.
 			end if
@@ -304,7 +307,7 @@ module w90Interface
 			!read header
 			read(340, *)	 ntot
 			read(340, *)	
-			if( ntot - nAt /= nWfs )	write(*,*)"[read_wann_centers]: warning _centres.xyz has wrong nWfs"
+			if( ntot - nAt /= nWfs )	write(*,*)"[read_wann_centers]: WARNING _centres.xyz has wrong nWfs"
 			!
 			!read centers
 			do wannF = 1,  size(w_centers,2)
@@ -447,9 +450,11 @@ module w90Interface
 								proj_l,proj_m,proj_radial,proj_z,proj_x,proj_zona, &
 								exclude_bands,proj_s,proj_s_qaxis)
 		!
-		if( nntot > 6 )	write(*,*)"[w90setup]: warning to many nearest neighborurs choosen nntot=",nntot
+		!
+		!DEBUG:
+		if( nntot /= 4 )		write(*,*)	"[w90setup]: WARNING did not find exactly 4 nearest neighbours"
 		do n = 1, num_bands_tot
-			if( exclude_bands(n) /= 0) write(*,'(a,i4,a,i4)')"[w90setup]: warning exclude_bands(",n,")=",exclude_bands(n)
+			if( exclude_bands(n) /= 0) write(*,'(a,i4,a,i4)')"[w90setup]: WARNING exclude_bands(",n,")=",exclude_bands(n)
 		end do
 		!
 		!			
@@ -572,7 +577,7 @@ module w90Interface
 		write(*,'(a,i3,a)')	"[#",myID,";w90prepEigVal]: wrote .eig file"
 		!
 		!DEBUG
-		if(	size(au_units,2) /= nQ	)	write(*,'(a,i3,a)')		"[#",myID,";w90prepEigVal]: warning En has wrong numbers of kpts"
+		if(	size(au_units,2) /= nQ	)	write(*,'(a,i3,a)')		"[#",myID,";w90prepEigVal]: WARNING En has wrong numbers of kpts"
 		!
 		!
 		return
@@ -638,8 +643,8 @@ module w90Interface
 		!
 		if( .not. useBloch )	then
 			!
-			if(	size(ck,2) < num_bands )	write(*,'(a,i3,a)')"[#",myID,";w90prepAmat]: warning not enough abInitio coeff, try to increase nSolve in inpupt"
-			if(	size(ck,3)/= qChunk )  	write(*,'(a,i3,a)')"[#",myID,";w90prepAmat]: warning ab initio exp. coefficients have wrong numbers of kpts"
+			if(	size(ck,2) < num_bands )	write(*,'(a,i3,a)')"[#",myID,";w90prepAmat]: WARNING not enough abInitio coeff, try to increase nSolve in inpupt"
+			if(	size(ck,3)/= qChunk )  	write(*,'(a,i3,a)')"[#",myID,";w90prepAmat]: WARNING ab initio exp. coefficients have wrong numbers of kpts"
 			if(	num_wann/nAt > 3) 			write(*,'(a,i3,a)')"[#",myID,";w90prepAmat]: can not handle more then 3 wfs per atom at the moment"
 			!
 			!MATRIX SETUP
@@ -721,11 +726,11 @@ module w90Interface
 		!
 		!READ U MATRIX
 		open(unit=300,iostat=stat, file=w90_dir//seedName//'_u.mat', status='old',action='read')
-		if( stat /= 0)	write(*,*)	"[readUmatrix]: warning did not file _u.mat file"
+		if( stat /= 0)	write(*,*)	"[readUmatrix]: WARNING did not file _u.mat file"
 		read(300,*)
 		read(300,*) dumI(1:3)
-		if( dumI(1) /= nQ ) write(*,*)	"[readUmatrix]: warning num_kpts=",dumI(1)," nQ=",nQ
-		if(	dumI(2)	/= nWfs) write(*,*)	"[readUmatrix]: warning num_wann=",dumI(2)," nWfs=",nWfs
+		if( dumI(1) /= nQ ) write(*,*)	"[readUmatrix]: WARNING num_kpts=",dumI(1)," nQ=",nQ
+		if(	dumI(2)	/= nWfs) write(*,*)	"[readUmatrix]: WARNING num_wann=",dumI(2)," nWfs=",nWfs
 		!
 		do qi = 1,  num_kpts
 			read(300,*)
@@ -738,7 +743,7 @@ module w90Interface
 			end do
 			!DEBUG
 			if( abs( krel(1,qi)*2.0_dp*PI_dp/aX - qpts(1,qi)) > machineP) then
-				write(*,*)	"[readUmatrix]: warning k meshes are ordered diffferently"
+				write(*,*)	"[readUmatrix]: WARNING k meshes are ordered diffferently"
 				write(*,*)	"				x: k_w90= ",krel(1,qi)*2.0_dp*PI_dp/aX, " qpts=",qpts(1,qi)
 				write(*,*)	"				y: k_w90= ",krel(2,qi)*2.0_dp*PI_dp/aY, " qpts=",qpts(2,qi)
 			end if

@@ -27,7 +27,7 @@
     Gcut        =   8.0 # edited by statFlow
     nSolve      =   96 # edited by statFlow
     nQx         =   4 # edited by statFlow
-    nQy         =   8 # edited by statFlow
+    nQy         =   4 # edited by statFlow
     nSCx        =   5 # edited by statFlow
     nSCy        =   9 # edited by statFlow
     nKx         =   5 # edited by statFlow
@@ -48,14 +48,14 @@
 [w90]
     seedName    =   'wf1'
     nShells     =   2
-    shells      =   2 3 # edited by statFlow
+    shells      =   3 4 # edited by statFlow
     nw90it      =   1000
     pw90GaugeB  =   f
 
 [berry]
     useRot      =   t
     doVeloNUM   =   f
-    doNiu       =   f
+    doNiu       =   t
     doPei       =   f
     doWanni     =   f
     doGaugBack  =   f

@@ -149,7 +149,7 @@ module sysPara
 		call CFG_add_get(my_cfg,	"numerics%nKy"		,	nKy			,	"# k x points of interpolation mesh"	)
 		call CFG_add_get(my_cfg,	"numerics%nRx"     	,	nRx      	,	"amount of r points used"				)
 		call CFG_add_get(my_cfg,	"numerics%nRy"     	,	nRy      	,	"amount of r points used"				)
-		call CFG_add_get(my_cfg,	"numerics%thres"    ,	thres      	,	"threshold for overlap warnings"		)
+		call CFG_add_get(my_cfg,	"numerics%thres"    ,	thres      	,	"threshold for overlap WARNINGs"		)
 		![methods]
 		call CFG_add_get(my_cfg,	"methods%doSolveHam",	doSolveHam	,	"solve electronic structure or read in"	)
 		call CFG_add_get(my_cfg,	"methods%doMagHam"	,	doMagHam	,	"include B-field via peierls in ham."	)
@@ -617,12 +617,12 @@ module sysPara
 					nGq(qLoc) = nGq(qLoc) + 1
 					Gvec(:,nGq(qLoc),qLoc) = kg(:)
 					inside = inside + 1
-					if( gi == 1)	write(*,*)	"[popGvec]: warning hit boundary of Gtest grid"
+					if( gi == 1)	write(*,*)	"[popGvec]: WARNING hit boundary of Gtest grid"
 				end if
 			end do
 			!DEBUG INFO
 			if(nGq(qLoc) > nG) write(*,'(a,i3,a,i4,a,i6)')	"[#",myID,&
-											";popGvec]: warning, somehow counted more basis functions at qi=",qi," limit nG=",nG	
+											";popGvec]: WARNING, somehow counted more basis functions at qi=",qi," limit nG=",nG	
 			write(*,'(a,i3,a,i6,a,i4)')	"[#",myID,";popGvec]: using ",nGq(qLoc), "basis functions at qi=",qi
 			qLoc = qLoc + 1	
 		end do

@@ -84,8 +84,8 @@ module planeWave
 			!if( gj>= nGq(knb) .and. notFound	) write(*,'(a,i3,a,i3)')	"[UNKoverlap]: no neighbour for gi=",gi," at qi=",qi
 		end do
 		!
-		if( cnt > nGq(qi)	)		write(*,'(a,i8,a,i8)')	"[calcMmat]: warning, used ",cnt," where nGmax(qi)=",nGq(qi)
-		if( cnt < nGq(qi) / 2.0_dp)	write(*,'(a,i8,a,i8)')	"[calcMmat]: warning, used  only",cnt," where nGmax(qi)=",nGq(qi)
+		if( cnt > nGq(qi)	)		write(*,'(a,i8,a,i8)')	"[calcMmat]: WARNING, used ",cnt," where nGmax(qi)=",nGq(qi)
+		if( cnt < nGq(qi) / 2.0_dp)	write(*,'(a,i8,a,i8)')	"[calcMmat]: WARNING, used  only",cnt," where nGmax(qi)=",nGq(qi)
 		!
 		!
 		return
@@ -192,7 +192,7 @@ module planeWave
 		if( B1condition(b_k, w_b) )	 then
 			write(*,*)	"[calcConnOnCoarse]: B1 condition fullfilled. FD scheme accepted"
 		else
-			write(*,*)	"[calcConnOnCoarse]: warning B1 condition not fullfilled" 
+			write(*,*)	"[calcConnOnCoarse]: WARNING B1 condition not fullfilled" 
 		end if
 		!
 		return
@@ -255,7 +255,7 @@ module planeWave
 		!
 		!TRIAL ORBITAL:
 		kappa	= PI_dp / ( 2.0_dp * atR(1,at) )
-		if( atR(1,at) /= atR(2,at) ) write(*,*)"[g1Int]: warning analytic projection can not handle non cubic wells"
+		if( atR(1,at) /= atR(2,at) ) write(*,*)"[g1Int]: WARNING analytic projection can not handle non cubic wells"
 		xc		= atPos(1,at) - atR(1,at)
 		yc		= atPos(2,at) - atR(2,at)
 		xL 		= atPos(1,at) - atR(1,at) 
@@ -298,7 +298,7 @@ module planeWave
 			!
 			!
 			if( abs(denom) < machineP) then
-				write(*,'(a,i4,a,f8.4,a,f8.4a,f8.4)') "[g1Int]: warning zero denom at qi=",qi," Gx=",Gx,"Gy=",Gy,"denom=",denom
+				write(*,'(a,i4,a,f8.4,a,f8.4a,f8.4)') "[g1Int]: WARNING zero denom at qi=",qi," Gx=",Gx,"Gy=",Gy,"denom=",denom
 				denom 	= 1e-5_dp
 			end if
 			!
@@ -320,7 +320,7 @@ module planeWave
 		!
 		!TRIAL ORBITAL:
 		kappa	= PI_dp / (2.0_dp*atR(1,at))
-		if( atR(1,at) /= atR(2,at) ) write(*,*)"[g2Int]: warning analytic projection can not handle non cubic wells"
+		if( atR(1,at) /= atR(2,at) ) write(*,*)"[g2Int]: WARNING analytic projection can not handle non cubic wells"
 		xc		= atPos(1,at) - atR(1,at)
 		yc		= atPos(2,at) - atR(2,at)
 		xL 		= atPos(1,at) - atR(1,at) 
@@ -363,7 +363,7 @@ module planeWave
 			!
 			!
 			if( abs(denom) < machineP) then
-				write(*,'(a,i4,a,f8.4,a,f8.4a,f8.4)') "[g2Int]: warning zero denom at qi=",qi," Gx=",Gx,"Gy=",Gy,"denom=",denom
+				write(*,'(a,i4,a,f8.4,a,f8.4a,f8.4)') "[g2Int]: WARNING zero denom at qi=",qi," Gx=",Gx,"Gy=",Gy,"denom=",denom
 				denom 	= 1e-5_dp
 			end if
 			!
@@ -383,7 +383,7 @@ module planeWave
 		integer						:: gi
 		!
 		kappa	= PI_dp / (2.0_dp*atR(1,at))
-		if( atR(1,at) /= atR(2,at) ) write(*,*)"[g3Int]: warning analytic projection can not handle non cubic wells"
+		if( atR(1,at) /= atR(2,at) ) write(*,*)"[g3Int]: WARNING analytic projection can not handle non cubic wells"
 		xc		= atPos(1,at) - atR(1,at)
 		yc		= atPos(2,at) - atR(2,at)
 		xL 		= atPos(1,at) - 2.0_dp * atR(1,at) 
@@ -430,7 +430,7 @@ module planeWave
 			!
 			!
 			if( abs(denom) < machineP) then
-				write(*,'(a,i4,a,f8.4,a,f8.4a,f8.4)') "[g3Int]: warning zero denom at qi=",qi," Gx=",Gx,"Gy=",Gy,"denom=",denom
+				write(*,'(a,i4,a,f8.4,a,f8.4a,f8.4)') "[g3Int]: WARNING zero denom at qi=",qi," Gx=",Gx,"Gy=",Gy,"denom=",denom
 				denom 	= 1e-5_dp
 			end if
 			!
