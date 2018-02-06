@@ -373,7 +373,7 @@ module w90Interface
 !PREPARE & RUN W90
 	subroutine write_W90setup_input()
 		!write input file for wannier_setup call
-		integer				:: stat
+		integer				:: stat, i
 		!
 		!Delete old input file
 		open(unit=200, iostat=stat, file=w90_Dir//seed_name//'.win', status='old')
@@ -397,7 +397,7 @@ module w90Interface
 
 		!FINITE DIFFERENCE
 		!write(100,*)	'search_shells = 200'
-		write(100,*)	'shell_list = ', shells
+		write(100,*)	'shell_list = ', (shells(i), i=1,size(shells) )
 		write(100,*)	'skip_b1_tests = .true.'
 		!
 
