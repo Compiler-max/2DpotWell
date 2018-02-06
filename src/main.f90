@@ -64,7 +64,8 @@ program main
 		write(*,*)					"*"
 		write(*,*)					"*"
 		write(*,*)					"[main]:**************************Infos about this run*************************"
-		write(*,*)					"[main]: electronic structure mesh nQ=",nQ
+		write(*,'(a,i3,a,i3,a)')	"[main]: q mesh nQx=",nQx," nQy=",nQy
+		write(*,'(a,f8.3,a,f8.3)')	"[main]: dqx=",dqx, " dqy=",dqy
 		write(*,*)					"[main]: interpolation mesh        nK=",nK
 		write(*,*)					"[main]: basis cutoff parameter  Gcut=",Gcut
 		write(*,'(a,i7,a,i7,a)')	"[main]: basis function   maximum  nG=",GmaxGLOBAL," of ",nG," trial basis functions"

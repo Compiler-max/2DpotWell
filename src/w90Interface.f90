@@ -61,7 +61,7 @@ module w90Interface
 		real_lattice		= 0.0_dp
 		real_lattice(1,1)	= aX * aUtoAngstrm 
 		real_lattice(2,2)	= aY * aUtoAngstrm
-		real_lattice(3,3)	= min(aX,aY) * aUtoAngstrm * 0.9_dp
+		real_lattice(3,3)	= min(aX,aY) * 0.99_dp * aUtoAngstrm !make sure z is smallest real, results in larger distance k-space nn
 		!reciprocal cell
 		recip_lattice		= 0.0_dp
 		recip_lattice(1,1)	= 2.0_dp * PI_dp / real_lattice(1,1) 	
@@ -373,9 +373,9 @@ module w90Interface
 !PREPARE & RUN W90
 	subroutine write_W90setup_input()
 		!write input file for wannier_setup call
-		integer				:: stat, i
+		integer	:: i
 		!
-		open(unit=100,file=w90_Dir//seed_name//'.win',action='write', status='new')
+		open(unit=100,file=w90_Dir//seed_name//'.win',action='write', status='replace')
 		!
 		!BASIC INFO
 		write(100,*)	'num_wann  = ',nWfs

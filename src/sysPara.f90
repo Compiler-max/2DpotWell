@@ -466,10 +466,10 @@ module sysPara
 		real(dp)	:: qxMin, qyMin
 		!
 		if( myID == root ) then
-			qxMin	= -1.0_dp * PI_dp * aX 	/ 		vol
-			dqx		=  2.0_dp * PI_dp * aX  /	(vol * nQx)
-			qyMin	= -1.0_dp * PI_dp * aY	/		vol
-			dqy		=  2.0_dp * PI_dp * aY	/	(vol * nQy)
+			qxMin	= -1.0_dp * PI_dp * aY 	/ 		vol
+			dqx		=  2.0_dp * PI_dp * aY  /	(vol * nQx)
+			qyMin	= -1.0_dp * PI_dp * aX	/		vol
+			dqy		=  2.0_dp * PI_dp * aX	/	(vol * nQy)
 			!
 			do qIy = 1, nQy
 				do qIx = 1, nQx
@@ -491,10 +491,10 @@ module sysPara
 		real(dp)	:: kxMin, kyMin
 		!
 		if( myID == root ) then
-			kxMin	= -1.0_dp * PI_dp * aX / vol
-			dkx		=  2.0_dp * PI_dp * aX / (vol * (nKx-1))
-			kyMin	= -1.0_dp * PI_dp * aY / vol
-			dky		=  2.0_dp * PI_dp * aY / (vol* (nKy-1))
+			kxMin	= -1.0_dp * PI_dp * aY / vol
+			dkx		=  2.0_dp * PI_dp * aY / (vol * (nKx-1))
+			kyMin	= -1.0_dp * PI_dp * aX / vol
+			dky		=  2.0_dp * PI_dp * aX / (vol* (nKy-1))
 			!
 			do kIy = 1, nKy
 				do kIx = 1, nKx
