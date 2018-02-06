@@ -72,7 +72,7 @@ module w90Interface
 		num_atoms			= nAt
 
 		!debug
-		if(	abs(dqx-dqy) > 1e-7_dp ) 	write(*,*)	"[w90setup]: WARNING - q mesh has non uniform grid spacing (required by w90)"
+		if(	abs(dqx-dqy) > 1e-7_dp ) 	stop	"[w90setup]: ERROR - q mesh has non uniform grid spacing (required by w90)"
 
 		!WRITE INPUT FILE (wann setup)
 		call write_W90setup_input()

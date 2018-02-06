@@ -49,12 +49,10 @@ module potWellModel
 			call eigSolverPART(Hmat(1:Gsize,1:Gsize),En_temp(1:Gsize), ck_temp(1:Gsize,:), found)
 			!
 			!DEBUG TESTS
-			if( found /= nSolve )	write(*,'(a,i3,a,i5,a,i5)'	)	"[#",myID,";solveHam]: only found ",found," bands of required ",nSolve
-			if( nBands > found	)	write(*,'(a,i3,a)'			)	"[#",myID,";solveHam]: WARNING did not found required amount of bands"
-			if( Gsize < nSolve	) 	write(*,'(a,i3,a,i5,a,i5,a)')	"[#",myID,";solveHam]: cutoff to small to get ",nSolve,&
-																	" bands! only get",Gsize," basis functions"
-			if( Gsize > Gmax	)	write(*,'(a,i3,a)'			)	"[#",myID,";solveHam]: critical error in solveHam, ",&
-																	"please contact developer. (nobody but dev will ever read this^^)"
+			if( found /= nSolve )	write(*,'(a,i3,a,i5,a,i5)'	)	"[#",myID,";solveHam]:WARNING only found ",found," bands of required ",nSolve
+			if( nBands > found	)	stop	"[solveHam]: ERROR did not find required amount of bands"
+			if( Gsize < nSolve	) 	stop	"[solveHam]: cutoff to small to get bands! only get basis functions"
+			if( Gsize > Gmax	)	stop	"[solveHam]: critical error in solveHam please contact developer. (nobody but dev will ever read this^^)"
 			!
 			!WRITE COEFF TO FILE
 			call writeABiN_basCoeff(qi, ck_temp)
@@ -102,7 +100,7 @@ module potWellModel
 		!
 		!DEBUG
 		if(debugHam) then
-			if ( .not.	isHermitian(Hmat)	) 	write(*,'(a,i3,a,i3)')	"[#",myID,";populateH]: Hamiltonian matrix is not Hermitian at qLoc=",qLoc
+			if ( .not.	isHermitian(Hmat)	) 	write(*,'(a,i3,a,i3)')	"[#",myID,";populateH]: WARNING Hamiltonian matrix is not Hermitian at qLoc=",qLoc
 		end if
 		!
 		!		

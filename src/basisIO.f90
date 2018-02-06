@@ -160,12 +160,15 @@ module basisIO
 		real(dp),		allocatable		:: buffer(:,:)
 		integer							:: qi
 		character(len=20)				:: filename
+		logical							:: file_exists
 		!
 		allocate(	buffer( size(ck,1), size(ck,2) 	)		)
 		!
 		!UNK REAL PART
 		do qi = 1 , size(ck,3)
 			write(filename, format) raw_dir//'ckR.',qi
+			inquire(file=filename,exist=file_exists)
+			if(.not. file_exists)	stop 'could not find all basis coefficients (ckR files)'
 			open(unit=700, file=filename ,form='unformatted',access='stream',action='read')
 			read(700) buffer
 			ck(:,:,qi)	= dcmplx(buffer)
@@ -175,6 +178,8 @@ module basisIO
 		!UNK IMAG PART
 		do qi = 1 , size(ck,3)
 			write(filename, format) raw_dir//'ckI.',qi
+			inquire(file=filename,exist=file_exists)
+			if(.not. file_exists)	stop 'could not find all basis coefficients (ckI files)'
 			open(unit=710, file=filename,form='unformatted',access='stream',action='read')
 			read(710) buffer
 			ck(:,:,qi)	= ck(:,:,qi) + i_dp * dcmplx(buffer)
@@ -185,6 +190,8 @@ module basisIO
 		!BAND ENERGIES
 		do qi = 1, size(En,2)	
 				write(filename, format) raw_dir//'enK.',qi
+				inquire(file=filename,exist=file_exists)
+				if(.not. file_exists)	stop 'could not find all eigenvalues (enK files)'
 				open(unit=720, file=filename, form='unformatted', access='stream', action='read')
 				read(720)	En(:,qi)
 				close(720)
