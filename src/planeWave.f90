@@ -30,24 +30,21 @@ module planeWave
 		!
 		v_mat = dcmplx(0.0_dp)
 		!
-		if(	size(ck,3)/=size(v_mat,4)	) then
-			write(*,*)	"[calcVeloGrad]: coeff and velo defined on different k meshes, stop now"
-			!call exit(status)
-		else
-			!$OMP PARALLEL DO SCHEDULE(STATIC) DEFAULT(SHARED) PRIVATE(qi, m, n, gi)
-			do qi = 1, nQ
-				do m = 1, nSolve
-					do n = 1, nSolve
-						!
-						!SUM OVER BASIS FUNCTIONS
-						do gi = 1 , nGq(qi)
-							v_mat(1:2,n,m,qi) = v_mat(1:2,n,m,qi) -  dconjg(ck(gi,n,qi)) *  ck(gi,m,qi) *  Gvec(1:2,gi,qi)
-						end do
+		if(	size(ck,3)/=size(v_mat,4)	) stop	"[calcVeloGrad]: coeff and velo defined on different k meshes, stop now"
+			
+		!$OMP PARALLEL DO SCHEDULE(STATIC) DEFAULT(SHARED) PRIVATE(qi, m, n, gi)
+		do qi = 1, nQ
+			do m = 1, nSolve
+				do n = 1, nSolve
+					!
+					!SUM OVER BASIS FUNCTIONS
+					do gi = 1 , nGq(qi)
+						v_mat(1:2,n,m,qi) = v_mat(1:2,n,m,qi) -  dconjg(ck(gi,n,qi)) *  ck(gi,m,qi) *  Gvec(1:2,gi,qi)
 					end do
 				end do
 			end do
-			!$OMP END PARALLEL DO
-		end if
+		end do
+		!$OMP END PARALLEL DO
 		!
 		return
 	end subroutine
@@ -67,21 +64,24 @@ module planeWave
 		do gi = 1, nGq(qi)
 			notFound 	= .true.
 			gj			= 1
+			!
 			do while( gj<= nGq(knb) .and. notFound ) 
 				delta(1:2)	=  ( Gvec(1:2,gi,qi)-qpts(1:2,qi) ) 	-  		( Gvec(1:2,gj,knb)-qpts(1:2,knb)-gShift(1:2) )
+				!
 				if( norm2(delta) < machineP )	then
 					do n = 1, size(Mmat,2)
 						do m = 1, size(Mmat,1)
 							Mmat(m,n)	= Mmat(m,n)	+ dconjg(	ck(gi,m,qi)	) * ck(gj,n,knb)
 						end do
 					end do
-					!UNKoverlap	= UNKoverlap +  dconjg( ck(gi,n,qi) ) * ck(gj,m,knb) 
 					cnt = cnt + 1
 					notFound = .false.
 				end if
+				!
 				gj = gj + 1
 			end do
-			!if( gj>= nGq(knb) .and. notFound	) write(*,'(a,i3,a,i3)')	"[UNKoverlap]: no neighbour for gi=",gi," at qi=",qi
+			!
+			!
 		end do
 		!
 		if( cnt > nGq(qi)	)		write(*,'(a,i8,a,i8)')	"[calcMmat]: WARNING, used ",cnt," where nGmax(qi)=",nGq(qi)
@@ -131,7 +131,7 @@ module planeWave
 					else 
 						state = 0
 						write(*,*)	"[calcAmatANA]: error while determining the state to project on. n=",n
-						write(*,*)	"[calcAmatANA]: error! will set A_matrix component to zero"
+						write(*,*)	"[calcAmatANA]: WARNING! will set A_matrix component to zero, try to run wannier with use_bloch switch"
 					end if
 					!
 					!DO PROJECTION
@@ -189,11 +189,7 @@ module planeWave
 		end do
 		!
 		!DEBUG
-		if( B1condition(b_k, w_b) )	 then
-			write(*,*)	"[calcConnOnCoarse]: B1 condition fullfilled. FD scheme accepted"
-		else
-			write(*,*)	"[calcConnOnCoarse]: WARNING B1 condition not fullfilled" 
-		end if
+		if( .not. B1condition(b_k, w_b) )	stop '[calcConnCoarse]: B1 condition (2D version) not fullfilled'
 		!
 		return
 	end subroutine
@@ -213,7 +209,6 @@ module planeWave
 		do i =1, nGq(qi)
 			basVec(i) 		= myExp( dot_product( Gvec(1:2,i,qi), rpts(1:2,ri) )		)  !/ dsqrt(vol)
 		end do
-		!
 		!
 		return
 	end subroutine
@@ -255,7 +250,7 @@ module planeWave
 		!
 		!TRIAL ORBITAL:
 		kappa	= PI_dp / ( 2.0_dp * atR(1,at) )
-		if( atR(1,at) /= atR(2,at) ) write(*,*)"[g1Int]: WARNING analytic projection can not handle non cubic wells"
+		if( atR(1,at) /= atR(2,at) )	stop	"[g1Int]: ERROR analytic projection can not handle non cubic wells"
 		xc		= atPos(1,at) - atR(1,at)
 		yc		= atPos(2,at) - atR(2,at)
 		xL 		= atPos(1,at) - atR(1,at) 
@@ -320,7 +315,7 @@ module planeWave
 		!
 		!TRIAL ORBITAL:
 		kappa	= PI_dp / (2.0_dp*atR(1,at))
-		if( atR(1,at) /= atR(2,at) ) write(*,*)"[g2Int]: WARNING analytic projection can not handle non cubic wells"
+		if( atR(1,at) /= atR(2,at) ) 	stop "[g2Int]: WARNING analytic projection can not handle non cubic wells"
 		xc		= atPos(1,at) - atR(1,at)
 		yc		= atPos(2,at) - atR(2,at)
 		xL 		= atPos(1,at) - atR(1,at) 
@@ -383,7 +378,7 @@ module planeWave
 		integer						:: gi
 		!
 		kappa	= PI_dp / (2.0_dp*atR(1,at))
-		if( atR(1,at) /= atR(2,at) ) write(*,*)"[g3Int]: WARNING analytic projection can not handle non cubic wells"
+		if( atR(1,at) /= atR(2,at) ) stop	"[g3Int]: WARNING analytic projection can not handle non cubic wells"
 		xc		= atPos(1,at) - atR(1,at)
 		yc		= atPos(2,at) - atR(2,at)
 		xL 		= atPos(1,at) - 2.0_dp * atR(1,at) 
