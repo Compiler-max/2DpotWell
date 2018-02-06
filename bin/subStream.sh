@@ -71,6 +71,7 @@ function runCalc {
 	#prepW90
 	mv input.txt oldInput/inputABinit.txt
 	mv input2.txt input.txt
+	rm w90files/*
 	wait
 	./main.exe > out.txt
 
