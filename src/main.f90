@@ -25,15 +25,11 @@ program main
     real(dp),		allocatable,	dimension(:,:)		:: 	En    														
     real												:: 	mastT0, mastT1, mastT, T0, T1, &
     															alloT,hamT,wannT,postWT, outT, berryT	
-    logical												::	mpiSuccess		
 
     !MPI INIT
 	call MPI_INIT( ierr )
     call MPI_COMM_RANK (MPI_COMM_WORLD, myID, ierr)
     call MPI_COMM_SIZE (MPI_COMM_WORLD, nProcs, ierr)
-    root = 0
-    mpiSuccess = .true.
-    call MPI_Barrier( MPI_COMM_WORLD, ierr )
     !
     !SETUP
     if( myID == root) then
@@ -54,10 +50,7 @@ program main
   	call readInp()
 	!
 	!check if equal kpt distribution among mpi procs is possible -> if not break
-	if( mod(nQ,nProcs)/=0)  then
-		if(myID == root) write(*,*)"[main]: CRITICAL WARNING: mpi threads have to be integer fraction of nQ"
-		mpiSuccess = .false.
-	end if
+	if( mod(nQ,nProcs)/=0)  stop '[main]: ERROR mpi threads have to be integer fraction of nQ'
 	!
 	!print info
 	if( myID == root) then
@@ -98,7 +91,7 @@ program main
 	
 	!HAM SOLVER
 	call MPI_BARRIER( MPI_COMM_WORLD, ierr )	
-	if( mpiSuccess .and. doSolveHam ) then
+	if( doSolveHam ) then
 		!
 		if( myID == root )	call cpu_time(T0)
 		if( myID == root ) 	write(*,*)"[main]:**************************ELECTRONIC STRUCTURE RUN*************************"

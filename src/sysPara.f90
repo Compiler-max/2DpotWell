@@ -29,7 +29,8 @@ module sysPara
 														nKx=1, nKy=1, nK, R0,  &
 														nShells, nw90it,  &
 														nRx=10, nRy=10, nR, nBands=1,nWfs=1, nSC, &
-														myID, nProcs, root, ierr, qChunk
+														myID, nProcs, ierr, qChunk
+	integer,	parameter							::	root=0
 	real(dp) 										::	aX=0.0_dp, aY=0.0_dp,vol=0.0_dp, Gcut=2*PI_dp, thres,& 
 														dx, dy, dqx, dqy, dkx, dky, B0, Bext(3)	, prefactF3, recpLatt(2,2)
 	character(len=3)								::	seedName										
