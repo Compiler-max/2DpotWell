@@ -61,7 +61,7 @@ module w90Interface
 		real_lattice		= 0.0_dp
 		real_lattice(1,1)	= aX * aUtoAngstrm 
 		real_lattice(2,2)	= aY * aUtoAngstrm
-		real_lattice(3,3)	= min(aX,aY) * aUtoAngstrm
+		real_lattice(3,3)	= min(aX,aY) * aUtoAngstrm * 0.9_dp
 		!reciprocal cell
 		recip_lattice		= 0.0_dp
 		recip_lattice(1,1)	= 2.0_dp * PI_dp / real_lattice(1,1) 	
