@@ -7,7 +7,7 @@ module sysPara
 	!#include "mpif.h"
 
 	private
-	public :: 	readInp, readGvec, insideAt, getRindex, getRleftX, getRrightX, getRleftY, getRrightY,& 
+	public :: 	readInp, insideAt, getRindex, getRleftX, getRrightX, getRleftY, getRrightY,& 
 				getKindex, getGammaPoint, getPot, &
 				dim, aX, aY, vol, nAt, relXpos, relYpos, atRx, atRy, atPot, dVpot, &
 				nG, nGq, nG0, Gmax, GmaxGLOBAL, Gcut, Gvec, Gtest, R0, nSolve, &
@@ -94,24 +94,6 @@ module sysPara
 			if( .not. dir_exists )	call system(mkdir//raw_dir)
 		end if
 
-		!
-		return
-	end subroutine
-
-
-	subroutine readGvec()
-		!
-		open(unit=800, file=raw_dir//"nGq.dat",form='unformatted',access='stream',action='read')
-		read(800) nGq
-		close(800)
-		write(*,'(a,i3,a)')	"[#",myID,";readGvec]: read nGq"
-		!
-		!
-		open(unit=805, file=raw_dir//"Gvec.dat",form='unformatted',access='stream',action='read')
-		read(805) Gvec
-		close(805)
-		write(*,'(a,i3,a)')	"[#",myID,";readGvec]: read Gvec"
-		!
 		!
 		return
 	end subroutine
@@ -472,6 +454,8 @@ module sysPara
 			qyMin	= -1.0_dp * PI_dp * aX	/		vol
 			dqy		=  2.0_dp * PI_dp * aX	/	(vol * nQy)
 			!
+			if( abs(dqx - dqy) > 1e-7_dp)	stop '[qmeshGen]: non uniform mesh, change nQx and/or nQy'
+
 			do qIy = 1, nQy
 				do qIx = 1, nQx
 					qI	=	(qIy-1) * nQx + qIx
