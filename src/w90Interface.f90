@@ -375,17 +375,6 @@ module w90Interface
 		!write input file for wannier_setup call
 		integer				:: stat, i
 		!
-		!Delete old input file
-		!open(unit=200, iostat=stat, file=w90_Dir//seed_name//'.win', status='old')
-		!if (stat == 0) close(200, status='delete')
-		!!Delete old wout file
-		!open(unit=210, iostat=stat, file=w90_Dir//seed_name//'.wout', status='old')
-		!if (stat == 0) close(210, status='delete')
-		!		
-		!
-		!
-		!create new
-		write(*,*)	"[write_W90setup_input]: try to write file: '"//w90_dir//seed_name//".win' "
 		open(unit=100,file=w90_Dir//seed_name//'.win',action='write', status='new')
 		!
 		!BASIC INFO
@@ -395,7 +384,6 @@ module w90Interface
 		if( useBloch )	write(100,*)	'use_bloch_phases = true '
 		write(100,*)	
 		!
-
 		!FINITE DIFFERENCE
 		!write(100,*)	'search_shells = 200'
 		write(100,*)	'shell_list = ', (shells(i), i=1,size(shells) )
