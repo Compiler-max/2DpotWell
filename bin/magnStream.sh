@@ -117,7 +117,7 @@ function runCalc {
 #BODY
 #
 #search foor w90
-echo '['$(date +"%T")']: start subStream'
+echo '['$(date +"%T")']: start magnStream'
 success=false
 searchWann
 if [ ! success ]; then

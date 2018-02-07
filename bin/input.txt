@@ -1,7 +1,7 @@
 #Input for 2D pot well code
 
 [unitCell]
-    aX          =   20  
+    aX          =   30  
     aY          =   10
 
 [atoms]
@@ -27,7 +27,7 @@
     Gcut        =   8.0 # edited by statFlow
     nSolve      =   96 # edited by statFlow
     nQx         =   4 # edited by statFlow
-    nQy         =   8 # edited by statFlow
+    nQy         =   12 # edited by statFlow
     nSCx        =   5 # edited by statFlow
     nSCy        =   9 # edited by statFlow
     nKx         =   5 # edited by statFlow

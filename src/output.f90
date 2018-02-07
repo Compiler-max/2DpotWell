@@ -484,26 +484,27 @@ module output
 		write(600,*)"*"
 		
 
-		write(600,*)"**************FIRST ORDER POL:"
-		!NIU
-		write(600,'(a,f16.8)') "F3 prefactor = ",prefactF3
-		write(600,'(a,e16.7,a,e16.7,a,e16.7,a,a,e16.7,a,e16.7,a)')	"pNiuF2= (", 	pNiuF2(1),	", ",	pNiuF2(2),", ", pNiuF2(3),	")[a.u.]",&
-														" moded=(",dmod(pNiuF2(1),aX/vol)*aUtoConv,", ",dmod(pNiuF2(2),aY/vol)*aUtoConv,") [muC/cm]."
-		!
-		write(600,'(a,e16.7,a,e16.7,a,e16.7,a,a,e16.7,a,e16.7,a)')	"pNiuF3= (", 	pNiuF3(1),	", ",	pNiuF3(2),", ", pNiuF3(3),	")[a.u.]",&
-														" moded=(",dmod(pNiuF3(1),aX/vol)*aUtoConv,", ",dmod(pNiuF3(2),aY/vol)*aUtoConv,") [muC/cm]."
-	
-		!												
-		write(600,'(a,e16.7,a,e16.7,a,e16.7,a,a,e16.7,a,e16.7,a)')	"pNiu  = (", 	pNiu(1),	", ",	pNiu(2),", ", pNiu(3),	")[a.u.]",&
-														" moded=(",dmod(pNiu(1),aX/vol)*aUtoConv,", ",dmod(pNiu(2),aY/vol)*aUtoConv,") [muC/cm]."
-	
-		
-		!0 + 1 order
-		pFirst = pBerry + pNiu
-		write(600,'(a,e16.7,a,e16.7,a,e16.7,a,a,e16.7,a,e16.7,a)')	"p0+1  = (", 	pFirst(1),	", ",	pFirst(2),", ", pFirst(3),	")[a.u.]",&
-																" moded=(",dmod(pFirst(1),aX/vol)*aUtoConv,", ",dmod(pFirst(2),aY/vol)*aUtoConv,") [muC/cm]."
-		write(600,*)" p0+1 = pBerry + pNiu"
-
+		if(.not. doMagHam) then
+			write(600,*)"**************FIRST ORDER POL:"
+			!NIU
+			write(600,'(a,f16.8)') "F3 prefactor = ",prefactF3
+			write(600,'(a,e16.7,a,e16.7,a,e16.7,a,a,e16.7,a,e16.7,a)')	"pNiuF2= (", 	pNiuF2(1),	", ",	pNiuF2(2),", ", pNiuF2(3),	")[a.u.]",&
+															" moded=(",dmod(pNiuF2(1),aX/vol)*aUtoConv,", ",dmod(pNiuF2(2),aY/vol)*aUtoConv,") [muC/cm]."
+			!
+			write(600,'(a,e16.7,a,e16.7,a,e16.7,a,a,e16.7,a,e16.7,a)')	"pNiuF3= (", 	pNiuF3(1),	", ",	pNiuF3(2),", ", pNiuF3(3),	")[a.u.]",&
+															" moded=(",dmod(pNiuF3(1),aX/vol)*aUtoConv,", ",dmod(pNiuF3(2),aY/vol)*aUtoConv,") [muC/cm]."
+			!
+			!												
+			write(600,'(a,e16.7,a,e16.7,a,e16.7,a,a,e16.7,a,e16.7,a)')	"pNiu  = (", 	pNiu(1),	", ",	pNiu(2),", ", pNiu(3),	")[a.u.]",&
+															" moded=(",dmod(pNiu(1),aX/vol)*aUtoConv,", ",dmod(pNiu(2),aY/vol)*aUtoConv,") [muC/cm]."
+			!	
+			!		
+			!0 + 1 order
+			pFirst = pBerry + pNiu
+			write(600,'(a,e16.7,a,e16.7,a,e16.7,a,a,e16.7,a,e16.7,a)')	"p0+1  = (", 	pFirst(1),	", ",	pFirst(2),", ", pFirst(3),	")[a.u.]",&
+																	" moded=(",dmod(pFirst(1),aX/vol)*aUtoConv,", ",dmod(pFirst(2),aY/vol)*aUtoConv,") [muC/cm]."
+			write(600,*)" p0+1 = pBerry + pNiu"
+		end if
 
 
 
@@ -525,23 +526,23 @@ module output
 			write(600,'(a,i3,a,e16.7,a,e16.7,a,e16.7,a)')	"pBerr(n=",n,")=	( ",b_centers(1,n),", ",b_centers(2,n),", ",b_centers(3,n)," )"
 		end do
 
-
-		write(600,*)	"*"
-		write(600,*)	"*"
-		write(600,*)	"*"
-		write(600,*)	"********Niu F2 (first order contribution)***********************"
-		do n = 1, size(niu_polF2,2)
-			write(600,'(a,i3,a,e16.7,a,e16.7,a,e16.7,a)')	"pNiuF2(n=",n,")=	( ",niu_polF2(1,n),", ", niu_polF2(2,n),", ", niu_polF2(3,n)," )"
-		end do
-	
-		write(600,*)	"*"
-		write(600,*)	"*"
-		write(600,*)	"*"
-		write(600,*)	"********Niu F3 (first order contribution)***********************"
-		do n = 1, size(niu_polF3,2)
-			write(600,'(a,i3,a,e16.7,a,e16.7,a,e16.7,a)')	"pNiuF3(n=",n,")=	( ",niu_polF3(1,n),", ",niu_polF3(2,n),", ",niu_polF3(3,n)," )"
-		end do
-
+		if( .not. doMagHam )
+			write(600,*)	"*"
+			write(600,*)	"*"
+			write(600,*)	"*"
+			write(600,*)	"********Niu F2 (first order contribution)***********************"
+			do n = 1, size(niu_polF2,2)
+				write(600,'(a,i3,a,e16.7,a,e16.7,a,e16.7,a)')	"pNiuF2(n=",n,")=	( ",niu_polF2(1,n),", ", niu_polF2(2,n),", ", niu_polF2(3,n)," )"
+			end do
+			!
+			write(600,*)	"*"
+			write(600,*)	"*"
+			write(600,*)	"*"
+			write(600,*)	"********Niu F3 (first order contribution)***********************"
+			do n = 1, size(niu_polF3,2)
+				write(600,'(a,i3,a,e16.7,a,e16.7,a,e16.7,a)')	"pNiuF3(n=",n,")=	( ",niu_polF3(1,n),", ",niu_polF3(2,n),", ",niu_polF3(3,n)," )"
+			end do
+		end if
 
 
 
