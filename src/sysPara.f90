@@ -19,7 +19,7 @@ module sysPara
 				Bext, prefactF3, &
 				seedName, w90_dir, info_dir, mkdir, raw_dir,&
 				debugProj, debugHam, debugWann, doSolveHam, doMagHam, doPrepW90, useBloch, doPw90, pw90GaugeB, doVdesc,  &
-				doBerry, useRot, doWanni, doVeloNUM, doNiu, doPei, doGaugBack, writeBin, &
+				doBerry,  doWanni, doVeloNUM, doNiu, doPei, doGaugBack, writeBin, &
 				myID, nProcs, root, ierr, qChunk
 
 
@@ -44,7 +44,7 @@ module sysPara
 	real(dp),	allocatable,	dimension(:,:,:)	::	Gvec
 	logical											::	debugHam, debugWann, debugProj, &
 														doSolveHam, doMagHam, doPrepW90,doPw90, pw90GaugeB, useBloch, doVdesc , &
-														doBerry, useRot, doWanni, doVeloNUM, doNiu, doPei, doGaugBack, &
+														doBerry, doWanni, doVeloNUM, doNiu, doPei, doGaugBack, &
 														writeBin 
 
 
@@ -147,7 +147,6 @@ module sysPara
 		call CFG_add_get(my_cfg,	"w90%nw90it"		, 	 nw90it		,	"number of iterations for wannnierisat,")
 		call CFG_add_get(my_cfg,	"w90%pw90GaugeB"	,	pw90GaugeB	,	"logical for switching gauge trafo	   ")
 		![berry]
-		call CFG_add_get(my_cfg,	"berry%useRot"		,	useRot		,	"logical for switching on/off rotation	")
 		call CFG_add_get(my_cfg,	"berry%doVeloNUM"	,	doVeloNUM	,	"if true tb velocities, else analyitcal")
 		call CFG_add_get(my_cfg,	"berry%doNiu"		,	doNiu		,	"switch for nius first order pol"		)
 		call CFG_add_get(my_cfg,	"berry%doPei"		,	doPei		,	"switch for  peierls first order pol"	)
@@ -236,7 +235,6 @@ module sysPara
 		call MPI_Bcast( nw90it		,		1	,	MPI_INTEGER				,	root,	MPI_COMM_WORLD, ierr)		
 		call MPI_Bcast( pw90GaugeB	,		1	,	MPI_LOGICAL				,	root,	MPI_COMM_WORLD, ierr)
 		![berry]
-		call MPI_Bcast( useRot		,		1	,	MPI_LOGICAL				,	root,	MPI_COMM_WORLD,	ierr)
 		call MPI_Bcast( doVeloNUM	,		1	,	MPI_LOGICAL				,	root,	MPI_COMM_WORLD,	ierr)
 		call MPI_Bcast( doNiu		,		1	,	MPI_LOGICAL				,	root,	MPI_COMM_WORLD,	ierr)
 		call MPI_Bcast( doPei		,		1	,	MPI_LOGICAL				,	root,	MPI_COMM_WORLD,	ierr)

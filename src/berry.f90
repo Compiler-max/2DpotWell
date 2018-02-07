@@ -40,7 +40,7 @@ module berry
 		complex(dp),	allocatable		:: 	U_matrix(:,:,:), ck_wann(:,:,:), &
 											AconnQ(:,:,:,:), FcurvQ(:,:,:,:),veloQ(:,:,:,:) 		
 		real(dp),		allocatable		::	R_real(:,:), v_Band(:,:,:), krel(:,:), b_k(:,:), w_b(:), &
-											w_centers(:,:), b_centers(:,:), niu_polF2(:,:), niu_polF3(:,:)
+											w_centers(:,:), berry_W_gauge(:,:),berry_H_gauge(:,:), niu_polF2(:,:), niu_polF3(:,:)
 		integer							::	nntot, gammaPt, nn
 		integer,		allocatable		:: 	nnlist(:,:), nncell(:,:,:)
 		!					
@@ -54,7 +54,8 @@ module berry
 		allocate(			krel(			3,									nQ		)			)
 		allocate(			U_matrix(					nWfs	,	nWfs	,	nQ		)			)
 		allocate(			w_centers(		3,					nWfs					)			)
-		allocate(			b_centers(		3,					nWfs					)			)
+		allocate(			berry_W_gauge(	3,					nWfs					)			)
+		allocate(			berry_H_gauge(	3,					nWfs					)			)
 		allocate(			niu_polF2(		3,					nWfs					)			)
 		allocate(			niu_polF3(		3,					nWfs					)			)
 		!
@@ -63,26 +64,30 @@ module berry
 		num_wann = nWfs
 		num_kpts = nQ
 		call read_FD_scheme(nntot, nnlist, nncell, b_k, w_b)
-		call read_U_matrix(R_real, U_matrix, krel)
+
 		call read_wann_centers(w_centers)
 		!
 		!nn info print
-		write(*,'(a,i2,a)')	"[berryMethod]: nn info:*****************************************"
+		write(*,'(a,i2,a)')	"[berryMethod]: nn info:"
 		gammaPt = 1 + int(	nQx*(0.5_dp+0.5_dp*nQy)	)
-		write(*,*)	"this means for qpt="qpts(:,gammaPt)
+		write(*,'(a,f6.2,a,f6.2,a)')	"        dqx=",dqx,"; dqy=",dqy,"."
+		write(*,'(a,f6.2,a,f6.2,a)')	"        this means for qpt=(",qpts(1,gammaPt),", ",qpts(2,gammaPt),")."
 		do nn = 1, nntot
-			write(*,'(a,i2,a,f6.3,a,f6.3,a)')	"nn=",nn," q_nn=("qpts(1,nnlist(gammaPt,nn)),", ",qpts(2,nnlist(gammaPt,nn)),")."
+			write(*,'(a,i2,a,f6.2,a,f6.2,a,f6.2)')	"        nn=",nn," q_nn=(",	qpts(1,nnlist(gammaPt,nn)),", ",&
+																				qpts(2,nnlist(gammaPt,nn)),"), weight=",w_b(nn)
 		end do
-		write(*,*) "**************************************************************************"
 		!
 		!
-		!ROTATE
+		!HAM GAUGE
+		write(*,*)	"[berryMethod]: start (H) gauge calculation"
+		call calcConnOnCoarse(ck, nntot, nnlist, nncell, b_k, w_b, AconnQ)
+		call calcPolViaA(AconnQ, berry_H_gauge)
+
+		!WANN GAUGE
+		call read_U_matrix(R_real, U_matrix, krel)
 		call applyRot(ck, U_matrix, ck_wann)
-		!
-		!
-		!CONNECTION (via K space)
 		call calcConnOnCoarse(ck_wann, nntot, nnlist, nncell, b_k, w_b, AconnQ)
-		call calcPolViaA(AconnQ, b_centers)
+		call calcPolViaA(AconnQ, berry_W_gauge)
 		!
 		!
 		!1st ORDER SEMICLASSICS
@@ -98,7 +103,7 @@ module berry
 		!
 		!
 		!OUTPUT
-		call writePolFile(w_centers, b_centers, niu_polF2, niu_polF3)
+		call writePolFile(w_centers, berry_H_gauge, berry_W_gauge, niu_polF2, niu_polF3)
 		call writeConnTxt( AconnQ )
 		call writeVeloHtxt( veloQ)	!*aUtoEv*aUtoAngstrm )				
 		!
@@ -122,7 +127,7 @@ module berry
 		integer							::	qi, gi, n, m
 		!
 		ckW	= dcmplx(0.0_dp)
-		if(	useRot ) then
+		!if(	useRot ) then
 			do qi = 1, nQ
 				do gi = 1, nGq(qi)			! u^(H) = u^(W) U -> u^(W) = u^(H) U^dagger
 					do n = 1, num_wann
@@ -137,11 +142,11 @@ module berry
 				end do
 			end do
 			write(*,*)	"[berry/applyRot]: applied U matrix to basis coefficients"
-		else 
-			ckW	= ck
-			write(*,'(a,a)')	"[berry/applyRot]: rotations disabled.",&
-									" Will use initial electronic structure coeff"
-		end if
+		!else 
+		!	ckW	= ck
+		!	write(*,'(a,a)')	"[berry/applyRot]: rotations disabled.",&
+		!							" Will use initial electronic structure coeff"
+		!end if
 		!
 		!
 		return

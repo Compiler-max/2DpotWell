@@ -425,23 +425,24 @@ module output
 
 
 
-	subroutine writePolFile(w_centers, b_centers, niu_polF2, niu_polF3)	!writePolFile(pWann, pBerry, pNiu, pPei )
-		real(dp),		intent(in)		::	w_centers(:,:), b_centers(:,:), niu_polF2(:,:), niu_polF3(:,:)
+	subroutine writePolFile(w_centers, b_H_gauge, b_W_gauge, niu_polF2, niu_polF3)	!writePolFile(pWann, pBerry, pNiu, pPei )
+		real(dp),		intent(in)		::	w_centers(:,:),  b_H_gauge(:,:), b_W_gauge(:,:), niu_polF2(:,:), niu_polF3(:,:)
 		real(dp)						:: 	aUtoConv, &
-											pWann(3), pBerry(3), &
+											pWann(3), pBerryH(3),pBerryW(3), &
 											pNiuF2(3), pNiuF3(3), pNiu(3), pFirst(3)
-		integer							::	n
+		integer							::	n, at
 		!look at substract centers in module polarization
 
 		!SUM OVER STATES
 		pWann(1:3)	= sum(	w_centers(1:3,:)	)
-		pBerry(1:3)	= sum(	b_centers(1:3,:)	)
+		pBerryH(1:3)= sum(	b_H_gauge(1:3,:)	)
+		pBerryW(1:3)= sum(	b_W_gauge(1:3,:)	)
 		pNiuF2(1:3)	= sum(	niu_polF2(1:3,:)	)
 		pNiuF3(1:3) = sum(	niu_polF3(1:3,:)	)
 
 		!
 		pNiu 	=	pNiuF2 + pNiuF3
-		pFirst 	=	pBerry + pNiu 
+		pFirst 	=	pBerryW + pNiu 
 
 
 		!	
@@ -451,14 +452,17 @@ module output
 		write(600,*)"**************POLARIZATION OUTPUT FILE**********************"
 		write(600,*)" via wavefunction method"
 		if(doMagHam )	write(600,*)"MAGNETIC HAMILTONIAN USED!!!"
-		write(600,*)"Gcut=",Gcut
-		write(600,*)"nQ=",nQx,"x",nQy
+		write(600,*)"maximum amount of basis function basis =",GmaxGlobal
+		write(600,*)"nQx=",nQx,"; nQy=",nQy
 		write(600,*)"*"
 		write(600,*)"*"
 		write(600,*)"*"
 		write(600,*)"*"
-		write(600,*)"**************ZION:"
-		write(600,*) Zion
+		!
+		write(600,*)"**************ATOMS:"
+		do at = 1, nAt
+			write(*,*)		"atPos(at=",at,")=	(",atPos(1,at),", ", atPos(2,at)," )."
+		end do
 		write(600,*)"*"
 		write(600,*)"*"
 		!
@@ -469,9 +473,9 @@ module output
 		write(600,'(a,f16.7,a,f16.7,a,a,f16.7,a,f16.7,a)')	"pWann =  (",  pWann(1)	,	", ",	pWann(2),		") [a.u.],",& 
 												" moded=(",dmod(pWann(1),aX/vol)*aUtoConv,", ",dmod(pWann(2),aY/vol)*aUtoConv,") [muC/cm]."
 		!
-		write(600,'(a,f16.7,a,f16.7,a,f16.7,a,a,f16.7,a,f16.7,a)')	"pBerry=  (",		pBerry(1)	,	", ",&	
-																					pBerry(2), " ,", pBerry(3)	,	") [a.u.],",& 
-												" moded=(",dmod(pBerry(1),aX/vol)*aUtoConv,", ",dmod(pBerry(2),aY/vol)*aUtoConv,") [muC/cm]."
+		write(600,'(a,f16.7,a,f16.7,a,f16.7,a,a,f16.7,a,f16.7,a)')	"pBerry=  (",		pBerryW(1)	,	", ",&	
+																					pBerryW(2), " ,", pBerryW(3)	,	") [a.u.],",& 
+												" moded=(",dmod(pBerryW(1),aX/vol)*aUtoConv,", ",dmod(pBerryW(2),aY/vol)*aUtoConv,") [muC/cm]."
 		!
 		write(600,*)"**************PERTURBATION:"
 		write(600,*) "states considered for perturbation nStates=",nSolve
@@ -500,7 +504,7 @@ module output
 			!	
 			!		
 			!0 + 1 order
-			pFirst = pBerry + pNiu
+			pFirst = pBerryW + pNiu
 			write(600,'(a,e16.7,a,e16.7,a,e16.7,a,a,e16.7,a,e16.7,a)')	"p0+1  = (", 	pFirst(1),	", ",	pFirst(2),", ", pFirst(3),	")[a.u.]",&
 																	" moded=(",dmod(pFirst(1),aX/vol)*aUtoConv,", ",dmod(pFirst(2),aY/vol)*aUtoConv,") [muC/cm]."
 			write(600,*)" p0+1 = pBerry + pNiu"
@@ -510,6 +514,7 @@ module output
 
 
 		!STATE RESOLVED
+		write(600,*)	"raw results: (no atom center corrrection, no moding with pol quantum)"
 		write(600,*)	"*"
 		write(600,*)	"*"
 		write(600,*)	"*"
@@ -521,10 +526,26 @@ module output
 		write(600,*)	"*"
 		write(600,*)	"*"
 		write(600,*)	"*"
-		write(600,*)	"********Berry centers (k-space integral)***********************"
-		do n = 1, size(b_centers,2)
-			write(600,'(a,i3,a,e16.7,a,e16.7,a,e16.7,a)')	"pBerry(n=",n,")=	( ",b_centers(1,n),", ",b_centers(2,n),", ",b_centers(3,n)," )"
+		write(600,*)	"********Berry centers (k-space integral) (H-gauge)***********************"
+		do n = 1, size(b_H_gauge,2)
+			write(600,'(a,i3,a,e16.7,a,e16.7,a,e16.7,a)')	"pBerry_H(n=",n,")=	( ",b_H_gauge(1,n),", ",b_H_gauge(2,n),", ",b_H_gauge(3,n)," )"
 		end do
+			write(600,'(a,e16.7,a,e16.7,a,e16.7,a)')	"pBerry_H(SUM)=	( ",sum(b_H_gauge(1,:)),", ",sum(b_H_gauge(2,:)),", ",sum(b_H_gauge(3,:))," )"
+
+
+		
+		write(600,*)	"*"
+		write(600,*)	"*"
+		write(600,*)	"*"
+		write(600,*)	"********Berry centers (k-space integral) (W-gauge)***********************"
+		do n = 1, size(b_W_gauge,2)
+			write(600,'(a,i3,a,e16.7,a,e16.7,a,e16.7,a)')	"pBerry_W(n=",n,")=	( ",b_W_gauge(1,n),", ",b_W_gauge(2,n),", ",b_W_gauge(3,n)," )"
+		end do
+			write(600,'(a,e16.7,a,e16.7,a,e16.7,a)')	"pBerry_W(SUM)=	( ",sum(b_W_gauge(1,:)),", ",sum(b_W_gauge(2,:)),", ",sum(b_W_gauge(3,:))," )"
+
+
+
+
 
 		if( .not. doMagHam ) then
 			write(600,*)	"*"

@@ -46,16 +46,11 @@ function prepareInput {
 	sed -i "/doPrepW90/c\     doPrepW90 = t $infoString"	./input2.txt
 	sed -i "/doPw90/c\    doPw90      = f $infoString" 		./input2.txt
 	sed -i "/doBerry/c\    doBerry     = f $infoString" 	./input2.txt
-	#(H) gauge
+	#post w90 - berry method
 	cp input2.txt input3.txt
 	sed -i "/doPrepW90/c\     doPrepW90 = f $infoString"	./input3.txt
 	sed -i "/doBerry/c\    doBerry     = t $infoString" 	./input3.txt
-	sed -i "/useRot/c\    useRot     = f $infoString"		./input3.txt
 	sed -i "/doNiu/c\        doNiu = t $infoString" 		./input3.txt
-	#(W) gauge
-	cp input3.txt input4.txt
-	sed -i "/useRot/c\    useRot      = t $infoString" 		./input4.txt
-
 }
 
 function runCalc {
@@ -73,7 +68,7 @@ function runCalc {
 	mv input2.txt input.txt
 	rm w90files/*
 	wait
-	./main.exe > out.txt
+	./main.exe > outW90inter.txt
 
 	#run wannier90
 	cd w90files
@@ -89,21 +84,12 @@ function runCalc {
 	mv input.txt oldInput/inputW90prep.txt
 	mv input3.txt input.txt
 	wait
-	./main.exe > outNoROT.txt
+	./main.exe > outBerry.txt
 	wait
 	echo '['$(date +"%T")']: finished berry random gauge'	
 
-	#Berry2 (rotation = wannier gauge)
-	mv input.txt oldInput/inputNoROT.txt
-	mv input4.txt input.txt
-	mv output/polOutput.txt output/polOutputNoROT.txt
-	wait
-	./main.exe > outROT.txt
-	wait
-	echo '['$(date +"%T")']: finished berry wannier gauge'	
-	
-	mv input.txt oldInput/inputROT.txt
-	mv output/polOutput.txt output/polOutputROT.txt
+	#finalize
+	mv input.txt oldInput/inputBerry.txt
 	mv out*.txt output
 	mv input.orig input.txt
 	wait
