@@ -9,6 +9,7 @@ bin/**
 !bin/myUNKplot.py
 !bin/myWNFplot.py
 !bin/magnStream.sh
+!bin/convFlowMagn.sh
 !bin/subStream.sh
 !bin/convFlow.sh
 !bin/statFlow.sh
