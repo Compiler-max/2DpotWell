@@ -1,13 +1,13 @@
 #Input for 2D pot well code (magnetic Hamiltonian) - super cell along x direction
 
 [unitCell]
-    aX          =   30  
+    aX          =   90  
     aY          =   10
 
 [atoms]
     doVdesc     =   f
     nAt         =   6      
-    relXpos     =   0.083 0.250     0.417 0.583     0.750 0.917     
+    relXpos     =   0.139 0.194     0.250 0.306     0.361 0.417    
     relYpos     =   0.500 0.500     0.500 0.500     0.500 0.500
     atRx        =   1.010 1.010     1.010 1.010     1.010 1.010 
     atRy        =   1.010 1.010     1.010 1.010     1.010 1.010

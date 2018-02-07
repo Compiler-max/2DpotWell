@@ -41,7 +41,7 @@ module berry
 											AconnQ(:,:,:,:), FcurvQ(:,:,:,:),veloQ(:,:,:,:) 		
 		real(dp),		allocatable		::	R_real(:,:), v_Band(:,:,:), krel(:,:), b_k(:,:), w_b(:), &
 											w_centers(:,:), b_centers(:,:), niu_polF2(:,:), niu_polF3(:,:)
-		integer							::	nntot
+		integer							::	nntot, gammaPt, nn
 		integer,		allocatable		:: 	nnlist(:,:), nncell(:,:,:)
 		!					
 		!COARSE
@@ -65,6 +65,15 @@ module berry
 		call read_FD_scheme(nntot, nnlist, nncell, b_k, w_b)
 		call read_U_matrix(R_real, U_matrix, krel)
 		call read_wann_centers(w_centers)
+		!
+		!nn info print
+		write(*,'(a,i2,a)')	"[berryMethod]: nn info:*****************************************"
+		gammaPt = 1 + int(	nQx*(0.5_dp+0.5_dp*nQy)	)
+		write(*,*)	"this means for qpt="qpts(:,gammaPt)
+		do nn = 1, nntot
+			write(*,'(a,i2,a,f6.3,a,f6.3,a)')	"nn=",nn," q_nn=("qpts(1,nnlist(gammaPt,nn)),", ",qpts(2,nnlist(gammaPt,nn)),")."
+		end do
+		write(*,*) "**************************************************************************"
 		!
 		!
 		!ROTATE
