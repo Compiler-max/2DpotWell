@@ -80,13 +80,13 @@ function runCalc {
 	echo '['$(date +"%T")']: finished wannier90 calculations'
 	
 	
-	#Berry (no rotation = random gauge)
+	#Berry
 	mv input.txt oldInput/inputW90prep.txt
 	mv input3.txt input.txt
 	wait
 	./main.exe > outBerry.txt
 	wait
-	echo '['$(date +"%T")']: finished berry random gauge'	
+	echo '['$(date +"%T")']: finished berry method'	
 
 	#finalize
 	mv input.txt oldInput/inputBerry.txt
