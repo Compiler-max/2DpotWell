@@ -10,7 +10,7 @@ program main
 	use postW90,		only:		effTBmodel
 	use berry,			only:		berryMethod
 
-	use output,		 	only:		writeMeshInfo, writeMeshBin, writePolFile,& 
+	use output,		 	only:		writeMeshInfo, writeMeshBin, writePolFile, write_K_lattices, & 
 									printTiming, printBasisInfo	!printMat, printInp, printWannInfo,writeSysInfo  
 
 
@@ -127,7 +127,9 @@ program main
 		if( doPrepW90 )	 then
 			write(*,*)	"[main]:**************************WANNIER90 INTERFACE*************************"
 			call prep_w90(ck,En)
+			call write_K_lattices()
 			write(*,*)	"[main]: please run w90 now"
+
 		end if
 		call cpu_time(T1)
 		wannT = T1 - T0

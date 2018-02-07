@@ -10,7 +10,7 @@ module output
 	implicit none
 	private
 
-	public ::	writeMeshInfo, writeMeshBin, & 
+	public ::	writeMeshInfo, writeMeshBin, write_K_lattices, & 
 				writeConnCurv, writeWannFiles, writePolFile, &
 				printMat, printTiming,  printBasisInfo, & 
 				writeVeloHtxt, writeConnTxt, writeVeloEffTB, writePeierls  
@@ -91,6 +91,28 @@ module output
 	end subroutine
 
 
+
+	subroutine write_K_lattices()
+		integer					:: stat
+		!
+		!Q MESH
+		open(unit=320, iostat=stat, file=raw_dir//'qpts.dat', status='old')
+		if (stat == 0) close(320, status='delete')
+		open(unit=320,file='rawData/qpts.dat',form='unformatted',access='stream',action='write')
+		write(320) qpts
+		close(320)
+		!
+		!K MESH (INTERPOLATION)
+		open(unit=325, iostat=stat, file=raw_dir//'kpts.dat', status='old')
+		if (stat == 0) close(325, status='delete')
+		open(unit=325,file='rawData/kpts.dat',form='unformatted',access='stream',action='write')
+		write(325) kpts
+		close(325)
+		!
+		return 
+	end subroutine
+
+
 	subroutine writeMeshBin()
 		!SYS PARA
 		integer				:: stat
@@ -144,21 +166,6 @@ module output
 		open(unit=310,file='rawData/rpts.dat',form='unformatted',access='stream',action='write')
 		write(310) rpts
 		close(310)
-		!
-		!K MESH
-		open(unit=320, iostat=stat, file=raw_dir//'qpts.dat', status='old')
-		if (stat == 0) close(320, status='delete')
-		open(unit=320,file='rawData/qpts.dat',form='unformatted',access='stream',action='write')
-		write(320) qpts
-		close(320)
-		!
-		!K INTERPOLATION
-		open(unit=325, iostat=stat, file=raw_dir//'kpts.dat', status='old')
-		if (stat == 0) close(325, status='delete')
-		open(unit=325,file='rawData/kpts.dat',form='unformatted',access='stream',action='write')
-		write(325) kpts
-		close(325)
-		!
 		!
 		return
 	end subroutine

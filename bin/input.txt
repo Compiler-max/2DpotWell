@@ -30,8 +30,8 @@
     nQy         =   4 # edited by statFlow
     nSCx        =   5 # edited by statFlow
     nSCy        =   5 # edited by statFlow
-    nKx         =   5 # edited by statFlow
-    nKy         =   5 # edited by statFlow
+    nKx         =   4 # edited by statFlow
+    nKy         =   4 # edited by statFlow
     nRx         =   10
     nRy         =   10
     thres       =   0.1
