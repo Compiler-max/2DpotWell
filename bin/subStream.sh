@@ -93,7 +93,6 @@ function runCalc {
 	mv out*.txt output
 	mv input.orig input.txt
 	wait
-	rm -r rawData 
 	echo '['$(date +"%T")']: all done'	
 }
 

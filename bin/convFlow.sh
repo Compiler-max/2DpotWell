@@ -84,6 +84,7 @@ for g in ${gVal[*]}; do
 		#execute calculation
 		./subStream.sh $nProcs
 		wait
+		rm -r rawData
 		echo '['$(date +"%T")']: finished subStream'
 			
 	
