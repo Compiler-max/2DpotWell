@@ -526,7 +526,7 @@ module output
 			write(600,'(a,i3,a,e16.7,a,e16.7,a,e16.7,a)')	"pBerr(n=",n,")=	( ",b_centers(1,n),", ",b_centers(2,n),", ",b_centers(3,n)," )"
 		end do
 
-		if( .not. doMagHam )
+		if( .not. doMagHam ) then
 			write(600,*)	"*"
 			write(600,*)	"*"
 			write(600,*)	"*"
