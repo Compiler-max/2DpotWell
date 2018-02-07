@@ -528,6 +528,7 @@ module output
 		write(600,*)	"********wannier90 centers***********************"
 		do n = 1, size(w_centers,2)
 			write(600,'(a,i3,a,e16.7,a,e16.7,a,e16.7,a)')	"pWann(n=",n,")=	( ",w_centers(1,n),", ",w_centers(2,n),", ",w_centers(3,n)," )"
+			write(600,'(a,f16.7,a,f16.7,a)')						"=(",w_centers(1,n)-atPos(1,mod(n,nAt)),", ",w_centers(2,n)-atPos(1,mod(n,nAt)),")."
 		end do
 
 		write(600,*)	"*"
@@ -536,6 +537,8 @@ module output
 		write(600,*)	"********Berry centers (k-space integral) (H-gauge)***********************"
 		do n = 1, size(b_H_gauge,2)
 			write(600,'(a,i3,a,e16.7,a,e16.7,a,e16.7,a)')	"pBerry_H(n=",n,")=	( ",b_H_gauge(1,n),", ",b_H_gauge(2,n),", ",b_H_gauge(3,n)," )"
+			write(600,'(a,f16.7,a,f16.7,a)')						"=(",b_H_gauge(1,n)-atPos(1,mod(n,nAt)),", ",b_H_gauge(2,n)-atPos(1,mod(n,nAt)),")."
+
 		end do
 			write(600,'(a,e16.7,a,e16.7,a,e16.7,a)')	"pBerry_H(SUM)=	( ",sum(b_H_gauge(1,:)),", ",sum(b_H_gauge(2,:)),", ",sum(b_H_gauge(3,:))," )"
 
@@ -547,6 +550,7 @@ module output
 		write(600,*)	"********Berry centers (k-space integral) (W-gauge)***********************"
 		do n = 1, size(b_W_gauge,2)
 			write(600,'(a,i3,a,e16.7,a,e16.7,a,e16.7,a)')	"pBerry_W(n=",n,")=	( ",b_W_gauge(1,n),", ",b_W_gauge(2,n),", ",b_W_gauge(3,n)," )"
+			write(600,'(a,f16.7,a,f16.7,a)')						"=(",b_W_gauge(1,n)-atPos(1,mod(n,nAt)),", ",b_W_gauge(2,n)-atPos(1,mod(n,nAt)),")."
 		end do
 			write(600,'(a,e16.7,a,e16.7,a,e16.7,a)')	"pBerry_W(SUM)=	( ",sum(b_W_gauge(1,:)),", ",sum(b_W_gauge(2,:)),", ",sum(b_W_gauge(3,:))," )"
 
