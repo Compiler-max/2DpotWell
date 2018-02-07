@@ -523,7 +523,7 @@ module output
 		write(600,*)	"*"
 		write(600,*)	"********Berry centers (k-space integral)***********************"
 		do n = 1, size(b_centers,2)
-			write(600,'(a,i3,a,e16.7,a,e16.7,a,e16.7,a)')	"pBerr(n=",n,")=	( ",b_centers(1,n),", ",b_centers(2,n),", ",b_centers(3,n)," )"
+			write(600,'(a,i3,a,e16.7,a,e16.7,a,e16.7,a)')	"pBerry(n=",n,")=	( ",b_centers(1,n),", ",b_centers(2,n),", ",b_centers(3,n)," )"
 		end do
 
 		if( .not. doMagHam ) then
