@@ -173,6 +173,7 @@ module planeWave
 		gX = 2.0_dp * PI_dp / aX
 		gY = 2.0_dp * PI_dp / aY
 		!
+		!$OMP PARALLEL DO SCHEDULE(STATIC)	DEFAULT(SHARED) PRIVATE(qi, nn, gShift)
 		do qi = 1, nQ
 			do nn = 1, nntot
 				!GET OVERLAP MATRIX
@@ -184,9 +185,9 @@ module planeWave
 				A_conn(1,:,:,qi)	= w_b(nn) * b_k(1,nn) * dimag( log(M_matrix(:,:)))
 				A_conn(2,:,:,qi)	= w_b(nn) * b_k(2,nn) * dimag( log(M_matrix(:,:)))
 				A_conn(3,:,:,qi)	= w_b(nn) * b_k(3,nn) * dimag( log(M_matrix(:,:)))
-
 			end do
 		end do
+		!$OMP END PARALLEL DO
 		!
 		!DEBUG
 		if( .not. B1condition(b_k, w_b) )	stop '[calcConnCoarse]: B1 condition (2D version) not fullfilled'

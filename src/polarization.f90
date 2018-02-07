@@ -52,12 +52,9 @@ module polarization
 		complex(dp),		intent(in)		:: A_mat(:,:,:,:)			!A(2,	 nWfs, nWfs, nQ	)	
 		real(dp),			intent(out)		:: centers(:,:)
 		complex(dp)	,		allocatable		:: val(:)
-		real(dp),			allocatable		:: rVal(:)
 		integer								:: n
 		!
 		allocate(	val(  size(A_mat,1) )	)
-		allocate(	rVal( size(A_mat,1) )	)
-		!
 		!
 		do n 	= 1, size(A_mat,2)
 			!
@@ -69,13 +66,11 @@ module polarization
 			!COLLECT REAL PART
 			centers(:,n) 	= dreal(val(:))
 			!
-			!
 			!DEBUG MESSAGE
 			write(*,'(a,i3,a,f8.4,a,f8.4,a)')	"[calcPolViaA]: n=",n,"p_n=",dreal(val(1)),",",dreal(val(2)),")."
 			if( abs(dimag(val(1))) > acc .or. abs(dimag(val(2))) > acc .or. abs(dimag(val(3))) > acc	) then
 				write(*,*)	"[calcPolViaA]: found non zero imaginary contribution from band n=",n 
 			end if	
-			!
 			!
 		end do
 		!
