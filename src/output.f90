@@ -2,7 +2,7 @@ module output
 	!module contains several routines for printing and writing data
 	use mpi
 	use omp_lib
-	use mathematics,	only:	dp, PI_dp, machineP, aUtoEv, aUtoAngstrm
+	use mathematics,	only:	dp, PI_dp, machineP, aUtoEv, aUtoAngstrm, aUtoTesla
 	use planeWave,		only:	calcBasis
 	use sysPara 
 
@@ -436,7 +436,7 @@ module output
 		real(dp),		intent(in)		::	w_centers(:,:),  b_H_gauge(:,:), b_W_gauge(:,:), niu_polF2(:,:), niu_polF3(:,:)
 		real(dp)						:: 	aUtoConv, &
 											pWann(3), pBerryH(3),pBerryW(3), &
-											pNiuF2(3), pNiuF3(3), pNiu(3), pFirst(3)
+											pNiuF2(3), pNiuF3(3), pNiu(3), pFirst(3), Btesla(3)
 		integer							::	n, at
 		!look at substract centers in module polarization
 
@@ -485,12 +485,13 @@ module output
 												" moded=(",dmod(pBerryW(1),aX/vol)*aUtoConv,", ",dmod(pBerryW(2),aY/vol)*aUtoConv,") [muC/cm]."
 		!
 		write(600,*)"**************PERTURBATION:"
-		write(600,*) "states considered for perturbation nStates=",nSolve
+		Btesla(1:3)	= Bext(1:3) * aUtoTesla
+		write(600,*) "states considered for perturbation nStates=",nSolve 
 		if( norm2(Bext) > machineP ) then
-			write(600,'(a,f16.12,a,f16.12,a,f16.12,a,f16.12,a)')	"Bext= ",norm2(Bext) ," * (", &
-											Bext(1)/norm2(Bext),	", ",	Bext(2)/norm2(Bext),", ", Bext(3)/norm2(Bext),	")"
+			write(*,*)	"no magnetic field applied ( norm of field is zero)"
 		else
-			write(600,'(a,f16.8,a,f16.8,a,f16.8,a)')	"Bext= (", 	Bext(1),	", ",	Bext(2),", ", Bext(3),	")"
+			write(600,'(a,f16.8,a,f16.8,a,f16.8,a)')	"Bext= (", 	Bext(1),	", ",	Bext(2),", ", Bext(3),	") [a.u.]"			
+			write(600,'(a,f16.8,a,f16.8,a,f16.8,a)')	"Bext= (", 	Btesla(1),	", ",	Btesla(2),", ", Btesla(3),	") [T]"
 		end if
 		write(600,*)"*"
 		
