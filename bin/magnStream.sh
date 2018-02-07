@@ -5,6 +5,7 @@
 #VARS
 wannDIR=$work/thirdparty/wannier90
 infoString='# edited by subStream'
+nProcs=16
 
 
 #FUNCTIONS
@@ -59,7 +60,7 @@ function runCalc {
 	
 
 	#electronic structure
-	mpirun -np 4 ./main.exe > outABin.txt
+	mpirun -np $nProcs ./main.exe > outABin.txt
 	wait
 	echo '['$(date +"%T")']: finished electronic structure'
 	
