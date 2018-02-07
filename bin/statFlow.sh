@@ -3,7 +3,7 @@
 #vars
 infoString='# edited by statFlow'
 root=$PWD
-
+nProcs=$1
 
 
 #numerics
@@ -74,7 +74,7 @@ for s in ${states[*]}; do
 	wait
 	#	
 	#execute calculation
-	./subStream.sh
+	./subStream.sh $nProcs
 	wait
 	echo '['$(date +"%T")']: finished subStream'
 			

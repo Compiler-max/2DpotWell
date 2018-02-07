@@ -4,7 +4,7 @@
 #VARS
 wannDIR=$work/thirdparty/wannier90
 infoString='# edited by subStream'
-nprocs=4
+nprocs=$1
 
 
 #FUNCTIONS
