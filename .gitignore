@@ -1,7 +1,10 @@
 **/lib
 **/bin/rawData
-bin/**
+
 !bin/input.txt
+!bin/inputS1.txt
+!bin/inputS3.txt
+!bin/inputS9.txt
 !bin/myBWFplot.py
 !bin/myCONNplot.py
 !bin/myCURVplot.py
@@ -14,6 +17,7 @@ bin/**
 !bin/convFlow.sh
 !bin/statFlow.sh
 !bin/masterFlow.sh
+bin/**
 
 **/vTune
 *.o
