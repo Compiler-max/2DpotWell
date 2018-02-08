@@ -450,9 +450,11 @@ module output
 
 		!substract atom centers
 		do n = 1, size(w_centers,2)
-			w_final(1:2,n)		= w_centers(1:2,n) - atPos(1:2,mod(n,nAt))
-			b_H_final(1:2,n)	= b_H_gauge(1:2,n) - atPos(1:2,mod(n,nAt))
-			b_W_final(1:2,n)	= b_W_gauge(1:2,n) - atPos(1:2,mod(n,nAt))
+			at = mod(n,nAt)
+			if( at== 0) at = nAt
+			w_final(1:2,n)		= w_centers(1:2,n) - atPos(1:2,at)
+			b_H_final(1:2,n)	= b_H_gauge(1:2,n) - atPos(1:2,at)
+			b_W_final(1:2,n)	= b_W_gauge(1:2,n) - atPos(1:2,at)
 		end do
 
 
