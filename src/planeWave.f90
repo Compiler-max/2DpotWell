@@ -81,7 +81,8 @@ module planeWave
 				!
 				gj = gj + 1
 			end do
-			if( .not. found  ) write(*,'(a,i5,a,i5,a,i5)')	"[calcMmat]: WARNING no matching Gvec found for qi=",qi," q_nn=",knb," gi=",gi
+			if( .not. found  ) write(*,'(a,i5,a,i5,a,f6.2,a,f6.2,a)')	"[calcMmat]: WARNING no matching Gvec found for qi=",qi," q_nn=",knb,&
+																		" gshift=(",gShift(1),",",gShift(2),")."
 			!
 			!
 		end do
