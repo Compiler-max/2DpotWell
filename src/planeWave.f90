@@ -86,8 +86,7 @@ module planeWave
 			!
 		end do
 		!
-		if( cnt > nGq(qi)	)		write(*,'(a,i8,a,i8)')	"[calcMmat]: WARNING, used ",cnt," where nGmax(qi)=",nGq(qi)
-		if( cnt < nGq(qi) / 2.0_dp)	write(*,'(a,i8,a,i8)')	"[calcMmat]: WARNING, used  only",cnt," where nGmax(qi)=",nGq(qi)
+		if( cnt /= nGq(qi)	)		write(*,'(a,i8,a,i8)')	"[calcMmat]: WARNING, used ",cnt," where nGmax(qi)=",nGq(qi)
 		!
 		!
 		return
