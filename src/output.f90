@@ -450,9 +450,9 @@ module output
 
 		!substract atom centers
 		do n = 1, size(w_centers,2)
-			w_final(:,n)	= w_centers(:,n) - atPos(:,mod(n,nAt))
-			b_H_final(:,n)	= b_H_gauge(:,n) - atPos(:,mod(n,nAt))
-			b_W_final(:,n)	= b_W_gauge(:,n) - atPos(:,mod(n,nAt))
+			w_final(1:2,n)		= w_centers(1:2,n) - atPos(1:2,mod(n,nAt))
+			b_H_final(1:2,n)	= b_H_gauge(1:2,n) - atPos(1:2,mod(n,nAt))
+			b_W_final(1:2,n)	= b_W_gauge(1:2,n) - atPos(1:2,mod(n,nAt))
 		end do
 
 
@@ -484,10 +484,21 @@ module output
 		!
 		write(600,*)"**************ATOMS:"
 		do at = 1, nAt
-			write(600,*)		"atPos(at=",at,")=	(",atPos(1,at),", ", atPos(2,at)," ). [a.u.]"
+			write(600,'(a,i2,a,f6.2,a,f6.2,a)')		"atPos(at=",at,")=	(",atPos(1,at),", ", atPos(2,at)," ). [a.u.]"
 		end do
 		write(600,*)"*"
 		write(600,*)"*"
+		write(600,*)"**************PERTURBATION:"
+		Btesla(1:3)	= Bext(1:3) * aUtoTesla
+		write(600,*) "states considered for perturbation nStates=",nSolve 
+		if( norm2(Bext) > machineP ) then
+			write(*,*)	"no magnetic field applied ( norm of field is zero)"
+		else
+			write(600,'(a,f6.2,a,f6.2,a,f6.2,a)')	"Bext= (", 	Bext(1),	", ",	Bext(2),", ", Bext(3),	") [a.u.]"			
+			write(600,'(a,f6.2,a,f6.2,a,f6.2,a)')	"Bext= (", 	Btesla(1),	", ",	Btesla(2),", ", Btesla(3),	") [T]"
+		end if
+		write(600,*)"*"
+
 		!
 		write(600,*)"**************POL:"
 		write(600,*) "aX/vol=",aX/vol,"aY/vol=",aY/vol
@@ -500,22 +511,13 @@ module output
 																					pBerryW(2), " ,", pBerryW(3)	,	") [a.u.],",& 
 												" moded=(",dmod(pBerryW(1),aX/vol)*aUtoConv,", ",dmod(pBerryW(2),aY/vol)*aUtoConv,") [muC/cm]."
 		!
-		write(600,*)"**************PERTURBATION:"
-		Btesla(1:3)	= Bext(1:3) * aUtoTesla
-		write(600,*) "states considered for perturbation nStates=",nSolve 
-		if( norm2(Bext) > machineP ) then
-			write(*,*)	"no magnetic field applied ( norm of field is zero)"
-		else
-			write(600,'(a,f6.2,a,f6.2,a,f6.2,a)')	"Bext= (", 	Bext(1),	", ",	Bext(2),", ", Bext(3),	") [a.u.]"			
-			write(600,'(a,f6.2,a,f6.2,a,f6.2,a)')	"Bext= (", 	Btesla(1),	", ",	Btesla(2),", ", Btesla(3),	") [T]"
-		end if
-		write(600,*)"*"
+		
 		
 
 		if(.not. doMagHam) then
 			write(600,*)"**************FIRST ORDER POL:"
 			!NIU
-			write(600,'(a,f16.8)') "F3 prefactor = ",prefactF3
+			write(600,'(a,f6.2)') "F3 prefactor = ",prefactF3
 			write(600,'(a,e16.7,a,e16.7,a,e16.7,a,a,e16.7,a,e16.7,a)')	"pNiuF2= (", 	pNiuF2(1),	", ",	pNiuF2(2),", ", pNiuF2(3),	")[a.u.]",&
 															" moded=(",dmod(pNiuF2(1),aX/vol)*aUtoConv,", ",dmod(pNiuF2(2),aY/vol)*aUtoConv,") [muC/cm]."
 			!
@@ -544,7 +546,7 @@ module output
 		write(600,*)	"*"
 		write(600,*)	"********wannier90 centers***********************"
 		do n = 1, size(w_centers,2)
-			write(600,'(a,i3,a,f7.3f7.3,a,f7.3,a,f7.3,a,a,f7.3,a,f7.3,a)')	"pWann(n=",n,")=	( ",w_centers(1,n),", ",w_centers(2,n),&
+			write(600,'(a,i3,a,f7.3,a,f7.3,a,f7.3,a,a,f7.3,a,f7.3,a)')	"pWann(n=",n,")=	( ",w_centers(1,n),", ",w_centers(2,n),&
 																									", ",w_centers(3,n)," )", &
 												"=(",w_final(1,n),", ",w_final(2,n),") [a.u.: a0]."
 		end do
