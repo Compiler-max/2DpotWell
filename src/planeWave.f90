@@ -229,9 +229,9 @@ module planeWave
 		real(dp),		intent(in)		:: 	b_k(:,:), w_b(:)
 		logical							:: 	xx, xy, yy
 		!
-		xx	= .true.
-		xy	= .true.
-		yy	= .true.
+		xx	= .false.
+		xy	= .false.
+		yy	= .false.
 		!
 		if(		abs(	sum(w_b(:)*b_k(1,:)*b_k(1,:)) - 1.0_dp	)		< 0.1_dp				) 			xx = .true.
 		if(		abs(	sum(w_b(:)*b_k(2,:)*b_k(2,:)) - 1.0_dp	)		< 0.1_dp				) 			yy = .true.
