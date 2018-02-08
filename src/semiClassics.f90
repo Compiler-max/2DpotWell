@@ -55,7 +55,8 @@ module semiClassics
 				!
 				!PHASE SPACE DENSITY CORRECTION
 				densCorr	= 0.5_dp * dot_product(		dreal(Fcurv(:,n,n,ki)), dreal(Aconn(:,n,n,ki) )	)		* Bext
-				if( 
+				if( norm2(densCorr) > acc ) write(*,*)	"[calcFirstOrdP]: WARNING the densCorr is none zero, norm2(densCorr)=",norm2(densCorr)
+				!
 				!POSITIONAL SHIFT
 				call getF2(n,ki,Velo,En, F2k)
 				call getF3(n,ki,Velo,En, F3k)

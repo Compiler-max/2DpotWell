@@ -57,15 +57,15 @@ module planeWave
 		complex(dp),	intent(out)		:: Mmat(:,:)
 		integer							:: gi, gj, n, m, cnt
 		real(dp)						:: delta(2)
-		logical							:: notFound
+		logical							:: found
 		!
 		Mmat	= dcmplx(0.0_dp)
 		cnt		= 0
 		do gi = 1, nGq(qi)
-			notFound 	= .true.
+			found 	= .false.
 			gj			= 1
 			!
-			do while( gj<= nGq(knb) .and. notFound ) 
+			do while( gj<= nGq(knb) .and. (.not. found) ) 
 				!find gj, which fullfills the delta condition
 				delta(1:2)	=  ( Gvec(1:2,gi,qi)-qpts(1:2,qi) ) 	-  		( Gvec(1:2,gj,knb)-qpts(1:2,knb)-gShift(1:2) )
 				!
@@ -76,17 +76,17 @@ module planeWave
 						end do
 					end do
 					cnt = cnt + 1
-					notFound = .false.
+					found = .true.
 				end if
 				!
 				gj = gj + 1
 			end do
-			if( notFound  ) write(*,'(a,i5,a,i5,a,i5)')	"[calcMmat]: WARNING no matching Gvec found for qi=",qi," q_nn=",knb," gi=",gi
+			if( .not. found  ) write(*,'(a,i5,a,i5,a,i5)')	"[calcMmat]: WARNING no matching Gvec found for qi=",qi," q_nn=",knb," gi=",gi
 			!
 			!
 		end do
 		!
-		if( cnt /= nGq(qi)	)		write(*,'(a,i8,a,i8)')	"[calcMmat]: WARNING, used ",cnt," where nGmax(qi)=",nGq(qi)
+		if( cnt /= nGq(qi)	)		write(*,'(a,i8,a,i8)')	"[calcMmat]: WARNING, found ",cnt," neighbouring Gvec, where nGmax(qi)=",nGq(qi)
 		!
 		!
 		return
@@ -183,9 +183,9 @@ module planeWave
 				call calcMmat(qi, nnlist(qi, nn), gshift, nGq, Gvec, ck, M_matrix)
 				!
 				!WEIGHT OVERLAPS
-				A_conn(1,:,:,qi)	= w_b(nn) * b_k(1,nn) * dimag( log(M_matrix(:,:)))
-				A_conn(2,:,:,qi)	= w_b(nn) * b_k(2,nn) * dimag( log(M_matrix(:,:)))
-				A_conn(3,:,:,qi)	= w_b(nn) * b_k(3,nn) * dimag( log(M_matrix(:,:)))
+				A_conn(1,:,:,qi)	= w_b(nn) * b_k(1,nn) * dimag( log(M_matrix(:,:))	)
+				A_conn(2,:,:,qi)	= w_b(nn) * b_k(2,nn) * dimag( log(M_matrix(:,:))	)
+				A_conn(3,:,:,qi)	= w_b(nn) * b_k(3,nn) * dimag( log(M_matrix(:,:))	)
 			end do
 		end do
 		!$OMP END PARALLEL DO
