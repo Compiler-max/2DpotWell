@@ -493,10 +493,10 @@ module output
 		write(600,*) "aX/vol=",aX/vol,"aY/vol=",aY/vol
 
 	
-		write(600,'(a,f16.7,a,f16.7,a,a,f16.7,a,f16.7,a)')	"pWann =  (",  pWann(1)	,	", ",	pWann(2),		") [a.u.],",& 
+		write(600,'(a,f6.2,a,f6.2,a,a,f6.2,a,f6.2,a)')	"pWann =  (",  pWann(1)	,	", ",	pWann(2),		") [a.u.],",& 
 												" moded=(",dmod(pWann(1),aX/vol)*aUtoConv,", ",dmod(pWann(2),aY/vol)*aUtoConv,") [muC/cm]."
 		!
-		write(600,'(a,f16.7,a,f16.7,a,f16.7,a,a,f16.7,a,f16.7,a)')	"pBerry=  (",		pBerryW(1)	,	", ",&	
+		write(600,'(a,f6.2,a,f6.2,a,f6.2,a,a,f6.2,a,f6.2,a)')	"pBerry=  (",		pBerryW(1)	,	", ",&	
 																					pBerryW(2), " ,", pBerryW(3)	,	") [a.u.],",& 
 												" moded=(",dmod(pBerryW(1),aX/vol)*aUtoConv,", ",dmod(pBerryW(2),aY/vol)*aUtoConv,") [muC/cm]."
 		!
@@ -506,8 +506,8 @@ module output
 		if( norm2(Bext) > machineP ) then
 			write(*,*)	"no magnetic field applied ( norm of field is zero)"
 		else
-			write(600,'(a,f16.8,a,f16.8,a,f16.8,a)')	"Bext= (", 	Bext(1),	", ",	Bext(2),", ", Bext(3),	") [a.u.]"			
-			write(600,'(a,f16.8,a,f16.8,a,f16.8,a)')	"Bext= (", 	Btesla(1),	", ",	Btesla(2),", ", Btesla(3),	") [T]"
+			write(600,'(a,f6.2,a,f6.2,a,f6.2,a)')	"Bext= (", 	Bext(1),	", ",	Bext(2),", ", Bext(3),	") [a.u.]"			
+			write(600,'(a,f6.2,a,f6.2,a,f6.2,a)')	"Bext= (", 	Btesla(1),	", ",	Btesla(2),", ", Btesla(3),	") [T]"
 		end if
 		write(600,*)"*"
 		
