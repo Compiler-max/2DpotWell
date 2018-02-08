@@ -5,7 +5,7 @@ module berry
 	use mathematics,	only:	dp, PI_dp, i_dp, acc, machineP,  myExp, myLeviCivita, aUtoAngstrm, aUtoEv
 	use sysPara
 	use w90Interface,	only:	read_U_matrix, readBandVelo, read_FD_scheme, read_wann_centers
-	use planeWave,		only:	calcVeloGrad, calcConnOnCoarse
+	use planeWave,		only:	calcMmat, calcVeloGrad
 	use polarization,	only:	calcPolViaA
 	use semiClassics,	only:	calcFirstOrdP
 	use output,			only:	writePolFile, writeVeloHtxt, writeConnTxt
@@ -37,15 +37,20 @@ module berry
 	subroutine berryMethod(ck, EnQ)
 		complex(dp),	intent(in)		::	ck(:,:,:)
 		real(dp),		intent(in)		::	EnQ(:,:)
-		complex(dp),	allocatable		:: 	U_matrix(:,:,:), ck_wann(:,:,:), &
+		complex(dp),	allocatable		:: 	U_matrix(:,:,:), ck_wann(:,:,:), M_matrix(:,:,:,:), &
 											Aconn_H(:,:,:,:), Aconn_W(:,:,:,:), FcurvQ(:,:,:,:),veloQ(:,:,:,:) 		
 		real(dp),		allocatable		::	R_real(:,:), v_Band(:,:,:), krel(:,:), b_k(:,:), w_b(:), &
 											w_centers(:,:), berry_W_gauge(:,:),berry_H_gauge(:,:), niu_polF2(:,:), niu_polF3(:,:)
-		integer							::	nntot, gammaPt, nn
+		integer							::	nntot, nn
 		integer,		allocatable		:: 	nnlist(:,:), nncell(:,:,:)
-		real(dp)						::	nnEstimate
-		!					
-		!COARSE
+		real(dp)						::	gX, gY
+		!
+		!READ FD SCHEME
+		num_wann = nWfs
+		num_kpts = nQ
+		call read_FD_scheme(nntot, nnlist, nncell, b_k, w_b)
+		!
+		allocate(			M_matrix(	nWfs	, 	nWfs, 		nntot 	,	nQ		)			)
 		allocate(			ck_wann(				GmaxGLOBAL	, 	nSolve	,  	nQ		)			)
 		allocate(			Aconn_H(		3		, 	nWfs	,	nWfs	,	nQ		)			)
 		allocate(			Aconn_W(		3		, 	nWfs	,	nWfs	,	nQ		)			)		
@@ -61,31 +66,21 @@ module berry
 		allocate(			niu_polF2(		3,					nWfs					)			)
 		allocate(			niu_polF3(		3,					nWfs					)			)
 		!
-		!
-		!READ IN QUANTITIES
-		num_wann = nWfs
-		num_kpts = nQ
-		call read_FD_scheme(nntot, nnlist, nncell, b_k, w_b)
-
-		call read_wann_centers(w_centers)
-		!
 		!nn info print
-		write(*,'(a,i2,a)')	"[berryMethod]: nn info:"
-		gammaPt = 1 + int(	nQx*(0.5_dp+0.5_dp*nQy)	)
-		write(*,'(a,f6.2,a,f6.2,a)')	"        dqx=",dqx,"; dqy=",dqy,"."
-		write(*,'(a,f6.2,a,f6.2,a)')	"        this means for qpt=(",qpts(1,gammaPt),", ",qpts(2,gammaPt),")."
-		write(*,*)	" nn  | q_nn(x) | q_nn(y) | w_b "
-		write(*,*)	"-------------------------------"
-		do nn = 1, nntot
-			
-			write(*,'(i2,a,f6.2,a,f6.2,a,f6.2)')	nn,"  |  ",	qpts(1,nnlist(gammaPt,nn)),"  |  ",&
-																				qpts(2,nnlist(gammaPt,nn)),"  |  ",w_b(nn)
-			
-			nnEstimate = 2.0_dp / ( 	w_b(nn) * dqx**2  ) !wbx 	= 2.0_dp / 	( real(Z,dp) * dqx**2 ) ; where Z is number of nearest neighbours
-			if( int(nnEstimate)/= nntot) write(*,*)	"[berryMethod]: weights suggest ",int(nnEstimate)," nearest neigbours, where ",nntot," are expected"
+		call printNNinfo(nntot, nnlist)
+		!
+		!GET M-matrix
+		gX = 2.0_dp * PI_dp / aX
+		gY = 2.0_dp * PI_dp / aY
+		!!$OMP PARALLEL DO SCHEDULE(STATIC) DEFAULT(SHARED) PRIVATE(gShift )
+		do qi = 1, nQ
+			do nn = 1, nntot
+				gShift(1)	= real(nncell(1,qi,nn),dp) * gX
+				gShift(2)	= real(nncell(2,qi,nn),dp) * gY
+				call calcMmat(qi, nnlist(qi, nn), gshift, nGq, Gvec, ck, M_matrix(:,:,nn,qi))
+			end do
 		end do
-		!
-		!
+
 		!HAM GAUGE
 		write(*,*)	"[berryMethod]: start (H) gauge calculation"
 		call calcConnOnCoarse(ck, nntot, nnlist, nncell, b_k, w_b, Aconn_H)
@@ -112,6 +107,7 @@ module berry
 		!
 		!
 		!OUTPUT
+		call read_wann_centers(w_centers)
 		call writePolFile(w_centers, berry_H_gauge, berry_W_gauge, niu_polF2, niu_polF3)
 		call writeConnTxt( Aconn_W )
 		call writeVeloHtxt( veloQ)	!*aUtoEv*aUtoAngstrm )				
@@ -130,6 +126,55 @@ module berry
 
 
 !private
+	subroutine calcConnOnCoarse(M_matrix, nntot, nnlist, nncell, b_k, w_b, A_conn)
+		!calculates the Berry connection, based on finite differences
+		!nntot, nnlist, nncell list the nearest neighbours (k-space)
+		!b_k:	 non zero if qi at boundary of bz and nn accross bz
+		!w_b:	 weight of nn 
+		complex(dp),	intent(in)			:: 	M_matrix(:,:,:,:)
+		integer,		intent(in)			::	nntot, nnlist(:,:), nncell(:,:,:)
+		real(dp),		intent(in)			::	b_k(:,:), w_b(:)
+		complex(dp),	intent(out)			::	A_conn(:,:,:,:)
+		complex(dp)							::	delta
+		integer								::	qi, nn, n, m
+		!
+		if( 		fastConnConv ) write(*,*)	"[calcConnOnCoarse]: use logarithm formula for connection"
+		if( .not.	fastConnConv ) write(*,*)	"[calcConnOnCoarse]: use finite difference formula for connection" 
+		!
+		!$OMP PARALLEL DO SCHEDULE(STATIC)	DEFAULT(SHARED) PRIVATE(qi, nn, gShift)
+		do qi = 1, nQ
+			A_conn(:,:,:,qi) = dcmplx(0.0_dp)
+			!SUM OVER NN
+			do nn = 1, nntot
+				!
+				!WEIGHT OVERLAPS (Fast Convergence)
+				if( fastConnConv ) then
+					A_conn(1,:,:,qi)	= A_conn(1,:,:,qi)	+	w_b(nn) * b_k(1,nn) * dimag( log(M_matrix(:,:,nn,qi))	)
+					A_conn(2,:,:,qi)	= A_conn(2,:,:,qi)	+	w_b(nn) * b_k(2,nn) * dimag( log(M_matrix(:,:,nn,qi))	)
+					A_conn(3,:,:,qi)	= A_conn(3,:,:,qi)	+	w_b(nn) * b_k(3,nn) * dimag( log(M_matrix(:,:,nn,qi))	)
+				!WEIGHT OVERLAPS (Finite Difference)
+				else
+					do n = 1, nWfs
+						do m = 1, nWfs
+							delta = dcmplx(0.0_dp)
+							if( n==m ) 	delta = dcmplx(1.0_dp)
+							A_conn(1,m,n,qi)		= 	A_conn(1,m,n,qi)	+	w_b(nn) * b_k(1,nn) * dimag( M_matrix(m,n,nn,qi) - delta  )					
+							A_conn(2,m,n,qi)		= 	A_conn(2,m,n,qi)	+	w_b(nn) * b_k(2,nn) * dimag( M_matrix(m,n,nn,qi) - delta  )
+							A_conn(3,m,n,qi)		= 	A_conn(3,m,n,qi)	+	w_b(nn) * b_k(3,nn) * dimag( M_matrix(m,n,nn,qi) - delta  )	
+						end do
+					end do				
+				end if
+			end do
+		end do
+		!$OMP END PARALLEL DO
+		!
+		!DEBUG
+		if( .not. B1condition(b_k, w_b) )	stop '[calcConnCoarse]: B1 condition (2D version) not fullfilled'
+		!
+		return
+	end subroutine
+
+
 	subroutine applyRot(ck, Uq, ckW)
 		complex(dp),	intent(in)		::	ck(:,:,:), Uq(:,:,:)
 		complex(dp),	intent(out)		::	ckW(:,:,:)
@@ -240,5 +285,27 @@ module berry
 	end subroutine
 
 
+	subroutine printNNinfo(nntot, nnlist)
+		integer, 	intent(in)				::	nntot, nnlist(:,:)
+		integer								::	gammaPt
+		real(dp)							::	nnEstimate
+		!
+		write(*,'(a,i2,a)')	"[berryMethod]: nn info:"
+		gammaPt = 1 + int(	nQx*(0.5_dp+0.5_dp*nQy)	)
+		write(*,'(a,f6.2,a,f6.2,a)')	"        dqx=",dqx,"; dqy=",dqy,"."
+		write(*,'(a,f6.2,a,f6.2,a)')	"        this means for qpt=(",qpts(1,gammaPt),", ",qpts(2,gammaPt),")."
+		write(*,*)	" nn  | q_nn(x) | q_nn(y) | w_b "
+		write(*,*)	"-------------------------------"
+		do nn = 1, nntot
+			
+			write(*,'(i2,a,f6.2,a,f6.2,a,f6.2)')	nn,"  |  ",	qpts(1,nnlist(gammaPt,nn)),"  |  ",&
+																				qpts(2,nnlist(gammaPt,nn)),"  |  ",w_b(nn)
+			
+			nnEstimate = 2.0_dp / ( 	w_b(nn) * dqx**2  ) !wbx 	= 2.0_dp / 	( real(Z,dp) * dqx**2 ) ; where Z is number of nearest neighbours
+			if( int(nnEstimate)/= nntot) write(*,*)	"[berryMethod]: weights suggest ",int(nnEstimate)," nearest neigbours, where ",nntot," are expected"
+		end do
+		!
+		return
+	end subroutine
 
 end module berry

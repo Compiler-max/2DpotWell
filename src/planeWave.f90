@@ -8,7 +8,7 @@ module planeWave
 	implicit none
 
 	private
-	public	::	calcVeloGrad, calcMmat, calcAmatANA, calcConnOnCoarse, calcBasis
+	public	::	calcVeloGrad, calcMmat, calcAmatANA, calcBasis
 
 
 	contains
@@ -150,73 +150,6 @@ module planeWave
 		!
 		return
 	end subroutine
-
-
-
-
-
-
-	subroutine calcConnOnCoarse(ck, nntot, nnlist, nncell, b_k, w_b, A_conn)
-		!calculates the Berry connection, based on finite differences
-		!nntot, nnlist, nncell list the nearest neighbours (k-space)
-		!b_k:	 non zero if qi at boundary of bz and nn accross bz
-		!w_b:	 weight of nn 
-		complex(dp),	intent(in)			:: 	ck(:,:,:)
-		integer,		intent(in)			::	nntot, nnlist(:,:), nncell(:,:,:)
-		real(dp),		intent(in)			::	b_k(:,:), w_b(:)
-		complex(dp),	intent(out)			::	A_conn(:,:,:,:)
-		complex(dp),	allocatable			::	M_matrix(:,:)
-		complex(dp)							::	delta
-		real(dp)							::	gShift(2), gX, gY
-		integer								::	qi, nn, n, m
-		!
-		A_conn = dcmplx(0.0_dp)
-		allocate(	M_matrix( size(A_conn,2), size(A_conn,3) )			)
-		!
-		gX = 2.0_dp * PI_dp / aX
-		gY = 2.0_dp * PI_dp / aY
-		!
-		if( 		fastConnConv ) write(*,*)	"[calcConnOnCoarse]: use logarithm formula for connection"
-		if( .not.	fastConnConv ) write(*,*)	"[calcConnOnCoarse]: use finite difference formula for connection" 
-
-
-		!
-		!$OMP PARALLEL DO SCHEDULE(STATIC)	DEFAULT(SHARED) PRIVATE(qi, nn, gShift)
-		do qi = 1, nQ
-			do nn = 1, nntot
-				!GET OVERLAP MATRIX
-				gShift(1)	= real(nncell(1,qi,nn),dp) * gX
-				gShift(2)	= real(nncell(2,qi,nn),dp) * gY
-				call calcMmat(qi, nnlist(qi, nn), gshift, nGq, Gvec, ck, M_matrix)
-				!
-				!WEIGHT OVERLAPS (Fast Convergence)
-				if( fastConnConv ) then
-					A_conn(1,:,:,qi)	= w_b(nn) * b_k(1,nn) * dimag( log(M_matrix(:,:))	)
-					A_conn(2,:,:,qi)	= w_b(nn) * b_k(2,nn) * dimag( log(M_matrix(:,:))	)
-					A_conn(3,:,:,qi)	= w_b(nn) * b_k(3,nn) * dimag( log(M_matrix(:,:))	)
-				!WEIGHT OVERLAPS (Finite Difference)
-				else
-					do n = 1, nWfs
-						do m = 1, nWfs
-							delta = dcmplx(0.0_dp)
-							if( n==m ) 	delta = dcmplx(1.0_dp)
-							A_conn(1,m,n,qi)		= w_b(nn) * b_k(1,nn) * dimag( M_matrix(m,n) - delta  )					
-							A_conn(2,m,n,qi)		= w_b(nn) * b_k(2,nn) * dimag( M_matrix(m,n) - delta  )
-							A_conn(3,m,n,qi)		= w_b(nn) * b_k(3,nn) * dimag( M_matrix(m,n) - delta  )	
-						end do
-					end do				
-				end if
-			end do
-		end do
-		!$OMP END PARALLEL DO
-		!
-		!DEBUG
-		if( .not. B1condition(b_k, w_b) )	stop '[calcConnCoarse]: B1 condition (2D version) not fullfilled'
-		!
-		return
-	end subroutine
-
-
 
 
 	subroutine calcBasis(qi, ri, basVec)
