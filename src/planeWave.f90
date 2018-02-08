@@ -168,6 +168,7 @@ module planeWave
 		real(dp)							::	gShift(2), gX, gY
 		integer								::	qi, nn
 		!
+		Aconn = dcmplx(0.0_dp)
 		allocate(	M_matrix( size(A_conn,2), size(A_conn,3) )			)
 		!
 		gX = 2.0_dp * PI_dp / aX

@@ -83,6 +83,7 @@ module berry
 		call calcConnOnCoarse(ck, nntot, nnlist, nncell, b_k, w_b, AconnQ)
 		call calcPolViaA(AconnQ, berry_H_gauge)
 
+
 		!WANN GAUGE
 		call read_U_matrix(R_real, U_matrix, krel)
 		call applyRot(ck, U_matrix, ck_wann)
