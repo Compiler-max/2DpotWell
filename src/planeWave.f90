@@ -130,8 +130,7 @@ module planeWave
 						state = 3
 					else 
 						state = 0
-						write(*,*)	"[calcAmatANA]: error while determining the state to project on. n=",n
-						write(*,*)	"[calcAmatANA]: WARNING! will set A_matrix component to zero, try to run wannier with use_bloch switch"
+					write(*,*)	"[calcAmatANA]: WARNING! will set A_matrix component to zero, try to run wannier with use_bloch switch"
 					end if
 					!
 					!DO PROJECTION

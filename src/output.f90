@@ -434,18 +434,34 @@ module output
 
 	subroutine writePolFile(w_centers, b_H_gauge, b_W_gauge, niu_polF2, niu_polF3)	!writePolFile(pWann, pBerry, pNiu, pPei )
 		real(dp),		intent(in)		::	w_centers(:,:),  b_H_gauge(:,:), b_W_gauge(:,:), niu_polF2(:,:), niu_polF3(:,:)
-		real(dp)						:: 	aUtoConv, &
+		real(dp)						:: 	aUtoConv, polQuantum, &
 											pWann(3), pBerryH(3),pBerryW(3), &
 											pNiuF2(3), pNiuF3(3), pNiu(3), pFirst(3), Btesla(3)
+		real(dp),		allocatable		::	w_final(:,:), b_H_final(:,:), b_W_final(:,:)
 		integer							::	n, at
-		!look at substract centers in module polarization
+		
+		!not Used jet:
+		polQuantum = 1.0_dp / vol
+
+		!GET CORRECTED VALUES
+		allocate(		w_final( 	size(w_centers,1),	size(w_centers,2) )		)
+		allocate(		b_H_final(	size(b_H_gauge,1),	size(b_H_gauge,2) )		)
+		allocate(		b_W_final(	size(b_W_gauge,1),	size(b_W_gauge,2) )		)		
+
+		!substract atom centers
+		do n = 1, size(w_centers,2)
+			w_final(:,n)	= w_centers(:,n) - atPos(:,mod(n,nAt))
+			b_H_final(:,n)	= b_H_gauge(:,n) - atPos(:,mod(n,nAt))
+			b_W_final(:,n)	= b_W_gauge(:,n) - atPos(:,mod(n,nAt))
+		end do
+
 
 		!SUM OVER STATES
-		pWann(1:3)	= sum(	w_centers(1:3,:)	)
-		pBerryH(1:3)= sum(	b_H_gauge(1:3,:)	)
-		pBerryW(1:3)= sum(	b_W_gauge(1:3,:)	)
-		pNiuF2(1:3)	= sum(	niu_polF2(1:3,:)	)
-		pNiuF3(1:3) = sum(	niu_polF3(1:3,:)	)
+		pWann(	1:3)	= sum(	w_final(	1:3,:)		)
+		pBerryH(1:3)	= sum(	b_H_final(	1:3,:)		)
+		pBerryW(1:3)	= sum(	b_W_final(	1:3,:)		)
+		pNiuF2(	1:3)	= sum(	niu_polF2(	1:3,:)		)
+		pNiuF3(	1:3)	= sum(	niu_polF3(	1:3,:)		)
 
 		!
 		pNiu 	=	pNiuF2 + pNiuF3
@@ -468,7 +484,7 @@ module output
 		!
 		write(600,*)"**************ATOMS:"
 		do at = 1, nAt
-			write(*,*)		"atPos(at=",at,")=	(",atPos(1,at),", ", atPos(2,at)," )."
+			write(*,*)		"atPos(at=",at,")=	(",atPos(1,at),", ", atPos(2,at)," ). [a.u.]"
 		end do
 		write(600,*)"*"
 		write(600,*)"*"
@@ -522,14 +538,15 @@ module output
 
 
 		!STATE RESOLVED
-		write(600,*)	"raw results: (no atom center corrrection, no moding with pol quantum)"
+		write(600,*)	"raw results: (no atom center corrrection, no moding with pol quantum) & atom center corrected values"
 		write(600,*)	"*"
 		write(600,*)	"*"
 		write(600,*)	"*"
 		write(600,*)	"********wannier90 centers***********************"
 		do n = 1, size(w_centers,2)
-			write(600,'(a,i3,a,f16.7,a,f16.7,a,f16.7,a)')	"pWann(n=",n,")=	( ",w_centers(1,n),", ",w_centers(2,n),", ",w_centers(3,n)," )"
-			write(600,'(a,f16.7,a,f16.7,a)')						"=(",w_centers(1,n)-atPos(1,mod(n,nAt)),", ",w_centers(2,n)-atPos(2,mod(n,nAt)),")."
+			write(600,'(a,i3,a,f7.3f7.3,a,f7.3,a,f7.3,a,a,f7.3,a,f7.3,a)')	"pWann(n=",n,")=	( ",w_centers(1,n),", ",w_centers(2,n),&
+																									", ",w_centers(3,n)," )", &
+												"=(",w_final(1,n),", ",w_final(2,n),") [a.u.: a0]."
 		end do
 
 		write(600,*)	"*"
@@ -537,11 +554,12 @@ module output
 		write(600,*)	"*"
 		write(600,*)	"********Berry centers (k-space integral) (H-gauge)***********************"
 		do n = 1, size(b_H_gauge,2)
-			write(600,'(a,i3,a,f16.7,a,f16.7,a,f16.7,a)')	"pBerry_H(n=",n,")=	( ",b_H_gauge(1,n),", ",b_H_gauge(2,n),", ",b_H_gauge(3,n)," )"
-			write(600,'(a,f16.7,a,f16.7,a)')						"=(",b_H_gauge(1,n)-atPos(1,mod(n,nAt)),", ",b_H_gauge(2,n)-atPos(2,mod(n,nAt)),")."
+			write(600,'(a,i3,a,f7.3,a,f7.3,a,f7.3,a,a,f7.3,a,f7.3,a)')	"pBerry_H(n=",n,")=	( ",b_H_gauge(1,n),", ",b_H_gauge(2,n),&
+																				", ",b_H_gauge(3,n)," )",&
+												"=(",b_H_final(1,n),", ",b_H_final(2,n),") [a.u.: a0]."
 
 		end do
-			write(600,'(a,f16.7,a,f16.7,a,f16.7,a)')	"pBerry_H(SUM)=	( ",sum(b_H_gauge(1,:)),", ",sum(b_H_gauge(2,:)),", ",sum(b_H_gauge(3,:))," )"
+			write(600,'(a,f7.3,a,f7.3,a,f7.3,a)')	"pBerry_H(SUM)=	( ",sum(b_H_final(1,:)),", ",sum(b_H_final(2,:)),", ",sum(b_H_final(3,:))," )"
 
 
 		
@@ -550,10 +568,11 @@ module output
 		write(600,*)	"*"
 		write(600,*)	"********Berry centers (k-space integral) (W-gauge)***********************"
 		do n = 1, size(b_W_gauge,2)
-			write(600,'(a,i3,a,f16.7,a,f16.7,a,f16.7,a)')	"pBerry_W(n=",n,")=	( ",b_W_gauge(1,n),", ",b_W_gauge(2,n),", ",b_W_gauge(3,n)," )"
-			write(600,'(a,f16.7,a,f16.7,a)')						"=(",b_W_gauge(1,n)-atPos(1,mod(n,nAt)),", ",b_W_gauge(2,n)-atPos(2,mod(n,nAt)),")."
+			write(600,'(a,i3,a,f7.3,a,f7.3,a,f7.3,a,a,f7.3,a,f7.3,a)')	"pBerry_W(n=",n,")=	( ",b_W_gauge(1,n),", ",b_W_gauge(2,n),&
+																					", ",b_W_gauge(3,n)," )",&
+												"=(",b_W_final(1,n),", ",b_W_final(2,n),") [a.u.: a0]."
 		end do
-			write(600,'(a,f16.7,a,f16.7,a,f16.7,a)')	"pBerry_W(SUM)=	( ",sum(b_W_gauge(1,:)),", ",sum(b_W_gauge(2,:)),", ",sum(b_W_gauge(3,:))," )"
+			write(600,'(a,f7.3,a,f7.3,a,f7.3,a)')	"pBerry_W(SUM)=	( ",sum(b_W_final(1,:)),", ",sum(b_W_final(2,:)),", ",sum(b_W_final(3,:))," )"
 
 
 
