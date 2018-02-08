@@ -69,7 +69,7 @@ module planeWave
 				!find gj, which fullfills the delta condition
 				delta(1:2)	=  ( Gvec(1:2,gi,qi)-qpts(1:2,qi) ) 	-  		( Gvec(1:2,gj,knb)-qpts(1:2,knb)-gShift(1:2) )
 				!
-				if( norm2(delta) < machineP )	then
+				if( norm2(delta) < 1e-8_dp )	then
 					do n = 1, size(Mmat,2)
 						do m = 1, size(Mmat,1)
 							Mmat(m,n)	= Mmat(m,n)	+ dconjg(	ck(gi,m,qi)	) * ck(gj,n,knb)
@@ -81,8 +81,8 @@ module planeWave
 				!
 				gj = gj + 1
 			end do
-			if( .not. found  ) write(*,'(a,i5,a,i5,a,f6.2,a,f6.2,a)')	"[calcMmat]: WARNING no matching Gvec found for qi=",qi," q_nn=",knb,&
-																		" gshift=(",gShift(1),",",gShift(2),")."
+			!if( .not. found  ) write(*,'(a,i5,a,i5,a,f6.2,a,f6.2,a)')	"[calcMmat]: WARNING no matching Gvec found for qi=",qi," q_nn=",knb,&
+			!															" gshift=(",gShift(1),",",gShift(2),")."
 			!
 			!
 		end do

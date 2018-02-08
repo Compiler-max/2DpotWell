@@ -74,8 +74,10 @@ module berry
 		write(*,'(a,f6.2,a,f6.2,a)')	"        dqx=",dqx,"; dqy=",dqy,"."
 		write(*,'(a,f6.2,a,f6.2,a)')	"        this means for qpt=(",qpts(1,gammaPt),", ",qpts(2,gammaPt),")."
 		do nn = 1, nntot
+			!wbx 	= 2.0_dp / 		( real(Z,dp) * dqx**2 )
 			write(*,'(a,i2,a,f6.2,a,f6.2,a,f6.2)')	"        nn=",nn," q_nn=(",	qpts(1,nnlist(gammaPt,nn)),", ",&
 																				qpts(2,nnlist(gammaPt,nn)),"), weight=",w_b(nn)
+			write(*,'(a,f6.2)')	" the weight relates to a nntot=",w_b(nn) * dqx**2 / 2.0_dp	
 		end do
 		!
 		!
