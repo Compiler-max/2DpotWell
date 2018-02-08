@@ -175,27 +175,6 @@ module planeWave
 
 
 !prviat
-	logical function B1condition(b_k, w_b)
-		! test if
-		!		sum_b{w_b * b_a * b_b}	= \delta_ab 
-		! is true for all a,b
-		real(dp),		intent(in)		:: 	b_k(:,:), w_b(:)
-		logical							:: 	xx, xy, yy
-		!
-		xx	= .false.
-		xy	= .false.
-		yy	= .false.
-		!
-		if(		abs(	sum(w_b(:)*b_k(1,:)*b_k(1,:)) - 1.0_dp	)		< 0.1_dp				) 			xx = .true.
-		if(		abs(	sum(w_b(:)*b_k(2,:)*b_k(2,:)) - 1.0_dp	)		< 0.1_dp				) 			yy = .true.
-		if(		abs(	sum(w_b(:)*b_k(1,:)*b_k(2,:)) 			)		< 0.1_dp				)			xy = .true.
-		!
-		B1condition = xx .and. yy .and. xy
-		!
-		return
-	end function
-
-
 		complex(dp) function g1Int(qi,m, at,ckH)
 		integer,		intent(in)	:: qi, m, at
 		complex(dp),	intent(in)	:: ckH(:,:)

@@ -8,8 +8,8 @@ module w90Interface
 	implicit none
 
 	private
-	public ::					prep_w90, &
-								read_U_matrix, readBandVelo, read_FD_scheme, read_wann_centers, & 
+	public ::					setup_w90, &
+								read_FD_scheme, read_M_initial, read_U_matrix, readBandVelo, read_wann_centers, & 
 								seed_name
 
 	!public var
@@ -37,7 +37,7 @@ module w90Interface
 
 
 !public:
-	subroutine prep_w90(ck, En)
+	subroutine setup_w90(ck, En)
 		complex(dp),	intent(in)		:: 	ck(:,:,:)	
 		real(dp),		intent(in)		:: 	En(:,:)
 		complex(dp),	allocatable		::	M_matrix_orig(:,:,:,:), A_matrix(:,:,:), U_matrix_opt(:,:,:)
@@ -134,20 +134,99 @@ module w90Interface
 
 
 
-	subroutine read_U_matrix(R_real, U_matrix, krel)
-		real(dp),		intent(out)		:: 	R_real(:,:), krel(:,:)
-		complex(dp),	intent(out)		::	U_matrix(:,:,:)
-		integer							::	R
-		!
-		!INIT SUPERCELL
-		R_real(3,:)	= 0.0_dp
-		do R = 1, nSC
-			R_real(1:2,R)	= Rcell(1:2,R)
-		end do 
-		!
+	subroutine read_U_matrix(U_matrix)
 		!READ U FROM W90
-		call Umat_reader(U_matrix, krel)
-		write(*,*)	"[read_U_matrix]: read the U_matrix"
+		complex(dp),	intent(out)	:: 	U_matrix(:,:,:)
+		real(dp),		allocatable	:: 	krel(:,:)
+		integer						:: 	stat, qi, n, m, dumI(3)
+		real(dp)					:: 	val(2)
+		logical						::	file_exists
+		!
+		U_matrix	= dcmplx(0.0_dp)
+
+		!inquire file
+		inquire(file=w90_dir//seedName//'_u.mat',exist=file_exists)
+		if(.not. file_exists )	stop '[Umat_reader]: did not find U matrix'
+		!
+		!read file
+		open(unit=300,iostat=stat, file=w90_dir//seedName//'_u.mat', status='old',action='read')
+		if( stat /= 0)	write(*,*)	"[readUmatrix]: WARNING did not file _u.mat file"
+		!
+		!header 
+		read(300,*)
+		read(300,*) dumI(1:3)
+		if( dumI(1) /= nQ ) 	stop	"[readUmatrix]:  ERROR - wrong qmesh size found in file"
+		if(	dumI(2)	/= nWfs) 	stop	"[readUmatrix]:  ERROR - wrong number of wannier functions found in file"
+		allocate(	krel( 3, dumI(1))	)
+		!
+		!body
+		do qi = 1,  num_kpts
+			read(300,*)
+			read(300,*) krel(1:3,qi)
+			do n = 1, num_wann
+				do m = 1, num_wann
+					read(300,*)	val(1:2)
+					U_matrix(m,n,qi)	= dcmplx(val(1))	+	i_dp	*	dcmplx(val(2))
+				end do
+			end do
+			!DEBUG
+			if( abs( krel(1,qi)*2.0_dp*PI_dp/aX - qpts(1,qi)) > machineP) then
+					write(*,*)	"				x: k_w90= ",krel(1,qi)*2.0_dp*PI_dp/aX, " qpts=",qpts(1,qi)
+					write(*,*)	"				y: k_w90= ",krel(2,qi)*2.0_dp*PI_dp/aY, " qpts=",qpts(2,qi)
+					stop	"[readUmatrix]: ERROR k meshes are ordered diffferently"
+			end if
+		end do
+		close(300)
+		!
+		return
+		write(*,*)	"[read_U_matrix]: read the _u.mat file"
+		!
+		!
+		return
+	end subroutine
+
+
+	subroutine read_M_initial( M_init)
+		!read the M_matrix written by w90prepMmat	
+		complex(dp),		intent(out)		::	M_init(:,:,:,:)
+		integer								::	qi,nn, n, m, x,&
+												f_num_bands, f_num_kpts, f_nntot, f_qi, f_nnlist, f_nncell(1:3)
+		real(dp)							::	cmplx(2)
+		logical								:: 	foundFile
+		!
+		!check for file
+		inquire(file=w90_Dir//seedName//'.mmn', exist=foundFile)
+		if( .not. foundFile ) stop 'the .mmn file could not be found'
+		!
+		!read file
+		open(unit=120,file=w90_Dir//seedName//'.mmn',action='read',access='stream',form='formatted', status='old')
+		read(120,*)
+		read(120,*) f_num_bands, f_num_kpts, f_nntot
+		!
+		do qi = 1, num_kpts
+			do nn = 1, nntot
+				read(120,*)	f_qi, f_nnlist, f_nncell(1:3)
+				if(	 	qi 			/= 	f_qi		)	stop	"[read_M_initial]: WARNING q mesh ordered differently"
+				if(	nnlist(qi,nn) 	/= 	f_nnlist	)	stop	"[read_M_initial]: WARNING trouble with nnlist"
+				do x = 1, 3
+					if( f_nncell(x) /= nncell(x,qi,nn))	stop	"[read_M_initial]:	WARNING trouble with nncell"
+				end do
+
+				do n = 1, num_bands
+					do m = 1, num_bands
+						read(120,*)	cmplx(1:2)
+						M_init(m,n,nn,qi)	= dcmplx(cmplx(1))
+						M_init(m,n,nn,qi)	= M_init(m,n,nn,qi) + i_dp * cmplx(2)
+					end do
+				end do		
+			end do
+		end do
+		!
+		!DEBUG
+		if( f_nntot 	/= 4	)	write(*,*) 	"[read_M_initial]: WARNING more then 4 nn in .mmn file"
+		if(	f_num_kpts 	/= nQ 	) 	stop 		"[read_M_initial]: .mmn file defined on different qpt mesh"
+		if(	f_num_bands /= nBands)	stop		"[read_M_initial]: nBands not matching"
+		write(*,*)	"[read_M_initial]: read the .mmn file"
 		!
 		!
 		return
@@ -181,6 +260,7 @@ module w90Interface
 		!
 		!ATOMIC UNITS CONVERSION:
 		v_vec 	= v_vec  / (aUtoEv  * aUtoAngstrm)	 ! [v_vec] = eV / Angstroem
+		write(*,*)	"[readBandVelo]: read the geninterp.dat file"
 		!
 		!	
 		return
@@ -235,7 +315,7 @@ module w90Interface
 		if( finished ) then
 			write(*,*)	"[readFDscheme]: read the .nnkp file"
 		else
-			write(*,*)	"[readFDscheme]: did not find search string: '",search_nnkp,"' in .nnkp file"
+			stop	"[readFDscheme]: did not find search string  in .nnkp file"
 		end if
 		!
 		!
@@ -269,33 +349,18 @@ module w90Interface
 			!
 		end do
 		close(335)
-		if( finished ) then
-			write(*,*)	"[readFDscheme]: read the .wout file"
-		else
-			write(*,*)	"[readFDscheme]: did not find search string: '",search_wout,"' in .wout file"
-		end if
-		
-
-		!DEBUG TEST FILE
-		open(unit=635, iostat=stat, file=w90_dir//'clone.nnkp', form='formatted', status='replace', action='write')
-		write(635, *)	"clone of the ",seedName,".nnkp file. This tests if the read in of the file is working"
-		write(635, *) search_nnkp
-		write(635, *)	nntot
-		do qi = 1, nQ
-			do qnn = 1, nntot
-				write(635, '(a,i3,a,i3,a,i3,a,i3,a,i3)')	"	",qi," ",nnlist(qi,qnn)," ",nncell(1,qi,qnn)," ",nncell(2,qi,qnn)," ",nncell(3,qi,qnn)
-			end do
-		end do
-		write(635, *) final_nnkp
-		write(635, *)	
-		write(635, *)	"nn ,		b_k (a0^-1) , w_b(a0^2)"
-		do qnn = 1, nntot
-			write(635, '(i3,a,f7.4,a,f7.4,a,f7.4,a,f7.4)')	qnn," ",b_k(1,qnn)," ",b_k(2,qnn)," ",b_k(3,qnn)," ",w_b(qnn)
-		end do
-		close(635)
-
+		!
+		!DEBUG
+		if( 		finished ) write(*,*)	"[readFDscheme]: read the .wout file"
+		if(	.not. 	finished ) write(*,*)	"[readFDscheme]: did not find search string: '",search_wout,"' in .wout file"
+		!
+		if( .not. B1condition(b_k, w_b)	)	stop	"[read_FD_scheme]: B1condition was not satisfied"
+		!
+		!
 		return
 	end subroutine
+
+
 
 
 	subroutine	read_wann_centers(w_centers)
@@ -333,9 +398,9 @@ module w90Interface
 		end if
 		close(340)
 		!
-		!
 		!convert to [a.u.]
 		w_centers 	= w_centers 	/ aUtoAngstrm
+		write(*,*)	"[read_wann_centers]: read the wannier centers from the .xyz file"
 		!
 		!
 		return
@@ -680,47 +745,26 @@ module w90Interface
 
 
 
-
-!READ RESULTS
-	subroutine Umat_reader(U_matrix, krel)
-		complex(dp),	intent(out)	:: 	U_matrix(:,:,:)
-		real(dp),		intent(out)	:: 	krel(:,:)
-		integer						:: 	stat, qi, n, m, dumI(3)
-		real(dp)					:: 	val(2)
-		logical						::	file_exists
+!READ HELPERS
+	logical function B1condition(b_k, w_b)
+		! test if
+		!		sum_b{w_b * b_a * b_b}	= \delta_ab 
+		! is true for all a,b
+		real(dp),		intent(in)		:: 	b_k(:,:), w_b(:)
+		logical							:: 	xx, xy, yy
 		!
-		!inquire file
-		inquire(file=w90_dir//seedName//'_u.mat',exist=file_exists)
-		if(.not. file_exists )	stop '[Umat_reader]: did not find U matrix'
+		xx	= .false.
+		xy	= .false.
+		yy	= .false.
 		!
-		!read file
-		open(unit=300,iostat=stat, file=w90_dir//seedName//'_u.mat', status='old',action='read')
-		if( stat /= 0)	write(*,*)	"[readUmatrix]: WARNING did not file _u.mat file"
-		read(300,*)
-		read(300,*) dumI(1:3)
-		if( dumI(1) /= nQ ) write(*,*)	"[readUmatrix]: WARNING num_kpts=",dumI(1)," nQ=",nQ
-		if(	dumI(2)	/= nWfs) write(*,*)	"[readUmatrix]: WARNING num_wann=",dumI(2)," nWfs=",nWfs
+		if(		abs(	sum(w_b(:)*b_k(1,:)*b_k(1,:)) - 1.0_dp	)		< 0.1_dp				) 			xx = .true.
+		if(		abs(	sum(w_b(:)*b_k(2,:)*b_k(2,:)) - 1.0_dp	)		< 0.1_dp				) 			yy = .true.
+		if(		abs(	sum(w_b(:)*b_k(1,:)*b_k(2,:)) 			)		< 0.1_dp				)			xy = .true.
 		!
-		do qi = 1,  num_kpts
-			read(300,*)
-			read(300,*) krel(1:3,qi)
-			do n = 1, num_wann
-				do m = 1, num_wann
-					read(300,*)	val(1:2)
-					U_matrix(m,n,qi)	= dcmplx(val(1))	+	i_dp	*	dcmplx(val(2))
-				end do
-			end do
-			!DEBUG
-			if( abs( krel(1,qi)*2.0_dp*PI_dp/aX - qpts(1,qi)) > machineP) then
-				write(*,*)	"[readUmatrix]: WARNING k meshes are ordered diffferently"
-				write(*,*)	"				x: k_w90= ",krel(1,qi)*2.0_dp*PI_dp/aX, " qpts=",qpts(1,qi)
-				write(*,*)	"				y: k_w90= ",krel(2,qi)*2.0_dp*PI_dp/aY, " qpts=",qpts(2,qi)
-			end if
-		end do
-		close(300)
+		B1condition = xx .and. yy .and. xy
 		!
 		return
-	end subroutine
+	end function
 
 
 

@@ -6,7 +6,7 @@ program main
 	use sysPara
 	use potWellModel, 	only: 		solveHam
 	use basisIO,		only:		readAbIn, readBasis
-	use w90Interface,	only:		prep_w90
+	use w90Interface,	only:		setup_w90
 	use postW90,		only:		effTBmodel
 	use berry,			only:		berryMethod
 
@@ -126,7 +126,7 @@ program main
 		call cpu_time(T0)
 		if( doPrepW90 )	 then
 			write(*,*)	"[main]:**************************WANNIER90 INTERFACE*************************"
-			call prep_w90(ck,En)
+			call setup_w90(ck,En)
 			call write_K_lattices()
 			write(*,*)	"[main]: please run w90 now"
 

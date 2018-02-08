@@ -61,7 +61,7 @@ module polarization
 			!INTEGRATE
 			val(1) = sum(A_mat(1,n,n,:)) / size(A_mat,4)
 			val(2) = sum(A_mat(2,n,n,:)) / size(A_mat,4)
-			if(size(A_mat,1)==3)	val(3) = sum(A_mat(3,n,n,:)) / size(A_mat,4)
+			if(size(A_mat,1)==3)	val(3) = -1.0_dp * sum(A_mat(3,n,n,:)) / size(A_mat,4)
 			!
 			!COLLECT REAL PART
 			centers(:,n) 	= dreal(val(:))
