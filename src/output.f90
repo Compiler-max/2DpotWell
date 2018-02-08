@@ -484,7 +484,7 @@ module output
 		!
 		write(600,*)"**************ATOMS:"
 		do at = 1, nAt
-			write(*,*)		"atPos(at=",at,")=	(",atPos(1,at),", ", atPos(2,at)," ). [a.u.]"
+			write(600,*)		"atPos(at=",at,")=	(",atPos(1,at),", ", atPos(2,at)," ). [a.u.]"
 		end do
 		write(600,*)"*"
 		write(600,*)"*"
