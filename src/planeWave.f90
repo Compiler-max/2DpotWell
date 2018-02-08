@@ -66,6 +66,7 @@ module planeWave
 			gj			= 1
 			!
 			do while( gj<= nGq(knb) .and. notFound ) 
+				!find gj, which fullfills the delta condition
 				delta(1:2)	=  ( Gvec(1:2,gi,qi)-qpts(1:2,qi) ) 	-  		( Gvec(1:2,gj,knb)-qpts(1:2,knb)-gShift(1:2) )
 				!
 				if( norm2(delta) < machineP )	then
@@ -80,6 +81,7 @@ module planeWave
 				!
 				gj = gj + 1
 			end do
+			if( notFound = .true. ) write(*,'(a,i5,a,i5,a,i5)')	"[calcMmat]: WARNING no matching Gvec found for qi=",qi," q_nn=",knb," gi=",gi
 			!
 			!
 		end do
