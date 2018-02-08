@@ -162,57 +162,73 @@ module berry
 		complex(dp),	intent(in)		::	ck(:,:,:), U_mat(:,:,:), A_mat(:,:,:,:)
 		real(dp),		intent(in)		::	En_vec(:,:)
 		complex(dp),	intent(out)		::	v_mat(:,:,:,:)
+		!
+		!PLANE WAVE GRADIENT
+		if( .not. doVeloNum ) then
+			write(*,*)	"[beryMethod/calcVelo]: velo via plane wave gradients"
+			call calcVeloGrad( ck, v_mat)
+		!BLOUNT
+		else
+			write(*,*)	"[beryMethod/calcVelo]: velo via blount formula - WARNING this is deprecated please set doVeloNum = f"
+			call calcVeloBLOUNT(U_mat, A_mat, En_vec, v_mat)			
+		end if
+		!
+		return
+	end subroutine
+
+
+
+	subroutine calcVeloBLOUNT(U_mat , A_mat, En_vec ,  v_mat)
+		complex(dp),	intent(in)		::	U_mat(:,:,:), A_mat(:,:,:,:)
+		real(dp),		intent(in)		::	En_vec(:,:)
+		complex(dp),	intent(out)		::	v_mat(:,:,:,:)
 		complex(dp),	allocatable		:: 	Abar(:,:,:), U(:,:), Ucjg(:,:), tmp(:,:)
 		real(dp),		allocatable		::	v_Band(:,:,:)
 		integer							::	n, m, qi, a
+
+		allocate(			Abar(		3		,	nWfs	,	nWfs				)			)
+		allocate(			tmp(					nWfs	,	nWfs				)			)
+		allocate(			U(						nWfs	,	nWfs				)			)
+		allocate(			Ucjg(					nWfs	,	nWfs				)			)
+		allocate(			v_Band(		3		,			nWfs		,	nQ		)			)
 		!
-		if( .not. doVeloNum ) then
-			!PLANE WAVE GRADIENT
-			write(*,*)	"[beryMethod/calcVelo]: velo via plane wave gradients"
-			call calcVeloGrad( ck, v_mat)
-			!BLOUNT
-		else
-			write(*,*)	"[beryMethod/calcVelo]: velo via blount formula - WARNING this is deprecated please set doVeloNum = f"
-			allocate(			Abar(		3		,	nWfs	,	nWfs				)			)
-			allocate(			tmp(					nWfs	,	nWfs				)			)
-			allocate(			U(						nWfs	,	nWfs				)			)
-			allocate(			Ucjg(					nWfs	,	nWfs				)			)
-			allocate(			v_Band(		3		,			nWfs		,	nQ		)			)
-			!
-			call readBandVelo( v_Band )
-			do qi = 1, nQ
-				!(H) GAUGE
-				if( doGaugBack ) then
-					!GET ROTATED QUANTITIES
-					U	 = U_mat(:,:,qi)
-					Ucjg = transpose( dconjg(U)	)
-					do a = 1, 3
-						tmp(:,:)	= matmul(	A_mat(a,:,:,qi) 	,	U	)
-						Abar(a,:,:)	= matmul(	Ucjg				,	tmp	)
-					end do
-					!
-					!APPLY
-					do m = 1, nWfs
-						do n = 1, nWfs
-							if(n==m)	v_mat(1:3,n,n,qi)	= v_Band(1:3,n,qi)
-							if(n/=m) 	v_mat(1:3,n,m,qi)	= - i_dp * dcmplx( En_vec(m,qi)-En_vec(n,qi) ) * Abar(1:3,n,m)
-						end do
-					end do
-				!(W) GAUGE
-				else
-					do m = 1, nWfs
-						do n = 1, nWfs
-							if(n==m)	v_mat(1:3,n,n,qi)	= v_Band(1:3,n,qi)
-							!if(n/=m) 	v_mat(1:3,n,m,qi)	= - i_dp * dcmplx( En_vec(m,qi)-En_vec(n,qi) ) * A_mat(1:3,n,m,qi)
-							if(n/=m) 	v_mat(1:3,n,m,qi)	= - i_dp * dcmplx( En_vec(m,qi)-En_vec(n,qi) ) * A_mat(1:3,n,m,qi)
-							!if(n/=m)	v_mat(1:3,n,m,qi)	= - i_dp * dcmplx( En_vec(m,qi)-En_vec(n,qi) ) * Abar(1:3,n,m)
-						end do
-					end do
-				end if
-			end do	
-		end if
+		v_mat	= dcmplx(0.0_dp)
 		!
+		call readBandVelo( v_Band )
 		!
+		do qi = 1, nQ
+			!(H) GAUGE
+			if( doGaugBack ) then
+				!GET ROTATED QUANTITIES
+				U	 = U_mat(:,:,qi)
+				Ucjg = transpose( dconjg(U)	)
+				do a = 1, 3
+					tmp(:,:)	= matmul(	A_mat(a,:,:,qi) 	,	U	)
+					Abar(a,:,:)	= matmul(	Ucjg				,	tmp	)
+				end do
+				!
+				!APPLY
+				do m = 1, nWfs
+					do n = 1, nWfs
+						if(n==m)	v_mat(1:3,n,n,qi)	= v_Band(1:3,n,qi)
+						if(n/=m) 	v_mat(1:3,n,m,qi)	= - i_dp * dcmplx( En_vec(m,qi)-En_vec(n,qi) ) * Abar(1:3,n,m)
+					end do
+				end do
+			!(W) GAUGE
+			else
+				do m = 1, nWfs
+					do n = 1, nWfs
+						if(n==m)	v_mat(1:3,n,n,qi)	= v_Band(1:3,n,qi)
+						!if(n/=m) 	v_mat(1:3,n,m,qi)	= - i_dp * dcmplx( En_vec(m,qi)-En_vec(n,qi) ) * A_mat(1:3,n,m,qi)
+						if(n/=m) 	v_mat(1:3,n,m,qi)	= - i_dp * dcmplx( En_vec(m,qi)-En_vec(n,qi) ) * A_mat(1:3,n,m,qi)
+						!if(n/=m)	v_mat(1:3,n,m,qi)	= - i_dp * dcmplx( En_vec(m,qi)-En_vec(n,qi) ) * Abar(1:3,n,m)
+					end do
+				end do
+			end if
+		end do	
+
+		!
+
 		return
 	end subroutine
 
