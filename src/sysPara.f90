@@ -20,7 +20,7 @@ module sysPara
 				seedName, w90_dir, info_dir, mkdir, raw_dir,&
 				debugProj, debugHam, debugWann, doSolveHam, doMagHam, doPrepW90, useBloch, doPw90, pw90GaugeB, doVdesc,  &
 				doBerry,  doWanni, doVeloNUM, doNiu, doPei, doGaugBack, writeBin, &
-				myID, nProcs, root, ierr, qChunk
+				myID, nProcs, root, ierr, qChunk, fastConnConv
 
 
 	!
@@ -44,7 +44,7 @@ module sysPara
 	real(dp),	allocatable,	dimension(:,:,:)	::	Gvec
 	logical											::	debugHam, debugWann, debugProj, &
 														doSolveHam, doMagHam, doPrepW90,doPw90, pw90GaugeB, useBloch, doVdesc , &
-														doBerry, doWanni, doVeloNUM, doNiu, doPei, doGaugBack, &
+														doBerry, doWanni, doVeloNUM, doNiu, doPei, doGaugBack, fastConnConv, &
 														writeBin 
 
 
@@ -122,6 +122,8 @@ module sysPara
 		call CFG_add_get(my_cfg,	"perturbation%B0"	,	B0			,	"scaling fact. of ext. magnetic field"	)
 		call CFG_add_get(my_cfg,	"perturbation%Bext"	,	Bext		,	"vector of ext. magnetic field"			)
 		![numerics]
+		
+		call CFG_add_get(my_cfg,	"numerics%fastConnConv",fastConnConv,	"try faster converging fd formula"		)
 		call CFG_add_get(my_cfg,	"numerics%Gcut"		,	Gcut	    ,	"k space cut of parameter"				)
 		call CFG_add_get(my_cfg,	"numerics%nSolve"	,	nSolve	    ,	"number of eigenstates to find"			)
 		call CFG_add_get(my_cfg,	"numerics%nQx"     	,	nQx      	,	"amount of k points used"				)

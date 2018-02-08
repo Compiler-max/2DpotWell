@@ -24,6 +24,7 @@
     Bext        =   0.0 0.0 1.0
 
 [numerics]
+    fastConnConv=   t
     Gcut        =   8.0 # edited by statFlow
     nSolve      =   96 # edited by statFlow
     nQx         =   4 # edited by statFlow

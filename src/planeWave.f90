@@ -166,14 +166,20 @@ module planeWave
 		real(dp),		intent(in)			::	b_k(:,:), w_b(:)
 		complex(dp),	intent(out)			::	A_conn(:,:,:,:)
 		complex(dp),	allocatable			::	M_matrix(:,:)
+		complex(dp)							::	delta
 		real(dp)							::	gShift(2), gX, gY
-		integer								::	qi, nn
+		integer								::	qi, nn, n, m
 		!
 		A_conn = dcmplx(0.0_dp)
 		allocate(	M_matrix( size(A_conn,2), size(A_conn,3) )			)
 		!
 		gX = 2.0_dp * PI_dp / aX
 		gY = 2.0_dp * PI_dp / aY
+		!
+		if( 		fastConnConv ) write(*,*)	"[calcConnOnCoarse]: use logarithm formula for connection"
+		if( .not.	fastConnConv ) write(*,*)	"[calcConnOnCoarse]: use finite difference formula for connection" 
+
+
 		!
 		!$OMP PARALLEL DO SCHEDULE(STATIC)	DEFAULT(SHARED) PRIVATE(qi, nn, gShift)
 		do qi = 1, nQ
@@ -184,11 +190,22 @@ module planeWave
 				call calcMmat(qi, nnlist(qi, nn), gshift, nGq, Gvec, ck, M_matrix)
 				!
 				!WEIGHT OVERLAPS (Fast Convergence)
-				A_conn(1,:,:,qi)	= w_b(nn) * b_k(1,nn) * dimag( log(M_matrix(:,:))	)
-				A_conn(2,:,:,qi)	= w_b(nn) * b_k(2,nn) * dimag( log(M_matrix(:,:))	)
-				A_conn(3,:,:,qi)	= w_b(nn) * b_k(3,nn) * dimag( log(M_matrix(:,:))	)
-				!
-				!WEIGHT OVERLAPS (FD)
+				if( fastConnConv ) then
+					A_conn(1,:,:,qi)	= w_b(nn) * b_k(1,nn) * dimag( log(M_matrix(:,:))	)
+					A_conn(2,:,:,qi)	= w_b(nn) * b_k(2,nn) * dimag( log(M_matrix(:,:))	)
+					A_conn(3,:,:,qi)	= w_b(nn) * b_k(3,nn) * dimag( log(M_matrix(:,:))	)
+				!WEIGHT OVERLAPS (Finite Difference)
+				else
+					do n = 1, nWfs
+						do m = 1, nWfs
+							delta = dcmplx(0.0_dp)
+							if( n==m ) 	delta = dcmplx(1.0_dp)
+							A_conn(1,m,n,qi)		= w_b(nn) * b_k(1,nn) * dimag( M_matrix(m,n) - delta  )					
+							A_conn(2,m,n,qi)		= w_b(nn) * b_k(2,nn) * dimag( M_matrix(m,n) - delta  )
+							A_conn(3,m,n,qi)		= w_b(nn) * b_k(3,nn) * dimag( M_matrix(m,n) - delta  )	
+						end do
+					end do				
+				end if
 			end do
 		end do
 		!$OMP END PARALLEL DO
