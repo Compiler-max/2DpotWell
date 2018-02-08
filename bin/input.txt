@@ -40,13 +40,13 @@
     doSolveHam  =   t
     doMagHam    =   f
     doPrepW90   =   f
-    useBloch    =   f
     doPw90      =   f
     doBerry     =   f
     writeBin    =   f
 
 [w90]
     seedName    =   'wf1'
+    useBloch    =   f
     nShells     =   1
     shells      =   1 # edited by statFlow
     nw90it      =   1000

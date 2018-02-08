@@ -183,10 +183,12 @@ module planeWave
 				gShift(2)	= real(nncell(2,qi,nn),dp) * gY
 				call calcMmat(qi, nnlist(qi, nn), gshift, nGq, Gvec, ck, M_matrix)
 				!
-				!WEIGHT OVERLAPS
+				!WEIGHT OVERLAPS (Fast Convergence)
 				A_conn(1,:,:,qi)	= w_b(nn) * b_k(1,nn) * dimag( log(M_matrix(:,:))	)
 				A_conn(2,:,:,qi)	= w_b(nn) * b_k(2,nn) * dimag( log(M_matrix(:,:))	)
 				A_conn(3,:,:,qi)	= w_b(nn) * b_k(3,nn) * dimag( log(M_matrix(:,:))	)
+				!
+				!WEIGHT OVERLAPS (FD)
 			end do
 		end do
 		!$OMP END PARALLEL DO

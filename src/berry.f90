@@ -43,6 +43,7 @@ module berry
 											w_centers(:,:), berry_W_gauge(:,:),berry_H_gauge(:,:), niu_polF2(:,:), niu_polF3(:,:)
 		integer							::	nntot, gammaPt, nn
 		integer,		allocatable		:: 	nnlist(:,:), nncell(:,:,:)
+		real(dp)						::	nnEstimate
 		!					
 		!COARSE
 		allocate(			ck_wann(				GmaxGLOBAL	, 	nSolve	,  	nQ		)			)
@@ -73,11 +74,15 @@ module berry
 		gammaPt = 1 + int(	nQx*(0.5_dp+0.5_dp*nQy)	)
 		write(*,'(a,f6.2,a,f6.2,a)')	"        dqx=",dqx,"; dqy=",dqy,"."
 		write(*,'(a,f6.2,a,f6.2,a)')	"        this means for qpt=(",qpts(1,gammaPt),", ",qpts(2,gammaPt),")."
+		write(*,*)	" nn  | q_nn(x) | q_nn(y) | w_b "
+		write(*,*)	"-------------------------------"
 		do nn = 1, nntot
-			!wbx 	= 2.0_dp / 		( real(Z,dp) * dqx**2 )
-			write(*,'(a,i2,a,f6.2,a,f6.2,a,f6.2)')	"        nn=",nn," q_nn=(",	qpts(1,nnlist(gammaPt,nn)),", ",&
-																				qpts(2,nnlist(gammaPt,nn)),"), weight=",w_b(nn)
-			write(*,'(a,f6.2)')	" the weight relates to a nntot=",w_b(nn) * dqx**2 / 2.0_dp	
+			
+			write(*,'(i2,a,f6.2,a,f6.2,a,f6.2)')	nn,"  |  ",	qpts(1,nnlist(gammaPt,nn)),"  |  ",&
+																				qpts(2,nnlist(gammaPt,nn)),"  |  ",w_b(nn)
+			
+			nnEstimate = 2.0_dp / ( 	w_b(nn) * dqx**2  ) !wbx 	= 2.0_dp / 	( real(Z,dp) * dqx**2 ) ; where Z is number of nearest neighbours
+			if( int(nnEstimate)/= nntot) write(*,*)	"[berryMethod]: weights suggest ",int(nnEstimate)," nearest neigbours, where ",nntot," are expected"
 		end do
 		!
 		!
