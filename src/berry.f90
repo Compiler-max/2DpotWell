@@ -125,18 +125,23 @@ module berry
 !private
 	subroutine applyRot(ck, Uq, ckW)
 		complex(dp),	intent(in)		::	ck(:,:,:), Uq(:,:,:)
-		complex(dp),	intent(out)		::	ckw(:,:,:)
+		complex(dp),	intent(out)		::	ckW(:,:,:)
 		integer							::	qi, gi, n, m
 		!
 		ckW	= dcmplx(0.0_dp)
+		!$OMP PARALLEL DO DEFAULT(SHARED) PRIVATE(gi, n, m) ,&
+		!$OMP& SCHEDULE(STATIC)
 		do qi = 1, nQ
-			do gi = 1, nGq(qi)			! u^(H) = u^(W) U -> u^(W) = u^(H) U^dagger
+			do gi = 1, nGq(qi)			
 				do n = 1, nSolve
-					!
+					!BOUND STATES
 					if( n <= nWfs ) then
+						!
+						!SUM_M
 						do m = 1, num_wann
 							ckW(gi,n,qi)	=  ckW(gi,n,qi) + Uq(m,n,qi)   * ck(gi,m,qi)	
-						end do		
+						end do
+					!CONDUCTING STATES
 					else
 						ckW(gi,n,qi)	= ck(gi,n,qi)
 					end if
@@ -144,6 +149,7 @@ module berry
 				end do
 			end do
 		end do
+		!$OMP END PARALLEL DO
 		write(*,*)	"[berry/applyRot]: applied U matrix to basis coefficients"
 
 		!

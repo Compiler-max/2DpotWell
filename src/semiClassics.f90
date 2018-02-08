@@ -43,9 +43,9 @@ module semiClassics
 		pol_F2 = 0.0_dp
 		pol_F3 = 0.0_dp
 		
-		!!!$OMP PARALLEL DEFAULT(SHARED)  &
-		!!!$OMP PRIVATE(n, ki, i, j, densCorr, F2, F2k, F3, F3k)
-		!!!$OMP DO SCHEDULE(STATIC)
+		!$OMP PARALLEL DEFAULT(SHARED)  &
+		!$OMP PRIVATE(n, ki, densCorr, F2, F2k, F3, F3k)
+		!$OMP DO SCHEDULE(STATIC)
 		do n = 1, nWfs
 			F2 = 0.0_dp
 			F3 = 0.0_dp
@@ -69,13 +69,13 @@ module semiClassics
 			F2 = F2 / real(kSize,dp)
 			F3 = F3  / real(kSize,dp)
 		
-			!APPLY FIELD 
+			!APPLY MATRIX 
 			pol_F2(:,n) = matmul(F2,Bext) 
 			pol_F3(:,n) = matmul(F3,Bext) 
 			!
 		end do
-		!!!$OMP END DO
-		!!!$OMP END PARALLEL
+		!$OMP END DO
+		!$OMP END PARALLEL
 		!
 		!DEBUG
 		if(	kSize /= size(En,2)	)	 write(*,*)"[calcFirstOrdP]: WARNING Energy and velocities live on different k meshes!"
