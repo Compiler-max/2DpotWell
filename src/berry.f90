@@ -38,7 +38,7 @@ module berry
 		complex(dp),	intent(in)		::	ck(:,:,:)
 		real(dp),		intent(in)		::	EnQ(:,:)
 		complex(dp),	allocatable		:: 	U_matrix(:,:,:), ck_wann(:,:,:), &
-											AconnQ(:,:,:,:), FcurvQ(:,:,:,:),veloQ(:,:,:,:) 		
+											Aconn_H(:,:,:,:), Aconn_W(:,:,:,:), FcurvQ(:,:,:,:),veloQ(:,:,:,:) 		
 		real(dp),		allocatable		::	R_real(:,:), v_Band(:,:,:), krel(:,:), b_k(:,:), w_b(:), &
 											w_centers(:,:), berry_W_gauge(:,:),berry_H_gauge(:,:), niu_polF2(:,:), niu_polF3(:,:)
 		integer							::	nntot, gammaPt, nn
@@ -46,7 +46,8 @@ module berry
 		!					
 		!COARSE
 		allocate(			ck_wann(				GmaxGLOBAL	, 	nSolve	,  	nQ		)			)
-		allocate(			AconnQ(			3		, 	nWfs	,	nWfs	,	nQ		)			)
+		allocate(			Aconn_H(		3		, 	nWfs	,	nWfs	,	nQ		)			)
+		allocate(			Aconn_W(		3		, 	nWfs	,	nWfs	,	nQ		)			)		
 		allocate(			FcurvQ(			3		,	nWfs	,	nWfs	,	nQ		)			)
 		allocate(			veloQ(			3		, 	nSolve	,	nSolve	,	nQ		)			)
 		allocate(			R_real(			3		,							nSC		)			)
@@ -80,23 +81,23 @@ module berry
 		!
 		!HAM GAUGE
 		write(*,*)	"[berryMethod]: start (H) gauge calculation"
-		call calcConnOnCoarse(ck, nntot, nnlist, nncell, b_k, w_b, AconnQ)
-		call calcPolViaA(AconnQ, berry_H_gauge)
+		call calcConnOnCoarse(ck, nntot, nnlist, nncell, b_k, w_b, Aconn_H)
+		call calcPolViaA(Aconn_H, berry_H_gauge)
 
 
 		!WANN GAUGE
 		call read_U_matrix(R_real, U_matrix, krel)
 		call applyRot(ck, U_matrix, ck_wann)
-		call calcConnOnCoarse(ck_wann, nntot, nnlist, nncell, b_k, w_b, AconnQ)
-		call calcPolViaA(AconnQ, berry_W_gauge)
+		call calcConnOnCoarse(ck_wann, nntot, nnlist, nncell, b_k, w_b, Aconn_W)
+		call calcPolViaA(Aconn_W, berry_W_gauge)
 		!
 		!
 		!1st ORDER SEMICLASSICS
 		if(doNiu) then
 			write(*,*)	"[berrryMethod]: now calc first order pol"
 			FcurvQ	= dcmplx(0.0_dp)	!does not matter since <FcurvQ,AconnQ> is always zero in 2D
-			call calcVelo(ck , U_matrix , AconnQ, EnQ ,  veloQ)
-			call calcFirstOrdP(FcurvQ, AconnQ, veloQ, EnQ, niu_polF2, niu_polF3)
+			call calcVelo(ck , U_matrix , Aconn_W, EnQ ,  veloQ)
+			call calcFirstOrdP(FcurvQ, Aconn_W, veloQ, EnQ, niu_polF2, niu_polF3)
 		else
 			niu_polF2 = 0.0_dp
 			niu_polF3 = 0.0_dp
@@ -105,7 +106,7 @@ module berry
 		!
 		!OUTPUT
 		call writePolFile(w_centers, berry_H_gauge, berry_W_gauge, niu_polF2, niu_polF3)
-		call writeConnTxt( AconnQ )
+		call writeConnTxt( Aconn_W )
 		call writeVeloHtxt( veloQ)	!*aUtoEv*aUtoAngstrm )				
 		!
 		!
@@ -128,27 +129,23 @@ module berry
 		integer							::	qi, gi, n, m
 		!
 		ckW	= dcmplx(0.0_dp)
-		!if(	useRot ) then
-			do qi = 1, nQ
-				do gi = 1, nGq(qi)			! u^(H) = u^(W) U -> u^(W) = u^(H) U^dagger
-					do n = 1, num_wann
-						!SUM OVER m
+		do qi = 1, nQ
+			do gi = 1, nGq(qi)			! u^(H) = u^(W) U -> u^(W) = u^(H) U^dagger
+				do n = 1, nSolve
+					!
+					if( n <= nWfs ) then
 						do m = 1, num_wann
 							ckW(gi,n,qi)	=  ckW(gi,n,qi) + Uq(m,n,qi)   * ck(gi,m,qi)	
 						end do		
-					end do	
-					do n = num_wann+1, nSolve
-							ckW(gi,n,qi)	= ck(gi,n,qi)
-					end do
+					else
+						ckW(gi,n,qi)	= ck(gi,n,qi)
+					end if
+					!
 				end do
 			end do
-			write(*,*)	"[berry/applyRot]: applied U matrix to basis coefficients"
-		!else 
-		!	ckW	= ck
-		!	write(*,'(a,a)')	"[berry/applyRot]: rotations disabled.",&
-		!							" Will use initial electronic structure coeff"
-		!end if
-		!
+		end do
+		write(*,*)	"[berry/applyRot]: applied U matrix to basis coefficients"
+
 		!
 		return
 	end subroutine
