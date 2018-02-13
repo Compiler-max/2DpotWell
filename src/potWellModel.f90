@@ -101,13 +101,10 @@ module potWellModel
 			En_temp	= 0.0_dp
 			Gsize 	= nGq(qLoc)
 			call eigSolverPART(Hmat(1:Gsize,1:Gsize),En_temp(1:Gsize), ck_temp(1:Gsize,:), found)
-			write(*,'(a,i3,a)'	)	"[#",myID,";solveHam]: I solved the Ham"
 			!
 			!get derived quantities
 			call calcAmatANA(qLoc, ck_temp, Amn_temp)
-			write(*,'(a,i3,a)'	)	"[#",myID,";solveHam]: I calculated A mat"
 			call calcVeloGrad(qLoc, ck_temp, velo_temp)
-			write(*,'(a,i3,a)'	)	"[#",myID,";solveHam]: I calculated velocities"
 
 			!
 			!DEBUG TESTS
