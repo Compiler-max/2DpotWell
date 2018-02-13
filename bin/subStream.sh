@@ -36,21 +36,15 @@ function prepareInput {
 
 	#e-Structure
 	sed -i "/doSolveHam/c\    doSolveHam  = t $infoString" 	./input.txt
-	sed -i "/doPrepW90/c\    doPrepW90 = f $infoString" 	./input.txt
 	sed -i "/doPw90/c\    doPw90      = f $infoString" 		./input.txt
 	sed -i "/doBerry/c\    doBerry     = f $infoString" 	./input.txt
 	
-	#prep w90
-	cp input.txt input2.txt
-	sed -i "/doSolveHam/c\    doSolveHam  = f $infoString" 	./input2.txt
-	sed -i "/doPrepW90/c\     doPrepW90 = t $infoString"	./input2.txt
-	sed -i "/doPw90/c\    doPw90      = f $infoString" 		./input2.txt
-	sed -i "/doBerry/c\    doBerry     = f $infoString" 	./input2.txt
 	#post w90 - berry method
-	cp input2.txt input3.txt
-	sed -i "/doPrepW90/c\     doPrepW90 = f $infoString"	./input3.txt
-	sed -i "/doBerry/c\    doBerry     = t $infoString" 	./input3.txt
-	sed -i "/doNiu/c\        doNiu = t $infoString" 		./input3.txt
+	cp input.txt inputBerry.txt
+	sed -i "/doSolveHam/c\    doSolveHam  = f $infoString" 	./inputBerry.txt
+	sed -i "/doPw90/c\    doPw90      = f $infoString" 		./inputBerry.txt
+	sed -i "/doBerry/c\    doBerry     = t $infoString" 	./inputBerry.txt
+	sed -i "/doNiu/c\        doNiu = t $infoString" 		./inputBerry.txt
 }
 
 function runCalc {
@@ -59,17 +53,14 @@ function runCalc {
 	
 
 	#electronic structure
-	mpirun -np $nprocs ./main.exe > outABin.txt
-	wait
-	echo '['$(date +"%T")']: finished electronic structure'
-	
-	#prepW90
-	mv input.txt oldInput/inputABinit.txt
-	mv input2.txt input.txt
 	rm w90files/*
 	wait
-	./main.exe > outW90inter.txt
-
+	mpirun -np $nprocs ./main.exe > outABin.txt
+	wait
+	mv input.txt oldInput/inputABiN.txt
+	echo '['$(date +"%T")']: finished electronic structure'
+	
+	
 	#run wannier90
 	cd w90files
 	$wannDIR/wannier90.x wf1
@@ -81,15 +72,14 @@ function runCalc {
 	
 	
 	#Berry
-	mv input.txt oldInput/inputW90prep.txt
-	mv input3.txt input.txt
+	mv inputBerry.txt input.txt
 	wait
 	./main.exe > outBerry.txt
 	wait
+	mv input.txt oldInput/inputBerry.txt
 	echo '['$(date +"%T")']: finished berry method'	
 
 	#finalize
-	mv input.txt oldInput/inputBerry.txt
 	mv out*.txt output
 	mv input.orig input.txt
 	wait
