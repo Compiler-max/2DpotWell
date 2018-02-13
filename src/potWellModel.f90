@@ -139,7 +139,7 @@ module potWellModel
 		complex(dp),	allocatable		::	ck_qi(:,:), cK_nn(:,:), Mmn(:,:,:)
 		real(dp),		allocatable		::	Gvec_qi(:,:), Gvec_nn(:,:)
 		real(dp)						::	gShift(2)
-		integer							::	qi, nn, q_nn, nG_qi, nG_nn
+		integer							::	qi, nn, q_nn, nG_qi, nG_nn, qLoc
 		!
 		allocate(	nGq_glob(nQ)				)
 		allocate(	Gvec_qi(dim, nG)			)
@@ -149,56 +149,37 @@ module potWellModel
 		allocate(	Mmn(nBands, nBands, nntot)	)
 		!
 		call MPI_GATHER( nGq	, qChunk, MPI_INTEGER, nGq_glob		, qChunk, MPI_INTEGER, root, MPI_COMM_WORLD, ierr)
-		if( myID == root ) write(*,*)	"[calc_Mmat]: gathered nGq"
 		!
-		if(myID == root) then
-			write(*,*)	"qChunk=",qChunk
-			write(*,*)	"fd sheme:"
-			write(*,*)	"nntot=",nntot
-			write(*,*)	"nnlist"
-			write(*,*)	nnlist
-			write(*,*)	"nncell"
-			write(*,*)	nncell
-			write(*,*)	"end nncell"
-		end if
 		!
+		qLoc = 1
 		do qi = myID*qChunk +1, myID*qChunk + qChunk
 			!
 			do nn = 1, nntot
 				!calc overlap of unks
 				if( nncell(3,qi,nn)/= 0 ) stop '[w90prepMmat]: out of plane nearest neighbour found. '
-				
-								write(*,*)	"[hello after break condition"
+				!
 				q_nn		=	nnlist(qi,nn)
-				write(*,*)		"q_nn=",q_nn
 				nG_qi		= 	nGq_glob(qi)
 				nG_nn		= 	nGq_glob(q_nn)
-				write(*,'(a,i5,a,i5,a,f6.2,a,f6.2)')		" nG_qi=",nG_qi," nG_nn=",nG_nn," aX=",aX,"  aY=",aY
-
 				gShift(1)	= 	real(nncell(1,qi,nn),dp) * 2.0_dp * PI_dp / aX
 				gShift(2)	= 	real(nncell(2,qi,nn),dp) * 2.0_dp * PI_dp / aY
 				!
-				write(*,*)	"gshift=",gShift
-
-				write(*,*)	"[hello after set vars"
 				!read basis coefficients
 				call read_coeff(qi,	ck_qi)
 				call read_coeff(q_nn, ck_nn)
-				write(*,'(a,i3,a)')		"[#",myID,",calc_Mmat]: read coff"
 				!
 				!read Gvec
 				call read_gVec(qi, 		Gvec_qi)
 				call read_gVec(q_nn,	Gvec_nn)
-				write(*,'(a,i3,a)')		"[#",myID,",calc_Mmat]: read gvec"
 				!
 				!
 				call calcMmat(qi, q_nn, gShift, nG_qi, nG_nn, Gvec_qi, Gvec_nn, ck_qi, ck_nn, Mmn(:,:,nn)	)
-				write(*,'(a,i3,a)')		"[#",myID,",calc_Mmat]: calulated Mmat"
 			end do
 			!
 			!write result to file
 			call writeABiN_Mmn(qi, Mmn)
-			write(*,'(a,i3,a,i5,a,i3)')		"[#",myID,",calc_Mmat]: done setting up M_matrix for qi=",qi," nntot=",nntot
+			write(*,'(a,i3,a,i5,a,i5,a,i5,a)')		"[#",myID,",calc_Mmat]: wrote M_matrix for qi=",qi,"; task (",qLoc,"/",qChunk,") done"
+			qLoc = qLoc + 1
 		end do
 		!		
 		!

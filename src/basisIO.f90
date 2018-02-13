@@ -199,7 +199,6 @@ module basisIO
 		!
 		allocate(	buffer( size(ck,1), size(ck,2) 	)		)
 		!
-		write(*,*)	"[read_coff]: hello there"
 		!
 		!UNK REAL PART
 		write(filename, format) raw_dir//'ckR.',qi
@@ -209,8 +208,6 @@ module basisIO
 		read(700) buffer
 		ck(:,:)	= dcmplx(buffer)
 		close(700)
-		
-			write(*,*)	"[read_coff]: read real"
 		!
 		!UNK IMAG PART
 		write(filename, format) raw_dir//'ckI.',qi
@@ -221,8 +218,6 @@ module basisIO
 		ck(:,:)	= ck(:,:) + i_dp * dcmplx(buffer)
 		close(710)
 		!
-
-					write(*,*)	"[read_coff]: read imag"
 		!
 		return
 	end subroutine
