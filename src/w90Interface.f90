@@ -77,9 +77,7 @@ module w90Interface
 		!
 		!W90 
 		write(*,*)	"[w90Interf]: wrote w90 input file"
-		call chdir(w90_Dir)
 		call run_w90setup(nntot_out, nnlist_out, nncell_out)
-		call chdir("..")
 		write(*,*)	"[w90Interf]: done with w90 setup"
 		write(*,*)	"[w90Interf]: will use num_bands= ",num_bands, " bands"
 		write(*,*)	"[w90Interf]: to gen   num_wann=  ",num_wann, " wnfs"
@@ -505,7 +503,7 @@ module w90Interface
 		!write input file for wannier_setup call
 		integer	:: i
 		!
-		open(unit=100,file=w90_Dir//seed_name//'.win',action='write', status='replace')
+		open(unit=100,file=seed_name//'.win',action='write', status='replace')
 		!
 		!BASIC INFO
 		write(100,*)	'num_wann  = ',nWfs
