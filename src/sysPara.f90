@@ -18,7 +18,7 @@ module sysPara
 				atPos, atR, qpts, rpts, Rcell, kpts, Zion, recpLatt, &
 				Bext, prefactF3, &
 				seedName, w90_dir, info_dir, mkdir, raw_dir,&
-				debugProj, debugHam, debugWann, doSolveHam, doMagHam, doPrepW90, useBloch, doPw90, pw90GaugeB, doVdesc,  &
+				debugProj, debugHam, debugWann, doSolveHam, doMagHam, useBloch, doPw90, pw90GaugeB, doVdesc,  &
 				doBerry,  doWanni, doVeloNUM, doNiu, doPei, doGaugBack, writeBin, &
 				myID, nProcs, root, ierr, qChunk, fastConnConv
 
@@ -43,7 +43,7 @@ module sysPara
 
 	real(dp),	allocatable,	dimension(:,:,:)	::	Gvec
 	logical											::	debugHam, debugWann, debugProj, &
-														doSolveHam, doMagHam, doPrepW90,doPw90, pw90GaugeB, useBloch, doVdesc , &
+														doSolveHam, doMagHam, doPw90, pw90GaugeB, useBloch, doVdesc , &
 														doBerry, doWanni, doVeloNUM, doNiu, doPei, doGaugBack, fastConnConv, &
 														writeBin 
 
@@ -138,7 +138,6 @@ module sysPara
 		![methods]
 		call CFG_add_get(my_cfg,	"methods%doSolveHam",	doSolveHam	,	"solve electronic structure or read in"	)
 		call CFG_add_get(my_cfg,	"methods%doMagHam"	,	doMagHam	,	"include B-field via peierls in ham."	)
-		call CFG_add_get(my_cfg,	"methods%doPrepW90"	,	doPrepW90	,	"prepare input files for wannier90"		)
 		call CFG_add_get(my_cfg,	"methods%doPw90"	,	doPw90		,	"read in the matrices in wann base	"	)	
 		call CFG_add_get(my_cfg,	"methods%doBerry"	,	doBerry		,	"switch on/off 	berry( unk) method "	)
 		call CFG_add_get(my_cfg,	"methods%writeBin"	,	writeBin	,	"switch for writing binary files"		)
@@ -226,7 +225,6 @@ module sysPara
 		![methods]
 		call MPI_Bcast( doSolveHam	,		1	,	MPI_LOGICAL				,	root,	MPI_COMM_WORLD, ierr)
 		call MPI_Bcast(	doMagHam	,		1	,	MPI_LOGICAL				,	root,	MPI_COMM_WORLD, ierr)
-		call MPI_Bcast(	doPrepW90	,		1	,	MPI_LOGICAL				,	root,	MPI_COMM_WORLD, ierr)
 		call MPI_Bcast( doPw90		,		1	,	MPI_LOGICAL				,	root,	MPI_COMM_WORLD, ierr)
 		call MPI_Bcast( doBerry		,		1	,	MPI_LOGICAL				,	root,	MPI_COMM_WORLD, ierr)
 		call MPI_Bcast( writeBin	,		1	,	MPI_LOGICAL				,	root,	MPI_COMM_WORLD, ierr)
