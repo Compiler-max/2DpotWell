@@ -151,6 +151,13 @@ module potWellModel
 		call MPI_GATHER( nGq	, qChunk, MPI_INTEGER, nGq_glob		, qChunk, MPI_INTEGER, root, MPI_COMM_WORLD, ierr)
 		if( myID == root ) write(*,*)	"[calc_Mmat]: gathered nGq"
 		!
+		if(myID == root) then
+			write(*,*)	"qChunk=",qChunk
+			write(*,*)	"fd sheme:"
+			write(*,*)	"nntot=",nntot
+			write(*,*)	nnlist
+			write(*,*)	nncell
+		end if
 		!
 		do qi = myID*qChunk +1, myID*qChunk + qChunk
 			!
