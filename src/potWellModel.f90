@@ -159,11 +159,13 @@ module potWellModel
 			write(*,*)	nnlist
 			write(*,*)	"nncell"
 			write(*,*)	nncell
+			write(*,*)	"end nncell"
 		end if
 		!
 		do qi = myID*qChunk +1, myID*qChunk + qChunk
 			!
 			do nn = 1, nntot
+				write(*,*)	"[hello from inside the loop]"
 				!calc overlap of unks
 				if( nncell(3,qi,nn)/= 0 ) stop '[w90prepMmat]: out of plane nearest neighbour found. '
 				
