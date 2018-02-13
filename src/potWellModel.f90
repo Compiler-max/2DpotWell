@@ -14,7 +14,7 @@ module potWellModel
 	!#include "mpif.h"
 
 	private
-	public ::			solveEstruct			
+	public ::			potWellMethod			
 
 
 
@@ -25,7 +25,7 @@ module potWellModel
 
 	contains
 !public:
-	subroutine solveEstruct()   !call solveHam(wnF, unk, EnW, VeloBwf)
+	subroutine potWellMethod()   !call solveHam(wnF, unk, EnW, VeloBwf)
 		!solves Hamiltonian at each k point
 		!also generates the Wannier functions on the fly (sum over all k)
 		!																
@@ -45,18 +45,18 @@ module potWellModel
 		!
 		!get FD scheme from w90
 		if( myID == root )  then
+			write(*,'(a,i3,a)')	"[#",myID,";potWellMethod]: Hamiltonian solved, setup w90 now"
 			call setup_w90(nntot, nnlist, nncell)
-			write(*,*)	"[]"
-
+			write(*,'(a,i3,a)')	"[#",myID,";potWellMethod]: wannier setup done, now calc M matrix"
 		end if
 		!
 		!Bcast FD scheme
 		call MPI_Bcast(nntot,			1		, MPI_INTEGER, root, MPI_COMM_WORLD, ierr)
 		call MPI_Bcast(nnlist,		nntotMax*nQ	, MPI_INTEGER, root, MPI_COMM_WORLD, ierr)
 		call MPI_Bcast(nncell,	3*	nntotMax*nQ	, MPI_INTEGER, root, MPI_COMM_WORLD, ierr)
+		if( myID == root) write(*,'(a,i3,a)')	"[#",myID,";potWellMethod]: broadcasted fd scheme"
 		!
 		!calc Mmat
-		write(*,'(a,i3,a)')		"[#",myID,", solveHam]: start setting up M_matrix now"
 		call calc_Mmat(nntot, nnlist, nncell)
 		write(*,'(a,i3,a)')		"[#",myID,", solveHam]: done setting up M_matrix"
 
@@ -64,7 +64,7 @@ module potWellModel
 		!call w90 interface to write input files & .mmn etc. files
 		if( myID == root ) then
 			call write_w90_matrices()
-			write(*,'(a,i3,a)')		"[#",myID,", solveHam]: wrote w90 matrix input files (.win, .amn, .mmn, .eig, _geninterp.kpt )"
+			write(*,'(a,i3,a)')		"[#",myID,";solveHam]: wrote w90 matrix input files (.win, .amn, .mmn, .eig, _geninterp.kpt )"
 		end if
 
 

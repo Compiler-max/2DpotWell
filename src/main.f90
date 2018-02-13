@@ -4,7 +4,7 @@ program main
 	use mathematics, 	only: 		dp, PI_dp
 
 	use sysPara
-	use potWellModel, 	only: 		solveEstruct
+	use potWellModel, 	only: 		potWellMethod
 	use postW90,		only:		effTBmodel
 	use berry,			only:		berryMethod
 
@@ -92,7 +92,7 @@ program main
 		if( myID == root ) 	write(*,*)"[main]:**************************ELECTRONIC STRUCTURE RUN*************************"
 		!
 		!
-		call solveEstruct()
+		call potWellMethod()
 		!
 		!
 		if( myID == root )	call write_K_lattices()
