@@ -582,7 +582,7 @@ module sysPara
 
 !
 	subroutine popGvec()
-		integer						:: qi, gi, inside,tot, qLoc
+		integer						:: qi, gi, inside,tot, qLoc, Gmin, GminGLOBAL
 		real(dp)					:: kg(2)
 		!^
 		!fill array
@@ -608,14 +608,16 @@ module sysPara
 			!DEBUG INFO
 			if(nGq(qLoc) > nG) write(*,'(a,i3,a,i4,a,i6)')	"[#",myID,&
 											";popGvec]: WARNING, somehow counted more basis functions at qi=",qi," limit nG=",nG	
-			write(*,'(a,i3,a,i6,a,i4)')	"[#",myID,";popGvec]: using ",nGq(qLoc), "basis functions at qi=",qi
 			qLoc = qLoc + 1	
 		end do
 		!
+		!DEBUG OUTPUT
 		Gmax = maxval(nGq)
-		write(*,'(a,i3,a,i7)')	"[#",myID,";popGvec]: maximum amount of basis functions is",Gmax
-		call MPI_ALLREDUCE(Gmax, GmaxGLOBAL, 1, MPI_INTEGER, MPI_MAX, MPI_COMM_WORLD, ierr)
-		if( myID == root ) write(*,'(a,i3,a,i7)') "[#",myID,";popGvec]: global Gmax=",GmaxGLOBAL
+		Gmin = minval(nGq)
+		write(*,'(a,i3,a,i7,a,i7)')	"[#",myID,";popGvec]: maximum amount of basis functions Gmax=",Gmax," minimum is Gmin=",Gmin
+		call MPI_ALLREDUCE(Gmax, GmaxGLOBAL, 1, MPI_INTEGER, MPI_MAX, MPI_COMM_WORLD, ierr) 
+		call MPI_ALLREDUCE(Gmin, GminGLOBAL, 1, MPI_INTEGER, MPI_MIN, MPI_COMM_WORLD, ierr)
+		if( myID == root ) write(*,'(a,i3,a,i7,a,i7)') "[#",myID,";popGvec]: global Gmax=",GmaxGLOBAL, "global Gmin=",Gmin
 		!
 		!
 		return
