@@ -157,7 +157,7 @@ module potWellModel
 			write(*,*)	"nntot=",nntot
 			write(*,*)	"nnlist"
 			write(*,*)	nnlist
-			write()
+			write(*,*)	"nncell"
 			write(*,*)	nncell
 		end if
 		!
