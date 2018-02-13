@@ -135,11 +135,11 @@ module potWellModel
 
 	subroutine calc_Mmat(nntot, nnlist, nncell)
 		integer,		intent(in)		::	nntot, nnlist(:,:), nncell(:,:,:)
-		integer,		allocatable		::	nGq_glob(:), nG_qi, nG_nn, q_nn
+		integer,		allocatable		::	nGq_glob(:)
 		complex(dp),	allocatable		::	ck_qi(:,:), cK_nn(:,:), Mmn(:,:,:)
 		real(dp),		allocatable		::	Gvec_qi(:,:), Gvec_nn(:,:)
 		real(dp)						::	gShift(2)
-		integer							::	qi, nn
+		integer							::	qi, nn, q_nn, nG_qi, nG_nn
 		!
 		allocate(	nGq_glob(nQ)				)
 		allocate(	Gvec_qi(dim, nG)			)
