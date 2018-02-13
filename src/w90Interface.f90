@@ -540,7 +540,8 @@ module w90Interface
 	subroutine run_w90setup(nntot_out, nnlist_out, nncell_out)
 		integer,		intent(out)		::	nntot_out, nnlist_out(:,:), nncell_out(:,:,:)
 		integer							:: 	at, n
-		!	
+		!
+		write(*,*)	"[run_w90setup]: try to allocate work arrays"	
 		!
 		allocate(	atom_symbols(					num_atoms						)			)
 		allocate(	kpt_latt(			3	,		num_kpts						)			)
@@ -558,6 +559,7 @@ module w90Interface
 		allocate(	proj_s(							num_bands_tot					)			)
 		allocate(	proj_s_qaxis(		3	,		num_bands_tot					)			)
 		!
+		write(*,*)	"[run_w90setup]: try to setup input arrays"
 		!fill atom related arrays
 		do	at = 1, num_atoms
 			atom_symbols(at)	= 'H'
@@ -569,6 +571,7 @@ module w90Interface
 		kpt_latt(2,:)			= qpts(2,:)	/ ( recip_lattice(2,2) * aUtoAngstrm ) 
 		kpt_latt(3,:)			= 0.0_dp
 		!
+		write(*,*)	"[run_w90setup]: try to call the library"
 		!			
 		call wannier_setup(seed_name,mp_grid,num_kpts,real_lattice,recip_lattice, &
 								kpt_latt,num_bands_tot,num_atoms,atom_symbols,atoms_cart, &
@@ -576,6 +579,7 @@ module w90Interface
 								proj_l,proj_m,proj_radial,proj_z,proj_x,proj_zona, &
 								exclude_bands,proj_s,proj_s_qaxis)
 		!
+		write(*,*)	"[run_w90setup]: called the library, ry to copy arrays"
 		!
 		nntot_out 	= nntot
 		nnlist_out	= nnlist
