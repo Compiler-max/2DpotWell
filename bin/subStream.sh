@@ -58,6 +58,7 @@ function runCalc {
 	mpirun -np $nprocs ./main.exe > outABin.txt
 	wait
 	mv input.txt oldInput/inputABiN.txt
+	mv wf1* w90files
 	echo '['$(date +"%T")']: finished electronic structure'
 	
 	
