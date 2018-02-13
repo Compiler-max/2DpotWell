@@ -149,6 +149,7 @@ module potWellModel
 		allocate(	Mmn(nBands, nBands, nntot)	)
 		!
 		call MPI_GATHER( nGq	, qChunk, MPI_INTEGER, nGq_glob		, qChunk, MPI_INTEGER, root, MPI_COMM_WORLD, ierr)
+		if( myID == root ) write(*,*)	"[calc_Mmat]: gathered nGq"
 		!
 		!
 		do qi = myID*qChunk +1, myID*qChunk + qChunk
@@ -177,7 +178,7 @@ module potWellModel
 			!
 			!write result to file
 			call writeABiN_Mmn(qi, Mmn)
-			write(*,'(a,i3,a,i5)')		"[#",myID,",calc_Mmat]: done setting up M_matrix for qi=",qi
+			write(*,'(a,i3,a,i5,a,i3)')		"[#",myID,",calc_Mmat]: done setting up M_matrix for qi=",qi," nntot=",nntot
 		end do
 		!		
 		!
