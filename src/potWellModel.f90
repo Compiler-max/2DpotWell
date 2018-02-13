@@ -34,7 +34,7 @@ module potWellModel
 		integer,		allocatable		::	nnlist(:,:), nncell(:,:,:)
 		!	
 		!
-		nntotMax = 4
+		nntotMax = 12
 		allocate(	nnlist(		nQ, nntotMax)		)
 		allocate(	nncell(3, 	nQ, nntotMax)		)
 		!

@@ -54,7 +54,7 @@ module w90Interface
 		mp_grid(2)			= nQy
 		mp_grid(3)			= 1
 		num_kpts			= nQ
-		num_nnmax			= 4
+		num_nnmax			= 12
 		!unit cell
 		real_lattice		= 0.0_dp
 		real_lattice(1,1)	= aX * aUtoAngstrm 
@@ -573,20 +573,6 @@ module w90Interface
 		!
 		write(*,*)	"[run_w90setup]: try to call the library, input arrays"
 		!	
-		write(*,*)	seed_name
-		write(*,*)	mp_grid
-		write(*,*)	num_kpts
-		write(*,*)	real_lattice
-		write(*,*)	recip_lattice
-		write(*,*)	kpt_latt
-		write(*,*)	num_bands_tot
-		write(*,*)	num_atoms
-		write(*,*)	atom_symbols
-		write(*,*)	atoms_cart
-		write(*,*)	gamma_only
-		write(*,*)	spinors
-
-
 
 		call wannier_setup(seed_name,mp_grid,num_kpts,real_lattice,recip_lattice, &
 								kpt_latt,num_bands_tot,num_atoms,atom_symbols,atoms_cart, &
