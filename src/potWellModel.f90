@@ -45,7 +45,6 @@ module potWellModel
 		!
 		!get FD scheme from w90
 		if( myID == root )  then
-			write(*,'(a,i3,a)')	"[#",myID,";potWellMethod]: Hamiltonian solved, setup w90 now"
 			call setup_w90(nntot, nnlist, nncell)
 			write(*,'(a,i3,a)')	"[#",myID,";potWellMethod]: wannier setup done, now calc M matrix"
 		end if
