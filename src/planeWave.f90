@@ -83,7 +83,7 @@ module planeWave
 			!
 		end do
 		!
-		if( cnt /= nG_qi	)		write(*,'(a,i8,a,i8)')	"[calcMmat]: WARNING, found ",cnt," neighbouring Gvec, where nGmax(qi)=",nG_qi
+		if( cnt /= nG_qi	)		write(*,'(a,i3,a,i8,a,i8)')	"[#",myID,"calcMmat]: WARNING, found ",cnt," neighbouring Gvec, where nGmax(qi)=",nG_qi
 		!
 		!		
 
