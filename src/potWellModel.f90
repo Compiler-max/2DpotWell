@@ -58,7 +58,7 @@ module potWellModel
 		!
 		!calc Mmat
 		call calc_Mmat(nntot, nnlist, nncell)
-		write(*,'(a,i3,a)')		"[#",myID,", solveHam]: done setting up M_matrix"
+
 
 
 		!call w90 interface to write input files & .mmn etc. files
@@ -177,6 +177,7 @@ module potWellModel
 			!
 			!write result to file
 			call writeABiN_Mmn(qi, Mmn)
+			write(*,'(a,i3,a,i5)')		"[#",myID,",calc_Mmat]: done setting up M_matrix for qi=",qi
 		end do
 		!		
 		!
