@@ -167,13 +167,16 @@ module potWellModel
 				!read basis coefficients
 				call read_coeff(qi,	ck_qi)
 				call read_coeff(q_nn, ck_nn)
+				write(*,'(a,i3,a)')		"[#",myID,",calc_Mmat]: read coff"
 				!
 				!read Gvec
 				call read_gVec(qi, 		Gvec_qi)
 				call read_gVec(q_nn,	Gvec_nn)
+				write(*,'(a,i3,a)')		"[#",myID,",calc_Mmat]: read gvec"
 				!
 				!
 				call calcMmat(qi, q_nn, gShift, nG_qi, nG_nn, Gvec_qi, Gvec_nn, ck_qi, ck_nn, Mmn(:,:,nn)	)
+				write(*,'(a,i3,a)')		"[#",myID,",calc_Mmat]: calulated Mmat"
 			end do
 			!
 			!write result to file
