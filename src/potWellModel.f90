@@ -155,7 +155,9 @@ module potWellModel
 			write(*,*)	"qChunk=",qChunk
 			write(*,*)	"fd sheme:"
 			write(*,*)	"nntot=",nntot
+			write(*,*)	"nnlist"
 			write(*,*)	nnlist
+			write()
 			write(*,*)	nncell
 		end if
 		!
@@ -168,8 +170,8 @@ module potWellModel
 				q_nn		=	nnlist(qi,nn)
 				nG_qi		= 	nGq_glob(qi)
 				nG_nn		= 	nGq_glob(q_nn)
-				gShift(1)	= 	nncell(1,qi,nn) * 2.0_dp * PI_dp / aX
-				gShift(2)	= 	nncell(2,qi,nn) * 2.0_dp * PI_dp / aY
+				gShift(1)	= 	real(nncell(1,qi,nn),dp) * 2.0_dp * PI_dp / aX
+				gShift(2)	= 	real(nncell(2,qi,nn),dp) * 2.0_dp * PI_dp / aY
 				!
 				!read basis coefficients
 				call read_coeff(qi,	ck_qi)
