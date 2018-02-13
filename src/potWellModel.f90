@@ -169,12 +169,14 @@ module potWellModel
 				!calc overlap of unks
 				if( nncell(3,qi,nn)/= 0 ) stop '[w90prepMmat]: out of plane nearest neighbour found. '
 				
+								write(*,*)	"[hello after break condition"
 				q_nn		=	nnlist(qi,nn)
 				nG_qi		= 	nGq_glob(qi)
 				nG_nn		= 	nGq_glob(q_nn)
 				gShift(1)	= 	real(nncell(1,qi,nn),dp) * 2.0_dp * PI_dp / aX
 				gShift(2)	= 	real(nncell(2,qi,nn),dp) * 2.0_dp * PI_dp / aY
 				!
+				write(*,*)	"[hello after set vars"
 				!read basis coefficients
 				call read_coeff(qi,	ck_qi)
 				call read_coeff(q_nn, ck_nn)
