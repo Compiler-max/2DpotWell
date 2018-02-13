@@ -204,7 +204,7 @@ module basisIO
 		write(filename, format) raw_dir//'ckR.',qi
 		inquire(file=filename,exist=file_exists)
 		if(.not. file_exists)	then
-			write(*,'(a,i3,a,i5,a)')	"[#",myID,";read_coeff]: could not find ckR.",qi" file in rawData"
+			write(*,'(a,i3,a,i5,a)')	"[#",myID,";read_coeff]: could not find ckR.",qi," file in rawData"
 			stop 'could not find basis coefficients (ckR files)'
 		end if
 		open(unit=700, file=filename ,form='unformatted',access='stream',action='read')
@@ -216,7 +216,7 @@ module basisIO
 		write(filename, format) raw_dir//'ckI.',qi
 		inquire(file=filename,exist=file_exists)
 		if(.not. file_exists)	then
-			write(*,'(a,i3,a,i5,a)')	"[#",myID,";read_coeff]: could not find ckI.",qi" file in rawData"
+			write(*,'(a,i3,a,i5,a)')	"[#",myID,";read_coeff]: could not find ckI.",qi," file in rawData"
 			stop 'could not find basis coefficients (ckI files)'
 		end if
 		open(unit=710, file=filename,form='unformatted',access='stream',action='read')
