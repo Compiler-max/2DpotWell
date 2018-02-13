@@ -4,8 +4,9 @@ module berry
 	use omp_lib
 	use mathematics,	only:	dp, PI_dp, i_dp, acc, machineP,  myExp, myLeviCivita, aUtoAngstrm, aUtoEv
 	use sysPara
+	
 	use w90Interface,	only:	read_U_matrix, read_M_initial, readBandVelo, read_FD_scheme, read_wann_centers
-	use planeWave,		only:	calcMmat, calcVeloGrad
+	use basisIO,		only:	read_energies, read_velo
 	use polarization,	only:	calcPolViaA
 	use semiClassics,	only:	calcFirstOrdP
 	use output,			only:	writePolFile, writeVeloHtxt, writeConnTxt
@@ -13,11 +14,11 @@ module berry
 	implicit none
 
 	private
-	public	::	berryMethod
+	public	::					berryMethod
 
 
 
-	integer								::	num_wann, num_kpts
+	integer	::					num_wann, num_kpts
 
 
 
@@ -34,12 +35,10 @@ module berry
 
 
 !public
-	subroutine berryMethod(ck, EnQ)
-		complex(dp),	intent(in)		::	ck(:,:,:)
-		real(dp),		intent(in)		::	EnQ(:,:)
+	subroutine berryMethod()
 		complex(dp),	allocatable		:: 	U_mat(:,:,:), M_mat(:,:,:,:), M_wann(:,:,:,:), &
 											Aconn_H(:,:,:,:), Aconn_W(:,:,:,:), FcurvQ(:,:,:,:),veloQ(:,:,:,:) 		
-		real(dp),		allocatable		::	b_k(:,:), w_b(:), &
+		real(dp),		allocatable		::	EnQ(:,:), b_k(:,:), w_b(:), &
 											w_centers(:,:), berry_W_gauge(:,:),berry_H_gauge(:,:), niu_polF2(:,:), niu_polF3(:,:)
 		integer							::	nntot
 		integer,		allocatable		:: 	nnlist(:,:), nncell(:,:,:)
@@ -50,6 +49,7 @@ module berry
 		call read_FD_scheme(nntot, nnlist, nncell, b_k, w_b)
 		!
 		!k-space
+		allocate(			EnQ(		nSolve	 							,	nQ		)			)
 		allocate(			U_mat(	nWfs	,	nWfs						,	nQ		)			)
 		allocate(			M_mat(	nWfs	, 	nWfs		, 	nntot 		,	nQ		)			)
 		allocate(			M_wann(	nWfs	,	nWfs		,	nntot		,	nQ		)			)		
@@ -64,6 +64,7 @@ module berry
 		allocate(			niu_polF3(		3,					nWfs					)			)
 		!
 		!
+		call read_energies(EnQ)
 		!read wannier files
 		call read_M_initial(M_mat)
 		call read_U_matrix(U_mat)
@@ -87,7 +88,7 @@ module berry
 			allocate(	FcurvQ(	3,	nWfs, nWfs,		nQ)		)
 			allocate(	veloQ(	3, 	nSolve,nSolve,	nQ)		)
 			FcurvQ	= dcmplx(0.0_dp)	!does not matter since <FcurvQ,AconnQ> is always zero in 2D
-			call calcVelo(ck , U_mat , Aconn_W, EnQ ,  veloQ)
+			call calcVelo(U_mat , Aconn_W, EnQ ,  veloQ)
 			call calcFirstOrdP(FcurvQ, Aconn_W, veloQ, EnQ, niu_polF2, niu_polF3)
 		else
 			niu_polF2 = 0.0_dp
@@ -98,7 +99,7 @@ module berry
 		call printNNinfo(nntot, nnlist, w_b)
 		call writePolFile(w_centers, berry_H_gauge, berry_W_gauge, niu_polF2, niu_polF3)
 		call writeConnTxt( Aconn_W )
-		call writeVeloHtxt( veloQ)	!*aUtoEv*aUtoAngstrm )				
+		call writeVeloHtxt( veloQ )	!*aUtoEv*aUtoAngstrm )				
 		!
 		!
 		return
@@ -220,15 +221,15 @@ module berry
 
 
 
-	subroutine calcVelo(ck, U_mat , A_mat, En_vec ,  v_mat)
-		complex(dp),	intent(in)		::	ck(:,:,:), U_mat(:,:,:), A_mat(:,:,:,:)
+	subroutine calcVelo(U_mat , A_mat, En_vec ,  v_mat)
+		complex(dp),	intent(in)		::	U_mat(:,:,:), A_mat(:,:,:,:)
 		real(dp),		intent(in)		::	En_vec(:,:)
 		complex(dp),	intent(out)		::	v_mat(:,:,:,:)
 		!
 		!PLANE WAVE GRADIENT
 		if( .not. doVeloNum ) then
 			write(*,*)	"[beryMethod/calcVelo]: velo via plane wave gradients"
-			call calcVeloGrad( ck, v_mat)
+			call read_velo(v_mat)
 		!BLOUNT
 		else
 			write(*,*)	"[beryMethod/calcVelo]: velo via blount formula - WARNING this is deprecated please set doVeloNum = f"

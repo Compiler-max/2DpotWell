@@ -3,12 +3,13 @@ module w90Interface
 	use mpi
 	use mathematics,	only:	dp, PI_dp, i_dp, machineP, aUtoAngstrm, aUtoEv, myExp
 	use sysPara
+	use basisIO,		only:	read_energies, read_Amn, read_Mmn
 	use planeWave,		only:	calcMmat, calcAmatANA
 
 	implicit none
 
 	private
-	public ::					setup_w90, &
+	public ::					setup_w90, write_w90_matrices, &
 								read_FD_scheme, read_M_initial, read_U_matrix, readBandVelo, read_wann_centers, & 
 								seed_name
 
@@ -36,13 +37,10 @@ module w90Interface
 
 
 
-!public:
-	subroutine setup_w90(ck, En)
-		complex(dp),	intent(in)		:: 	ck(:,:,:)	
-		real(dp),		intent(in)		:: 	En(:,:)
-		complex(dp),	allocatable		::	M_matrix_orig(:,:,:,:), A_matrix(:,:,:), U_matrix_opt(:,:,:)
-		real(dp),		allocatable		::	eigenvalues(:,:)
-		logical,		allocatable		::	lwindow(:,:)
+!PUBLIC WRITE
+	subroutine setup_w90(nntot_out, nnlist_out, nncell_out)
+		integer,		intent(out)		::	nntot_out, nnlist_out(:,:), nncell_out(:,:,:)
+		
 		!
 		!PREP W90 INIT
 		seed_name	= seedName
@@ -56,7 +54,7 @@ module w90Interface
 		mp_grid(2)			= nQy
 		mp_grid(3)			= 1
 		num_kpts			= nQ
-		num_nnmax			= 12
+		num_nnmax			= 4
 		!unit cell
 		real_lattice		= 0.0_dp
 		real_lattice(1,1)	= aX * aUtoAngstrm 
@@ -80,28 +78,14 @@ module w90Interface
 		!W90 
 		write(*,*)	"[w90Interf]: wrote w90 input file"
 		call chdir(w90_Dir)
-		call run_w90setup()
+		call run_w90setup(nntot_out, nnlist_out, nncell_out)
 		call chdir("..")
 		write(*,*)	"[w90Interf]: done with w90 setup"
 		write(*,*)	"[w90Interf]: will use num_bands= ",num_bands, " bands"
 		write(*,*)	"[w90Interf]: to gen   num_wann=  ",num_wann, " wnfs"
-		write(*,*)	"[w90Interf]: start preparing wannierisation"
-		!
-		!ALLOCATE
-		allocate(	M_matrix_orig(	num_bands	,	num_bands	,	nntot	,	num_kpts	)		)
-		allocate(	 A_matrix( 		num_bands	,	num_wann				,	num_kpts	)		)
-		allocate(	U_matrix_opt(	num_bands	,	num_wann				,	num_kpts	)		)
-		allocate(	U_matrix(		num_wann	,	num_wann				,	num_kpts	)		)
-		allocate(	eigenvalues(								num_bands	,	num_kpts	)		)
-		allocate(	lwindow(									num_bands	,	num_kpts	)		)
-		allocate(	wann_centres(	3,	num_wann)	)
-		allocate(	wann_spreads(		num_wann)	)
-		!
-		!CALC W90 INPUT 
-		call w90prepMmat(ck, M_matrix_orig)
-		call w90prepAmat(ck, A_matrix)
-		call w90prepEigVal(En, eigenvalues)
-		
+		write(*,*)	"[w90Interf]: write input for wannierisation"
+	
+
 		!WRITE INPUT FILE (wann run)
 		call write_W90run_input()
 		write(*,*)	"[w90Interf]: done preparing wannierization input matrices"
@@ -133,142 +117,78 @@ module w90Interface
 	end subroutine
 
 
-
-	subroutine read_U_matrix(U_matrix)
-		!READ U FROM W90
-		complex(dp),	intent(out)	:: 	U_matrix(:,:,:)
-		real(dp),		allocatable	:: 	krel(:,:)
-		integer						:: 	stat, qi, n, m, dumI(3)
-		real(dp)					:: 	val(2)
-		logical						::	file_exists
+	subroutine write_w90_matrices()
+		complex(dp),	allocatable		::	Amn(:,:,:), Mmn(:,:,:,:)
+		real(dp),		allocatable		::	En(:,:)
+		integer							::	qi, nn, n, m 
 		!
-		U_matrix	= dcmplx(0.0_dp)
-
-		!inquire file
-		inquire(file=w90_dir//seedName//'_u.mat',exist=file_exists)
-		if(.not. file_exists )	stop '[Umat_reader]: did not find U matrix'
+		allocate(	Amn(nBands, nWfs, 			nQ	)	)
+		allocate(	Mmn(nBands, nBands, nntot, 	nQ	)	)
+		allocate(	En(	nSolve,					nQ	)	)
 		!
-		!read file
-		open(unit=300,iostat=stat, file=w90_dir//seedName//'_u.mat', status='old',action='read')
-		if( stat /= 0)	write(*,*)	"[readUmatrix]: WARNING did not file _u.mat file"
+		call read_Amn(Amn)
+		call read_Mmn(Mmn)
+		call read_energies(En)
 		!
-		!header 
-		read(300,*)
-		read(300,*) dumI(1:3)
-		if( dumI(1) /= nQ ) 	stop	"[readUmatrix]:  ERROR - wrong qmesh size found in file"
-		if(	dumI(2)	/= nWfs) 	stop	"[readUmatrix]:  ERROR - wrong number of wannier functions found in file"
-		allocate(	krel( 3, dumI(1))	)
-		!
-		!body
-		do qi = 1,  num_kpts
-			read(300,*)
-			read(300,*) krel(1:3,qi)
-			do n = 1, num_wann
-				do m = 1, num_wann
-					read(300,*)	val(1:2)
-					U_matrix(m,n,qi)	= dcmplx(val(1))	+	i_dp	*	dcmplx(val(2))
-				end do
-			end do
-			!DEBUG
-			if( abs( krel(1,qi)*2.0_dp*PI_dp/aX - qpts(1,qi)) > machineP) then
-					write(*,*)	"				x: k_w90= ",krel(1,qi)*2.0_dp*PI_dp/aX, " qpts=",qpts(1,qi)
-					write(*,*)	"				y: k_w90= ",krel(2,qi)*2.0_dp*PI_dp/aY, " qpts=",qpts(2,qi)
-					stop	"[readUmatrix]: ERROR k meshes are ordered diffferently"
-			end if
-		end do
-		close(300)
-		!
-		return
-		write(*,*)	"[read_U_matrix]: read the _u.mat file"
-		!
-		!
-		return
-	end subroutine
-
-
-	subroutine read_M_initial( M_init)
-		!read the M_matrix written by w90prepMmat	
-		complex(dp),		intent(out)		::	M_init(:,:,:,:)
-		integer								::	qi,nn, n, m, x,&
-												f_num_bands, f_num_kpts, f_nntot, f_qi, f_nnlist, f_nncell(1:3)
-		real(dp)							::	cmplx(2)
-		logical								:: 	foundFile
-		!
-		!check for file
-		inquire(file=w90_Dir//seedName//'.mmn', exist=foundFile)
-		if( .not. foundFile ) stop 'the .mmn file could not be found'
-		!
-		!read file
-		open(unit=120,file=w90_Dir//seedName//'.mmn',action='read',access='stream',form='formatted', status='old')
-		read(120,*)
-		read(120,*) f_num_bands, f_num_kpts, f_nntot
+		!WRITE TO FILE
+		!Mmn
+		open(unit=120,file=w90_Dir//seed_name//'.mmn',action='write',access='stream',form='formatted', status='replace')
+		write(120,*)	'overlap matrix'
+		write(120,*)	num_bands, ' ', num_kpts, ' ', nntot	
 		!
 		do qi = 1, num_kpts
 			do nn = 1, nntot
-				read(120,*)	f_qi, f_nnlist, f_nncell(1:3)
-				if(	 	qi 			/= 	f_qi		)	stop	"[read_M_initial]: WARNING q mesh ordered differently"
-				if(	nnlist(qi,nn) 	/= 	f_nnlist	)	stop	"[read_M_initial]: WARNING trouble with nnlist"
-				do x = 1, 3
-					if( f_nncell(x) /= nncell(x,qi,nn))	stop	"[read_M_initial]:	WARNING trouble with nncell"
-				end do
-
+				write(120,*)	qi,' ',nnlist(qi,nn),' ',nncell(1,qi,nn),' ',nncell(2,qi,nn),' ', nncell(3,qi,nn)
 				do n = 1, num_bands
 					do m = 1, num_bands
-						read(120,*)	cmplx(1:2)
-						M_init(m,n,nn,qi)	= dcmplx(cmplx(1))
-						M_init(m,n,nn,qi)	= M_init(m,n,nn,qi) + i_dp * cmplx(2)
+						write(120,*)	dreal(Mmn(m,n,nn,qi)), ' ', dimag(Mmn(m,n,nn,qi))
 					end do
 				end do		
 			end do
 		end do
+		close(120)
 		!
-		!DEBUG
-		if( f_nntot 	/= 4	)	write(*,*) 	"[read_M_initial]: WARNING more then 4 nn in .mmn file"
-		if(	f_num_kpts 	/= nQ 	) 	stop 		"[read_M_initial]: .mmn file defined on different qpt mesh"
-		if(	f_num_bands /= nBands)	stop		"[read_M_initial]: nBands not matching"
-		write(*,*)	"[read_M_initial]: read the .mmn file"
-		!
-		!
-		return
-	end subroutine
-
-
-	subroutine readBandVelo( v_vec )
-		real(dp),		intent(out)		::	v_vec(:,:,:)
-		real(dp)						::	buffer(7)
-		integer							::	stat, qi, n, qInd
-		logical							::	file_exists
-		!
-		!write(*,*)  seedName//'_geninterp.dat'
-		!check if exists
-		inquire(file=w90_dir//seedName//'_geninterp.dat', exist=file_exists)
-		if( .not. file_exists ) stop 'geninterp.dat file not found'
-		!read
-		open(unit=320,iostat=stat, file=w90_dir//seedName//'_geninterp.dat',form='formatted', status='old',action='read')
-		read(320,*)
-		read(320,*)
-		read(320,*)
-		do qi = 1, nQ
-			do n = 1, nWfs
-				read(320,*)	qInd, buffer
-				v_vec(1,n,qInd)	= buffer(5)
-				v_vec(2,n,qInd)	= buffer(6)
-				v_vec(3,n,qInd)	= buffer(7) 
+		!Amn
+		open(unit=120,file=w90_Dir//seed_name//'.amn',action='write',access='stream',form='formatted', status='replace')
+		write(120,*)	'projection matrix( initial guess for U matrix)'
+		write(120,*)	num_bands, ' ', num_kpts, ' ', num_wann
+		do qi = 1, num_kpts
+			do n = 1, num_wann
+				do m = 1, num_bands	
+					write(120,*)	m, ' ', n, ' ', ' ', qi, ' ', dreal(Amn(m,n,qi)), ' ', dimag(Amn(m,n,qi))
+				end do
 			end do
 		end do
-		close(320)
 		!
-		!ATOMIC UNITS CONVERSION:
-		v_vec 	= v_vec  / (aUtoEv  * aUtoAngstrm)	 ! [v_vec] = eV / Angstroem
-		write(*,*)	"[readBandVelo]: read the geninterp.dat file"
+		!En
+		open(unit=120,file=w90_Dir//seed_name//'.eig',action='write',access='stream',form='formatted', status='replace')
+		do qi = 1, nQ
+			do n = 1, nBands
+				write(120,*)	n, ' ', qi, ' ', aUtoEv * En(n,qi)
+			end do
+		end do
+		close(120)
 		!
-		!	
+		!
 		return
 	end subroutine
 
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+!PUBLIC READ
 	subroutine read_FD_scheme(nntot, nnlist, nncell, b_k, w_b)
 		!call after w90 is finished
 		!reads seedname.nnkp & seedname.wout
@@ -408,6 +328,141 @@ module w90Interface
 
 
 
+	subroutine read_U_matrix(U_matrix)
+		!READ U FROM W90
+		complex(dp),	intent(out)	:: 	U_matrix(:,:,:)
+		real(dp),		allocatable	:: 	krel(:,:)
+		integer						:: 	stat, qi, n, m, dumI(3)
+		real(dp)					:: 	val(2)
+		logical						::	file_exists
+		!
+		U_matrix	= dcmplx(0.0_dp)
+
+		!inquire file
+		inquire(file=w90_dir//seedName//'_u.mat',exist=file_exists)
+		if(.not. file_exists )	stop '[Umat_reader]: did not find U matrix'
+		!
+		!read file
+		open(unit=300,iostat=stat, file=w90_dir//seedName//'_u.mat', status='old',action='read')
+		if( stat /= 0)	write(*,*)	"[readUmatrix]: WARNING did not file _u.mat file"
+		!
+		!header 
+		read(300,*)
+		read(300,*) dumI(1:3)
+		if( dumI(1) /= nQ ) 	stop	"[readUmatrix]:  ERROR - wrong qmesh size found in file"
+		if(	dumI(2)	/= nWfs) 	stop	"[readUmatrix]:  ERROR - wrong number of wannier functions found in file"
+		allocate(	krel( 3, dumI(1))	)
+		!
+		!body
+		do qi = 1,  num_kpts
+			read(300,*)
+			read(300,*) krel(1:3,qi)
+			do n = 1, num_wann
+				do m = 1, num_wann
+					read(300,*)	val(1:2)
+					U_matrix(m,n,qi)	= dcmplx(val(1))	+	i_dp	*	dcmplx(val(2))
+				end do
+			end do
+			!DEBUG
+			if( abs( krel(1,qi)*2.0_dp*PI_dp/aX - qpts(1,qi)) > machineP) then
+					write(*,*)	"				x: k_w90= ",krel(1,qi)*2.0_dp*PI_dp/aX, " qpts=",qpts(1,qi)
+					write(*,*)	"				y: k_w90= ",krel(2,qi)*2.0_dp*PI_dp/aY, " qpts=",qpts(2,qi)
+					stop	"[readUmatrix]: ERROR k meshes are ordered diffferently"
+			end if
+		end do
+		close(300)
+		!
+		return
+		write(*,*)	"[read_U_matrix]: read the _u.mat file"
+		!
+		!
+		return
+	end subroutine
+
+
+	subroutine read_M_initial( M_init)
+		!read the M_matrix written by w90prepMmat	
+		complex(dp),		intent(out)		::	M_init(:,:,:,:)
+		integer								::	qi,nn, n, m, x,&
+												f_num_bands, f_num_kpts, f_nntot, f_qi, f_nnlist, f_nncell(1:3)
+		real(dp)							::	cmplx(2)
+		logical								:: 	foundFile
+		!
+		!check for file
+		inquire(file=w90_Dir//seedName//'.mmn', exist=foundFile)
+		if( .not. foundFile ) stop 'the .mmn file could not be found'
+		!
+		!read file
+		open(unit=120,file=w90_Dir//seedName//'.mmn',action='read',access='stream',form='formatted', status='old')
+		read(120,*)
+		read(120,*) f_num_bands, f_num_kpts, f_nntot
+		!
+		do qi = 1, num_kpts
+			do nn = 1, nntot
+				read(120,*)	f_qi, f_nnlist, f_nncell(1:3)
+				if(	 	qi 			/= 	f_qi		)	stop	"[read_M_initial]: WARNING q mesh ordered differently"
+				if(	nnlist(qi,nn) 	/= 	f_nnlist	)	stop	"[read_M_initial]: WARNING trouble with nnlist"
+				do x = 1, 3
+					if( f_nncell(x) /= nncell(x,qi,nn))	stop	"[read_M_initial]:	WARNING trouble with nncell"
+				end do
+
+				do n = 1, num_bands
+					do m = 1, num_bands
+						read(120,*)	cmplx(1:2)
+						M_init(m,n,nn,qi)	= dcmplx(cmplx(1))
+						M_init(m,n,nn,qi)	= M_init(m,n,nn,qi) + i_dp * cmplx(2)
+					end do
+				end do		
+			end do
+		end do
+		!
+		!DEBUG
+		if( f_nntot 	/= 4	)	write(*,*) 	"[read_M_initial]: WARNING more then 4 nn in .mmn file"
+		if(	f_num_kpts 	/= nQ 	) 	stop 		"[read_M_initial]: .mmn file defined on different qpt mesh"
+		if(	f_num_bands /= nBands)	stop		"[read_M_initial]: nBands not matching"
+		write(*,*)	"[read_M_initial]: read the .mmn file"
+		!
+		!
+		return
+	end subroutine
+
+
+	subroutine readBandVelo( v_vec )
+		real(dp),		intent(out)		::	v_vec(:,:,:)
+		real(dp)						::	buffer(7)
+		integer							::	stat, qi, n, qInd
+		logical							::	file_exists
+		!
+		!write(*,*)  seedName//'_geninterp.dat'
+		!check if exists
+		inquire(file=w90_dir//seedName//'_geninterp.dat', exist=file_exists)
+		if( .not. file_exists ) stop 'geninterp.dat file not found'
+		!read
+		open(unit=320,iostat=stat, file=w90_dir//seedName//'_geninterp.dat',form='formatted', status='old',action='read')
+		read(320,*)
+		read(320,*)
+		read(320,*)
+		do qi = 1, nQ
+			do n = 1, nWfs
+				read(320,*)	qInd, buffer
+				v_vec(1,n,qInd)	= buffer(5)
+				v_vec(2,n,qInd)	= buffer(6)
+				v_vec(3,n,qInd)	= buffer(7) 
+			end do
+		end do
+		close(320)
+		!
+		!ATOMIC UNITS CONVERSION:
+		v_vec 	= v_vec  / (aUtoEv  * aUtoAngstrm)	 ! [v_vec] = eV / Angstroem
+		write(*,*)	"[readBandVelo]: read the geninterp.dat file"
+		!
+		!	
+		return
+	end subroutine
+
+
+
+
 
 
 
@@ -484,8 +539,9 @@ module w90Interface
 
 
 
-	subroutine run_w90setup()
-		integer							:: at, n
+	subroutine run_w90setup(nntot_out, nnlist_out, nncell_out)
+		integer,		intent(out)		::	nntot_out, nnlist_out(:,:), nncell_out(:,:,:)
+		integer							:: 	at, n
 		!	
 		!
 		allocate(	atom_symbols(					num_atoms						)			)
@@ -523,6 +579,9 @@ module w90Interface
 								exclude_bands,proj_s,proj_s_qaxis)
 		!
 		!
+		nntot_out 	= nntot
+		nnlist_out	= nnlist
+		nncell_out	= nncell
 		!DEBUG:
 		if( nntot /= 4 )		write(*,*)	"[w90setup]: WARNING did not find exactly 4 nearest neighbours"
 		do n = 1, num_bands_tot
@@ -536,6 +595,7 @@ module w90Interface
 
 
 	subroutine write_W90run_input()
+		!input for wannierisation
 		integer				:: qi, at
 		!
 		!create new
@@ -576,10 +636,6 @@ module w90Interface
         	end do
         write(100,*)"end kpoints"
         write(100,*)
-
-    
-
-		
         !
         !PROJECTIONS
 		write(100,*)	'Begin Projections'
@@ -630,117 +686,6 @@ module w90Interface
 		return
 	end subroutine
 
-
-	subroutine w90prepEigVal(au_units, eV_units)
-		!convert eigenvalues from atomic units to eV
-		real(dp),		intent(in)		:: 	au_units(:,:)
-		real(dp),		intent(out)		::	eV_units(:,:)
-		integer							:: 	qi, n		!
-		!
-		!WRITE FILE
-		open(unit=110,file=w90_Dir//seed_name//'.eig',action='write',access='stream',form='formatted', status='replace')
-		do qi = 1, num_kpts
-			do n = 1, num_bands
-				eV_units(n,qi)	= aUtoEv * au_units(n,qi)
-				write(110,*)	n, ' ', qi, ' ', eV_units(n,qi)
-			end do
-		end do
-		close(110)
-		write(*,'(a,i3,a)')	"[#",myID,";w90prepEigVal]: wrote .eig file"
-		!
-		!DEBUG
-		if(	size(au_units,2) /= nQ	)	write(*,'(a,i3,a)')		"[#",myID,";w90prepEigVal]: WARNING En has wrong numbers of kpts"
-		!
-		!
-		return
-	end subroutine
-
-
-!M_MATRIX ROUTINES
-	subroutine w90prepMmat(ck, M_mat)
-		complex(dp),	intent(in)		::	ck(:,:,:) 	 !ck(			nG		,	nBands  	,	nQ	)	
-		complex(dp),	intent(out)		::	M_mat(:,:,:,:)
-		integer							::	qi, nn, n, m
-		real(dp)						::	gShift(2)							
-		!
-		!FILL THE MATRIX
-		M_mat	= dcmplx(0.0_dp)
-		write(*,'(a,i3,a)')	"[w90prepMmat]: use ",nntot," nearest neighbours per k point"
-		!$OMP PARALLEL DO SCHEDULE(STATIC) DEFAULT(SHARED) PRIVATE(qi, nn, gShift)
-		do qi = 1, nQ
-			do nn = 1, nntot
-				!calc overlap of unks
-				if( nncell(3,qi,nn)/= 0 ) stop '[w90prepMmat]: out of plane nearest neighbour found. '
-			
-				gShift(1)			= nncell(1,qi,nn) * 2.0_dp * PI_dp / aX
-				gShift(2)			= nncell(2,qi,nn) * 2.0_dp * PI_dp / aY
-				!oLap				= UNKoverlap(n,m, qi, nnlist(qi,nn), gShift, ck)
-				call calcMmat(qi, nnlist(qi,nn), gShift, nGq, Gvec, ck, M_mat(:,:,nn,qi))
-			end do
-		end do
-		!$OMP END PARALLEL DO	
-		!
-		!WRITE TO FILE
-		open(unit=120,file=w90_Dir//seed_name//'.mmn',action='write',access='stream',form='formatted', status='replace')
-		write(120,*)	'overlap matrix'
-		write(120,*)	num_bands, ' ', num_kpts, ' ', nntot	
-		!
-		do qi = 1, num_kpts
-			do nn = 1, nntot
-				write(120,*)	qi,' ',nnlist(qi,nn),' ',nncell(1,qi,nn),' ',nncell(2,qi,nn),' ', nncell(3,qi,nn)
-				do n = 1, num_bands
-					do m = 1, num_bands
-						write(120,*)	dreal(M_mat(m,n,nn,qi)), ' ', dimag(M_mat(m,n,nn,qi))
-					end do
-				end do		
-			end do
-		end do
-		close(120)
-		write(*,'(a,i3,a)')	"[#",myID,";w90prepMmat]: wrote .mmn file"
-		!
-		!
-		return
-	end subroutine
-
-!A_MATRIX ROUTINES
-	subroutine w90prepAmat(ck, A_mat)
-		complex(dp),	intent(in)		:: ck(:,:,:) 	 !ck(			nG		,	nBands  	,	nQ	)
-		complex(dp),	intent(out)		:: A_mat(:,:,:)
-		integer							:: qi, n, m
-		!
-		if( .not. useBloch )	then
-			!
-			if(	size(ck,2) < num_bands )	write(*,'(a,i3,a)')"[#",myID,";w90prepAmat]: WARNING not enough abInitio coeff, try to increase nSolve in inpupt"
-			if(	size(ck,3)/= qChunk )  	write(*,'(a,i3,a)')"[#",myID,";w90prepAmat]: WARNING ab initio exp. coefficients have wrong numbers of kpts"
-			if(	num_wann/nAt > 3) 			write(*,'(a,i3,a)')"[#",myID,";w90prepAmat]: can not handle more then 3 wfs per atom at the moment"
-			!
-			!MATRIX SETUP
-			!$OMP PARALLEL DO SCHEDULE(DYNAMIC) DEFAULT(SHARED) PRIVATE(qi)		
-			do qi = 1, nQ
-				call calcAmatANA(qi,ck(:,:,qi), A_mat(:,:,qi))
-			end do
-			!$OMP END PARALLEL DO
-			!
-			!WRITE TO FILE
-			open(unit=120,file=w90_Dir//seed_name//'.amn',action='write',access='stream',form='formatted', status='replace')
-			write(120,*)	'overlap matrix'
-			write(120,*)	num_bands, ' ', num_kpts, ' ', num_wann
-			do qi = 1, num_kpts
-				do n = 1, num_wann
-					do m = 1, num_bands	
-						write(120,*)	m, ' ', n, ' ', ' ', qi, ' ', dreal(A_mat(m,n,qi)), ' ', dimag(A_mat(m,n,qi))
-					end do
-				end do
-			end do
-			write(*,'(a,i3,a)')	"[#",myID,";w90prepAmat]: wrote .amn file"
-			!
-		else
-			if( myID==root )	write(*,*)	"[w90Interf]: projection disabled will use bloch phase"
-		end if
-		!
-		!
-		return 
-	end subroutine
 
 
 
@@ -871,3 +816,125 @@ end module
 !!!		!
 !!!		return
 !!!	end subroutine
+
+
+
+
+
+
+
+
+
+!!!!M_MATRIX ROUTINES
+!!!	subroutine w90prepMmat(ck, M_mat)
+!!!		complex(dp),	intent(in)		::	ck(:,:,:) 	 !ck(			nG		,	nBands  	,	nQ	)	
+!!!		complex(dp),	intent(out)		::	M_mat(:,:,:,:)
+!!!		integer							::	qi, nn, n, m
+!!!		real(dp)						::	gShift(2)							
+!!!		!
+!!!		!FILL THE MATRIX
+!!!		M_mat	= dcmplx(0.0_dp)
+!!!		write(*,'(a,i3,a)')	"[w90prepMmat]: use ",nntot," nearest neighbours per k point"
+!!!		!$OMP PARALLEL DO SCHEDULE(STATIC) DEFAULT(SHARED) PRIVATE(qi, nn, gShift)
+!!!		do qi = 1, nQ
+!!!			do nn = 1, nntot
+!!!				!calc overlap of unks
+!!!				if( nncell(3,qi,nn)/= 0 ) stop '[w90prepMmat]: out of plane nearest neighbour found. '
+!!!			
+!!!				gShift(1)			= nncell(1,qi,nn) * 2.0_dp * PI_dp / aX
+!!!				gShift(2)			= nncell(2,qi,nn) * 2.0_dp * PI_dp / aY
+!!!				!oLap				= UNKoverlap(n,m, qi, nnlist(qi,nn), gShift, ck)
+!!!				call calcMmat(qi, nnlist(qi,nn), gShift, nGq, Gvec, ck, M_mat(:,:,nn,qi))
+!!!			end do
+!!!		end do
+!!!		!$OMP END PARALLEL DO	
+!!!		!
+!!!		!WRITE TO FILE
+!!!		open(unit=120,file=w90_Dir//seed_name//'.mmn',action='write',access='stream',form='formatted', status='replace')
+!!!		write(120,*)	'overlap matrix'
+!!!		write(120,*)	num_bands, ' ', num_kpts, ' ', nntot	
+!!!		!
+!!!		do qi = 1, num_kpts
+!!!			do nn = 1, nntot
+!!!				write(120,*)	qi,' ',nnlist(qi,nn),' ',nncell(1,qi,nn),' ',nncell(2,qi,nn),' ', nncell(3,qi,nn)
+!!!				do n = 1, num_bands
+!!!					do m = 1, num_bands
+!!!						write(120,*)	dreal(M_mat(m,n,nn,qi)), ' ', dimag(M_mat(m,n,nn,qi))
+!!!					end do
+!!!				end do		
+!!!			end do
+!!!		end do
+!!!		close(120)
+!!!		write(*,'(a,i3,a)')	"[#",myID,";w90prepMmat]: wrote .mmn file"
+!!!		!
+!!!		!
+!!!		return
+!!!	end subroutine
+!!!
+!!!!A_MATRIX ROUTINES
+!!!	subroutine w90prepAmat(ck, A_mat)
+!!!		complex(dp),	intent(in)		:: ck(:,:,:) 	 !ck(			nG		,	nBands  	,	nQ	)
+!!!		complex(dp),	intent(out)		:: A_mat(:,:,:)
+!!!		integer							:: qi, n, m
+!!!		!
+!!!		if( .not. useBloch )	then
+!!!			!
+!!!			if(	size(ck,2) < num_bands )	write(*,'(a,i3,a)')"[#",myID,";w90prepAmat]: WARNING not enough abInitio coeff, try to increase nSolve in inpupt"
+!!!			if(	size(ck,3)/= qChunk )  	write(*,'(a,i3,a)')"[#",myID,";w90prepAmat]: WARNING ab initio exp. coefficients have wrong numbers of kpts"
+!!!			if(	num_wann/nAt > 3) 			write(*,'(a,i3,a)')"[#",myID,";w90prepAmat]: can not handle more then 3 wfs per atom at the moment"
+!!!			!
+!!!			!MATRIX SETUP
+!!!			!$OMP PARALLEL DO SCHEDULE(DYNAMIC) DEFAULT(SHARED) PRIVATE(qi)		
+!!!			do qi = 1, nQ
+!!!				call calcAmatANA(qi,ck(:,:,qi), A_mat(:,:,qi))
+!!!			end do
+!!!			!$OMP END PARALLEL DO
+!!!			!
+!!!			!WRITE TO FILE
+!!!			open(unit=120,file=w90_Dir//seed_name//'.amn',action='write',access='stream',form='formatted', status='replace')
+!!!			write(120,*)	'overlap matrix'
+!!!			write(120,*)	num_bands, ' ', num_kpts, ' ', num_wann
+!!!			do qi = 1, num_kpts
+!!!				do n = 1, num_wann
+!!!					do m = 1, num_bands	
+!!!						write(120,*)	m, ' ', n, ' ', ' ', qi, ' ', dreal(A_mat(m,n,qi)), ' ', dimag(A_mat(m,n,qi))
+!!!					end do
+!!!				end do
+!!!			end do
+!!!			write(*,'(a,i3,a)')	"[#",myID,";w90prepAmat]: wrote .amn file"
+!!!			!
+!!!		else
+!!!			if( myID==root )	write(*,*)	"[w90Interf]: projection disabled will use bloch phase"
+!!!		end if
+!!!		!
+!!!		!
+!!!		return 
+!!!	end subroutine
+
+!!!
+!!!	subroutine w90prepEigVal(au_units, eV_units)
+!!!		!convert eigenvalues from atomic units to eV
+!!!		real(dp),		intent(in)		:: 	au_units(:,:)
+!!!		real(dp),		intent(out)		::	eV_units(:,:)
+!!!		integer							:: 	qi, n		!
+!!!		!
+!!!		!WRITE FILE
+!!!		open(unit=110,file=w90_Dir//seed_name//'.eig',action='write',access='stream',form='formatted', status='replace')
+!!!		do qi = 1, num_kpts
+!!!			do n = 1, num_bands
+!!!				eV_units(n,qi)	= aUtoEv * au_units(n,qi)
+!!!				write(110,*)	n, ' ', qi, ' ', eV_units(n,qi)
+!!!			end do
+!!!		end do
+!!!		close(110)
+!!!		write(*,'(a,i3,a)')	"[#",myID,";w90prepEigVal]: wrote .eig file"
+!!!		!
+!!!		!DEBUG
+!!!		if(	size(au_units,2) /= nQ	)	write(*,'(a,i3,a)')		"[#",myID,";w90prepEigVal]: WARNING En has wrong numbers of kpts"
+!!!		!
+!!!		!
+!!!		return
+!!!	end subroutine
+
+
+

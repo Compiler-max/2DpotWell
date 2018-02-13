@@ -6,12 +6,15 @@ module potWellModel
 	use mathematics,	only:	dp, PI_dp,i_dp, machineP, myExp, myLeviCivita, &
 								eigSolverPART, isUnit, isHermitian
 	use sysPara				
-	use basisIO,		only:	writeABiN_energy, writeABiN_basis, writeABiN_basCoeff
+	use planeWave,		only:	calcVeloGrad, calcAmatANA, calcMmat
+	use basisIO,		only:	writeABiN_basVect, writeABiN_energy, writeABiN_basCoeff, writeABiN_velo, writeABiN_Amn, writeABiN_Mmn, &
+								read_coeff, read_gVec
+	use w90Interface,	only:	setup_w90, write_w90_matrices
 	implicit none	
 	!#include "mpif.h"
 
 	private
-	public ::					solveHam
+	public ::			solveEstruct			
 
 
 
@@ -22,18 +25,69 @@ module potWellModel
 
 	contains
 !public:
-	subroutine solveHam()   !call solveHam(wnF, unk, EnW, VeloBwf)
+	subroutine solveEstruct()   !call solveHam(wnF, unk, EnW, VeloBwf)
 		!solves Hamiltonian at each k point
 		!also generates the Wannier functions on the fly (sum over all k)
 		!																
-		complex(dp),	allocatable		::	Hmat(:,:) , ck_temp(:,:)
+
+		integer							::	nntotMax, nntot
+		integer,		allocatable		::	nnlist(:,:), nncell(:,:,:)
+		!	
+		!
+		nntotMax = 4
+		allocate(	nnlist(		nQ, nntotMax)		)
+		allocate(	nncell(3, 	nQ, nntotMax)		)
+		!
+		
+
+		!SOLVE HAM at each k-point
+		call solveHam()
+		!
+		!get FD scheme from w90
+		if( myID == root )  then
+			call setup_w90(nntot, nnlist, nncell)
+			write(*,*)	"[]"
+
+		end if
+		!
+		!Bcast FD scheme
+		call MPI_Bcast(nntot,			1		, MPI_INTEGER, root, MPI_COMM_WORLD, ierr)
+		call MPI_Bcast(nnlist,		nntotMax*nQ	, MPI_INTEGER, root, MPI_COMM_WORLD, ierr)
+		call MPI_Bcast(nncell,	3*	nntotMax*nQ	, MPI_INTEGER, root, MPI_COMM_WORLD, ierr)
+		!
+		!calc Mmat
+		write(*,'(a,i3,a)')		"[#",myID,", solveHam]: start setting up M_matrix now"
+		call calc_Mmat(nntot, nnlist, nncell)
+		write(*,'(a,i3,a)')		"[#",myID,", solveHam]: done setting up M_matrix"
+
+
+		!call w90 interface to write input files & .mmn etc. files
+		if( myID == root ) then
+			call write_w90_matrices()
+			write(*,'(a,i3,a)')		"[#",myID,", solveHam]: wrote w90 matrix input files (.win, .amn, .mmn, .eig, _geninterp.kpt )"
+		end if
+
+
+		!
+		return
+	end subroutine
+
+
+
+
+!private:
+	subroutine solveHam()
+		!			solve Ham, write results and derived quantites														
+		complex(dp),	allocatable		::	Hmat(:,:) , ck_temp(:,:), Amn_temp(:,:), velo_temp(:,:,:)
 		real(dp),		allocatable		::	En_temp(:)
 		integer							:: 	qi, qLoc, found, Gsize
 		!	
 		!
 		allocate(	Hmat(				Gmax,	Gmax				)	)
 		allocate(	ck_temp(		GmaxGLOBAL, nSolve				)	)
-		allocate(	En_temp(				Gmax					)	)	
+		allocate(	En_temp(				Gmax					)	)
+		allocate(	velo_temp(	3, 	nSolve,		nSolve				)	)	
+		allocate(	Amn_temp(		nBands,		nWfs				)	)
 		!
 		qLoc = 1
 		call MPI_BARRIER( MPI_COMM_WORLD, ierr)
@@ -48,6 +102,11 @@ module potWellModel
 			Gsize 	= nGq(qLoc)
 			call eigSolverPART(Hmat(1:Gsize,1:Gsize),En_temp(1:Gsize), ck_temp(1:Gsize,:), found)
 			!
+			!get derived quantities
+			call calcAmatANA(qLoc, ck_temp, Amn_temp)
+			call calcVeloGrad(qLoc, ck_temp, velo_temp)
+
+			!
 			!DEBUG TESTS
 			if( found /= nSolve )	write(*,'(a,i3,a,i5,a,i5)'	)	"[#",myID,";solveHam]:WARNING only found ",found," bands of required ",nSolve
 			if( nBands > found	)	stop	"[solveHam]: ERROR did not find required amount of bands"
@@ -55,8 +114,12 @@ module potWellModel
 			if( Gsize > Gmax	)	stop	"[solveHam]: critical error in solveHam please contact developer. (nobody but dev will ever read this^^)"
 			!
 			!WRITE COEFF TO FILE
+			call writeABiN_basVect(qi, Gvec(:,:,qLoc))
 			call writeABiN_basCoeff(qi, ck_temp)
 			call writeABiN_energy(qi, En_temp(1:nSolve))
+			call writeABiN_Amn(qi, Amn_temp)
+			call writeABiN_velo(qi, velo_temp)
+
 			!FINALIZE
 			write(*,'(a,i3,a,i5,a,f6.2,a,i5,a,i5,a)')"[#",myID,", solveHam]: done for qi=",qi," lowest energy=",En_temp(1),"[Hatree] done tasks=(",qLoc,"/",qChunk,")"
 			qLoc = qLoc + 1		
@@ -67,9 +130,59 @@ module potWellModel
 	end subroutine
 
 
+	subroutine calc_Mmat(nntot, nnlist, nncell)
+		integer,		intent(in)		::	nntot, nnlist(:,:), nncell(:,:,:)
+		integer,		allocatable		::	nGq_glob(:), nG_qi, nG_nn, q_nn
+		complex(dp),	allocatable		::	ck_qi(:,:), cK_nn(:,:), Mmn(:,:,:)
+		real(dp),		allocatable		::	Gvec_qi(:,:), Gvec_nn(:,:)
+		real(dp)						::	gShift(2)
+		integer							::	qi, nn
+		!
+		allocate(	nGq_glob(nQ)				)
+		allocate(	Gvec_qi(dim, nG)			)
+		allocate(	Gvec_nn(dim, nG)			)
+		allocate(	ck_nn(GmaxGLOBAL, nSolve)	)
+		allocate(	ck_qi(GmaxGLOBAL, nSolve)	)
+		allocate(	Mmn(nBands, nBands, nntot)	)
+		!
+		call MPI_GATHER( nGq	, qChunk, MPI_INTEGER, nGq_glob		, qChunk, MPI_INTEGER, root, MPI_COMM_WORLD, ierr)
+		!
+		!
+		do qi = myID*qChunk +1, myID*qChunk + qChunk
+			!
+			do nn = 1, nntot
+				!calc overlap of unks
+				if( nncell(3,qi,nn)/= 0 ) stop '[w90prepMmat]: out of plane nearest neighbour found. '
+				
+				q_nn		=	nnlist(qi,nn)
+				nG_qi		= 	nGq_glob(qi)
+				nG_nn		= 	nGq_glob(q_nn)
+				gShift(1)	= 	nncell(1,qi,nn) * 2.0_dp * PI_dp / aX
+				gShift(2)	= 	nncell(2,qi,nn) * 2.0_dp * PI_dp / aY
+				!
+				!read basis coefficients
+				call read_coeff(qi,	ck_qi)
+				call read_coeff(q_nn, ck_nn)
+				!
+				!read Gvec
+				call read_gVec(qi, 		Gvec_qi)
+				call read_gVec(q_nn,	Gvec_nn)
+				!
+				!
+				call calcMmat(qi, q_nn, gShift, nG_qi, nG_nn, Gvec_qi, Gvec_nn, ck_qi, ck_nn, Mmn(:,:,nn)	)
+			end do
+			!
+			!write result to file
+			call writeABiN_Mmn(qi, Mmn)
+		end do
+		!		
+		!
+		return
+	end subroutine
 
 
-!private:
+
+
 	!POPULATION OF H MATRIX
 	subroutine populateH(qLoc, Hmat)
 		!populates the Hamiltonian matrix by adding 

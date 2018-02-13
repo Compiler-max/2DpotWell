@@ -20,59 +20,55 @@ module planeWave
 
 
 !public
-	subroutine calcVeloGrad(ck, v_mat )
+	subroutine calcVeloGrad(qi, ck, v_mat )
 		!calculates the velocity operator matrix
 		!	Psi_n v Psi_m	= i/hbar Psi_n grad_r Psi_m
 		!					= - 1 / hbar sum_G ckn^dag ckm G
-		complex(dp),	intent(in)		:: 	ck(:,:,:)
-		complex(dp),	intent(out)		::	v_mat(:,:,:,:)
+		complex(dp),	intent(in)		:: 	ck(:,:)
+		complex(dp),	intent(out)		::	v_mat(:,:,:)
 		integer							::	qi, m, n, gi
 		!
 		v_mat = dcmplx(0.0_dp)
 		!
-		if(	size(ck,3)/=size(v_mat,4)	) stop	"[calcVeloGrad]: coeff and velo defined on different k meshes, stop now"
-			
-		!$OMP PARALLEL DO SCHEDULE(STATIC) DEFAULT(SHARED) PRIVATE(qi, m, n, gi)
-		do qi = 1, nQ
-			do m = 1, nSolve
-				do n = 1, nSolve
-					!
-					!SUM OVER BASIS FUNCTIONS
-					do gi = 1 , nGq(qi)
-						v_mat(1:2,n,m,qi) = v_mat(1:2,n,m,qi) -  dconjg(ck(gi,n,qi)) *  ck(gi,m,qi) *  Gvec(1:2,gi,qi)
-					end do
+		do m = 1, nSolve
+			do n = 1, nSolve
+				!
+				!SUM OVER BASIS FUNCTIONS
+				do gi = 1 , nGq(qi)
+					v_mat(1:2,n,m) = v_mat(1:2,n,m) -  dconjg(ck(gi,n)) *  ck(gi,m) *  Gvec(1:2,gi,qi)
 				end do
 			end do
 		end do
-		!$OMP END PARALLEL DO
 		!
 		return
 	end subroutine
 
 
-	subroutine calcMmat(qi,knb,gShift, nGq, Gvec, ck, Mmat)
-		integer,		intent(in)		:: qi, knb, nGq(:)
-		real(dp),		intent(in)		:: gShift(2),  Gvec(:,:,:)
-		complex(dp),	intent(in)		:: ck(:,:,:)
-		complex(dp),	intent(out)		:: Mmat(:,:)
-		integer							:: gi, gj, n, m, cnt
-		real(dp)						:: delta(2)
-		logical							:: found
+
+
+	subroutine calcMmat(qi, q_nn, gShift, nG_qi, nG_nn, Gvec_qi, Gvec_nn, ck_qi, ck_nn, Mmn	)
+		integer,		intent(in)		::	qi, q_nn, nG_qi, nG_nn
+		real(dp),		intent(in)		::	gShift(2), Gvec_qi(:,:), Gvec_nn(:,:)
+		complex(dp),	intent(in)		::	ck_qi(:,:), ck_nn(:,:)
+		complex(dp),	intent(out)		::	Mmn(:,:)
+		integer							::	gi, gj, cnt, m, n
+		real(dp)						::	delta(2)
+		logical							::	found
 		!
-		Mmat	= dcmplx(0.0_dp)
+		Mmn	= dcmplx(0.0_dp)
 		cnt		= 0
-		do gi = 1, nGq(qi)
+		do gi = 1, nG_qi
 			found 	= .false.
 			gj			= 1
 			!
-			do while( gj<= nGq(knb) .and. (.not. found) ) 
+			do while( gj<= nG_nn .and. (.not. found) ) 
 				!find gj, which fullfills the delta condition
-				delta(1:2)	=  ( Gvec(1:2,gi,qi)-qpts(1:2,qi) ) 	-  		( Gvec(1:2,gj,knb)-qpts(1:2,knb)-gShift(1:2) )
+				delta(1:2)	=  ( Gvec_qi(1:2,gi)-qpts(1:2,qi) ) 	-  		( Gvec_nn(1:2,gj)-qpts(1:2,q_nn)-gShift(1:2) )
 				!
 				if( norm2(delta) < 1e-8_dp )	then
-					do n = 1, size(Mmat,2)
-						do m = 1, size(Mmat,1)
-							Mmat(m,n)	= Mmat(m,n)	+ dconjg(	ck(gi,m,qi)	) * ck(gj,n,knb)
+					do n = 1, size(Mmn,2)
+						do m = 1, size(Mmn,1)
+							Mmn(m,n)	= Mmn(m,n)	+ dconjg(	ck_qi(gi,m)	) * ck_nn(gj,n)
 						end do
 					end do
 					cnt = cnt + 1
@@ -87,12 +83,13 @@ module planeWave
 			!
 		end do
 		!
-		if( cnt /= nGq(qi)	)		write(*,'(a,i8,a,i8)')	"[calcMmat]: WARNING, found ",cnt," neighbouring Gvec, where nGmax(qi)=",nGq(qi)
+		if( cnt /= nG_qi	)		write(*,'(a,i8,a,i8)')	"[calcMmat]: WARNING, found ",cnt," neighbouring Gvec, where nGmax(qi)=",nG_qi
 		!
-		!
+		!		
+
+
 		return
 	end subroutine
-
 
 
 	subroutine calcAmatANA(qi,ckH, A_matrix)
@@ -387,7 +384,48 @@ end module planeWave
 
 
 
-
+!subroutine calcMmatOLD(qi,knb,gShift, nGq, Gvec, ck, Mmat)
+!	integer,		intent(in)		:: qi, knb, nGq(:)
+!	real(dp),		intent(in)		:: gShift(2),  Gvec(:,:,:)
+!	complex(dp),	intent(in)		:: ck(:,:,:)
+!	complex(dp),	intent(out)		:: Mmat(:,:)
+!	integer							:: gi, gj, n, m, cnt
+!	real(dp)						:: delta(2)
+!	logical							:: found
+!	!
+!	Mmat	= dcmplx(0.0_dp)
+!	cnt		= 0
+!	do gi = 1, nGq(qi)
+!		found 	= .false.
+!		gj			= 1
+!		!
+!		do while( gj<= nGq(knb) .and. (.not. found) ) 
+!			!find gj, which fullfills the delta condition
+!			delta(1:2)	=  ( Gvec(1:2,gi,qi)-qpts(1:2,qi) ) 	-  		( Gvec(1:2,gj,knb)-qpts(1:2,knb)-gShift(1:2) )
+!			!
+!			if( norm2(delta) < 1e-8_dp )	then
+!				do n = 1, size(Mmat,2)
+!					do m = 1, size(Mmat,1)
+!						Mmat(m,n)	= Mmat(m,n)	+ dconjg(	ck(gi,m,qi)	) * ck(gj,n,knb)
+!					end do
+!				end do
+!				cnt = cnt + 1
+!				found = .true.
+!			end if
+!			!
+!			gj = gj + 1
+!		end do
+!		!if( .not. found  ) write(*,'(a,i5,a,i5,a,f6.2,a,f6.2,a)')	"[calcMmat]: WARNING no matching Gvec found for qi=",qi," q_nn=",knb,&
+!		!															" gshift=(",gShift(1),",",gShift(2),")."
+!		!
+!		!
+!	end do
+!	!
+!	if( cnt /= nGq(qi)	)		write(*,'(a,i8,a,i8)')	"[calcMmat]: WARNING, found ",cnt," neighbouring Gvec, where nGmax(qi)=",nGq(qi)
+!	!
+!	!
+!	return
+!end subroutine!
 
 
 

@@ -4,9 +4,7 @@ program main
 	use mathematics, 	only: 		dp, PI_dp
 
 	use sysPara
-	use potWellModel, 	only: 		solveHam
-	use basisIO,		only:		readAbIn, readBasis
-	use w90Interface,	only:		setup_w90
+	use potWellModel, 	only: 		solveEstruct
 	use postW90,		only:		effTBmodel
 	use berry,			only:		berryMethod
 
@@ -19,12 +17,9 @@ program main
 	implicit none
 	!#include "mpif.h"
 	
-
-
-    complex(dp),	allocatable,	dimension(:,:,:)	:: 	ck
-    real(dp),		allocatable,	dimension(:,:)		:: 	En    														
-    real												:: 	mastT0, mastT1, mastT, T0, T1, &
-    															alloT,hamT,wannT,postWT, outT, berryT	
+														
+    real	:: 	mastT0, mastT1, mastT, T0, T1, &
+    		    	alloT,hamT,wannT,postWT, outT, berryT	
 
     !MPI INIT
 	call MPI_INIT( ierr )
@@ -96,7 +91,11 @@ program main
 		if( myID == root )	call cpu_time(T0)
 		if( myID == root ) 	write(*,*)"[main]:**************************ELECTRONIC STRUCTURE RUN*************************"
 		!
-		call solveHam()
+		!
+		call solveEstruct()
+		!
+		!
+		if( myID == root )	call write_K_lattices()
 		call MPI_BARRIER( MPI_COMM_WORLD, ierr )
 		if( myID == root ) then
 			write(*,*)"[main]: done solving Schroedinger eq."
@@ -112,36 +111,12 @@ program main
 
 	!POST HAM SOLVER
 	if( .not. doSolveHam .and. myID == root ) then	
-		write(*,*)"[main]:**************************READ E-STRUCTURE*************************"
-		allocate(	En(						nSolve	, 	nQ	)	)
-		allocate(	ck(			GmaxGLOBAL,	nSolve 	,	nQ	)	)
-
-		!READ IN ELECTRONIC STRUCTURE
-		call readAbIn(ck, En)
-		!call readBasis() !reads in Gvec, nGq (optiónal)
-
-
-	
-
-		call cpu_time(T0)
-		if( doPrepW90 )	 then
-			write(*,*)	"[main]:**************************WANNIER90 INTERFACE*************************"
-			call setup_w90(ck,En)
-			call write_K_lattices()
-			write(*,*)	"[main]: please run w90 now"
-
-		end if
-		call cpu_time(T1)
-		wannT = T1 - T0
-
-
-
 
 		!EFF TB - post w90
 		call cpu_time(T0)
 		if(	doPw90 ) then
 			write(*,*)"[main]:**************************POST WANNIER90 *************************"
-			write(*,*)	"[main]: start with eff TB model calculations"
+			write(*,*)	"[main]: start with effective TB model calculations"
 			call effTBmodel()
 			write(*,*)	"[main]: done with effective tight binding calculations"
 			write(*,*)"*"
@@ -158,7 +133,7 @@ program main
 		
 		if ( doBerry ) then
 			write(*,*)"[main]:**************************BERRY METHOD*************************"
-			call berryMethod(ck, En)
+			call berryMethod()
 			write(*,*)"[main]: done with wavefunction method "
 			write(*,*)"*"
 			write(*,*)"*"
