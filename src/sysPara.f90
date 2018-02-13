@@ -610,12 +610,12 @@ module sysPara
 		end do
 		!
 		!DEBUG OUTPUT
-		Gmax = maxval(nGq)
-		Gmin = minval(nGq)
-		write(*,'(a,i3,a,i7,a,i7)')	"[#",myID,";popGvec]: maximum amount of basis functions Gmax=",Gmax," minimum is Gmin=",Gmin
+		Gmax = maxval(nGq(:))
+		Gmin = minval(nGq(:))
+		write(*,'(a,i3,a,i7,a,i7)')	"[#",myID,";popGvec]:  Gmax=",Gmax,";	  Gmin=",Gmin
 		call MPI_ALLREDUCE(Gmax, GmaxGLOBAL, 1, MPI_INTEGER, MPI_MAX, MPI_COMM_WORLD, ierr) 
 		call MPI_ALLREDUCE(Gmin, GminGLOBAL, 1, MPI_INTEGER, MPI_MIN, MPI_COMM_WORLD, ierr)
-		if( myID == root ) write(*,'(a,i3,a,i7,a,i7)') "[#",myID,";popGvec]: global Gmax=",GmaxGLOBAL, "global Gmin=",Gmin
+		if( myID == root ) write(*,'(a,i3,a,i7,a,i7)') "[#",myID,";popGvec]: global Gmax=",GmaxGLOBAL, ";	global Gmin=",GminGLOBAL
 		!
 		!
 		return
