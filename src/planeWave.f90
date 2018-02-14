@@ -104,8 +104,8 @@ module planeWave
 		A_matrix	= dcmplx(0.0_dp)
 		!
 		perAtom	= nWfs / nAt
-		if( qi == 1 )	write(*,'(a,i2,a,i2,a)')	"[calcAmatANA]: projecting onto ",nWfs," states, distributed over ",nAt," atoms"
-		if( qi == 1 )	write(*,'(a,i2,a)')			"[calcAmatANA]: projecting onto ",perAtom," states per atom"
+		if( qi == 1 .and. myID == root)	write(*,'(a,i3,a,i2,a,i2,a)')		"[#",myID,";calcAmatANA]: projecting onto ",nWfs," states, distributed over ",nAt," atoms"
+		if( qi == 1 .and. myID == root)	write(*,'(a,i3,a,i2,a)')			"[#",myID,";calcAmatANA]: projecting onto ",perAtom," states per atom"
 		!
 		if( perAtom == 1 ) then
 			do n = 1, nWfs
@@ -129,7 +129,7 @@ module planeWave
 						state = 3
 					else 
 						state = 0
-					write(*,*)	"[calcAmatANA]: WARNING! will set A_matrix component to zero, try to run wannier with use_bloch switch"
+					write(*,*)	"[calcAmatANA]: WARNING! will set A_matrix component to identity, try to run wannier with use_bloch switch"
 					end if
 					!
 					!DO PROJECTION
@@ -140,8 +140,12 @@ module planeWave
 				end do
 			end do
 		else
-			write(*,*)	"[calcAmatANA]: only 1 or 3 states per atom supported. set A_mat to zero"
-			A_matrix = dcmplx(0.0_dp)
+			write(*,*)	"[calcAmatANA]: only 1 or 3 states per atom supported. set A_mat to identity"
+			do n = 1, size(A_matrix,2)
+				do m = 1, size(A_matrix,1)
+					if( m==n ) A_matrix(m,n) = dcmplx(1.0_dp)
+				end do
+			end do
 		end if
 		!
 		!
