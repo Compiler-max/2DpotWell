@@ -250,6 +250,7 @@ module w90Interface
 		close(330)
 		if( finished ) then
 			write(*,*)	"[readFDscheme]: read the .nnkp file"
+			write(*,*)	"[readFDscheme]: nntot=",nntot
 		else
 			stop	"[readFDscheme]: did not find search string  in .nnkp file"
 		end if
@@ -286,6 +287,12 @@ module w90Interface
 		end do
 		close(335)
 		!
+		write(*,*)					"[readFDscheme]: 	nn | 				b				| 		w_b "
+		do nn = 1, nntot
+			write(*,'(a,i2,a,f4.1,a,f4.1,a,f4.1,a,f6.2)')		"                   ",nn," | (",b_k(1,nn),", ",b_k(2,nn),", ",b_k(3,nn)," |    ",w_b(nn)
+		end do
+
+
 		!DEBUG
 		if( 		finished ) write(*,*)	"[readFDscheme]: read the .wout file"
 		if(	.not. 	finished ) write(*,*)	"[readFDscheme]: did not find search string: '",search_wout,"' in .wout file"
