@@ -2,8 +2,9 @@ module berry
 	!module contains methods related to the Berry phase theory of modern polarization
 	!	i.e. calculation of connection, velocities, curvatures and polarization
 	use omp_lib
-	use mathematics,	only:	dp, PI_dp, i_dp, acc, machineP,  myExp, myLeviCivita, aUtoAngstrm, aUtoEv
-	use sysPara,		only:	nWfs, nQ, nSolve, &
+	use mathematics,	only:	dp, PI_dp, i_dp, acc, machineP,  myExp, aUtoAngstrm, aUtoEv
+	use sysPara,		only:	Bext, prefactF3, &
+								nWfs, nQ, nSolve, &
 								nQx, nQy, dqx, dqy, &
 								qpts, &
 								doGaugBack, doNiu, fastConnConv, doVeloNum 
@@ -92,7 +93,7 @@ module berry
 			FcurvQ	= dcmplx(0.0_dp)	!does not matter since <FcurvQ,AconnQ> is always zero in 2D
 			call read_energies(EnQ)
 			call calcVelo(U_mat , Aconn_W, EnQ ,  veloQ)
-			call calcFirstOrdP(FcurvQ, Aconn_W, veloQ, EnQ, niu_polF2, niu_polF3)
+			call calcFirstOrdP(Bext, prefactF3, FcurvQ, Aconn_W, veloQ, EnQ, niu_polF2, niu_polF3)
 		else
 			niu_polF2 = 0.0_dp
 			niu_polF3 = 0.0_dp
