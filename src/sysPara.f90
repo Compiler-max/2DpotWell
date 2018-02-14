@@ -582,9 +582,7 @@ module sysPara
 	subroutine popGvec()
 		integer						:: qi, gi, inside,tot, qLoc, Gmin, GminGLOBAL
 		real(dp)					:: kg(2)
-		!^
-		!fill array
-		write(*,'(a,i3,a,i6)')	"[#",myID,";popGvec]: my qChunk=",qChunk
+		!
 		allocate(	nGq(					qChunk		)		)
 		allocate(	Gvec(	dim,	nG ,	qChunk		)		)
 		!
@@ -600,7 +598,7 @@ module sysPara
 					nGq(qLoc) = nGq(qLoc) + 1
 					Gvec(:,nGq(qLoc),qLoc) = kg(:)
 					inside = inside + 1
-					if( gi == 1)	write(*,*)	"[popGvec]: WARNING hit boundary of Gtest grid"
+					if( gi == 1)	stop	"[popGvec]: WARNING hit boundary of Gtest grid"
 				end if
 			end do
 			!DEBUG INFO
@@ -612,7 +610,7 @@ module sysPara
 		!DEBUG OUTPUT
 		Gmax = maxval(nGq(:))
 		Gmin = minval(nGq(:))
-		write(*,'(a,i3,a,i7,a,i7)')	"[#",myID,";popGvec]:  Gmax=",Gmax,";	  Gmin=",Gmin
+		write(*,'(a,i3,a,i3,a,i7,a,i7)')	"[#",myID,";popGvec]: my qChunk=",qChunk, " Gmax=",Gmax,";	  Gmin=",Gmin
 		call MPI_ALLREDUCE(Gmax, GmaxGLOBAL, 1, MPI_INTEGER, MPI_MAX, MPI_COMM_WORLD, ierr) 
 		call MPI_ALLREDUCE(Gmin, GminGLOBAL, 1, MPI_INTEGER, MPI_MIN, MPI_COMM_WORLD, ierr)
 		if( myID == root ) write(*,'(a,i3,a,i7,a,i7)') "[#",myID,";popGvec]: global Gmax=",GmaxGLOBAL, ";	global Gmin=",GminGLOBAL
