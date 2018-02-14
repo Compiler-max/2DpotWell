@@ -3,9 +3,6 @@ module semiClassics
 	!	to the polariztion induced by a perturbive magnetic field
 	! 	see Niu PRL 112, 166601 (2014)
 	use omp_lib
-	use mathematics,	only:	dp, PI_dp, i_dp, machineP, acc, myExp, myLeviCivita
-	use sysPara,		only:	Bext, prefactF3, atPos, nAt, nWfs
-	use output,			only:	printMat
 	implicit none
 
 
@@ -13,6 +10,9 @@ module semiClassics
 	private
 	public ::			calcFirstOrdP, calcFmat
 
+	integer, 		parameter 	:: 	dp 				= kind(0.d0)
+	real(dp), 		parameter	:: 	machineP 		= 1e-15_dp
+	real(dp)					:: 	acc				= 1e-7_dp
 
 
 	contains
@@ -23,11 +23,11 @@ module semiClassics
 
 
 !public
-	subroutine	calcFirstOrdP(Fcurv, Aconn, Velo, En, pol_F2, pol_F3)
+	subroutine	calcFirstOrdP(Bext, prefactF3, Fcurv, Aconn, Velo, En, pol_F2, pol_F3)
 		!calculates the first order polarization p1 according to
 		!	P'= -int_dk [0.5 (Curv.Velo)*B_ext + a']
-		complex(dp),	intent(in)		::	Fcurv(:,:,:,:), Aconn(:,:,:,:), Velo(:,:,:,:)	
-		real(dp),		intent(in)		::	En(:,:)			
+		real(dp),		intent(in)		::	Bext(3), prefactF3, En(:,:)		
+		complex(dp),	intent(in)		::	Fcurv(:,:,:,:), Aconn(:,:,:,:), Velo(:,:,:,:)			
 		real(dp),		intent(out)		::  pol_F2(:,:), pol_F3(:,:)
 		!real(dp)						::	pnF2(3), pnF3(3)
 		real(dp)						:: 	F2(3,3), F3(3,3), F2k(3,3), F3k(3,3)
@@ -46,7 +46,7 @@ module semiClassics
 		!$OMP PARALLEL DEFAULT(SHARED)  &
 		!$OMP PRIVATE(n, ki, densCorr, F2, F2k, F3, F3k)
 		!$OMP DO SCHEDULE(STATIC)
-		do n = 1, nWfs
+		do n = 1, size(pol_F2,2)
 			F2 = 0.0_dp
 			F3 = 0.0_dp
 			!
@@ -59,7 +59,7 @@ module semiClassics
 				!
 				!POSITIONAL SHIFT
 				call getF2(n,ki,Velo,En, F2k)
-				call getF3(n,ki,Velo,En, F3k)
+				call getF3(prefactF3, n,ki,Velo,En, F3k)
 				!sum over K
 				F2 = F2 + F2k
 				F3 = F3 + F3k
@@ -86,18 +86,18 @@ module semiClassics
 
 
 
-	subroutine	calcFmat(nZero,ki, Velo ,En, Fmat)
+	subroutine	calcFmat(prefactF3, nZero,ki, Velo ,En, Fmat)
 		!calculates the linear response F matrix for magnetic field perturbation
 		!F is derived in the semiclassical wavepacket approach (again see Niu PRL 112, 166601 (2014))
 		integer,		intent(in)		:: nZero, ki
 		complex(dp),	intent(in)		:: Velo(:,:,:,:)  !V(3,nWfs,nWfs,nK)
-		real(dp),		intent(in)		:: En(:,:)			!En(nK nWfs)
+		real(dp),		intent(in)		:: prefactF3, En(:,:)			!En(nK nWfs)
 		real(dp),		intent(out)		:: Fmat(3,3)
 		real(dp)						:: F2(3,3), F3(3,3)
 		!
 		Fmat	=	0.0_dp		
 		call getF2(nZero, ki, Velo, En, F2)
-		call getF3(nZero, ki, Velo, En, F3)
+		call getF3(prefactF3, nZero, ki, Velo, En, F3)
 		!
 		!
 		Fmat	=	F2 + F3
@@ -179,13 +179,13 @@ module semiClassics
 
 
 
-	subroutine	getF3(nZero,ki, Velo ,En, F3)	
+	subroutine	getF3(prefactF3, nZero,ki, Velo ,En, F3)	
 		!
 		!	F^(2)_ij = +- Re \sum_{n/=0} \eps_{j,k,l}  * (v^k_0 V^l_nZero V^i_0n) / ( (E0-En)**3  )
 		!
 		integer,		intent(in)		:: nZero, ki
 		complex(dp),	intent(in)		:: Velo(:,:,:,:)  
-		real(dp),		intent(in)		:: En(:,:)			
+		real(dp),		intent(in)		:: prefactF3, En(:,:)			
 		real(dp),		intent(out)		:: F3(3,3)
 		complex(dp)						:: Vtmp
 		real(dp)						:: eDiff
@@ -227,6 +227,32 @@ module semiClassics
 	end subroutine
 
 
+
+	!helper
+	integer function myLeviCivita(i,j,k)
+		!Hard coded Levi Civita tensor
+		integer,		intent(in)		:: i,j,k
+		logical							:: even, odd
+		!
+		!
+		even	= (i==1 .and. j==2 .and. k==3) .or. (i==2 .and. j==3 .and. k==1) .or. (i==3 .and. j==1 .and. k==2)
+		odd		= (i==3 .and. j==2 .and. k==1) .or. (i==1 .and. j==3 .and. k==2) .or. (i==2 .and. j==1 .and. k==3)
+		!
+		if(even) then
+			myLeviCivita	=  1
+		else if (odd) then
+			myLeviCivita	= -1
+		else
+			myLeviCivita	=  0
+		end if
+		!
+		!DEBUGGING
+		if(even .and. odd) then
+			write(*,*)"[myLeviCivita]: myLeviCivita detected even and odd, contact the programer he fucked up"
+		end if
+		!
+		return
+	end function
 
 
 
