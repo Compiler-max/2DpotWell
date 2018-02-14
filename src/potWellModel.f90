@@ -63,6 +63,9 @@ module potWellModel
 		!call w90 interface to write input files & .mmn etc. files
 
 		if( myID == root ) then
+			write(*,*)	"*"
+			write(*,*)	"*"
+			write(*,*)	"*"
 			write(*,'(a,i3,a)')		"[#",myID,";solveHam]: wrote Mmn files, now collect files to write wannier90 input files"
 			call write_w90_matrices()
 			write(*,'(a,i3,a)')		"[#",myID,";solveHam]: wrote w90 matrix input files (.win, .amn, .mmn, .eig, _geninterp.kpt )"
