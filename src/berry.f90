@@ -214,10 +214,12 @@ module berry
 		complex(dp),		allocatable		::	U_left(:,:), tmp(:,:)
 		integer								:: 	qi, nn
 		!
+		!$OMP PARALLEL DEFAULT(SHARED) PRIVATE(tmp, U_left, nn, qi)
 		allocate(		tmp(	size(U_mat,1), size(U_mat,2)	)			)
 		allocate(		U_left(	size(U_mat,1), size(U_mat,2)	)			)
-		!
+		!$OMP DO SCHEDULE(STATIC)
 		do qi = 1, size(M_H,4)
+			!
 			do nn = 1, nntot
 				tmp(:,:)		=	matmul(		M_H(:,:,nn,qi)	,	U_mat(:,:,nnlist(qi,nn) )			)
 				U_left(:,:)		=	dconjg(		 transpose( U_mat(:,:,qi) )			)
@@ -225,8 +227,10 @@ module berry
 				!
 				M_W(:,:,nn,qi)	= matmul(	U_left(:,:), tmp(:,:) )
 			end do
+			!
 		end do
-		!
+		!$OMP END DO
+		!$OMP END PARALLEL
 		return
 	end subroutine
 
@@ -333,36 +337,3 @@ module berry
 
 end module berry
 
-
-	!subroutine applyRot(ck, Uq, ckW)
-	!	complex(dp),	intent(in)		::	ck(:,:,:), Uq(:,:,:)
-	!	complex(dp),	intent(out)		::	ckW(:,:,:)
-	!	integer							::	qi, gi, n, m
-	!	!
-	!	ckW	= dcmplx(0.0_dp)
-	!	!$OMP PARALLEL DO DEFAULT(SHARED) PRIVATE(gi, n, m) ,&
-	!	!$OMP& SCHEDULE(STATIC)
-	!	do qi = 1, nQ
-	!		do gi = 1, nGq(qi)			
-	!			do n = 1, nSolve
-	!				!BOUND STATES
-	!				if( n <= nWfs ) then
-	!					!
-	!					!SUM_M
-	!					do m = 1, num_wann
-	!						ckW(gi,n,qi)	=  ckW(gi,n,qi) + Uq(m,n,qi)   * ck(gi,m,qi)	
-	!					end do
-	!				!CONDUCTING STATES
-	!				else
-	!					ckW(gi,n,qi)	= ck(gi,n,qi)
-	!				end if
-	!				!
-	!			end do
-	!		end do
-	!	end do
-	!	!$OMP END PARALLEL DO
-	!	write(*,*)	"[berry/applyRot]: applied U matrix to basis coefficients"
-!
-!	!	!
-!	!	return
-	!end subroutine
