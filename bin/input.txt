@@ -55,8 +55,6 @@
 [berry]
     doVeloNUM   =   f
     doNiu       =   f
-    doPei       =   f
-    doWanni     =   f
     doGaugBack  =   f
 
 [semiclassics]

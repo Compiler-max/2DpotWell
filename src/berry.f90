@@ -98,14 +98,15 @@ module berry
 			niu_polF2 = 0.0_dp
 			niu_polF3 = 0.0_dp
 		end if
+		write(*,*)	"[berryMethod]: first order pol calculated"
 		!
 		!OUTPUT
 		call printNNinfo(nntot, nnlist, w_b)
 		call writePolFile(w_centers, berry_H_gauge, berry_W_gauge, niu_polF2, niu_polF3)
 		write(*,*)	"[berryMethod]: wrote pol file"
-		call writeConnTxt( Aconn_W )
-		call writeVeloHtxt( veloQ )	!*aUtoEv*aUtoAngstrm )	
-		write(*,*)	"[berryMethod]: wrote k-space info files (connection & velocities)"			
+		!call writeConnTxt( Aconn_W )
+		!call writeVeloHtxt( veloQ )	!*aUtoEv*aUtoAngstrm )	
+		!write(*,*)	"[berryMethod]: wrote k-space info files (connection & velocities)"			
 		!
 		!
 		return
