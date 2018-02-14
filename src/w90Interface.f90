@@ -287,9 +287,9 @@ module w90Interface
 		end do
 		close(335)
 		!
-		write(*,*)					"[readFDscheme]: 	nn | 			b			| 		w_b "
+		write(*,*)					" 	nn | 		b		| 		w_b "
 		do nn = 1, nntot
-			write(*,'(a,i2,a,f4.1,a,f4.1,a,f4.1,a,f6.2)')		"        				           ",nn," | (",b_k(1,nn),", ",b_k(2,nn),", ",b_k(3,nn)," |    ",w_b(nn)
+			write(*,'(a,i2,a,f4.1,a,f4.1,a,f4.1,a,f6.2)')		"  ",nn," | (",b_k(1,nn),", ",b_k(2,nn),", ",b_k(3,nn),") |    ",w_b(nn)
 		end do
 
 
