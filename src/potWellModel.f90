@@ -137,19 +137,20 @@ module potWellModel
 	subroutine calc_Mmat(nntot, nnlist, nncell)
 		integer,		intent(in)		::	nntot, nnlist(:,:), nncell(:,:,:)
 		integer,		allocatable		::	nGq_glob(:)
-		complex(dp),	allocatable		::	ck_qi(:,:), cK_nn(:,:), Mmn(:,:,:)
+		complex(dp),	allocatable		::	ck_qi(:,:), cK_nn(:,:), Mmn(:,:,:), Mmn_global(:,:,:,:)
 		real(dp),		allocatable		::	Gvec_qi(:,:), Gvec_nn(:,:), Gvec_glob(:,:,:)
 		real(dp)						::	gShift(2)
 		integer							::	qi, nn, q_nn, nG_qi, nG_nn, qLoc
 		real							::	T0, T1
 		!
-		allocate(	nGq_glob(nQ)				)
-		allocate(	Gvec_qi(dim, nG)			)
-		allocate(	Gvec_nn(dim, nG)			)
-		allocate(	Gvec_glob(dim, nG, nQ)		)
-		allocate(	ck_nn(GmaxGLOBAL, nSolve)	)
-		allocate(	ck_qi(GmaxGLOBAL, nSolve)	)
-		allocate(	Mmn(nBands, nBands, nntot)	)
+		allocate(	nGq_glob(nQ)					)
+		allocate(	Gvec_qi(dim, nG)				)
+		allocate(	Gvec_nn(dim, nG)				)
+		allocate(	Gvec_glob(dim, nG, nQ)			)
+		allocate(	ck_nn(GmaxGLOBAL, nSolve)		)
+		allocate(	ck_qi(GmaxGLOBAL, nSolve)		)
+		allocate(	Mmn(nBands, nBands, nntot)		)
+		allocate(	Mmn(nBands, nBands, nntot, nQ)	)
 		!
 		if(myID == root ) write(*,*)"[calc_Mmat]: try allgather nGq...."
 		call MPI_ALLGATHER( nGq	, qChunk, MPI_INTEGER, nGq_glob		, qChunk, MPI_INTEGER, MPI_COMM_WORLD, ierr)
@@ -157,7 +158,7 @@ module potWellModel
 			write(*,*)"[calc_Mmat]: ...success. try allgather Gvec"
 			call cpu_time(T0)
 		end if
-		call MPI_ALLGATHER(	Gvec, dim*nG*qChunk, MPI_DOUBLE_PRECISION, Gvec_glob, qChunk, MPI_DOUBLE_PRECISION, MPI_COMM_WORLD, ierr)
+		call MPI_ALLGATHER(	Gvec, dim*nG*qChunk, MPI_DOUBLE_PRECISION, Gvec_glob, dim*nG*qChunk, MPI_DOUBLE_PRECISION, MPI_COMM_WORLD, ierr)
 		if(myID == root )	then
 			call cpu_time(T1)
 			write(*,*)"[calc_Mmat]: ...success. took ",T1-T0," seconds"
