@@ -11,6 +11,7 @@ module w90Interface
 	private
 	public ::					setup_w90, write_w90_matrices, &
 								read_FD_scheme, read_M_initial, read_U_matrix, readBandVelo, read_wann_centers, & 
+								printNNinfo, &
 								seed_name
 
 	!public var
@@ -172,7 +173,25 @@ module w90Interface
 
 
 
-
+	subroutine printNNinfo(nntot, nnlist)
+		integer, 	intent(in)				::	nntot, nnlist(:,:)
+		integer								::	gammaPt, nn
+		real(dp)							::	w_b_guess
+		!
+		write(*,'(a,i2,a)')	"[berryMethod]: nn info:"
+		gammaPt = 1 + int(	nQx*(0.5_dp+0.5_dp*nQy)	)
+		write(*,'(a,f6.2,a,f6.2,a)')	"        dqx=",dqx,"; dqy=",dqy,"."
+		write(*,'(a,f6.2,a,f6.2,a)')	"        this means for qpt=(",qpts(1,gammaPt),", ",qpts(2,gammaPt),")."
+		write(*,*)	" nn  | q_nn(x) | q_nn(y) | w_b "
+		write(*,*)	"-------------------------------"
+		do nn = 1, nntot
+			w_b_guess = 2.0_dp / ( real(nntot,dp) * dqx**2 )
+			write(*,'(i2,a,f6.2,a,f6.2,a,f6.2)')	nn,"  |  ",	qpts(1,nnlist(gammaPt,nn)),"  |  ",&
+																				qpts(2,nnlist(gammaPt,nn)),"  |  ",w_b_guess
+		end do
+		!
+		return
+	end subroutine 
 
 
 

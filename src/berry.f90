@@ -100,7 +100,6 @@ module berry
 		write(*,*)	"[berryMethod]: first order pol calculated"
 		!
 		!OUTPUT
-		call printNNinfo(nntot, nnlist, w_b)
 		call writePolFile(w_centers, berry_H_gauge, berry_W_gauge, niu_polF2, niu_polF3)
 		write(*,*)	"[berryMethod]: wrote pol file"
 		!call writeConnTxt( Aconn_W )
@@ -311,29 +310,7 @@ module berry
 	end subroutine
 
 
-	subroutine printNNinfo(nntot, nnlist, w_b)
-		integer, 	intent(in)				::	nntot, nnlist(:,:)
-		real(dp),	intent(in)				::	w_b(:)
-		integer								::	gammaPt, nn
-		real(dp)							::	nnEstimate
-		!
-		write(*,'(a,i2,a)')	"[berryMethod]: nn info:"
-		gammaPt = 1 + int(	nQx*(0.5_dp+0.5_dp*nQy)	)
-		write(*,'(a,f6.2,a,f6.2,a)')	"        dqx=",dqx,"; dqy=",dqy,"."
-		write(*,'(a,f6.2,a,f6.2,a)')	"        this means for qpt=(",qpts(1,gammaPt),", ",qpts(2,gammaPt),")."
-		write(*,*)	" nn  | q_nn(x) | q_nn(y) | w_b "
-		write(*,*)	"-------------------------------"
-		do nn = 1, nntot
-			
-			write(*,'(i2,a,f6.2,a,f6.2,a,f6.2)')	nn,"  |  ",	qpts(1,nnlist(gammaPt,nn)),"  |  ",&
-																				qpts(2,nnlist(gammaPt,nn)),"  |  ",w_b(nn)
-			
-			nnEstimate = 2.0_dp / ( 	w_b(nn) * dqx**2  ) !wbx 	= 2.0_dp / 	( real(Z,dp) * dqx**2 ) ; where Z is number of nearest neighbours
-			if( int(nnEstimate)/= nntot) write(*,*)	"[berryMethod]: weights suggest ",int(nnEstimate)," nearest neigbours, where ",nntot," are expected"
-		end do
-		!
-		return
-	end subroutine
+
 
 end module berry
 

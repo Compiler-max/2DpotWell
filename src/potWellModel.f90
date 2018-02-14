@@ -9,7 +9,7 @@ module potWellModel
 	use planeWave,		only:	calcVeloGrad, calcAmatANA, calcMmat
 	use basisIO,		only:	writeABiN_basVect, writeABiN_energy, writeABiN_basCoeff, writeABiN_velo, writeABiN_Amn, writeABiN_Mmn, &
 								read_coeff, read_gVec
-	use w90Interface,	only:	setup_w90, write_w90_matrices
+	use w90Interface,	only:	setup_w90, write_w90_matrices, printNNinfo
 	implicit none	
 	!#include "mpif.h"
 
@@ -46,6 +46,7 @@ module potWellModel
 		!get FD scheme from w90
 		if( myID == root )  then
 			call setup_w90(nntot, nnlist, nncell)
+			call printNNinfo(nntot, nnlist)
 		end if
 		!
 		!Bcast FD scheme
