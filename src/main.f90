@@ -98,6 +98,10 @@ program main
 		if( myID == root )	call write_K_lattices()
 		call MPI_BARRIER( MPI_COMM_WORLD, ierr )
 		if( myID == root ) then
+			write(*,*)"*"
+			write(*,*)"*"
+			write(*,*)"*"
+			write(*,*)"*"
 			write(*,*)"[main]: done solving Schroedinger eq., please execute wannier90 now"
 			call cpu_time(T1)
 			hamT = T1-T0
@@ -173,7 +177,6 @@ program main
 
 	!MPI FINALIZE
 	call MPI_Barrier( MPI_COMM_WORLD, ierr )
-	write(*,'(a,i3,a)')	"[#",myID,";main]: all done, exit"
 	call MPI_FINALIZE ( ierr )
 	!
 	!
