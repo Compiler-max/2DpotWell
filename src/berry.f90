@@ -160,6 +160,8 @@ module berry
 					end do				
 				end if
 			end do
+			!
+			!
 		end do
 		!$OMP END PARALLEL DO
 		!
