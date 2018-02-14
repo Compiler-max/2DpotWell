@@ -614,23 +614,10 @@ module output
 	subroutine printBasisInfo()
 		!nG to Gcut RATIO
 		if(			nG		< 		vol * Gcut * dsqrt(Gcut) /	(2.0_dp*PI_dp**2)		) then
-			write(*,*)	"[BasisInfo]:	vol: increase Gcut"
+			write(*,*)	"[BasisInfo]:	volume: increase Gcut"
 		else
-			write(*,*)	"[BasisInfo]: 	vol: o.k. Gcut"
+			write(*,*)	"[BasisInfo]: 	volume: accepted Gcut"
 		end if
-		!nR to Gcut RATIO
-		if(		nR	<		vol * dsqrt(Gcut) 	/ PI_dp) then
-			write(*,*)	"[BasisInfo]: nR: increase real space grid (or decrease Gcut)"
-		else
-			write(*,*)	"[BasisInfo]: nR: o.k."
-		end if
-		!real space grid TO supercells
-		if(		nRx / nSCx <  10)  then
-			write(*,*)	"[BasisInfo]: nR per cell: need more grid points in each cell"
-		else	
-			write(*,*)	"[BasisInfo]: nR per cell: o.k."
-		end if
-		!
 		!
 		return 
 	end subroutine
