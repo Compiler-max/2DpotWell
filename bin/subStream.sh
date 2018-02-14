@@ -84,6 +84,10 @@ function runCalc {
 	#finalize
 	mv out*.txt output
 	mv input.orig input.txt
+	rm rawData/Mmn*
+	rm rawData/Amn*
+	rm rawData/ck*
+	rm rawData/gVec*
 	wait
 	echo '['$(date +"%T")']: all done'	
 }

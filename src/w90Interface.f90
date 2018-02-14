@@ -76,20 +76,19 @@ module w90Interface
 		call write_W90setup_input()
 		!
 		!W90 
-		write(*,*)	"[w90Interf]: wrote w90 input file"
+		write(*,*)	"[w90Interf]: wrote w90 setup input file (.win)"
 		call run_w90setup(nntot_out, nnlist_out, nncell_out)
 		write(*,*)	"[w90Interf]: done with w90 setup"
 		write(*,*)	"[w90Interf]: will use num_bands= ",num_bands, " bands"
 		write(*,*)	"[w90Interf]: to gen   num_wann=  ",num_wann, " wnfs"
-		write(*,*)	"[w90Interf]: write input for wannierisation"
 	
 
 		!WRITE INPUT FILE (wann run)
 		call write_W90run_input()
-		write(*,*)	"[w90Interf]: done preparing wannierization input matrices"
+		write(*,*)	"[w90Interf]: wrote input file for wannierisation (.win)"
 		!PREP PW90
 		call writeW90KinterpMesh()
-		write(*,*)	"[w90Interf]: wrote interpolation mesh file"
+		write(*,*)	"[w90Interf]: wrote interpolation mesh file (_geninterp.kpt)"
 	
 		!WANNIERISE
 		!call wannier_run(seed_name,mp_grid,num_kpts,real_lattice,recip_lattice, &
@@ -318,7 +317,7 @@ module w90Interface
 		!
 		!convert to [a.u.]
 		w_centers 	= w_centers 	/ aUtoAngstrm
-		write(*,*)	"[read_wann_centers]: read the wannier centers from the .xyz file"
+		write(*,*)	"[read_wann_centers]: read the .xyz file"
 		!
 		!
 		return

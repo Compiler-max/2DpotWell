@@ -265,7 +265,7 @@ module basisIO
 				read(720)	En(:,qi)
 				close(720)
 		end do
-		write(*,*)	"[read_energies]: read the enK.qi files"
+		write(*,*)	"[read_energies]: read the enK.qi files (abinit files)"
 		!
 		return
 	end subroutine
@@ -369,7 +369,7 @@ module basisIO
 			close(210)
 			velo(:,:,:,qi)	= velo(:,:,:,qi) + i_dp * dcmplx(buffer(:,:,:))
 		end do
-		write(*,*)	"[read_velo]: finished"
+		write(*,*)	"[read_velo]: finished reading velR.qi & velI.qi files (abinit files)"
 		!
 		return
 	end subroutine
