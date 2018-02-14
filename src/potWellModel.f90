@@ -138,7 +138,7 @@ module potWellModel
 		integer,		intent(in)		::	nntot, nnlist(:,:), nncell(:,:,:)
 		integer,		allocatable		::	nGq_glob(:)
 		complex(dp),	allocatable		::	ck_qi(:,:), cK_nn(:,:), Mmn(:,:,:), Mmn_global(:,:,:,:)
-		real(dp),		allocatable		::	Gvec_qi(:,:), Gvec_nn(:,:), Gvec_glob(:,:,:)
+		real(dp),		allocatable		::	Gvec_qi(:,:), Gvec_nn(:,:)
 		real(dp)						::	gShift(2)
 		integer							::	qi, nn, q_nn, nG_qi, nG_nn, qLoc
 		real							::	T0, T1
@@ -146,23 +146,12 @@ module potWellModel
 		allocate(	nGq_glob(nQ)					)
 		allocate(	Gvec_qi(dim, nG)				)
 		allocate(	Gvec_nn(dim, nG)				)
-		allocate(	Gvec_glob(dim, nG, nQ)			)
 		allocate(	ck_nn(GmaxGLOBAL, nSolve)		)
 		allocate(	ck_qi(GmaxGLOBAL, nSolve)		)
 		allocate(	Mmn(nBands, nBands, nntot)		)
 		allocate(	Mmn(nBands, nBands, nntot, nQ)	)
 		!
-		if(myID == root ) write(*,*)"[calc_Mmat]: try allgather nGq...."
 		call MPI_ALLGATHER( nGq	, qChunk, MPI_INTEGER, nGq_glob		, qChunk, MPI_INTEGER, MPI_COMM_WORLD, ierr)
-		if(myID == root ) then
-			write(*,*)"[calc_Mmat]: ...success. try allgather Gvec"
-			call cpu_time(T0)
-		end if
-		call MPI_ALLGATHER(	Gvec, dim*nG*qChunk, MPI_DOUBLE_PRECISION, Gvec_glob, dim*nG*qChunk, MPI_DOUBLE_PRECISION, MPI_COMM_WORLD, ierr)
-		if(myID == root )	then
-			call cpu_time(T1)
-			write(*,*)"[calc_Mmat]: ...success. took ",T1-T0," seconds"
-		end if
 		!
 		!
 		qLoc = 1
@@ -183,11 +172,11 @@ module potWellModel
 				call read_coeff(q_nn, ck_nn)
 				!
 				!read Gvec
-				!call read_gVec(qi, 		Gvec_qi)
-				!call read_gVec(q_nn,	Gvec_nn)
+				call read_gVec(qi, 		Gvec_qi)
+				call read_gVec(q_nn,	Gvec_nn)
 				!
 				!
-				call calcMmat(qi, q_nn, gShift, nG_qi, nG_nn, Gvec_glob(:,:,qi), Gvec_glob(:,:,q_nn), ck_qi, ck_nn, Mmn(:,:,nn)	)
+				call calcMmat(qi, q_nn, gShift, nG_qi, nG_nn, Gvec_qi, Gvec_nn, ck_qi, ck_nn, Mmn(:,:,nn)	)
 			end do
 			!
 			!write result to file, alternative: gather on root and write .mmn directly
