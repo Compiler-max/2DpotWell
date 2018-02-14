@@ -149,7 +149,6 @@ module potWellModel
 		allocate(	Gvec_glob(dim, nG, nQ)		)
 		allocate(	ck_nn(GmaxGLOBAL, nSolve)	)
 		allocate(	ck_qi(GmaxGLOBAL, nSolve)	)
-		allocate(	ck_glob(nG, nSolve, nQ)		)
 		allocate(	Mmn(nBands, nBands, nntot)	)
 		!
 		if(myID == root ) write(*,*)"[calc_Mmat]: try allgather nGq...."
