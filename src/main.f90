@@ -5,7 +5,6 @@ program main
 
 	use sysPara
 	use potWellModel, 	only: 		potWellMethod
-	use postW90,		only:		effTBmodel
 	use berry,			only:		berryMethod
 
 	use output,		 	only:		writeMeshInfo, writeMeshBin, writePolFile, write_K_lattices, & 
@@ -122,9 +121,7 @@ program main
 		call cpu_time(T0)
 		if(	doPw90 ) then
 			write(*,*)	"[main]:**************************POST WANNIER90 *************************"
-			write(*,*)	"[main]: start with effective TB model calculations"
-			call effTBmodel()
-			write(*,*)	"[main]: done with effective tight binding calculations"
+			write(*,*)	"[main]: postw90 deprecated, not used in this version any more"
 			write(*,*)	"*"
 			write(*,*)	"*"
 			write(*,*)	"*"

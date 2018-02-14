@@ -10,7 +10,6 @@ module berry
 	
 	use w90Interface,	only:	read_U_matrix, read_M_initial, readBandVelo, read_FD_scheme, read_wann_centers
 	use basisIO,		only:	read_energies, read_velo
-	use polarization,	only:	calcPolViaA
 	use semiClassics,	only:	calcFirstOrdP
 	use output,			only:	writePolFile, writeVeloHtxt, writeConnTxt
 
@@ -164,6 +163,42 @@ module berry
 		end do
 		!$OMP END PARALLEL DO
 		!
+		return
+	end subroutine
+
+
+	subroutine calcPolViaA(A_mat, centers)
+		!calculates the polarization by integrating connection over the brillouin zone
+		! r_n 	= <0n|r|0n> 
+		!		=V/(2pi)**2 \integrate_BZ <unk|i \nabla_k|unk>
+		!		=V/(2pi)**2 \integrate_BZ A(k)
+		complex(dp),		intent(in)		:: A_mat(:,:,:,:)			!A(2,	 nWfs, nWfs, nQ	)	
+		real(dp),			intent(out)		:: centers(:,:)
+		complex(dp)	,		allocatable		:: val(:)
+		integer								:: n
+		!
+		allocate(	val(  size(A_mat,1) )	)
+		!$OMP PARALLEL DO SCHEDULE(STATIC) DEFAULT(SHARED) PRIVATE(n, val)
+		do n 	= 1, size(A_mat,2)
+			!
+			!INTEGRATE
+			val(1) = sum(A_mat(1,n,n,:)) / size(A_mat,4)
+			val(2) = sum(A_mat(2,n,n,:)) / size(A_mat,4)
+			if(size(A_mat,1)==3)	val(3) = -1.0_dp * sum(A_mat(3,n,n,:)) / size(A_mat,4)
+			!
+			!COLLECT REAL PART
+			centers(:,n) 	= dreal(val(:))
+			!
+			!DEBUG MESSAGE
+			write(*,'(a,i3,a,f8.4,a,f8.4,a)')	"[calcPolViaA]: n=",n,"p_n=",dreal(val(1)),",",dreal(val(2)),")."
+			if( abs(dimag(val(1))) > acc .or. abs(dimag(val(2))) > acc .or. abs(dimag(val(3))) > acc	) then
+				write(*,*)	"[calcPolViaA]: found non zero imaginary contribution from band n=",n 
+			end if	
+			!
+		end do
+		!$OMP END PARALLEL DO
+		!
+		!		
 		return
 	end subroutine
 
