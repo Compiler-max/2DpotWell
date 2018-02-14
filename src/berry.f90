@@ -173,10 +173,9 @@ module berry
 		!		=V/(2pi)**2 \integrate_BZ A(k)
 		complex(dp),		intent(in)		:: A_mat(:,:,:,:)			!A(2,	 nWfs, nWfs, nQ	)	
 		real(dp),			intent(out)		:: centers(:,:)
-		complex(dp)	,		allocatable		:: val(:)
+		complex(dp)							:: val(3)
 		integer								:: n
 		!
-		allocate(	val(  size(A_mat,1) )	)
 		!$OMP PARALLEL DO SCHEDULE(STATIC) DEFAULT(SHARED) PRIVATE(n, val)
 		do n 	= 1, size(A_mat,2)
 			!
