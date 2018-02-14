@@ -3,7 +3,10 @@ module berry
 	!	i.e. calculation of connection, velocities, curvatures and polarization
 	use omp_lib
 	use mathematics,	only:	dp, PI_dp, i_dp, acc, machineP,  myExp, myLeviCivita, aUtoAngstrm, aUtoEv
-	use sysPara
+	use sysPara,		only:	nWfs, nQ, nSolve, &
+								nQx, nQy, dqx, dqy, &
+								qpts, &
+								doGaugBack, doNiu, fastConnConv, doVeloNum 
 	
 	use w90Interface,	only:	read_U_matrix, read_M_initial, readBandVelo, read_FD_scheme, read_wann_centers
 	use basisIO,		only:	read_energies, read_velo
@@ -64,7 +67,7 @@ module berry
 		allocate(			niu_polF3(		3,					nWfs					)			)
 		!
 		!
-		call read_energies(EnQ)
+		
 		!read wannier files
 		call read_M_initial(M_mat)
 		call read_U_matrix(U_mat)
@@ -88,6 +91,7 @@ module berry
 			allocate(	FcurvQ(	3,	nWfs, nWfs,		nQ)		)
 			allocate(	veloQ(	3, 	nSolve,nSolve,	nQ)		)
 			FcurvQ	= dcmplx(0.0_dp)	!does not matter since <FcurvQ,AconnQ> is always zero in 2D
+			call read_energies(EnQ)
 			call calcVelo(U_mat , Aconn_W, EnQ ,  veloQ)
 			call calcFirstOrdP(FcurvQ, Aconn_W, veloQ, EnQ, niu_polF2, niu_polF3)
 		else
@@ -133,7 +137,7 @@ module berry
 		if( .not.	fastConnConv ) write(*,*)	"[calcConnOnCoarse]: use finite difference formula for connection" 
 		!
 		!$OMP PARALLEL DO SCHEDULE(STATIC)	DEFAULT(SHARED) PRIVATE(qi, nn, n,m, delta)
-		do qi = 1, nQ
+		do qi = 1, size(M_mat,4)
 			A_conn(:,:,:,qi) = dcmplx(0.0_dp)
 			!SUM OVER NN
 			do nn = 1, nntot
@@ -145,8 +149,8 @@ module berry
 					A_conn(3,:,:,qi)	= A_conn(3,:,:,qi)	+	w_b(nn) * b_k(3,nn) * dimag( log(M_mat(:,:,nn,qi))	)
 				!WEIGHT OVERLAPS (Finite Difference)
 				else
-					do n = 1, nWfs
-						do m = 1, nWfs
+					do n = 1, size(M_mat,2)
+						do m = 1, size(M_mat,1)
 							delta = dcmplx(0.0_dp)
 							if( n==m ) 	delta = dcmplx(1.0_dp)
 							A_conn(1,m,n,qi)		= 	A_conn(1,m,n,qi)	+	w_b(nn) * b_k(1,nn) * dimag( M_mat(m,n,nn,qi) - delta  )					
@@ -163,38 +167,7 @@ module berry
 	end subroutine
 
 
-	subroutine applyRot(ck, Uq, ckW)
-		complex(dp),	intent(in)		::	ck(:,:,:), Uq(:,:,:)
-		complex(dp),	intent(out)		::	ckW(:,:,:)
-		integer							::	qi, gi, n, m
-		!
-		ckW	= dcmplx(0.0_dp)
-		!$OMP PARALLEL DO DEFAULT(SHARED) PRIVATE(gi, n, m) ,&
-		!$OMP& SCHEDULE(STATIC)
-		do qi = 1, nQ
-			do gi = 1, nGq(qi)			
-				do n = 1, nSolve
-					!BOUND STATES
-					if( n <= nWfs ) then
-						!
-						!SUM_M
-						do m = 1, num_wann
-							ckW(gi,n,qi)	=  ckW(gi,n,qi) + Uq(m,n,qi)   * ck(gi,m,qi)	
-						end do
-					!CONDUCTING STATES
-					else
-						ckW(gi,n,qi)	= ck(gi,n,qi)
-					end if
-					!
-				end do
-			end do
-		end do
-		!$OMP END PARALLEL DO
-		write(*,*)	"[berry/applyRot]: applied U matrix to basis coefficients"
 
-		!
-		return
-	end subroutine
 
 
 	subroutine rot_M_matrix(nntot, nnlist, M_H, U_mat, M_W)
@@ -208,7 +181,7 @@ module berry
 		allocate(		tmp(	size(U_mat,1), size(U_mat,2)	)			)
 		allocate(		U_left(	size(U_mat,1), size(U_mat,2)	)			)
 		!
-		do qi = 1, nQ
+		do qi = 1, size(M_H,4)
 			do nn = 1, nntot
 				tmp(:,:)		=	matmul(		M_H(:,:,nn,qi)	,	U_mat(:,:,nnlist(qi,nn) )			)
 				U_left(:,:)		=	dconjg(		 transpose( U_mat(:,:,qi) )			)
@@ -223,8 +196,8 @@ module berry
 
 
 
-	subroutine calcVelo(U_mat , A_mat, En_vec ,  v_mat)
-		complex(dp),	intent(in)		::	U_mat(:,:,:), A_mat(:,:,:,:)
+	subroutine calcVelo(U_mat , A_conn, En_vec ,  v_mat)
+		complex(dp),	intent(in)		::	U_mat(:,:,:), A_conn(:,:,:,:)
 		real(dp),		intent(in)		::	En_vec(:,:)
 		complex(dp),	intent(out)		::	v_mat(:,:,:,:)
 		!
@@ -235,7 +208,7 @@ module berry
 		!BLOUNT
 		else
 			write(*,*)	"[beryMethod/calcVelo]: velo via blount formula - WARNING this is deprecated please set doVeloNum = f"
-			call calcVeloBLOUNT(U_mat, A_mat, En_vec, v_mat)			
+			call calcVeloBLOUNT(U_mat, A_conn, En_vec, v_mat)			
 		end if
 		!
 		return
@@ -243,8 +216,8 @@ module berry
 
 
 
-	subroutine calcVeloBLOUNT(U_mat , A_mat, En_vec ,  v_mat)
-		complex(dp),	intent(in)		::	U_mat(:,:,:), A_mat(:,:,:,:)
+	subroutine calcVeloBLOUNT(U_mat , A_conn, En_vec ,  v_mat)
+		complex(dp),	intent(in)		::	U_mat(:,:,:), A_conn(:,:,:,:)
 		real(dp),		intent(in)		::	En_vec(:,:)
 		complex(dp),	intent(out)		::	v_mat(:,:,:,:)
 		complex(dp),	allocatable		:: 	Abar(:,:,:), U(:,:), Ucjg(:,:), tmp(:,:)
@@ -261,14 +234,14 @@ module berry
 		!
 		call readBandVelo( v_Band )
 		!
-		do qi = 1, nQ
+		do qi = 1, size(A_conn,4)
 			!(H) GAUGE
 			if( doGaugBack ) then
 				!GET ROTATED QUANTITIES
 				U	 = U_mat(:,:,qi)
 				Ucjg = transpose( dconjg(U)	)
 				do a = 1, 3
-					tmp(:,:)	= matmul(	A_mat(a,:,:,qi) 	,	U	)
+					tmp(:,:)	= matmul(	A_conn(a,:,:,qi) 	,	U	)
 					Abar(a,:,:)	= matmul(	Ucjg				,	tmp	)
 				end do
 				!
@@ -284,8 +257,8 @@ module berry
 				do m = 1, nWfs
 					do n = 1, nWfs
 						if(n==m)	v_mat(1:3,n,n,qi)	= v_Band(1:3,n,qi)
-						!if(n/=m) 	v_mat(1:3,n,m,qi)	= - i_dp * dcmplx( En_vec(m,qi)-En_vec(n,qi) ) * A_mat(1:3,n,m,qi)
-						if(n/=m) 	v_mat(1:3,n,m,qi)	= - i_dp * dcmplx( En_vec(m,qi)-En_vec(n,qi) ) * A_mat(1:3,n,m,qi)
+						!if(n/=m) 	v_mat(1:3,n,m,qi)	= - i_dp * dcmplx( En_vec(m,qi)-En_vec(n,qi) ) * A_conn(1:3,n,m,qi)
+						if(n/=m) 	v_mat(1:3,n,m,qi)	= - i_dp * dcmplx( En_vec(m,qi)-En_vec(n,qi) ) * A_conn(1:3,n,m,qi)
 						!if(n/=m)	v_mat(1:3,n,m,qi)	= - i_dp * dcmplx( En_vec(m,qi)-En_vec(n,qi) ) * Abar(1:3,n,m)
 					end do
 				end do
@@ -323,3 +296,37 @@ module berry
 	end subroutine
 
 end module berry
+
+
+	!subroutine applyRot(ck, Uq, ckW)
+	!	complex(dp),	intent(in)		::	ck(:,:,:), Uq(:,:,:)
+	!	complex(dp),	intent(out)		::	ckW(:,:,:)
+	!	integer							::	qi, gi, n, m
+	!	!
+	!	ckW	= dcmplx(0.0_dp)
+	!	!$OMP PARALLEL DO DEFAULT(SHARED) PRIVATE(gi, n, m) ,&
+	!	!$OMP& SCHEDULE(STATIC)
+	!	do qi = 1, nQ
+	!		do gi = 1, nGq(qi)			
+	!			do n = 1, nSolve
+	!				!BOUND STATES
+	!				if( n <= nWfs ) then
+	!					!
+	!					!SUM_M
+	!					do m = 1, num_wann
+	!						ckW(gi,n,qi)	=  ckW(gi,n,qi) + Uq(m,n,qi)   * ck(gi,m,qi)	
+	!					end do
+	!				!CONDUCTING STATES
+	!				else
+	!					ckW(gi,n,qi)	= ck(gi,n,qi)
+	!				end if
+	!				!
+	!			end do
+	!		end do
+	!	end do
+	!	!$OMP END PARALLEL DO
+	!	write(*,*)	"[berry/applyRot]: applied U matrix to basis coefficients"
+!
+!	!	!
+!	!	return
+	!end subroutine
