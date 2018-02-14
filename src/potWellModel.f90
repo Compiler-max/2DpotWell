@@ -134,18 +134,23 @@ module potWellModel
 		integer,		intent(in)		::	nntot, nnlist(:,:), nncell(:,:,:)
 		integer,		allocatable		::	nGq_glob(:)
 		complex(dp),	allocatable		::	ck_qi(:,:), cK_nn(:,:), Mmn(:,:,:)
-		real(dp),		allocatable		::	Gvec_qi(:,:), Gvec_nn(:,:)
+		real(dp),		allocatable		::	Gvec_qi(:,:), Gvec_nn(:,:), Gvec_glob(:,:,:)
 		real(dp)						::	gShift(2)
 		integer							::	qi, nn, q_nn, nG_qi, nG_nn, qLoc
 		!
 		allocate(	nGq_glob(nQ)				)
 		allocate(	Gvec_qi(dim, nG)			)
 		allocate(	Gvec_nn(dim, nG)			)
+		allocate(	Gvec_glob(dim, nG, nQ)		)
 		allocate(	ck_nn(GmaxGLOBAL, nSolve)	)
 		allocate(	ck_qi(GmaxGLOBAL, nSolve)	)
 		allocate(	Mmn(nBands, nBands, nntot)	)
 		!
+		if(myID == root ) write(*,*)"[calc_Mmat]: try allgather nGq...."
 		call MPI_ALLGATHER( nGq	, qChunk, MPI_INTEGER, nGq_glob		, qChunk, MPI_INTEGER, MPI_COMM_WORLD, ierr)
+		if(myID == root ) write(*,*)"[calc_Mmat]: ...success. try allgather Gvec"
+		call MPI_ALLGATHER(	Gvec, dim*nG*qChunk, MPI_DOUBLE_PRECISION, Gvec_glob, qChunk, MPI_DOUBLE_PRECISION, MPI_COMM_WORLD, ierr)
+		if(myID == root ) write(*,*)"[calc_Mmat]: ...success. now start calculations"
 		!
 		!
 		qLoc = 1
