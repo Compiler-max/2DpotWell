@@ -146,6 +146,7 @@ module potWellModel
 		allocate(	Gvec_glob(dim, nG, nQ)		)
 		allocate(	ck_nn(GmaxGLOBAL, nSolve)	)
 		allocate(	ck_qi(GmaxGLOBAL, nSolve)	)
+		allocate(	ck_glob(nG, nSolve, nQ)		)
 		allocate(	Mmn(nBands, nBands, nntot)	)
 		!
 		if(myID == root ) write(*,*)"[calc_Mmat]: try allgather nGq...."
@@ -179,11 +180,11 @@ module potWellModel
 				call read_coeff(q_nn, ck_nn)
 				!
 				!read Gvec
-				call read_gVec(qi, 		Gvec_qi)
-				call read_gVec(q_nn,	Gvec_nn)
+				!call read_gVec(qi, 		Gvec_qi)
+				!call read_gVec(q_nn,	Gvec_nn)
 				!
 				!
-				call calcMmat(qi, q_nn, gShift, nG_qi, nG_nn, Gvec_qi, Gvec_nn, ck_qi, ck_nn, Mmn(:,:,nn)	)
+				call calcMmat(qi, q_nn, gShift, nG_qi, nG_nn, Gvec_glob(:,:,qi), Gvec_glob(:,:,q_nn), ck_qi, ck_nn, Mmn(:,:,nn)	)
 			end do
 			!
 			!write result to file
