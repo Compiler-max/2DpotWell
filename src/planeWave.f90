@@ -51,7 +51,7 @@ module planeWave
 		real(dp),		intent(in)		::	gShift(2), Gvec_qi(:,:), Gvec_nn(:,:)
 		complex(dp),	intent(in)		::	ck_qi(:,:), ck_nn(:,:)
 		complex(dp),	intent(out)		::	Mmn(:,:)
-		integer							::	gi, gj, cnt, m, n
+		integer							::	gi, gj, cnt, m, n, dG
 		real(dp)						::	delta(2)
 		logical							::	found
 		!
@@ -83,7 +83,8 @@ module planeWave
 			!
 		end do
 		!
-		if( cnt /= nG_qi	)		write(*,'(a,i3,a,i8,a,i8)')	"[#",myID,"calcMmat]: WARNING, found ",cnt," neighbouring Gvec, where nGmax(qi)=",nG_qi
+		dG = GmaxGLOBAL-GminGLOBAL
+		if( cnt < GminGLOBAL-dG	)		write(*,'(a,i3,a,i8,a,i8)')	"[#",myID,"calcMmat]: WARNING, found ",cnt," neighbouring Gvec, where nGmax(qi)=",nG_qi
 		!
 		!		
 

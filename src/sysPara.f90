@@ -10,7 +10,7 @@ module sysPara
 	public :: 	readInp, insideAt, getRindex, getRleftX, getRrightX, getRleftY, getRrightY,& 
 				getKindex, getGammaPoint, getPot, &
 				dim, aX, aY, vol, nAt, relXpos, relYpos, atRx, atRy, atPot, dVpot, &
-				nG, nGq, nG0, Gmax, GmaxGLOBAL, Gcut, Gvec, Gtest, R0, nSolve, &
+				nG, nGq, nG0, Gmax, GmaxGLOBAL, GminGLOBAL, Gcut, Gvec, Gtest, R0, nSolve, &
 				nQ, nQx, nQy, nKx, nKy, nK, nSC, nSCx, nSCy, dqx, dqy, dkx, dky, &
 				nR, nRx, nRy,  dx, dy, &
 				nShells, nw90it, shells, &
@@ -24,7 +24,7 @@ module sysPara
 
 
 	!
-	integer  										:: 	dim=2, nAt=0, nG, nGdim, Gmax, GmaxGLOBAL,nSolve=20, nG0,&  
+	integer  										:: 	dim=2, nAt=0, nG, nGdim, Gmax, GmaxGLOBAL, GminGLOBAL,nSolve=20, nG0,&  
 														nQx=1, nQy=1,nQ , nSCx=1, nSCy=1,& 
 														nKx=1, nKy=1, nK, R0,  &
 														nShells, nw90it,  &
@@ -580,7 +580,7 @@ module sysPara
 
 !
 	subroutine popGvec()
-		integer						:: qi, gi, inside,tot, qLoc, Gmin, GminGLOBAL
+		integer						:: qi, gi, inside,tot, qLoc, Gmin
 		real(dp)					:: kg(2)
 		!
 		allocate(	nGq(					qChunk		)		)
