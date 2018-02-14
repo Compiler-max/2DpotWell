@@ -27,7 +27,7 @@ program main
     call MPI_COMM_SIZE (MPI_COMM_WORLD, nProcs, ierr)
     !
     !SETUP
-    if( myID == root) then
+    if( myID == root ) then
     	alloT	= 0.0
     	hamT	= 0.0
     	wannT	= 0.0
@@ -48,7 +48,7 @@ program main
 	if( mod(nQ,nProcs)/=0)  stop '[main]: ERROR mpi threads have to be integer fraction of nQ'
 	!
 	!print info
-	if( myID == root) then
+	if( myID == root .and. doSolveHam ) then
 		write(*,*)					"*"
 		write(*,*)					"*"
 		write(*,*)					"[main]:**************************Infos about this run*************************"
