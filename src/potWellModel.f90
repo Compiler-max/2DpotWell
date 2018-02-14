@@ -144,7 +144,7 @@ module potWellModel
 		allocate(	ck_qi(GmaxGLOBAL, nSolve)	)
 		allocate(	Mmn(nBands, nBands, nntot)	)
 		!
-		call MPI_GATHER( nGq	, qChunk, MPI_INTEGER, nGq_glob		, qChunk, MPI_INTEGER, root, MPI_COMM_WORLD, ierr)
+		call MPI_ALLGATHER( nGq	, qChunk, MPI_INTEGER, nGq_glob		, qChunk, MPI_INTEGER, root, MPI_COMM_WORLD, ierr)
 		!
 		!
 		qLoc = 1
