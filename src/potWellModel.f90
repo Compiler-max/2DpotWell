@@ -57,10 +57,11 @@ module potWellModel
 		!
 		!calc Mmat
 		call calc_Mmat(nntot, nnlist, nncell)
-
+		call MPI_BARRIER(MPI_COMM_WORLD, ierr)	!without root may try to read Mmat files which are not written
 
 
 		!call w90 interface to write input files & .mmn etc. files
+
 		if( myID == root ) then
 			call write_w90_matrices()
 			write(*,'(a,i3,a)')		"[#",myID,";solveHam]: wrote w90 matrix input files (.win, .amn, .mmn, .eig, _geninterp.kpt )"
