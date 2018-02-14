@@ -309,6 +309,7 @@ module basisIO
 			Amn(:,:,qi)	= Amn(:,:,qi) + i_dp * dcmplx(buffer(:,:))
 			!
 		end do
+		write(*,*)	"[read_Amn]: finished"
 		!
 		return
 	end subroutine
@@ -338,6 +339,7 @@ module basisIO
 			Mmn(:,:,:,qi)	= Mmn(:,:,:,qi) + i_dp * dcmplx(buffer(:,:,:))
 			!
 		end do
+		write(*,*)	"[read_Mmn]: finished"
 		!
 		return
 	end subroutine
@@ -367,8 +369,8 @@ module basisIO
 			close(210)
 			velo(:,:,:,qi)	= velo(:,:,:,qi) + i_dp * dcmplx(buffer(:,:,:))
 		end do
-
-
+		write(*,*)	"[read_velo]: finished"
+		!
 		return
 	end subroutine
 
