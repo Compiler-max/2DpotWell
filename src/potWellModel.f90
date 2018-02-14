@@ -149,7 +149,6 @@ module potWellModel
 		allocate(	ck_nn(GmaxGLOBAL, nSolve)		)
 		allocate(	ck_qi(GmaxGLOBAL, nSolve)		)
 		allocate(	Mmn(nBands, nBands, nntot)		)
-		allocate(	Mmn(nBands, nBands, nntot, nQ)	)
 		!
 		call MPI_ALLGATHER( nGq	, qChunk, MPI_INTEGER, nGq_glob		, qChunk, MPI_INTEGER, MPI_COMM_WORLD, ierr)
 		!
