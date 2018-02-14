@@ -2,10 +2,8 @@ module berry
 	!module contains methods related to the Berry phase theory of modern polarization
 	!	i.e. calculation of connection, velocities, curvatures and polarization
 	use omp_lib
-	use mathematics,	only:	dp, PI_dp, i_dp, acc, machineP,  myExp, aUtoAngstrm, aUtoEv
 	use sysPara,		only:	Bext, prefactF3, &
 								nWfs, nQ, nSolve, &
-								nQx, nQy, dqx, dqy, &
 								qpts, &
 								doGaugBack, doNiu, fastConnConv, doVeloNum 
 	
@@ -21,9 +19,10 @@ module berry
 
 
 
-	integer	::					num_wann, num_kpts
-
-
+	integer						::	num_wann, num_kpts, num_stat
+	integer, 		parameter 	:: 	dp 				= kind(0.d0)
+	real(dp), 		parameter	:: 	machineP 		= 1e-15_dp
+	complex(dp),	parameter 	::	i_dp 			= dcmplx(0.0_dp, 1.0_dp)
 
 
 
@@ -46,25 +45,26 @@ module berry
 		integer							::	nntot
 		integer,		allocatable		:: 	nnlist(:,:), nncell(:,:,:)
 		!
-		!READ FD SCHEME
-		num_wann = nWfs
+		num_wann = nWfs		
 		num_kpts = nQ
+		num_stat = nSolve
+
+		!READ FD SCHEME
 		call read_FD_scheme(nntot, nnlist, nncell, b_k, w_b)
 		!
 		!k-space
-		allocate(			EnQ(		nSolve	 							,	nQ		)			)
-		allocate(			U_mat(	nWfs	,	nWfs						,	nQ		)			)
-		allocate(			M_mat(	nWfs	, 	nWfs		, 	nntot 		,	nQ		)			)
-		allocate(			M_wann(	nWfs	,	nWfs		,	nntot		,	nQ		)			)		
-		allocate(			Aconn_H(		3		, 	nWfs	,	nWfs	,	nQ		)			)
-		allocate(			Aconn_W(		3		, 	nWfs	,	nWfs	,	nQ		)			)		
+		allocate(			U_mat(		num_wann	,	num_wann					,	num_kpts		)			)
+		allocate(			M_mat(		num_wann	, 	num_wann	, 	nntot 		,	num_kpts		)			)
+		allocate(			M_wann(		num_wann	,	num_wann	,	nntot		,	num_kpts		)			)		
+		allocate(			Aconn_H(		3		, 	num_wann	,	num_wann	,	num_kpts		)			)
+		allocate(			Aconn_W(		3		, 	num_wann	,	num_wann	,	num_kpts		)			)		
 		!
 		!real-space
-		allocate(			w_centers(		3,					nWfs					)			)
-		allocate(			berry_W_gauge(	3,					nWfs					)			)
-		allocate(			berry_H_gauge(	3,					nWfs					)			)
-		allocate(			niu_polF2(		3,					nWfs					)			)
-		allocate(			niu_polF3(		3,					nWfs					)			)
+		allocate(			w_centers(		3,					num_wann					)			)
+		allocate(			berry_W_gauge(	3,					num_wann					)			)
+		allocate(			berry_H_gauge(	3,					num_wann					)			)
+		allocate(			niu_polF2(		3,					num_wann					)			)
+		allocate(			niu_polF3(		3,					num_wann					)			)
 		!
 		!
 		
@@ -87,13 +87,17 @@ module berry
 		!
 		!1st ORDER SEMICLASSICS
 		if(doNiu) then
+			!
 			write(*,*)	"[berryMethod]: now calc first order pol"
-			allocate(	FcurvQ(	3,	nWfs, nWfs,		nQ)		)
-			allocate(	veloQ(	3, 	nSolve,nSolve,	nQ)		)
-			FcurvQ	= dcmplx(0.0_dp)	!does not matter since <FcurvQ,AconnQ> is always zero in 2D
+			allocate(	EnQ(		num_stat,				num_kpts)		)
+			allocate(	FcurvQ(	3,	num_wann, num_wann,		num_kpts)		)
+			allocate(	veloQ(	3, 	num_stat, num_stat,		num_kpts)		)
+	
 			call read_energies(EnQ)
 			call calcVelo(U_mat , Aconn_W, EnQ ,  veloQ)
+			call calcCurv(FcurvQ)
 			call calcFirstOrdP(Bext, prefactF3, FcurvQ, Aconn_W, veloQ, EnQ, niu_polF2, niu_polF3)
+			!
 		else
 			niu_polF2 = 0.0_dp
 			niu_polF3 = 0.0_dp
@@ -104,7 +108,7 @@ module berry
 		call writePolFile(w_centers, berry_H_gauge, berry_W_gauge, niu_polF2, niu_polF3)
 		write(*,*)	"[berryMethod]: wrote pol file"
 		!call writeConnTxt( Aconn_W )
-		!call writeVeloHtxt( veloQ )	!*aUtoEv*aUtoAngstrm )	
+		!call writeVeloHtxt( veloQ )		
 		!write(*,*)	"[berryMethod]: wrote k-space info files (connection & velocities)"			
 		!
 		!
@@ -192,7 +196,7 @@ module berry
 			!
 			!DEBUG MESSAGE
 			write(*,'(a,i3,a,f8.4,a,f8.4,a)')	"[calcPolViaA]: n=",n,"p_n=",dreal(val(1)),",",dreal(val(2)),")."
-			if( abs(dimag(val(1))) > acc .or. abs(dimag(val(2))) > acc .or. abs(dimag(val(3))) > acc	) then
+			if( abs(dimag(val(1))) > machineP .or. abs(dimag(val(2))) > machineP .or. abs(dimag(val(3))) > machineP	) then
 				write(*,*)	"[calcPolViaA]: found non zero imaginary contribution from band n=",n 
 			end if	
 			!
@@ -251,6 +255,19 @@ module berry
 			write(*,*)	"[beryMethod/calcVelo]: velo via blount formula - WARNING this is deprecated please set doVeloNum = f"
 			call calcVeloBLOUNT(U_mat, A_conn, En_vec, v_mat)			
 		end if
+		!
+		return
+	end subroutine
+
+
+	subroutine calcCurv(Fcurv_mat)
+		!todo: implement this in case of 3d system
+		complex(dp),		intent(out)		:: Fcurv_mat(:,:,:,:)
+		!
+		write(*,*)	"[calcCurv]: WARNING - calcCurv is not implemented (irrelevant for 2D system)"
+		!
+		Fcurv_mat = dcmplx(0.0_dp)
+		!
 		!
 		return
 	end subroutine
