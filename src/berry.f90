@@ -84,7 +84,7 @@ module berry
 		!
 		!1st ORDER SEMICLASSICS
 		if(doNiu) then
-			write(*,*)	"[berrryMethod]: now calc first order pol"
+			write(*,*)	"[berryMethod]: now calc first order pol"
 			allocate(	FcurvQ(	3,	nWfs, nWfs,		nQ)		)
 			allocate(	veloQ(	3, 	nSolve,nSolve,	nQ)		)
 			FcurvQ	= dcmplx(0.0_dp)	!does not matter since <FcurvQ,AconnQ> is always zero in 2D
@@ -98,8 +98,10 @@ module berry
 		!OUTPUT
 		call printNNinfo(nntot, nnlist, w_b)
 		call writePolFile(w_centers, berry_H_gauge, berry_W_gauge, niu_polF2, niu_polF3)
+		write(*,*)	"[berryMethod]: wrote pol file"
 		call writeConnTxt( Aconn_W )
-		call writeVeloHtxt( veloQ )	!*aUtoEv*aUtoAngstrm )				
+		call writeVeloHtxt( veloQ )	!*aUtoEv*aUtoAngstrm )	
+		write(*,*)	"[berryMethod]: wrote k-space info files (connection & velocities)"			
 		!
 		!
 		return
