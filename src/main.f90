@@ -60,6 +60,8 @@ program main
 		write(*,*)					"[main]: only solve for        nSolve=",nSolve
     	write(*,*)					"[main]: nBands=", nBands
 		write(*,*)					"[main]: nWfs  =", nWfs
+		write(*,*)					"[main]: nAt   =", nAt
+		write(*,'(a,i3,a)')			"[main]: project ",nWfs/nAt," states onto each atom"
 		write(*,*)					"[main]: w90 seed_name= ", seedName	
 		write(*,*)					"*"
 		write(*,*)					"*"

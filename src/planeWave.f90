@@ -100,8 +100,6 @@ module planeWave
 		A_matrix	= dcmplx(0.0_dp)
 		!
 		perAtom	= nWfs / nAt
-		if( qi == 1 .and. myID == root)	write(*,'(a,i3,a,i2,a,i2,a)')		"[#",myID,";calcAmatANA]: projecting onto ",nWfs," states, distributed over ",nAt," atoms"
-		if( qi == 1 .and. myID == root)	write(*,'(a,i3,a,i2,a)')			"[#",myID,";calcAmatANA]: projecting onto ",perAtom," states per atom"
 		!
 		if( perAtom == 1 ) then
 			do n = 1, nWfs
