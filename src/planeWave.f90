@@ -77,9 +77,6 @@ module planeWave
 				!
 				gj = gj + 1
 			end do
-			!if( .not. found  ) write(*,'(a,i5,a,i5,a,f6.2,a,f6.2,a)')	"[calcMmat]: WARNING no matching Gvec found for qi=",qi," q_nn=",knb,&
-			!															" gshift=(",gShift(1),",",gShift(2),")."
-			!
 			!
 		end do
 		!
@@ -87,8 +84,6 @@ module planeWave
 		if( cnt < GminGLOBAL-dG	)		write(*,'(a,i3,a,i8,a,i8)')	"[#",myID,"calcMmat]: WARNING, found ",cnt," neighbouring Gvec, where nGmax(qi)=",nG_qi
 		!
 		!		
-
-
 		return
 	end subroutine
 
