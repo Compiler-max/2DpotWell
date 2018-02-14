@@ -614,7 +614,7 @@ module output
 	subroutine printBasisInfo()
 		!nG to Gcut RATIO
 		if(			nG		< 		vol * Gcut * dsqrt(Gcut) /	(2.0_dp*PI_dp**2)		) then
-			write(*,*)	"[BasisInfo]:	volume: increase Gcut"
+			stop	"[BasisInfo]:	volume: increase Gcut"
 		else
 			write(*,*)	"[BasisInfo]: 	volume: accepted Gcut"
 		end if
