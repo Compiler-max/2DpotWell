@@ -265,7 +265,7 @@ module basisIO
 				read(720)	En(:,qi)
 				close(720)
 		end do
-		write(*,*)	"[read_energies]: finished"
+		write(*,*)	"[read_energies]: read the enK.qi files"
 		!
 		return
 	end subroutine
