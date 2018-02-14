@@ -63,6 +63,7 @@ module potWellModel
 		!call w90 interface to write input files & .mmn etc. files
 
 		if( myID == root ) then
+			write(*,'(a,i3,a)')		"[#",myID,";solveHam]: wrote Mmn files, now collect files to write wannier90 input files"
 			call write_w90_matrices()
 			write(*,'(a,i3,a)')		"[#",myID,";solveHam]: wrote w90 matrix input files (.win, .amn, .mmn, .eig, _geninterp.kpt )"
 		end if
@@ -137,6 +138,7 @@ module potWellModel
 		real(dp),		allocatable		::	Gvec_qi(:,:), Gvec_nn(:,:), Gvec_glob(:,:,:)
 		real(dp)						::	gShift(2)
 		integer							::	qi, nn, q_nn, nG_qi, nG_nn, qLoc
+		real							::	T0, T1
 		!
 		allocate(	nGq_glob(nQ)				)
 		allocate(	Gvec_qi(dim, nG)			)
@@ -148,9 +150,15 @@ module potWellModel
 		!
 		if(myID == root ) write(*,*)"[calc_Mmat]: try allgather nGq...."
 		call MPI_ALLGATHER( nGq	, qChunk, MPI_INTEGER, nGq_glob		, qChunk, MPI_INTEGER, MPI_COMM_WORLD, ierr)
-		if(myID == root ) write(*,*)"[calc_Mmat]: ...success. try allgather Gvec"
+		if(myID == root ) then
+			write(*,*)"[calc_Mmat]: ...success. try allgather Gvec"
+			call cpu_time(T0)
+		end if
 		call MPI_ALLGATHER(	Gvec, dim*nG*qChunk, MPI_DOUBLE_PRECISION, Gvec_glob, qChunk, MPI_DOUBLE_PRECISION, MPI_COMM_WORLD, ierr)
-		if(myID == root ) write(*,*)"[calc_Mmat]: ...success. now start calculations"
+		if(myID == root )	then
+			call cpu_time(T1)
+			write(*,*)"[calc_Mmat]: ...success. took ",T1-T0," seconds"
+		end if
 		!
 		!
 		qLoc = 1
