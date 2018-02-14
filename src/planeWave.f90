@@ -81,7 +81,7 @@ module planeWave
 		end do
 		!
 		dG = GmaxGLOBAL-GminGLOBAL
-		if( cnt < GminGLOBAL-dG	)		write(*,'(a,i3,a,i8,a,i8)')	"[#",myID,"calcMmat]: WARNING, found ",cnt," neighbouring Gvec, where nGmax(qi)=",nG_qi
+		if( cnt < GminGLOBAL-2*dG	)		write(*,'(a,i3,a,i8,a,i8)')	"[#",myID,"calcMmat]: WARNING, found ",cnt," neighbouring Gvec, where nGmax(qi)=",nG_qi
 		!
 		!		
 		return
