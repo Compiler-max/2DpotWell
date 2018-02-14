@@ -190,7 +190,7 @@ module potWellModel
 				call calcMmat(qi, q_nn, gShift, nG_qi, nG_nn, Gvec_glob(:,:,qi), Gvec_glob(:,:,q_nn), ck_qi, ck_nn, Mmn(:,:,nn)	)
 			end do
 			!
-			!write result to file
+			!write result to file, alternative: gather on root and write .mmn directly
 			call writeABiN_Mmn(qi, Mmn)
 			write(*,'(a,i3,a,i5,a,i5,a,i5,a)')		"[#",myID,",calc_Mmat]: wrote M_matrix for qi=",qi,"; task (",qLoc,"/",qChunk,") done"
 			qLoc = qLoc + 1
