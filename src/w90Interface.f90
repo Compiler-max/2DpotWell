@@ -289,7 +289,7 @@ module w90Interface
 		!
 		write(*,*)		" 	nn | 	b	| 	w_b "
 		do nn = 1, nntot
-			write(*,'(a,i2,a,f4.1,a,f4.1,a,f4.1,a,f6.2)')		"  ",nn," | (",b_k(1,nn),", ",b_k(2,nn),", ",b_k(3,nn),") |    ",w_b(nn)
+			write(*,'(a,i2,a,f6.2,a,f6.2,a,f6.2,a,f6.2)')		"  ",nn," | (",b_k(1,nn),", ",b_k(2,nn),", ",b_k(3,nn),") |    ",w_b(nn)
 		end do
 
 
@@ -411,6 +411,7 @@ module w90Interface
 		real(dp)							::	cmplx(2)
 		logical								:: 	foundFile
 		!
+		M_init = dcmplx(0.0_dp)
 		!check for file
 		inquire(file=w90_Dir//seedName//'.mmn', exist=foundFile)
 		if( .not. foundFile ) stop 'the .mmn file could not be found'
