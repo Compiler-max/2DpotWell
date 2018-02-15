@@ -73,14 +73,13 @@ module berry
 		call read_U_matrix(U_mat)
 		call read_wann_centers(w_centers)
 		!
-		!HAM GAUGE
+		!0th HAM GAUGE
 		write(*,*)	"[berryMethod]: start (H) gauge calculation"
 		call calcConnOnCoarse(M_mat, nntot, b_k, w_b, Aconn_H)
 		call calcPolViaA(Aconn_H, berry_H_gauge)
 		!
-		!WANN GAUGE
+		!0th WANN GAUGE
 		write(*,*)	"[berryMethod]: start (W) gauge calculation"
-
 		call rot_M_matrix(nntot, nnlist, M_mat, U_mat, M_wann)
 		call calcConnOnCoarse(M_wann, nntot, b_k, w_b, Aconn_W)
 		call calcPolViaA(Aconn_W, berry_W_gauge)
@@ -92,12 +91,21 @@ module berry
 			allocate(	EnQ(		num_stat,				num_kpts)		)
 			allocate(	FcurvQ(	3,	num_wann, num_wann,		num_kpts)		)
 			allocate(	veloQ(	3, 	num_stat, num_stat,		num_kpts)		)
-	
+			
+			!get energies
 			call read_energies(EnQ)
-			call calcVelo(U_mat , Aconn_W, EnQ ,  veloQ)
+			!get velocities
+			if(	doVeloNum) then
+				if( .not. 	doGaugBack )	call calcVeloBLOUNT(Aconn_W, EnQ, veloQ)	
+				if(			doGaugBack )	call calcVeloBLOUNT(Aconn_H, EnQ, veloQ)	
+			else
+				call read_velo(veloQ)
+			end if
+			!get curvature (toDo) 
 			call calcCurv(FcurvQ)
-			call calcFirstOrdP(Bext, prefactF3, FcurvQ, Aconn_W, veloQ, EnQ, niu_polF2, niu_polF3)
 			!
+			!semiclassics
+			call calcFirstOrdP(Bext, prefactF3, FcurvQ, Aconn_W, veloQ, EnQ, niu_polF2, niu_polF3)
 		else
 			niu_polF2 = 0.0_dp
 			niu_polF3 = 0.0_dp
@@ -140,9 +148,9 @@ module berry
 		if( 		fastConnConv ) write(*,*)	"[calcConnOnCoarse]: use logarithmic formula for connection"
 		if( .not.	fastConnConv ) write(*,*)	"[calcConnOnCoarse]: use finite difference formula for connection" 
 		!
+		A_conn = dcmplx(0.0_dp)
 		!$OMP PARALLEL DO SCHEDULE(STATIC)	DEFAULT(SHARED) PRIVATE(qi, nn, n,m, delta)
 		do qi = 1, size(M_mat,4)
-			A_conn(:,:,:,qi) = dcmplx(0.0_dp)
 			!SUM OVER NN
 			do nn = 1, nntot
 				!
@@ -187,9 +195,9 @@ module berry
 		do n 	= 1, size(A_mat,2)
 			!
 			!INTEGRATE
-			val(1) = sum(A_mat(1,n,n,:)) / size(A_mat,4)
-			val(2) = sum(A_mat(2,n,n,:)) / size(A_mat,4)
-			if(size(A_mat,1)==3)	val(3) = -1.0_dp * sum(A_mat(3,n,n,:)) / size(A_mat,4)
+			val(1) = -1.0_dp * sum(A_mat(1,n,n,:)) / size(A_mat,4)
+			val(2) = -1.0_dp * sum(A_mat(2,n,n,:)) / size(A_mat,4)
+			if(size(A_mat,1)==3)	val(3) =  -1.0_dp * sum(A_mat(3,n,n,:)) / size(A_mat,4)
 			!
 			!COLLECT REAL PART
 			centers(:,n) 	= dreal(val(:))
@@ -197,7 +205,7 @@ module berry
 			!DEBUG MESSAGE
 			write(*,'(a,i3,a,f8.4,a,f8.4,a)')	"[calcPolViaA]: n=",n,"p_n=",dreal(val(1)),",",dreal(val(2)),")."
 			if( abs(dimag(val(1))) > machineP .or. abs(dimag(val(2))) > machineP .or. abs(dimag(val(3))) > machineP	) then
-				write(*,*)	"[calcPolViaA]: found non zero imaginary contribution from band n=",n 
+				write(*,*)	"[calcPolViaA]: WARNING - found non zero imaginary contribution from band n=",n 
 			end if	
 			!
 		end do
@@ -224,13 +232,11 @@ module berry
 		allocate(		U_left(	size(U_mat,1), size(U_mat,2)	)			)
 		!$OMP DO SCHEDULE(STATIC)
 		do qi = 1, size(M_H,4)
+			U_left(:,:)			=	dconjg(		 transpose( U_mat(:,:,qi) )			)
 			!
 			do nn = 1, nntot
-				tmp(:,:)		=	matmul(		M_H(:,:,nn,qi)	,	U_mat(:,:,nnlist(qi,nn) )			)
-				U_left(:,:)		=	dconjg(		 transpose( U_mat(:,:,qi) )			)
-				!
-				!
-				M_W(:,:,nn,qi)	= matmul(	U_left(:,:), tmp(:,:) )
+				tmp(:,:)		=	matmul(		M_H(:,:,nn,qi)	,	U_mat(:,:,nnlist(qi,nn))	)
+				M_W(:,:,nn,qi)	= 	matmul(		U_left(:,:)		, 	tmp(:,:) 					)
 			end do
 			!
 		end do
@@ -239,25 +245,6 @@ module berry
 		return
 	end subroutine
 
-
-
-	subroutine calcVelo(U_mat , A_conn, En_vec ,  v_mat)
-		complex(dp),	intent(in)		::	U_mat(:,:,:), A_conn(:,:,:,:)
-		real(dp),		intent(in)		::	En_vec(:,:)
-		complex(dp),	intent(out)		::	v_mat(:,:,:,:)
-		!
-		!PLANE WAVE GRADIENT
-		if( .not. doVeloNum ) then
-			write(*,*)	"[beryMethod/calcVelo]: velo via plane wave gradients"
-			call read_velo(v_mat)
-		!BLOUNT
-		else
-			write(*,*)	"[beryMethod/calcVelo]: velo via blount formula - WARNING this is deprecated please set doVeloNum = f"
-			call calcVeloBLOUNT(U_mat, A_conn, En_vec, v_mat)			
-		end if
-		!
-		return
-	end subroutine
 
 
 	subroutine calcCurv(Fcurv_mat)
@@ -274,57 +261,38 @@ module berry
 
 
 
-	subroutine calcVeloBLOUNT(U_mat , A_conn, En_vec ,  v_mat)
-		complex(dp),	intent(in)		::	U_mat(:,:,:), A_conn(:,:,:,:)
+	subroutine calcVeloBLOUNT(A_conn, En_vec ,  v_mat)
+		!use Blount 1962
+		! 
+		complex(dp),	intent(in)		::	A_conn(:,:,:,:)
 		real(dp),		intent(in)		::	En_vec(:,:)
 		complex(dp),	intent(out)		::	v_mat(:,:,:,:)
-		complex(dp),	allocatable		:: 	Abar(:,:,:), U(:,:), Ucjg(:,:), tmp(:,:)
 		real(dp),		allocatable		::	v_Band(:,:,:)
-		integer							::	n, m, qi, a
-
-		allocate(			Abar(		3		,	nWfs	,	nWfs				)			)
-		allocate(			tmp(					nWfs	,	nWfs				)			)
-		allocate(			U(						nWfs	,	nWfs				)			)
-		allocate(			Ucjg(					nWfs	,	nWfs				)			)
-		allocate(			v_Band(		3		,			nWfs		,	nQ		)			)
+		integer							::	n, m, qi
+		!
+		allocate(	v_Band(	3,	num_wann,	num_kpts)		)
 		!
 		v_mat	= dcmplx(0.0_dp)
 		!
+		!DEBUG
+		if( size(A_conn,1) /= size(v_mat,1)	)	write(*,*)	"[calcVeloBLOUNT]: A_conn and v_mat have different real space dimensionality"
+		if( size(A_conn,2) /= size(v_mat,2) )	stop		"[calcVeloBLOUNT]: A_conn and v_mat have different amount of states covered"
+		if( size(A_conn,3) /= size(v_mat,3) )	stop		"[calcVeloBLOUNT]: A_conn and v_mat have different amount of states covered"
+		if( size(A_conn,4) /= size(v_mat,4) )	stop		"[calcVeloBLOUNT]: A_conn and v_mat live on different k meshes"
+		!
+		!GET DIAGONAL ELEMENTS
 		call readBandVelo( v_Band )
-		!
+		!FILL MATRIX
 		do qi = 1, size(A_conn,4)
-			!(H) GAUGE
-			if( doGaugBack ) then
-				!GET ROTATED QUANTITIES
-				U	 = U_mat(:,:,qi)
-				Ucjg = transpose( dconjg(U)	)
-				do a = 1, 3
-					tmp(:,:)	= matmul(	A_conn(a,:,:,qi) 	,	U	)
-					Abar(a,:,:)	= matmul(	Ucjg				,	tmp	)
+			do m = 1, size(v_mat,3)
+				do n = 1, size(v_mat,2)
+					if(n==m)	v_mat(1:3,n,n,qi)	= v_Band(1:3,n,qi)
+					if(n/=m) 	v_mat(1:3,n,m,qi)	= - i_dp * dcmplx( En_vec(m,qi)-En_vec(n,qi) ) * A_conn(1:3,n,m,qi)
 				end do
-				!
-				!APPLY
-				do m = 1, nWfs
-					do n = 1, nWfs
-						if(n==m)	v_mat(1:3,n,n,qi)	= v_Band(1:3,n,qi)
-						if(n/=m) 	v_mat(1:3,n,m,qi)	= - i_dp * dcmplx( En_vec(m,qi)-En_vec(n,qi) ) * Abar(1:3,n,m)
-					end do
-				end do
-			!(W) GAUGE
-			else
-				do m = 1, nWfs
-					do n = 1, nWfs
-						if(n==m)	v_mat(1:3,n,n,qi)	= v_Band(1:3,n,qi)
-						!if(n/=m) 	v_mat(1:3,n,m,qi)	= - i_dp * dcmplx( En_vec(m,qi)-En_vec(n,qi) ) * A_conn(1:3,n,m,qi)
-						if(n/=m) 	v_mat(1:3,n,m,qi)	= - i_dp * dcmplx( En_vec(m,qi)-En_vec(n,qi) ) * A_conn(1:3,n,m,qi)
-						!if(n/=m)	v_mat(1:3,n,m,qi)	= - i_dp * dcmplx( En_vec(m,qi)-En_vec(n,qi) ) * Abar(1:3,n,m)
-					end do
-				end do
-			end if
+			end do
 		end do	
-
 		!
-
+		!
 		return
 	end subroutine
 
