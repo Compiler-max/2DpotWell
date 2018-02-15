@@ -636,7 +636,8 @@ module w90Interface
 		write(100,*)	
 		write(100,*)	'shell_list =',shells
 		write(100,*)	'skip_b1_tests = .true.'
-		if( useBloch )	write(100,*)	'use_bloch_phases = true '
+		if( useBloch )		write(100,*)	'use_bloch_phases = true '
+		if(.not. useBloch)	write(100,*)	'use_bloch_phases = false '
 		write(100,*)	
 		!
 		!real lattice
