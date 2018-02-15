@@ -42,7 +42,7 @@ module berry
 											Aconn_H(:,:,:,:), Aconn_W(:,:,:,:), FcurvQ(:,:,:,:),veloQ(:,:,:,:) 		
 		real(dp),		allocatable		::	EnQ(:,:), b_k(:,:), w_b(:), &
 											w_centers(:,:), berry_W_gauge(:,:),berry_H_gauge(:,:), niu_polF2(:,:), niu_polF3(:,:)
-		integer							::	nntot
+		integer							::	nntot, n
 		integer,		allocatable		:: 	nnlist(:,:), nncell(:,:,:)
 		!
 		num_wann = nWfs		
@@ -72,6 +72,10 @@ module berry
 		call read_M_initial(M_mat)
 		call read_U_matrix(U_mat)
 		call read_wann_centers(w_centers)
+		write(*,*)	"[berryMethod]: w90 centers:"
+		do n = 1, size(w_centers,2)
+			write(*,'(a,i3,a,f6.2,a,f6.2,a,f6.2,a)')	"n=",n,"	p_w90(n)=(",w_centers(1,n),", ",w_centers(2,n),", ",w_centers(3,n),")."
+		end do
 		!
 		!0th HAM GAUGE
 		write(*,*)	"[berryMethod]: start (H) gauge calculation"
