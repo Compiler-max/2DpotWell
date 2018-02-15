@@ -414,7 +414,7 @@ module w90Interface
 	subroutine read_M_initial( M_init)
 		!read the M_matrix written by w90prepMmat	
 		complex(dp),		intent(out)		::	M_init(:,:,:,:)
-		integer								::	qi,nn, n, m, &
+		integer								::	qi,nn, n, m, x, &
 												f_num_bands, f_num_kpts, f_nntot, f_qi, f_nnlist, f_nncell(1:3)
 		real(dp)							::	realBuff(2)
 		logical								:: 	foundFile
@@ -433,7 +433,11 @@ module w90Interface
 			do nn = 1, size(M_init,3)
 				!
 				read(120,*)	f_qi, f_nnlist, f_nncell(1:3)
-				if(	 qi /= 	f_qi )	stop	"[read_M_initial]: WARNING q mesh ordered differently"
+				if(	 qi /= 	f_qi )						stop	"[read_M_initial]: WARNING q mesh ordered differently"
+				if( f_nnlist /= nnlist(qi,nn))			stop	"[read_M_initial]: nnlist ordering is different"
+				do x = 1, 3
+					if(f_nncell(x) /= nncell(x,qi,nn)) 	stop	"[read_M_initial]: the nncell ordering is different"
+				end do
 				!
 				do n = 1, size(M_init,2)
 					do m = 1, size(M_init,1)
@@ -454,18 +458,15 @@ module w90Interface
 		!WRITE CLONE FOR DEBUG
 		open(unit=125,file=w90_Dir//'clone'//'.mmn',action='write',access='stream',form='formatted', status='replace')
 		write(125,*)	"clone of the "//seedName//".mmn file"
-		write(125,*)	f_num_bands, f_num_kpts, f_nntot
+		write(125,*)	f_num_bands, f_num_kpts, nntot
 		do qi = 1, size(M_init,4)
-			do nn = 1, size(M_init,3)
-				!
+			do nn = 1, nntot
 				write(125,*)	qi, nnlist(qi,nn),	nncell(1:3,qi,nn)
-				!
 				do n = 1, size(M_init,2)
 					do m = 1, size(M_init,1)
 						write(125,*)	M_init(m,n,nn,qi)
 					end do
 				end do
-				!
 			end do
 		end do
 		close(125)
