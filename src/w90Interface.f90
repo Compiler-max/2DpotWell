@@ -427,10 +427,10 @@ module w90Interface
 				read(120,*)	f_qi, f_nnlist, f_nncell(1:3)
 				write(*,*)	"[read_M_initial]: read fd sheme for qi=",qi	," nn=",nn	
 				if(	 	qi 			/= 	f_qi		)	stop	"[read_M_initial]: WARNING q mesh ordered differently"
-				if(	nnlist(qi,nn) 	/= 	f_nnlist	)	stop	"[read_M_initial]: WARNING trouble with nnlist"
-				do x = 1, 3
-					if( f_nncell(x) /= nncell(x,qi,nn))	stop	"[read_M_initial]:	WARNING trouble with nncell"
-				end do
+				!if(	nnlist(qi,nn) 	/= 	f_nnlist	)	stop	"[read_M_initial]: WARNING trouble with nnlist"
+				!do x = 1, 3
+				!	if( f_nncell(x) /= nncell(x,qi,nn))	stop	"[read_M_initial]:	WARNING trouble with nncell"
+				!end do
 				write(*,*)	"[read_M_initial]: tested fd sheme"
 
 
