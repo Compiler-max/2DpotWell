@@ -133,7 +133,7 @@ module berry
 		!OUTPUT
 		call writePolFile(w_centers, berry_H_gauge, berry_W_gauge, niu_polF2, niu_polF3)
 		write(*,*)		"[berryMethod]: wrote pol file"
-		call writeConnTxt( Aconn_H )
+		call writeConnTxt( Aconn_W )
 		!call writeVeloHtxt( veloQ )		
 		!write(*,*)	"[berryMethod]: wrote k-space info files (connection & velocities)"			
 		!
