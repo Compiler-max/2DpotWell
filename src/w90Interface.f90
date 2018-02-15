@@ -433,7 +433,7 @@ module w90Interface
 				do n = 1, size(M_init,2)
 					do m = 1, size(M_init,1)
 						read(120,*)	realBuff(1:2)
-						M_init(m,n,nn,qi)	= dcmplx(realBuff(1),realBuff(2))
+						M_init(m,n,nn,qi)	= dcmplx( realBuff(1), realBuff(2) )
 					end do
 				end do		
 			end do

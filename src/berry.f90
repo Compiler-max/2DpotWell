@@ -9,7 +9,7 @@ module berry
 								doGaugBack, doNiu, fastConnConv, doVeloNum 
 	
 	use w90Interface,	only:	read_U_matrix, read_M_initial, readBandVelo, read_FD_scheme, read_wann_centers
-	use basisIO,		only:	read_energies, read_velo
+	use basisIO,		only:	read_energies, read_velo, read_Mmn
 	use semiClassics,	only:	calcFirstOrdP
 	use output,			only:	writePolFile, writeVeloHtxt, writeConnTxt
 
@@ -39,11 +39,11 @@ module berry
 
 !public
 	subroutine berryMethod()
-		complex(dp),	allocatable		:: 	U_mat(:,:,:), M_ham(:,:,:,:), M_wann(:,:,:,:), &
+		complex(dp),	allocatable		:: 	U_mat(:,:,:), M_ham(:,:,:,:), M_wann(:,:,:,:), M_basis(:,:,:,:), &
 											FcurvQ(:,:,:,:),veloQ(:,:,:,:) 		
-		real(dp),		allocatable		::	Aconn_H(:,:,:,:), Aconn_W(:,:,:,:), &
+		real(dp),		allocatable		::	Aconn_H(:,:,:,:), Aconn_W(:,:,:,:), A_basis(:,:,:,:), &
 											EnQ(:,:), b_k(:,:), w_b(:), &
-											w_centers(:,:), berry_W_gauge(:,:),berry_H_gauge(:,:), niu_polF2(:,:), niu_polF3(:,:)
+											w_centers(:,:), berry_W_gauge(:,:),berry_H_gauge(:,:),berry_basis(:,:), niu_polF2(:,:), niu_polF3(:,:)
 		integer							::	nntot, n
 		integer,		allocatable		:: 	nnlist(:,:), nncell(:,:,:)
 		!
@@ -58,21 +58,22 @@ module berry
 		allocate(			U_mat(		num_wann	,	num_wann					,	num_kpts		)			)
 		allocate(			M_ham(		num_wann	, 	num_wann	, 	nntot 		,	num_kpts		)			)
 		allocate(			M_wann(		num_wann	,	num_wann	,	nntot		,	num_kpts		)			)		
+		allocate(			M_basis(	num_wann	,	num_wann	,	nntot		,	num_kpts		)			)
 		allocate(			Aconn_H(		3		, 	num_wann	,	num_wann	,	num_kpts		)			)
-		allocate(			Aconn_W(		3		, 	num_wann	,	num_wann	,	num_kpts		)			)		
+		allocate(			Aconn_W(		3		, 	num_wann	,	num_wann	,	num_kpts		)			)
+		allocate(			A_basis(		3		, 	num_wann	,	num_wann	,	num_kpts		)			)	
 		!
 		!real-space
 		allocate(			w_centers(		3,					num_wann					)			)
 		allocate(			berry_W_gauge(	3,					num_wann					)			)
 		allocate(			berry_H_gauge(	3,					num_wann					)			)
+		allocate(			berry_basis(	3,					num_wann					)			)
 		allocate(			niu_polF2(		3,					num_wann					)			)
 		allocate(			niu_polF3(		3,					num_wann					)			)
 		!
 		!
 		
 		!read wannier files
-		call read_M_initial(M_ham)
-		call read_U_matrix(U_mat)
 		call read_wann_centers(w_centers)
 		
 		!print atoms
@@ -87,6 +88,17 @@ module berry
 			write(*,'(a,i3,a,f6.2,a,f6.2,a,f6.2,a)')	"n=",n,"	p_w90(n)=(",w_centers(1,n),", ",w_centers(2,n),", ",w_centers(3,n),")."
 		end do
 		!
+		!0th basisIO source
+		call read_Mmn(M_basis)
+		call calcConnOnCoarse(M_basis, nntot, b_k, w_b, A_basis)
+		call calcPolViaA(A_basis, berry_basis)
+
+
+		!second wannier read
+		call read_M_initial(M_ham)
+		call read_U_matrix(U_mat)
+
+
 		!0th HAM GAUGE
 		write(*,*)	"[berryMethod]: start (H) gauge calculation"
 		call calcConnOnCoarse(M_ham, nntot, b_k, w_b, Aconn_H)
