@@ -408,7 +408,7 @@ module output
 
 
 	subroutine writeConnTxt( A_mat )
-		complex(dp),	intent(in)		::	A_mat(:,:,:,:)
+		real(dp),		intent(in)		::	A_mat(:,:,:,:)
 		integer							::	qi, n, m
 		!
 		open(unit=350,file=info_dir//'AconnBerry.txt',action='write', status='replace')
@@ -418,10 +418,7 @@ module output
 			write(350,*)	"qi=",	qi
 			do m = 1, size(A_mat,3)
 				do n = 1, size( A_mat,2)
-					write(350,'(i3,a,i3,a,f8.4,a,f8.4,a,f8.4,a,f8.4,a,f8.4,a,f8.4)')	n," ",m,&	
-													"   ",dreal(A_mat(1,n,m,qi))," ",dimag(A_mat(1,n,m,qi)),&
-													"   ",dreal(A_mat(2,n,m,qi))," ",dimag(A_mat(2,n,m,qi)),&
-													"   ",dreal(A_mat(3,n,m,qi))," ",dimag(A_mat(3,n,m,qi))
+					write(350,'(i3,a,i3,a,i5,a,e15.6,a,e15.6,a,e15.6,a)')	n," ",m," ",qi," (",A_mat(1,n,m,qi),", ",A_mat(2,n,m,qi),", ",A_mat(3,n,m,qi),")"
 				end do
 			end do
 		end do

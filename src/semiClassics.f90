@@ -26,8 +26,8 @@ module semiClassics
 	subroutine	calcFirstOrdP(Bext, prefactF3, Fcurv, Aconn, Velo, En, pol_F2, pol_F3)
 		!calculates the first order polarization p1 according to
 		!	P'= -int_dk [0.5 (Curv.Velo)*B_ext + a']
-		real(dp),		intent(in)		::	Bext(3), prefactF3, En(:,:)		
-		complex(dp),	intent(in)		::	Fcurv(:,:,:,:), Aconn(:,:,:,:), Velo(:,:,:,:)			
+		real(dp),		intent(in)		::	Bext(3), prefactF3, Aconn(:,:,:,:), En(:,:)		
+		complex(dp),	intent(in)		::	Fcurv(:,:,:,:), Velo(:,:,:,:)			
 		real(dp),		intent(out)		::  pol_F2(:,:), pol_F3(:,:)
 		!real(dp)						::	pnF2(3), pnF3(3)
 		real(dp)						:: 	F2(3,3), F3(3,3), F2k(3,3), F3k(3,3)
@@ -54,7 +54,7 @@ module semiClassics
 			do ki = 1, kSize		
 				!
 				!PHASE SPACE DENSITY CORRECTION
-				densCorr	= 0.5_dp * dot_product(		dreal(Fcurv(:,n,n,ki)), dreal(Aconn(:,n,n,ki) )	)		* Bext
+				densCorr	= 0.5_dp * dot_product(		dreal(Fcurv(:,n,n,ki)), Aconn(:,n,n,ki)	)		* Bext
 				if( norm2(densCorr) > acc ) write(*,*)	"[calcFirstOrdP]: WARNING the densCorr is none zero, norm2(densCorr)=",norm2(densCorr)
 				!
 				!POSITIONAL SHIFT

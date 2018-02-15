@@ -40,8 +40,9 @@ module berry
 !public
 	subroutine berryMethod()
 		complex(dp),	allocatable		:: 	U_mat(:,:,:), M_ham(:,:,:,:), M_wann(:,:,:,:), &
-											Aconn_H(:,:,:,:), Aconn_W(:,:,:,:), FcurvQ(:,:,:,:),veloQ(:,:,:,:) 		
-		real(dp),		allocatable		::	EnQ(:,:), b_k(:,:), w_b(:), &
+											FcurvQ(:,:,:,:),veloQ(:,:,:,:) 		
+		real(dp),		allocatable		::	Aconn_H(:,:,:,:), Aconn_W(:,:,:,:), &
+											EnQ(:,:), b_k(:,:), w_b(:), &
 											w_centers(:,:), berry_W_gauge(:,:),berry_H_gauge(:,:), niu_polF2(:,:), niu_polF3(:,:)
 		integer							::	nntot, n
 		integer,		allocatable		:: 	nnlist(:,:), nncell(:,:,:)
@@ -154,14 +155,14 @@ module berry
 		complex(dp),	intent(in)			:: 	M_mat(:,:,:,:)
 		integer,		intent(in)			::	nntot
 		real(dp),		intent(in)			::	b_k(:,:), w_b(:)
-		complex(dp),	intent(out)			::	A_conn(:,:,:,:)
+		real(dp),		intent(out)			::	A_conn(:,:,:,:)
 		complex(dp)							::	delta
 		integer								::	qi, nn, n, m
 		!
 		if( 		fastConnConv ) write(*,*)	"[calcConnOnCoarse]: use logarithmic formula for connection"
 		if( .not.	fastConnConv ) write(*,*)	"[calcConnOnCoarse]: use finite difference formula for connection" 
 		!
-		A_conn = dcmplx(0.0_dp)
+		A_conn = 0.0_dp
 		!$OMP PARALLEL DO SCHEDULE(STATIC)	DEFAULT(SHARED) PRIVATE(qi, nn, n,m, delta)
 		do qi = 1, size(M_mat,4)
 			!SUM OVER NN
@@ -199,27 +200,18 @@ module berry
 		! r_n 	= <0n|r|0n> 
 		!		=V/(2pi)**2 \integrate_BZ <unk|i \nabla_k|unk>
 		!		=V/(2pi)**2 \integrate_BZ A(k)
-		complex(dp),		intent(in)		:: A_mat(:,:,:,:)			!A(2,	 nWfs, nWfs, nQ	)	
+		real(dp),			intent(in)		:: A_mat(:,:,:,:)			!A(2,	 nWfs, nWfs, nQ	)	
 		real(dp),			intent(out)		:: centers(:,:)
-		complex(dp)							:: val(3)
 		integer								:: n
 		!
-		!$OMP PARALLEL DO SCHEDULE(STATIC) DEFAULT(SHARED) PRIVATE(n, val)
+		centers = 0.0_dp
+		!$OMP PARALLEL DO SCHEDULE(STATIC) DEFAULT(SHARED) PRIVATE(n)
 		do n 	= 1, size(A_mat,2)
 			!
 			!INTEGRATE
-			val(1) = -1.0_dp * sum(A_mat(1,n,n,:)) / size(A_mat,4)
-			val(2) = -1.0_dp * sum(A_mat(2,n,n,:)) / size(A_mat,4)
-			if(size(A_mat,1)==3)	val(3) =  -1.0_dp * sum(A_mat(3,n,n,:)) / size(A_mat,4)
-			!
-			!COLLECT REAL PART
-			centers(:,n) 	= dreal(val(:))
-			!
-			!DEBUG MESSAGE
-			write(*,'(a,i3,a,f8.4,a,f8.4,a)')	"[calcPolViaA]: n=",n,"p_n=",dreal(val(1)),",",dreal(val(2)),")."
-			if( abs(dimag(val(1))) > machineP .or. abs(dimag(val(2))) > machineP .or. abs(dimag(val(3))) > machineP	) then
-				write(*,*)	"[calcPolViaA]: WARNING - found non zero imaginary contribution from band n=",n 
-			end if	
+			centers(1,n) = -1.0_dp * sum(A_mat(1,n,n,:)) / size(A_mat,4)
+			centers(2,n) = -1.0_dp * sum(A_mat(2,n,n,:)) / size(A_mat,4)
+			if(size(A_mat,1)==3)	centers(3,n) =  -1.0_dp * sum(A_mat(3,n,n,:)) / size(A_mat,4)
 			!
 		end do
 		!$OMP END PARALLEL DO
@@ -275,9 +267,9 @@ module berry
 
 
 	subroutine calcVeloBLOUNT(A_conn, En_vec ,  v_mat)
-		!use Blount 1962
+		!use Blount 1962 formu.la
 		! 
-		complex(dp),	intent(in)		::	A_conn(:,:,:,:)
+		real(dp),		intent(in)		::	A_conn(:,:,:,:)
 		real(dp),		intent(in)		::	En_vec(:,:)
 		complex(dp),	intent(out)		::	v_mat(:,:,:,:)
 		real(dp),		allocatable		::	v_Band(:,:,:)
@@ -294,13 +286,13 @@ module berry
 		if( size(A_conn,4) /= size(v_mat,4) )	stop		"[calcVeloBLOUNT]: A_conn and v_mat live on different k meshes"
 		!
 		!GET DIAGONAL ELEMENTS
-		call readBandVelo( v_Band )
+		call readBandVelo( v_Band ) !=band derivative
 		!FILL MATRIX
 		do qi = 1, size(A_conn,4)
 			do m = 1, size(v_mat,3)
 				do n = 1, size(v_mat,2)
-					if(n==m)	v_mat(1:3,n,n,qi)	= v_Band(1:3,n,qi)
-					if(n/=m) 	v_mat(1:3,n,m,qi)	= - i_dp * dcmplx( En_vec(m,qi)-En_vec(n,qi) ) * A_conn(1:3,n,m,qi)
+					if(n==m)	v_mat(1:3,n,n,qi)	= dcmplx(v_Band(1:3,n,qi) )
+					if(n/=m) 	v_mat(1:3,n,m,qi)	= dcmplx(		0.0_dp,		-1.0_dp * (En_vec(m,qi)-En_vec(n,qi)) * A_conn(1:3,n,m,qi)		 )
 				end do
 			end do
 		end do	
