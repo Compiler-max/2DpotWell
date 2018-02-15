@@ -557,6 +557,7 @@ module output
 																									", ",w_centers(3,n)," )", &
 												"=(",w_final(1,n),", ",w_final(2,n),") [a.u.: a0]."
 		end do
+			write(600,'(a,f7.3,a,f7.3,a,f7.3,a)')	"pWann(SUM)=	( ",sum(w_final(1,:)),", ",sum(w_final(2,:)),", ",sum(w_final(3,:))," )"
 
 		write(600,*)	"*"
 		write(600,*)	"*"
