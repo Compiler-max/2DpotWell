@@ -201,7 +201,6 @@ module berry
 			end do
 			!
 			!
-			write(*,*)	"[calcConnOnCoarse]: finished with qi=",qi
 		end do
 		!$OMP END PARALLEL DO
 		write(*,*)	"[calcConnOnCoarse]: established connection"
@@ -228,7 +227,7 @@ module berry
 			centers(2,n) = -1.0_dp * sum(A_mat(2,n,n,:)) / size(A_mat,4)
 			if(size(A_mat,1)==3)	centers(3,n) =  -1.0_dp * sum(A_mat(3,n,n,:)) / size(A_mat,4)
 			!
-			write(*,*)	"[calcPolViaA]: done for #nWf=",n
+			write(*,'(a,i3,a,f6.4,a,f6.4,a,f6.4,a)')	"[calcPolViaA]: n=",n,"  r(n)=(",centers(1,n),", ", centers(2,n),",",centers(3,n), ")."
 		end do
 		!$OMP END PARALLEL DO
 		!
