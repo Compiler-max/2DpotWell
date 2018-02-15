@@ -10,7 +10,7 @@ module w90Interface
 
 	private
 	public ::					setup_w90, write_w90_matrices, &
-								read_FD_scheme, read_M_initial, read_U_matrix, readBandVelo, read_wann_centers, & 
+								read_M_initial, read_FD_b_vectors,  read_U_matrix, readBandVelo, read_wann_centers, & 
 								printNNinfo, &
 								seed_name
 
@@ -205,59 +205,88 @@ module w90Interface
 
 
 !PUBLIC READ
-	subroutine read_FD_scheme(f_nntot, f_nnlist, f_nncell, b_k, w_b)
+	subroutine read_M_initial(f_num_bands, f_num_kpts, f_nntot, f_nnlist, f_nncell, M_init)
+		!read the M_matrix written by w90prepMmat	
+		integer,		intent(out)					::	f_num_bands, f_num_kpts, f_nntot
+		integer,		allocatable,	intent(out)	::	f_nnlist(:,:), f_nncell(:,:,:)
+		complex(dp),	allocatable,	intent(out)	::	M_init(:,:,:,:)
+		integer										::	qi, f_qi, nn, n, m
+		real(dp)									::	realBuff(2)
+		logical										:: 	foundFile
+		!
+		M_init = dcmplx(0.0_dp)
+		!check for file
+		inquire(file=w90_Dir//seedName//'.mmn', exist=foundFile)
+		if( .not. foundFile ) stop 'the .mmn file could not be found'
+		!
+		!read file
+		open(unit=120,file=w90_Dir//seedName//'.mmn',action='read',access='stream',form='formatted', status='old')
+		read(120,*)
+		read(120,*) f_num_bands, f_num_kpts, f_nntot		
+		
+		allocate(	f_nnlist(			f_num_kpts, f_nntot					)	)
+		allocate(	f_nncell(	3,		f_num_kpts, f_nntot					)	)
+
+		allocate(	M_init(f_num_bands, f_num_bands, f_nntot, f_num_kpts	)	)
+
+		!
+		do qi = 1, size(M_init,4)
+			do nn = 1, size(M_init,3)
+				!
+				read(120,*)	f_qi, f_nnlist(qi,nn), f_nncell(1:3,qi,nn)
+				if(	 qi /= 	f_qi )						stop	"[read_M_initial]: WARNING q mesh ordered differently"
+				!
+				do n = 1, size(M_init,2)
+					do m = 1, size(M_init,1)
+						read(120,*)	realBuff(1:2)
+						M_init(m,n,nn,qi)	= dcmplx( realBuff(1), realBuff(2) )
+					end do
+				end do
+				!
+			end do
+		end do
+		!
+		!DEBUG
+		if( f_nntot 	/= 4	)	write(*,*) 	"[read_M_initial]: WARNING more then 4 nn in .mmn file"
+		if(	f_num_kpts 	/= nQ 	) 	stop 		"[read_M_initial]: .mmn file defined on different qpt mesh"
+		if(	f_num_bands /= nBands)	stop		"[read_M_initial]: nBands not matching"
+		write(*,*)	"[read_M_initial]: read the .mmn file"
+		!
+		!WRITE CLONE FOR DEBUG
+		open(unit=125,file=w90_Dir//'clone'//'.mmn',action='write',access='stream',form='formatted', status='replace')
+		write(125,*)	"clone of the "//seedName//".mmn file"
+		write(125,*)	f_num_bands, f_num_kpts, nntot
+		do qi = 1, size(M_init,4)
+			do nn = 1, nntot
+				write(125,*)	qi, nnlist(qi,nn),	nncell(1:3,qi,nn)
+				do n = 1, size(M_init,2)
+					do m = 1, size(M_init,1)
+						write(125,*)	M_init(m,n,nn,qi)
+					end do
+				end do
+			end do
+		end do
+		close(125)
+
+		!
+		return
+	end subroutine
+
+
+	subroutine read_FD_b_vectors(nntot_in, b_k, w_b)
 		!call after w90 is finished
 		!reads seedname.nnkp & seedname.wout
-		integer, 					intent(out)		::	f_nntot
-		integer,	allocatable, 	intent(out)		::	f_nnlist(:,:), f_nncell(:,:,:)
+		integer,					intent(in)		::	nntot_in
 		real(dp),	allocatable,	intent(out)		::	b_k(:,:), w_b(:)
-		integer										::	stat, qi, qnn, iLine(5), nn, start, end
+		integer										::	stat, qnn,  nn, start, end
 		real(dp)									::	b_vec(3), weight
-		character(len=*), 			parameter 		::	search_nnkp = "begin nnkpts", final_nnkp = "end nnkpts" 
 		character(len=*), 			parameter 		::	search_wout=" |                  b_k Vectors (Ang^-1) and Weights (Ang^2)                  |"
 
 		character(len=100)							::	line
-		logical										::	finished, file_exists
+		logical										::	finished
 		!
-		!inquire file
-		inquire(file=w90_dir//seedName//'.nnkp',exist=file_exists)
-		if( .not. file_exists	) stop '[read_FD_scheme]: could not find .nnkp file'
-		!
-		!read file
-		open(unit=330, iostat=stat, file=w90_dir//seedName//'.nnkp', form='formatted', status='old', action='read')
-		finished = .false.
-		do while( .not. finished .and. stat==0)
-			read(330,"(a)",iostat=stat) line
-			!find the block
-			if(line == search_nnkp) then
-				!GET nntot				
-				read(330,*)	f_nntot
-				nntot = f_nntot
-				allocate(	f_nnlist(		nQ, f_nntot)		)
-				allocate(	f_nncell(	3, 	nQ, f_nntot)		)
-				allocate(	nnlist(			nQ, f_nntot)		)
-				allocate(	nncell(		3,	nQ,	f_nntot	)		)
-				allocate(	b_k(	3,		f_nntot)			)
-				allocate(	w_b(			f_nntot)			)
-				!read data
-				do qi = 1, nQ
-					do qnn = 1, f_nntot
-						read(330, *) iLine
-						f_nnlist( iLine(1), qnn )		= iLine(2)
-						f_nncell(	1:3, iLine(1), qnn)	= iLine(3:5)
-					end do
-				end do
-				finished = .true.
-			end if
-		end do 
-		close(330)
-		if( finished ) then
-			write(*,*)	"[readFDscheme]: read the .nnkp file"
-			write(*,*)	"[readFDscheme]: nntot=",f_nntot
-		else
-			stop	"[readFDscheme]: did not find search string  in .nnkp file"
-		end if
-		!
+		allocate(	b_k(3,nntot_in)	)
+		allocate(	w_b(nntot_in)	)
 		!
 		!READ .wout
 		finished = .false.
@@ -269,7 +298,7 @@ module w90Interface
 				read(335,*)
 				read(335,*)
 				read(335,*)
-				do qnn = 1, f_nntot
+				do qnn = 1, nntot_in
 					!read line
 					read(335,"(a)",iostat=stat) line
 					!remove "|" from line  (this is neccessary to use pattern matching on string)
@@ -291,7 +320,7 @@ module w90Interface
 		close(335)
 		!
 		write(*,*)		" 	nn | 	b	| 	w_b "
-		do nn = 1, f_nntot
+		do nn = 1, nntot_in
 			write(*,'(a,i2,a,f6.2,a,f6.2,a,f6.2,a,f6.2)')		"  ",nn," | (",b_k(1,nn),", ",b_k(2,nn),", ",b_k(3,nn),") |    ",w_b(nn)
 		end do
 
@@ -354,13 +383,14 @@ module w90Interface
 
 
 
-	subroutine read_U_matrix(U_matrix)
+	subroutine read_U_matrix(f_num_wann, U_matrix)
 		!READ U FROM W90
-		complex(dp),	intent(out)	:: 	U_matrix(:,:,:)
-		real(dp),		allocatable	:: 	krel(:,:)
-		integer						:: 	stat, qi, n, m, dumI(3)
-		real(dp)					:: 	val(2)
-		logical						::	file_exists
+		integer,						intent(out)	::	f_num_wann
+		complex(dp),	allocatable,	intent(out)	:: 	U_matrix(:,:,:)
+		real(dp),		allocatable					:: 	krel(:,:)
+		integer										:: 	f_num_kpts, stat, qi, n, m, dumI(3)
+		real(dp)									:: 	val(2)
+		logical										::	file_exists
 		!
 		U_matrix	= dcmplx(0.0_dp)
 
@@ -375,9 +405,15 @@ module w90Interface
 		!header 
 		read(300,*)
 		read(300,*) dumI(1:3)
+		f_num_kpts 	= dumI(1)
+		f_num_wann	= dumI(2)
+
 		if( dumI(1) /= size(U_matrix,3) ) 	stop	"[readUmatrix]:  ERROR - wrong qmesh size found in file (doesn't match allo size)"
-		if(	dumI(2)	/= size(U_matrix,2)) 	stop	"[readUmatrix]:  ERROR - wrong number of wannier functions found in file (doesn't match allo size)"
-		allocate(	krel( 3, dumI(1))	)
+		if(	dumI(3)	/= f_num_wann) 			stop	"[readUmatrix]:  ERROR - file specifies two differnt num_wann values"
+		
+
+		allocate(	krel( 		3,f_num_kpts						)	)
+		allocate(	U_matrix(	f_num_wann, f_num_wann, f_num_kpts	)	)
 		!
 		!body
 		do qi = 1,  size(U_matrix,3)
@@ -411,69 +447,7 @@ module w90Interface
 	end subroutine
 
 
-	subroutine read_M_initial( M_init)
-		!read the M_matrix written by w90prepMmat	
-		complex(dp),		intent(out)		::	M_init(:,:,:,:)
-		integer								::	qi,nn, n, m, x, &
-												f_num_bands, f_num_kpts, f_nntot, f_qi, f_nnlist, f_nncell(1:3)
-		real(dp)							::	realBuff(2)
-		logical								:: 	foundFile
-		!
-		M_init = dcmplx(0.0_dp)
-		!check for file
-		inquire(file=w90_Dir//seedName//'.mmn', exist=foundFile)
-		if( .not. foundFile ) stop 'the .mmn file could not be found'
-		!
-		!read file
-		open(unit=120,file=w90_Dir//seedName//'.mmn',action='read',access='stream',form='formatted', status='old')
-		read(120,*)
-		read(120,*) f_num_bands, f_num_kpts, f_nntot		
-		!
-		do qi = 1, size(M_init,4)
-			do nn = 1, size(M_init,3)
-				!
-				read(120,*)	f_qi, f_nnlist, f_nncell(1:3)
-				if(	 qi /= 	f_qi )						stop	"[read_M_initial]: WARNING q mesh ordered differently"
-				if( f_nnlist /= nnlist(qi,nn))			stop	"[read_M_initial]: nnlist ordering is different"
-				do x = 1, 3
-					if(f_nncell(x) /= nncell(x,qi,nn)) 	stop	"[read_M_initial]: the nncell ordering is different"
-				end do
-				!
-				do n = 1, size(M_init,2)
-					do m = 1, size(M_init,1)
-						read(120,*)	realBuff(1:2)
-						M_init(m,n,nn,qi)	= dcmplx( realBuff(1), realBuff(2) )
-					end do
-				end do
-				!
-			end do
-		end do
-		!
-		!DEBUG
-		if( f_nntot 	/= 4	)	write(*,*) 	"[read_M_initial]: WARNING more then 4 nn in .mmn file"
-		if(	f_num_kpts 	/= nQ 	) 	stop 		"[read_M_initial]: .mmn file defined on different qpt mesh"
-		if(	f_num_bands /= nBands)	stop		"[read_M_initial]: nBands not matching"
-		write(*,*)	"[read_M_initial]: read the .mmn file"
-		!
-		!WRITE CLONE FOR DEBUG
-		open(unit=125,file=w90_Dir//'clone'//'.mmn',action='write',access='stream',form='formatted', status='replace')
-		write(125,*)	"clone of the "//seedName//".mmn file"
-		write(125,*)	f_num_bands, f_num_kpts, nntot
-		do qi = 1, size(M_init,4)
-			do nn = 1, nntot
-				write(125,*)	qi, nnlist(qi,nn),	nncell(1:3,qi,nn)
-				do n = 1, size(M_init,2)
-					do m = 1, size(M_init,1)
-						write(125,*)	M_init(m,n,nn,qi)
-					end do
-				end do
-			end do
-		end do
-		close(125)
 
-		!
-		return
-	end subroutine
 
 
 	subroutine readBandVelo( v_vec )

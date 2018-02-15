@@ -8,8 +8,9 @@ module berry
 								atPos, &
 								doGaugBack, doNiu, fastConnConv, doVeloNum 
 	
-	use w90Interface,	only:	read_U_matrix, read_M_initial, readBandVelo, read_FD_scheme, read_wann_centers
-	use basisIO,		only:	read_energies, read_velo, read_Mmn
+	use w90Interface,	only:	read_U_matrix, read_M_initial, read_FD_b_vectors, read_wann_centers, &
+								readBandVelo
+	use basisIO,		only:	read_energies, read_velo
 	use semiClassics,	only:	calcFirstOrdP
 	use output,			only:	writePolFile, writeVeloHtxt, writeConnTxt
 
@@ -18,12 +19,16 @@ module berry
 	private
 	public	::					berryMethod
 
-
-
-	integer						::	num_wann, num_kpts, num_stat
+	!cloned from mathematics.f90:
 	integer, 		parameter 	:: 	dp 				= kind(0.d0)
 	real(dp), 		parameter	:: 	machineP 		= 1e-15_dp
 	complex(dp),	parameter 	::	i_dp 			= dcmplx(0.0_dp, 1.0_dp)
+
+	!read in parameters:
+	integer						::	num_wann, num_bands, num_kpts, num_stat, &
+									nntot
+	integer,		allocatable	::	nnlist(:,:), nncell(:,:,:)
+	real(dp),		allocatable	::	b_k(:,:), w_b(:)
 
 
 
@@ -44,23 +49,32 @@ module berry
 		real(dp),		allocatable		::	Aconn_H(:,:,:,:), Aconn_W(:,:,:,:), &
 											EnQ(:,:), b_k(:,:), w_b(:), &
 											w_centers(:,:), berry_W_gauge(:,:),berry_H_gauge(:,:), niu_polF2(:,:), niu_polF3(:,:)
-		integer							::	nntot, n
-		integer,		allocatable		:: 	nnlist(:,:), nncell(:,:,:)
+		integer							::	n
 		!
 		num_wann = nWfs		
 		num_kpts = nQ
 		num_stat = nSolve
 
-		!READ FD SCHEME
-		call read_FD_scheme(nntot, nnlist, nncell, b_k, w_b)
-		!
-		!k-space
-		allocate(			U_mat(		num_wann	,	num_wann					,	num_kpts		)			)
-		allocate(			M_ham(		num_wann	, 	num_wann	, 	nntot 		,	num_kpts		)			)
+		
+		!READ W90 Files
+		call read_M_initial(num_bands, num_kpts, nntot, nnlist, nncell, M_ham)
+		call read_U_matrix(num_wann, U_mat)
+		call read_FD_b_vectors(nntot, b_k, w_b)
+		
+		!WARNINGS & INFO
+		write(*,*)	"[berryMethod]: detected parameter info:"
+		write(*,*)	"	num_kpts  =",num_kpts
+		write(*,*)	"	num_bands =",num_bands
+		write(*,*)	"	num_wann  =",num_wann
+		write(*,*)	"	nntot  	  =",nntot
+		if(	num_wann /= num_bands ) 	stop		"[berryMethod]: detected different num_wann(from _u.mat) and num_bands( .mmn file)"
+		if(	nntot /= 4 )				write(*,*)	"[berryMethod]: WARNING nntot is not equal 4"
+		write(*,*)	"*"
+
+		!k-space allo
 		allocate(			M_wann(		num_wann	,	num_wann	,	nntot		,	num_kpts		)			)		
 		allocate(			Aconn_H(		3		, 	num_wann	,	num_wann	,	num_kpts		)			)
 		allocate(			Aconn_W(		3		, 	num_wann	,	num_wann	,	num_kpts		)			)
-		!
 		!real-space
 		allocate(			w_centers(		3,					num_wann					)			)
 		allocate(			berry_W_gauge(	3,					num_wann					)			)
@@ -81,18 +95,19 @@ module berry
 		do n = 1, size(w_centers,2)
 			write(*,'(a,i3,a,f6.2,a,f6.2,a,f6.2,a)')	"n=",n,"	p_w90(n)=(",w_centers(1,n),", ",w_centers(2,n),", ",w_centers(3,n),")."
 		end do
-	
+
+
+
+
 		!0th HAM GAUGE
 		write(*,*)		"[berryMethod]: start (H) gauge calculation"
-		call read_M_initial(M_ham)
-		call calcConnOnCoarse(M_ham, nntot, b_k, w_b, Aconn_H)
+		call calcConnOnCoarse(M_ham, Aconn_H)
 		call calcPolViaA(Aconn_H, berry_H_gauge)
 		!
 		!0th WANN GAUGE
 		write(*,*)		"[berryMethod]: start (W) gauge calculation"
-		call read_U_matrix(U_mat)
-		call rot_M_matrix(nntot, nnlist, M_ham, U_mat, M_wann)
-		call calcConnOnCoarse(M_wann, nntot, b_k, w_b, Aconn_W)
+		call rot_M_matrix(M_ham, U_mat, M_wann)
+		call calcConnOnCoarse(M_wann, Aconn_W)
 		call calcPolViaA(Aconn_W, berry_W_gauge)
 		!
 		!
@@ -151,14 +166,12 @@ module berry
 
 
 !private
-	subroutine calcConnOnCoarse(M_mat, nntot, b_k, w_b, A_conn)
+	subroutine calcConnOnCoarse(M_mat,  A_conn)
 		!calculates the Berry connection, based on finite differences
 		!nntot, nnlist, nncell list the nearest neighbours (k-space)
 		!b_k:	 non zero if qi at boundary of bz and nn accross bz
 		!w_b:	 weight of nn 
 		complex(dp),	intent(in)			:: 	M_mat(:,:,:,:)
-		integer,		intent(in)			::	nntot
-		real(dp),		intent(in)			::	b_k(:,:), w_b(:)
 		real(dp),		intent(out)			::	A_conn(:,:,:,:)
 		complex(dp)							::	delta
 		integer								::	qi, nn, n, m
@@ -232,9 +245,8 @@ module berry
 
 
 
-	subroutine rot_M_matrix(nntot, nnlist, M_H, U_mat, M_W)
+	subroutine rot_M_matrix(M_H, U_mat, M_W)
 		!	M^(W)(nn,qi)	= U^*(qi)	M^(H)(nn,qi) U(qnb(nn)) 
-		integer,			intent(in)		::	nntot, nnlist(:,:)
 		complex(dp),		intent(in)		::	M_H(:,:,:,:), U_mat(:,:,:)
 		complex(dp),		intent(out)		::	M_W(:,:,:,:)
 		complex(dp),		allocatable		::	U_left(:,:), tmp(:,:)
