@@ -37,10 +37,10 @@
     thres       =   0.1
 
 [methods]
-    doSolveHam  =   t
+    doSolveHam  =   f
     doMagHam    =   f
     doPw90      =   f
-    doBerry     =   f
+    doBerry     =   t
     writeBin    =   f
 
 [w90]

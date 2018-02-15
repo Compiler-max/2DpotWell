@@ -92,7 +92,6 @@ module berry
 		write(*,*)	"[berryMethod]: start basisIO version"
 		call read_Mmn(M_basis)
 		call calcConnOnCoarse(M_basis, nntot, b_k, w_b, A_basis)
-		write(*,*)	"[berryMethod]: established connection"
 		call calcPolViaA(A_basis, berry_basis)
 
 
@@ -205,6 +204,7 @@ module berry
 			write(*,*)	"[calcConnOnCoarse]: finished with qi=",qi
 		end do
 		!$OMP END PARALLEL DO
+		write(*,*)	"[calcConnOnCoarse]: established connection"
 		!
 		return
 	end subroutine
@@ -228,6 +228,7 @@ module berry
 			centers(2,n) = -1.0_dp * sum(A_mat(2,n,n,:)) / size(A_mat,4)
 			if(size(A_mat,1)==3)	centers(3,n) =  -1.0_dp * sum(A_mat(3,n,n,:)) / size(A_mat,4)
 			!
+			write(*,*)	"[calcPolViaA]: done for #nWf=",n
 		end do
 		!$OMP END PARALLEL DO
 		!
