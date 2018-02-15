@@ -372,18 +372,18 @@ module w90Interface
 		!header 
 		read(300,*)
 		read(300,*) dumI(1:3)
-		if( dumI(1) /= nQ ) 	stop	"[readUmatrix]:  ERROR - wrong qmesh size found in file"
-		if(	dumI(2)	/= nWfs) 	stop	"[readUmatrix]:  ERROR - wrong number of wannier functions found in file"
+		if( dumI(1) /= size(U_matrix,3) ) 	stop	"[readUmatrix]:  ERROR - wrong qmesh size found in file (doesn't match allo size)"
+		if(	dumI(2)	/= size(U_matrix,2)) 	stop	"[readUmatrix]:  ERROR - wrong number of wannier functions found in file (doesn't match allo size)"
 		allocate(	krel( 3, dumI(1))	)
 		!
 		!body
-		do qi = 1,  num_kpts
+		do qi = 1,  size(U_matrix,3)
 			read(300,*)
 			read(300,*) krel(1:3,qi)
-			do n = 1, num_wann
-				do m = 1, num_wann
+			do n = 1, size(U_matrix,2)
+				do m = 1, size(U_matrix,1)
 					read(300,*)	val(1:2)
-					U_matrix(m,n,qi)	= dcmplx(val(1))	+	i_dp	*	dcmplx(val(2))
+					U_matrix(m,n,qi)	= dcmplx(val(1), val(2) )	
 				end do
 			end do
 			!DEBUG
@@ -395,7 +395,11 @@ module w90Interface
 		end do
 		close(300)
 		!
-		return
+		!DEBUG TEST
+		do qi = 1, size(U_matrix,3)
+			if(		.not.	 isUnit(U_matrix(:,:,qi))		) stop "[read_U_matrix]: found non unitary matrix in input file..."
+		end do
+		!FINALIZE
 		write(*,*)	"[read_U_matrix]: read the _u.mat file"
 		!
 		!
