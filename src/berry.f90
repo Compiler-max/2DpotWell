@@ -89,8 +89,10 @@ module berry
 		end do
 		!
 		!0th basisIO source
+		write(*,*)	"[berryMethod]: start basisIO version"
 		call read_Mmn(M_basis)
 		call calcConnOnCoarse(M_basis, nntot, b_k, w_b, A_basis)
+		write(*,*)	"[berryMethod]: established connection"
 		call calcPolViaA(A_basis, berry_basis)
 
 
@@ -200,6 +202,7 @@ module berry
 			end do
 			!
 			!
+			write(*,*)	"[calcConnOnCoarse]: finished with qi=",qi
 		end do
 		!$OMP END PARALLEL DO
 		!
