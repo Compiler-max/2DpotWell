@@ -1,7 +1,7 @@
 module w90Interface	
 
 	use mpi
-	use mathematics,	only:	dp, PI_dp, i_dp, machineP, aUtoAngstrm, aUtoEv, myExp, isUnit
+	use mathematics,	only:	dp, PI_dp, i_dp, machineP, aUtoAngstrm, aUtoEv, myExp, isUnit, isIdentity
 	use sysPara
 	use basisIO,		only:	read_energies, read_Amn, read_Mmn
 	use planeWave,		only:	calcMmat, calcAmatANA
@@ -397,6 +397,7 @@ module w90Interface
 		!
 		!DEBUG TEST
 		do qi = 1, size(U_matrix,3)
+			if(			isIdentity(U_matrix(:,:,qi))		) write(*,*)	"[read_U_matrix]: U_matrix is identity at qi=", qi
 			if(		.not.	 isUnit(U_matrix(:,:,qi))		) stop "[read_U_matrix]: found non unitary matrix in input file..."
 		end do
 		!FINALIZE
