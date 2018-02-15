@@ -435,7 +435,7 @@ module output
 											pWann(3), pBerryH(3),pBerryW(3), &
 											pNiuF2(3), pNiuF3(3), pNiu(3), pFirst(3), Btesla(3)
 		real(dp),		allocatable		::	w_final(:,:), b_H_final(:,:), b_W_final(:,:)
-		integer							::	n, at
+		integer							::	n, at, x
 		
 		!not Used jet:
 		polQuantum = 1.0_dp / vol
@@ -444,6 +444,12 @@ module output
 		allocate(		w_final( 	size(w_centers,1),	size(w_centers,2) )		)
 		allocate(		b_H_final(	size(b_H_gauge,1),	size(b_H_gauge,2) )		)
 		allocate(		b_W_final(	size(b_W_gauge,1),	size(b_W_gauge,2) )		)		
+
+		!zero init
+		w_final 	= 0.0_dp
+		b_H_final	= 0.0_dp
+		b_W_final	= 0.0_dp
+
 
 		!substract atom centers
 		do n = 1, size(w_centers,2)
@@ -456,12 +462,13 @@ module output
 
 
 		!SUM OVER STATES
-		pWann(	1:3)	= sum(	w_final(	1:3,:)		)
-		pBerryH(1:3)	= sum(	b_H_final(	1:3,:)		)
-		pBerryW(1:3)	= sum(	b_W_final(	1:3,:)		)
-		pNiuF2(	1:3)	= sum(	niu_polF2(	1:3,:)		)
-		pNiuF3(	1:3)	= sum(	niu_polF3(	1:3,:)		)
-
+		do x = 1, 3
+			pWann(	x)	= sum(	w_final(	x, :)		)
+			pBerryH(x)	= sum(	b_H_final(	x, :)		)
+			pBerryW(x)	= sum(	b_W_final(	x, :)		)
+			pNiuF2(	x)	= sum(	niu_polF2(	x, :)		)
+			pNiuF3(	x)	= sum(	niu_polF3(	x, :)		)
+		end do
 		!
 		pNiu 	=	pNiuF2 + pNiuF3
 		pFirst 	=	pBerryW + pNiu 
