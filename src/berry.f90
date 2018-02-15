@@ -39,7 +39,7 @@ module berry
 
 !public
 	subroutine berryMethod()
-		complex(dp),	allocatable		:: 	U_mat(:,:,:), M_mat(:,:,:,:), M_wann(:,:,:,:), &
+		complex(dp),	allocatable		:: 	U_mat(:,:,:), M_ham(:,:,:,:), M_wann(:,:,:,:), &
 											Aconn_H(:,:,:,:), Aconn_W(:,:,:,:), FcurvQ(:,:,:,:),veloQ(:,:,:,:) 		
 		real(dp),		allocatable		::	EnQ(:,:), b_k(:,:), w_b(:), &
 											w_centers(:,:), berry_W_gauge(:,:),berry_H_gauge(:,:), niu_polF2(:,:), niu_polF3(:,:)
@@ -55,7 +55,7 @@ module berry
 		!
 		!k-space
 		allocate(			U_mat(		num_wann	,	num_wann					,	num_kpts		)			)
-		allocate(			M_mat(		num_wann	, 	num_wann	, 	nntot 		,	num_kpts		)			)
+		allocate(			M_ham(		num_wann	, 	num_wann	, 	nntot 		,	num_kpts		)			)
 		allocate(			M_wann(		num_wann	,	num_wann	,	nntot		,	num_kpts		)			)		
 		allocate(			Aconn_H(		3		, 	num_wann	,	num_wann	,	num_kpts		)			)
 		allocate(			Aconn_W(		3		, 	num_wann	,	num_wann	,	num_kpts		)			)		
@@ -70,14 +70,14 @@ module berry
 		!
 		
 		!read wannier files
-		call read_M_initial(M_mat)
+		call read_M_initial(M_ham)
 		call read_U_matrix(U_mat)
 		call read_wann_centers(w_centers)
 		
 		!print atoms
 		write(*,*)	"[berryMethod]: atom positions:"
 		do n = 1, size(atPos,2)
-				write(*,'(a,i3,a,f6.2,a,f6.2,a)')	"n=",n,"	atPos(n)=(",atPos(1,n),", ",atPos(2,n),")."
+				write(*,'(a,i3,a,f6.2,a,f6.2,a)')	"at=",n,"	atPos(at)=(",atPos(1,n),", ",atPos(2,n),")."
 		end do
 
 		!print w90 centers
@@ -88,12 +88,12 @@ module berry
 		!
 		!0th HAM GAUGE
 		write(*,*)	"[berryMethod]: start (H) gauge calculation"
-		call calcConnOnCoarse(M_mat, nntot, b_k, w_b, Aconn_H)
+		call calcConnOnCoarse(M_ham, nntot, b_k, w_b, Aconn_H)
 		call calcPolViaA(Aconn_H, berry_H_gauge)
 		!
 		!0th WANN GAUGE
 		write(*,*)	"[berryMethod]: start (W) gauge calculation"
-		call rot_M_matrix(nntot, nnlist, M_mat, U_mat, M_wann)
+		call rot_M_matrix(nntot, nnlist, M_ham, U_mat, M_wann)
 		call calcConnOnCoarse(M_wann, nntot, b_k, w_b, Aconn_W)
 		call calcPolViaA(Aconn_W, berry_W_gauge)
 		!
@@ -128,7 +128,7 @@ module berry
 		!OUTPUT
 		call writePolFile(w_centers, berry_H_gauge, berry_W_gauge, niu_polF2, niu_polF3)
 		write(*,*)	"[berryMethod]: wrote pol file"
-		!call writeConnTxt( Aconn_W )
+		call writeConnTxt( Aconn_H )
 		!call writeVeloHtxt( veloQ )		
 		!write(*,*)	"[berryMethod]: wrote k-space info files (connection & velocities)"			
 		!
