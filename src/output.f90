@@ -479,6 +479,7 @@ module output
 		if(doMagHam )	write(600,*)"MAGNETIC HAMILTONIAN USED!!!"
 		write(600,*)"maximum amount of basis function basis =",GmaxGlobal
 		write(600,*)"nQx=",nQx,"; nQy=",nQy
+		write(600,*)"pol quantum = e/vol =",polQuantum
 		write(600,*)"*"
 		write(600,*)"*"
 		write(600,*)"*"
