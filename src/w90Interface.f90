@@ -448,6 +448,25 @@ module w90Interface
 		if(	f_num_bands /= nBands)	stop		"[read_M_initial]: nBands not matching"
 		write(*,*)	"[read_M_initial]: read the .mmn file"
 		!
+		!WRITE CLONE FOR DEBUG
+		open(unit=125,file=w90_Dir//'clone'//'.mmn',action='write',access='stream',form='formatted', status='replace')
+		write(125,*)	"clone of the "//seedName//".mmn file"
+		write(125,*)	f_num_bands, f_num_kpts, f_nntot
+		do qi = 1, size(M_init,4)
+			do nn = 1, size(M_init,3)
+				!
+				write(125,*)	qi, nn
+				!
+				do n = 1, size(M_init,2)
+					do m = 1, size(M_init,1)
+						write(125,*)	M_init(m,n,nn,qi)
+					end do
+				end do
+				!
+			end do
+		end do
+		close(125)
+
 		!
 		return
 	end subroutine
