@@ -439,7 +439,7 @@ module mathematics
 		isIdentity 	= .true.
 		!
 		if(size(I,1) /= size(I,2) ) then
-			write(*,*)"[isIdentity]: ERROR - only implemented for square matrices"
+			write(*,*)"[isIdentity]: ERROR - only implemented for square matrices (will return false)"
 			isIdentity = .false.
 		else
 			Isize	= size(I,1)
@@ -447,20 +447,19 @@ module mathematics
 			do while( m<= Isize .and. isIdentity )
 				n = 1
 				do while( n<= Isize .and. isIdentity )
+					!
+					!
 					if(n == m) then 
-						if(  abs(abs(dreal(I(n,n)))-1.0_dp) > acc  .or. abs(dimag(I(n,n))) > acc	) then
-							isIdentity = .false. !set to false and ...
-						end if
-					else
-						if( abs(I(n,m)) > acc ) then
-							isIdentity = .false.
-						end if
+						if(  abs(abs(dreal(I(n,n)))-1.0_dp) > acc  .or. abs(dimag(I(n,n))) > acc	) 	isIdentity = .false.
+					else 
+						if(	abs(I(n,m)) > acc ))														isIdentity = .false.
 					end if
-					n = n + 1	
+					n = n + 1
+					!
+					!	
 				end do
 				m = m + 1
 			end do 
-
 		end if
 		!
 		return
