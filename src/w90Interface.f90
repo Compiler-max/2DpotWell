@@ -431,6 +431,8 @@ module w90Interface
 				do x = 1, 3
 					if( f_nncell(x) /= nncell(x,qi,nn))	stop	"[read_M_initial]:	WARNING trouble with nncell"
 				end do
+				write(*,*)	"[read_M_initial]: tested fd sheme"
+
 
 				do n = 1, size(M_init,2)
 					do m = 1, size(M_init,1)
