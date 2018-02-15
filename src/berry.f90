@@ -227,10 +227,12 @@ module berry
 			centers(2,n) = -1.0_dp * sum(A_mat(2,n,n,:)) / size(A_mat,4)
 			if(size(A_mat,1)==3)	centers(3,n) =  -1.0_dp * sum(A_mat(3,n,n,:)) / size(A_mat,4)
 			!
-			write(*,'(a,i3,a,f6.2,a,f6.2,a,f6.2,a)')	"[calcPolViaA]: n=",n,"  r(n)=(",centers(1,n),", ", centers(2,n),",",centers(3,n), ")."
 		end do
 		!$OMP END PARALLEL DO
 		!
+		do n = 1, size(A_mat,2)
+			write(*,'(a,i3,a,f6.2,a,f6.2,a,f6.2,a)')	"[calcPolViaA]: n=",n,"  r(n)=(",centers(1,n),", ", centers(2,n),",",centers(3,n), ")."
+		end do
 		!		
 		return
 	end subroutine
