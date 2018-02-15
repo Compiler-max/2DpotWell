@@ -205,11 +205,11 @@ module w90Interface
 
 
 !PUBLIC READ
-	subroutine read_FD_scheme(nntot, nnlist, nncell, b_k, w_b)
+	subroutine read_FD_scheme(f_nntot, f_nnlist, f_nncell, b_k, w_b)
 		!call after w90 is finished
 		!reads seedname.nnkp & seedname.wout
-		integer, 					intent(out)		::	nntot
-		integer,	allocatable, 	intent(out)		::	nnlist(:,:), nncell(:,:,:)
+		integer, 					intent(out)		::	f_nntot
+		integer,	allocatable, 	intent(out)		::	f_nnlist(:,:), f_nncell(:,:,:)
 		real(dp),	allocatable,	intent(out)		::	b_k(:,:), w_b(:)
 		integer										::	stat, qi, qnn, iLine(5), nn, start, end
 		real(dp)									::	b_vec(3), weight
@@ -231,17 +231,20 @@ module w90Interface
 			!find the block
 			if(line == search_nnkp) then
 				!GET nntot				
-				read(330,*)	nntot
-				allocate(	nnlist(		nQ, nntot)		)
-				allocate(	nncell(	3, 	nQ, nntot)		)
-				allocate(	b_k(	3,		nntot)		)
-				allocate(	w_b(			nntot)		)
+				read(330,*)	f_nntot
+				nntot = f_nntot
+				allocate(	f_nnlist(		nQ, f_nntot)		)
+				allocate(	f_nncell(	3, 	nQ, f_nntot)		)
+				allocate(	nnlist(			nQ, f_nntot)		)
+				allocate(	nncell(		3,	nQ,	f_nntot	)		)
+				allocate(	b_k(	3,		f_nntot)			)
+				allocate(	w_b(			f_nntot)			)
 				!read data
 				do qi = 1, nQ
-					do qnn = 1, nntot
+					do qnn = 1, f_nntot
 						read(330, *) iLine
-						nnlist( iLine(1), qnn )		= iLine(2)
-						nncell(	1:3, iLine(1), qnn)	= iLine(3:5)
+						f_nnlist( iLine(1), qnn )		= iLine(2)
+						f_nncell(	1:3, iLine(1), qnn)	= iLine(3:5)
 					end do
 				end do
 				finished = .true.
@@ -250,7 +253,7 @@ module w90Interface
 		close(330)
 		if( finished ) then
 			write(*,*)	"[readFDscheme]: read the .nnkp file"
-			write(*,*)	"[readFDscheme]: nntot=",nntot
+			write(*,*)	"[readFDscheme]: nntot=",f_nntot
 		else
 			stop	"[readFDscheme]: did not find search string  in .nnkp file"
 		end if
@@ -266,7 +269,7 @@ module w90Interface
 				read(335,*)
 				read(335,*)
 				read(335,*)
-				do qnn = 1, nntot
+				do qnn = 1, f_nntot
 					!read line
 					read(335,"(a)",iostat=stat) line
 					!remove "|" from line  (this is neccessary to use pattern matching on string)
@@ -288,7 +291,7 @@ module w90Interface
 		close(335)
 		!
 		write(*,*)		" 	nn | 	b	| 	w_b "
-		do nn = 1, nntot
+		do nn = 1, f_nntot
 			write(*,'(a,i2,a,f6.2,a,f6.2,a,f6.2,a,f6.2)')		"  ",nn," | (",b_k(1,nn),", ",b_k(2,nn),", ",b_k(3,nn),") |    ",w_b(nn)
 		end do
 
@@ -455,7 +458,7 @@ module w90Interface
 		do qi = 1, size(M_init,4)
 			do nn = 1, size(M_init,3)
 				!
-				write(125,*)	qi, nn
+				write(125,*)	qi, nnlist(qi,nn),	nncell(1:3,qi,nn)
 				!
 				do n = 1, size(M_init,2)
 					do m = 1, size(M_init,1)
