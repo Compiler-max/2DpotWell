@@ -160,12 +160,12 @@ module output
 		close(307)
 		!
 		!
-		!R MESH
-		open(unit=310, iostat=stat, file=raw_dir//'rpts.dat', status='old')
-		if (stat == 0) close(310, status='delete')
-		open(unit=310,file='rawData/rpts.dat',form='unformatted',access='stream',action='write')
-		write(310) rpts
-		close(310)
+		!!R MESH
+		!open(unit=310, iostat=stat, file=raw_dir//'rpts.dat', status='old')
+		!if (stat == 0) close(310, status='delete')
+		!open(unit=310,file='rawData/rpts.dat',form='unformatted',access='stream',action='write')
+		!write(310) rpts
+		!close(310)
 		!
 		return
 	end subroutine

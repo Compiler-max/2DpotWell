@@ -39,11 +39,11 @@ module berry
 
 !public
 	subroutine berryMethod()
-		complex(dp),	allocatable		:: 	U_mat(:,:,:), M_ham(:,:,:,:), M_wann(:,:,:,:), M_basis(:,:,:,:), &
+		complex(dp),	allocatable		:: 	U_mat(:,:,:), M_ham(:,:,:,:), M_wann(:,:,:,:), &
 											FcurvQ(:,:,:,:),veloQ(:,:,:,:) 		
-		real(dp),		allocatable		::	Aconn_H(:,:,:,:), Aconn_W(:,:,:,:), A_basis(:,:,:,:), &
+		real(dp),		allocatable		::	Aconn_H(:,:,:,:), Aconn_W(:,:,:,:), &
 											EnQ(:,:), b_k(:,:), w_b(:), &
-											w_centers(:,:), berry_W_gauge(:,:),berry_H_gauge(:,:),berry_basis(:,:), niu_polF2(:,:), niu_polF3(:,:)
+											w_centers(:,:), berry_W_gauge(:,:),berry_H_gauge(:,:), niu_polF2(:,:), niu_polF3(:,:)
 		integer							::	nntot, n
 		integer,		allocatable		:: 	nnlist(:,:), nncell(:,:,:)
 		!

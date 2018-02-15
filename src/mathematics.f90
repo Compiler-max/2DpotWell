@@ -452,7 +452,7 @@ module mathematics
 					if(n == m) then 
 						if(  abs(abs(dreal(I(n,n)))-1.0_dp) > acc  .or. abs(dimag(I(n,n))) > acc	) 	isIdentity = .false.
 					else 
-						if(	abs(I(n,m)) > acc ))														isIdentity = .false.
+						if(	abs(I(n,m)) > acc )															isIdentity = .false.
 					end if
 					n = n + 1
 					!

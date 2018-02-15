@@ -1,7 +1,7 @@
 module w90Interface	
 
 	use mpi
-	use mathematics,	only:	dp, PI_dp, i_dp, machineP, aUtoAngstrm, aUtoEv, myExp
+	use mathematics,	only:	dp, PI_dp, i_dp, machineP, aUtoAngstrm, aUtoEv, myExp, isUnit
 	use sysPara
 	use basisIO,		only:	read_energies, read_Amn, read_Mmn
 	use planeWave,		only:	calcMmat, calcAmatANA
@@ -410,7 +410,7 @@ module w90Interface
 	subroutine read_M_initial( M_init)
 		!read the M_matrix written by w90prepMmat	
 		complex(dp),		intent(out)		::	M_init(:,:,:,:)
-		integer								::	qi,nn, n, m, x,&
+		integer								::	qi,nn, n, m, &
 												f_num_bands, f_num_kpts, f_nntot, f_qi, f_nnlist, f_nncell(1:3)
 		real(dp)							::	realBuff(2)
 		logical								:: 	foundFile
