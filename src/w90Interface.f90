@@ -437,6 +437,7 @@ module w90Interface
 					end do
 				end do		
 			end do
+			write(*,*)	"[read_M_initial]: done for qi=",qi
 		end do
 		!
 		!DEBUG
