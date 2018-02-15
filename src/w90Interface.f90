@@ -408,7 +408,7 @@ module w90Interface
 		complex(dp),		intent(out)		::	M_init(:,:,:,:)
 		integer								::	qi,nn, n, m, x,&
 												f_num_bands, f_num_kpts, f_nntot, f_qi, f_nnlist, f_nncell(1:3)
-		real(dp)							::	cmplx(2)
+		real(dp)							::	realBuff(2)
 		logical								:: 	foundFile
 		!
 		M_init = dcmplx(0.0_dp)
@@ -421,8 +421,8 @@ module w90Interface
 		read(120,*)
 		read(120,*) f_num_bands, f_num_kpts, f_nntot
 		!
-		do qi = 1, num_kpts
-			do nn = 1, nntot
+		do qi = 1, size(M_init,4)
+			do nn = 1, size(M_init,3)
 				read(120,*)	f_qi, f_nnlist, f_nncell(1:3)
 				if(	 	qi 			/= 	f_qi		)	stop	"[read_M_initial]: WARNING q mesh ordered differently"
 				if(	nnlist(qi,nn) 	/= 	f_nnlist	)	stop	"[read_M_initial]: WARNING trouble with nnlist"
@@ -430,11 +430,10 @@ module w90Interface
 					if( f_nncell(x) /= nncell(x,qi,nn))	stop	"[read_M_initial]:	WARNING trouble with nncell"
 				end do
 
-				do n = 1, num_bands
-					do m = 1, num_bands
-						read(120,*)	cmplx(1:2)
-						M_init(m,n,nn,qi)	= dcmplx(cmplx(1))
-						M_init(m,n,nn,qi)	= M_init(m,n,nn,qi) + i_dp * cmplx(2)
+				do n = 1, size(M_init,2)
+					do m = 1, size(M_init,1)
+						read(120,*)	realBuff(1:2)
+						M_init(m,n,nn,qi)	= dcmplx(realBuff(1),realBuff(2))
 					end do
 				end do		
 			end do
