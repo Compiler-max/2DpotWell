@@ -420,10 +420,12 @@ module w90Interface
 		open(unit=120,file=w90_Dir//seedName//'.mmn',action='read',access='stream',form='formatted', status='old')
 		read(120,*)
 		read(120,*) f_num_bands, f_num_kpts, f_nntot
+		write(*,*)	"[read_M_initial]: read the header"
 		!
 		do qi = 1, size(M_init,4)
 			do nn = 1, size(M_init,3)
 				read(120,*)	f_qi, f_nnlist, f_nncell(1:3)
+				write(*,*)	"[read_M_initial]: read fd sheme for qi=",qi	," nn=",nn	
 				if(	 	qi 			/= 	f_qi		)	stop	"[read_M_initial]: WARNING q mesh ordered differently"
 				if(	nnlist(qi,nn) 	/= 	f_nnlist	)	stop	"[read_M_initial]: WARNING trouble with nnlist"
 				do x = 1, 3
@@ -435,9 +437,9 @@ module w90Interface
 						read(120,*)	realBuff(1:2)
 						M_init(m,n,nn,qi)	= dcmplx( realBuff(1), realBuff(2) )
 					end do
-				end do		
+				end do
+				write(*,*)	"[read_M_initial]: done for qi=",qi	," nn=",nn	
 			end do
-			write(*,*)	"[read_M_initial]: done for qi=",qi
 		end do
 		!
 		!DEBUG
