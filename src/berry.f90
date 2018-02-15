@@ -238,7 +238,7 @@ module berry
 		complex(dp),		intent(in)		::	M_H(:,:,:,:), U_mat(:,:,:)
 		complex(dp),		intent(out)		::	M_W(:,:,:,:)
 		complex(dp),		allocatable		::	U_left(:,:), tmp(:,:)
-		integer								:: 	qi, nn
+		integer								:: 	qi, nn, qnn
 		!
 		!$OMP PARALLEL DEFAULT(SHARED) PRIVATE(tmp, U_left, nn, qi)
 		allocate(		tmp(	size(U_mat,1), size(U_mat,2)	)			)
@@ -248,8 +248,9 @@ module berry
 			U_left(:,:)			=	dconjg(		 transpose( U_mat(:,:,qi) )			)
 			!
 			do nn = 1, nntot
-				tmp(:,:)		=	matmul(		M_H(:,:,nn,qi)	,	U_mat(:,:,nnlist(qi,nn))	)
-				M_W(:,:,nn,qi)	= 	matmul(		U_left(:,:)		, 	tmp(:,:) 					)
+				qnn				=	nnlist(qi,nn)
+				tmp(:,:)		=	matmul(		U_left(:,:)	,	M_H(:,:,nn,qi)		)
+				M_W(:,:,nn,qi)	= 	matmul(		tmp(:,:)	, 	U_mat(:,:,qnn) 		)
 			end do
 			!
 		end do
