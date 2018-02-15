@@ -35,16 +35,22 @@ program main
     	outT 	= 0.0
     	mastT	= 0.0
     	!
-   		write(*,*)	"[main]:**************************setup Grids*************************"
+   		write(*,*)					"[main]:**************************setup Grids*************************"
    		call cpu_time(mastT0)
    		call cpu_time(T0)
     end if
 
     !read & distribute input
   	call readInp()
+	if(myID == root ) then
+		write(*,*)					"*"
+		write(*,*)					"*"
+		write(*,*)					"*"
+		write(*,*)					"*"
+	end if
 	!
 	!check if equal kpt distribution among mpi procs is possible -> if not break
-	if( mod(nQ,nProcs)/=0)  stop '[main]: ERROR mpi threads have to be integer fraction of nQ'
+	if( mod(nQ,nProcs)/=0)  stop 	'[main]: ERROR mpi threads have to be integer fraction of nQ'
 	!
 	!print info
 	if( myID == root .and. doSolveHam ) then
@@ -72,13 +78,13 @@ program main
 
 
 		!try to print some WARNINGs for to small Gcut
-		write(*,*)	"[main]:**************************BASIS SET DEBUG*************************"
+		write(*,*)					"[main]:**************************BASIS SET DEBUG*************************"
 		call printBasisInfo()
-		write(*,*)	"[main]: ...wrote basis set debug info"
-		write(*,*)	"*"
-		write(*,*)	"*"
-		write(*,*)	"*"
-		write(*,*)	"*"
+		write(*,*)					"[main]: ...wrote basis set debug info"
+		write(*,*)					"*"
+		write(*,*)					"*"
+		write(*,*)					"*"
+		write(*,*)					"*"
 		call cpu_time(T1)
 		outT = T1 - T0
 	end if
@@ -99,11 +105,11 @@ program main
 		if( myID == root )	call write_K_lattices()
 		call MPI_BARRIER( MPI_COMM_WORLD, ierr )
 		if( myID == root ) then
-			write(*,*)	"*"
-			write(*,*)	"*"
-			write(*,*)	"*"
-			write(*,*)	"*"
-			write(*,*)	"[main]: done solving Schroedinger eq., please execute wannier90 now"
+			write(*,*)				"*"
+			write(*,*)				"*"
+			write(*,*)				"*"
+			write(*,*)				"*"
+			write(*,*)				"[main]: done solving Schroedinger eq., please execute wannier90 now"
 			call cpu_time(T1)
 			hamT = T1-T0
 		end if
@@ -120,12 +126,12 @@ program main
 		!EFF TB - post w90
 		call cpu_time(T0)
 		if(	doPw90 ) then
-			write(*,*)	"[main]:**************************POST WANNIER90 *************************"
-			write(*,*)	"[main]: postw90 deprecated, not used in this version any more"
-			write(*,*)	"*"
-			write(*,*)	"*"
-			write(*,*)	"*"
-			write(*,*)	"*"
+			write(*,*)				"[main]:**************************POST WANNIER90 *************************"
+			write(*,*)				"[main]: postw90 deprecated, not used in this version any more"
+			write(*,*)				"*"
+			write(*,*)				"*"
+			write(*,*)				"*"
+			write(*,*)				"*"
 		end if
 		call cpu_time(T1)
 		postWT	= T1-T0
@@ -135,43 +141,43 @@ program main
 		call cpu_time(T0)
 		
 		if ( doBerry ) then
-			write(*,*)	"[main]:**************************BERRY METHOD*************************"
+			write(*,*)				"[main]:**************************BERRY METHOD*************************"
 			call berryMethod()
-			write(*,*)	"[main]: done with wavefunction method "
-			write(*,*)	"*"
-			write(*,*)	"*"
-			write(*,*)	"*"
-			write(*,*)	"*"
+			write(*,*)				"[main]: done with wavefunction method "
+			write(*,*)				"*"
+			write(*,*)				"*"
+			write(*,*)				"*"
+			write(*,*)				"*"
 		end if
 		call cpu_time(T1)
 		berryT	= T1 - T0
 
 		!OUTPUT
-		write(*,*)	"[main]:**************************WRITE OUTPUT*************************"
+		write(*,*)					"[main]:**************************WRITE OUTPUT*************************"
 		call cpu_time(T0)
 		!
 		call writeMeshInfo() 
-		write(*,*)	"[main]: ...wrote mesh info"
+		write(*,*)					"[main]: ...wrote mesh info"
 		if( writeBin )	then
 			call writeMeshBin()
-			write(*,*)	"[main]: ...wrote mesh bin"
-			write(*,*)	"[main]: ...wrote binary files for meshes and unks"
+			write(*,*)				"[main]: ...wrote mesh bin"
+			write(*,*)				"[main]: ...wrote binary files for meshes and unks"
 		end if
 		!
-		write(*,*)	"*"
-		write(*,*)	"*"
-		write(*,*)	"*"
-		write(*,*)	"*"
+		write(*,*)					"*"
+		write(*,*)					"*"
+		write(*,*)					"*"
+		write(*,*)					"*"
 		!
 		!TIMING INFO SECTION
 		call cpu_time(mastT1)
 		mastT= mastT1-mastT0
-		write(*,*) '**************TIMING INFORMATION************************'
+		write(*,*) 					"[main]:**************TIMING INFORMATION************************"
 		call printTiming(alloT,hamT,wannT,postWT,berryT,outT,mastT)
-		write(*,*)	"*"
-		write(*,*)	"*"
-		write(*,*)	"*"
-		write(*,*)	"*"
+		write(*,*)					"*"
+		write(*,*)					"*"
+		write(*,*)					"*"
+		write(*,*)					"*"
 	end if
 
 	!MPI FINALIZE
