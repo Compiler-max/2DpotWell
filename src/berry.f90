@@ -58,58 +58,43 @@ module berry
 		allocate(			U_mat(		num_wann	,	num_wann					,	num_kpts		)			)
 		allocate(			M_ham(		num_wann	, 	num_wann	, 	nntot 		,	num_kpts		)			)
 		allocate(			M_wann(		num_wann	,	num_wann	,	nntot		,	num_kpts		)			)		
-		allocate(			M_basis(	num_wann	,	num_wann	,	nntot		,	num_kpts		)			)
 		allocate(			Aconn_H(		3		, 	num_wann	,	num_wann	,	num_kpts		)			)
 		allocate(			Aconn_W(		3		, 	num_wann	,	num_wann	,	num_kpts		)			)
-		allocate(			A_basis(		3		, 	num_wann	,	num_wann	,	num_kpts		)			)	
 		!
 		!real-space
 		allocate(			w_centers(		3,					num_wann					)			)
 		allocate(			berry_W_gauge(	3,					num_wann					)			)
 		allocate(			berry_H_gauge(	3,					num_wann					)			)
-		allocate(			berry_basis(	3,					num_wann					)			)
 		allocate(			niu_polF2(		3,					num_wann					)			)
 		allocate(			niu_polF3(		3,					num_wann					)			)
 		!
 		!
-		
-		!read wannier files
-		call read_wann_centers(w_centers)
-		
 		!print atoms
 		write(*,*)	"[berryMethod]: atom positions:"
 		do n = 1, size(atPos,2)
 				write(*,'(a,i3,a,f6.2,a,f6.2,a)')	"at=",n,"	atPos(at)=(",atPos(1,n),", ",atPos(2,n),")."
 		end do
-
+	
 		!print w90 centers
 		write(*,*)	"[berryMethod]: w90 centers:"
+		call read_wann_centers(w_centers)
 		do n = 1, size(w_centers,2)
 			write(*,'(a,i3,a,f6.2,a,f6.2,a,f6.2,a)')	"n=",n,"	p_w90(n)=(",w_centers(1,n),", ",w_centers(2,n),", ",w_centers(3,n),")."
 		end do
-		!
-		!0th basisIO source
-		write(*,*)	"[berryMethod]: start basisIO version"
-		call read_Mmn(M_basis)
-		call calcConnOnCoarse(M_basis, nntot, b_k, w_b, A_basis)
-		call calcPolViaA(A_basis, berry_basis)
-
-
-		!second wannier read
-		call read_M_initial(M_ham)
-		call read_U_matrix(U_mat)
-
-
+	
 		!0th HAM GAUGE
 		write(*,*)	"[berryMethod]: start (H) gauge calculation"
+		call read_M_initial(M_ham)
 		call calcConnOnCoarse(M_ham, nntot, b_k, w_b, Aconn_H)
 		call calcPolViaA(Aconn_H, berry_H_gauge)
 		!
 		!0th WANN GAUGE
 		write(*,*)	"[berryMethod]: start (W) gauge calculation"
+		call read_U_matrix(U_mat)
 		call rot_M_matrix(nntot, nnlist, M_ham, U_mat, M_wann)
 		call calcConnOnCoarse(M_wann, nntot, b_k, w_b, Aconn_W)
 		call calcPolViaA(Aconn_W, berry_W_gauge)
+		!
 		!
 		!1st ORDER SEMICLASSICS
 		if(doNiu) then
