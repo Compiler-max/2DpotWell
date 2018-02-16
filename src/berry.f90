@@ -174,6 +174,13 @@ module berry
 		!nntot, nnlist, nncell list the nearest neighbours (k-space)
 		!b_k:	 non zero if qi at boundary of bz and nn accross bz
 		!w_b:	 weight of nn 
+		!
+		!fastConnvergence:
+		!			\vec{r_n} = 	1/N_k 	\sum_{k,b}	 w_b \vec{b} IMAG[ log M(n,n,nn,qi) ]
+		!
+		!finiteDifference:
+		!			\vec{r_n} = 	1/N_k 	\sum_{k,b}	 w_b \vec{b} i_dp [ M(n,n,nn,qi) - 1.0_dp ]
+
 		complex(dp),	intent(in)			:: 	M_mat(:,:,:,:)
 		real(dp),		intent(in)			::	w_b(:), b_k(:,:)
 		real(dp),		intent(out)			::	A_conn(:,:,:,:)
@@ -182,10 +189,11 @@ module berry
 		!
 		if( 		fastConnConv ) write(*,*)	"[calcConnOnCoarse]: use logarithmic formula for connection"
 		if( .not.	fastConnConv ) write(*,*)	"[calcConnOnCoarse]: use finite difference formula for connection" 
+		if(num_bands /= num_wann ) stop			"[calcConnONCoarse]: WARNING disentanglement not supported"
 		!
 		A_conn = 0.0_dp
 		!$OMP PARALLEL DO SCHEDULE(STATIC)	DEFAULT(SHARED) PRIVATE(qi, nn, n,m, delta)
-		do qi = 1, size(M_mat,4)
+		do qi = 1, num_kpts
 			!SUM OVER NN
 			do nn = 1, nntot
 				!
@@ -200,9 +208,9 @@ module berry
 						do m = 1, size(M_mat,1)
 							delta = dcmplx(0.0_dp)
 							if( n==m ) 	delta = dcmplx(1.0_dp)
-							A_conn(1,m,n,qi)		= 	A_conn(1,m,n,qi)	+	w_b(nn) * b_k(1,nn) * dimag( M_mat(m,n,nn,qi) - delta  )					
-							A_conn(2,m,n,qi)		= 	A_conn(2,m,n,qi)	+	w_b(nn) * b_k(2,nn) * dimag( M_mat(m,n,nn,qi) - delta  )
-							A_conn(3,m,n,qi)		= 	A_conn(3,m,n,qi)	+	w_b(nn) * b_k(3,nn) * dimag( M_mat(m,n,nn,qi) - delta  )	
+							A_conn(1,m,n,qi)		= 	A_conn(1,m,n,qi)	+	w_b(nn) * b_k(1,nn) * dreal( i_dp * (M_mat(m,n,nn,qi) - delta)  )					
+							A_conn(2,m,n,qi)		= 	A_conn(2,m,n,qi)	+	w_b(nn) * b_k(2,nn) * dreal( i_dp * (M_mat(m,n,nn,qi) - delta)  )
+							A_conn(3,m,n,qi)		= 	A_conn(3,m,n,qi)	+	w_b(nn) * b_k(3,nn) * dreal( i_dp * (M_mat(m,n,nn,qi) - delta)  )	
 						end do
 					end do				
 				end if
@@ -242,7 +250,7 @@ module berry
 		!$OMP END PARALLEL DO
 		!
 		do n = 1, size(A_mat,2)
-			write(*,'(a,i3,a,f6.2,a,f6.2,a,f6.2,a)')	"[calcPolViaA]: n=",n,"  r(n)=(",centers(1,n),", ", centers(2,n),",",centers(3,n), ")=",&
+			write(*,'(a,i3,a,f6.2,a,f6.2,a,f6.2,a,a,f9.4,a,f9.4,a,f9.4,a)')	"[calcPolViaA]: n=",n,"  r(n)=(",centers(1,n),", ", centers(2,n),",",centers(3,n), ")=",&
 																"(",mod(centers(1,n),polQuantum),", ", mod(centers(2,n),polQuantum),",",mod(centers(3,n),polQuantum), ")."
 		end do
 		!		
