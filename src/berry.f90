@@ -170,8 +170,8 @@ module berry
 
 !private
 	subroutine calcConnOnCoarse(M_mat, w_b, b_k, A_conn)
-		!calculates the Berry connection, based on finite differences
-		!nntot, nnlist, nncell list the nearest neighbours (k-space)
+		!calculates the Berry connection, from the overlap matrix
+		! see Vanderbilt 1997, eq.(22) & eq.(31)
 		!b_k:	 non zero if qi at boundary of bz and nn accross bz
 		!w_b:	 weight of nn 
 		!
@@ -208,9 +208,9 @@ module berry
 						do m = 1, size(M_mat,1)
 							delta = dcmplx(0.0_dp)
 							if( n==m ) 	delta = dcmplx(1.0_dp)
-							A_conn(1,m,n,qi)		= 	A_conn(1,m,n,qi)	+	w_b(nn) * b_k(1,nn) * dreal( i_dp * (M_mat(m,n,nn,qi) - delta)  )					
-							A_conn(2,m,n,qi)		= 	A_conn(2,m,n,qi)	+	w_b(nn) * b_k(2,nn) * dreal( i_dp * (M_mat(m,n,nn,qi) - delta)  )
-							A_conn(3,m,n,qi)		= 	A_conn(3,m,n,qi)	+	w_b(nn) * b_k(3,nn) * dreal( i_dp * (M_mat(m,n,nn,qi) - delta)  )	
+							A_conn(1,m,n,qi)		= 	A_conn(1,m,n,qi)	-	w_b(nn) * b_k(1,nn) * dreal( i_dp * (M_mat(m,n,nn,qi) - delta)  )					
+							A_conn(2,m,n,qi)		= 	A_conn(2,m,n,qi)	-	w_b(nn) * b_k(2,nn) * dreal( i_dp * (M_mat(m,n,nn,qi) - delta)  )
+							A_conn(3,m,n,qi)		= 	A_conn(3,m,n,qi)	-	w_b(nn) * b_k(3,nn) * dreal( i_dp * (M_mat(m,n,nn,qi) - delta)  )	
 						end do
 					end do				
 				end if
