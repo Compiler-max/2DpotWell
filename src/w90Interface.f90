@@ -229,7 +229,6 @@ module w90Interface
 		f_nnlist	= 0
 		f_nncell	= 0
 		M_init 		= dcmplx(0.0_dp)
-		write(*,*)	"[read_M_initial]: allocated the M matrix"
 		!
 		do qi = 1, f_num_kpts
 			do nn = 1, f_nntot
@@ -268,6 +267,7 @@ module w90Interface
 			end do
 		end do
 		close(125)
+		write(*,*)	"[read_M_initial]: wrote clone.mmn file"
 
 		!
 		return
