@@ -11,13 +11,13 @@
     relYpos     =   0.500 0.500
     atRx        =   1.010 1.010
     atRy        =   1.010 1.010
-    atPot       =   -3.20 -3.00
+    atPot       =   -0.40 -0.20
     dVpot       =   0.000 0.000
     Zion        =   1.000 1.000
 
 [wann]
-    nBands      =   6
-    nWfs        =   6
+    nBands      =   2
+    nWfs        =   2
 
 [perturbation]
     B0          =   1.0               #hbar/(e*a0**2) = 2.35 * 10**5  T

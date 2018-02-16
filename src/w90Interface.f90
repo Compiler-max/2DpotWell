@@ -273,20 +273,15 @@ module w90Interface
 	end subroutine
 
 
-	subroutine read_FD_b_vectors(nntot_in, b_k, w_b)
+	subroutine read_FD_b_vectors(b_k, w_b)
 		!call after w90 is finished
 		!reads seedname.nnkp & seedname.wout
-		integer,					intent(in)		::	nntot_in
-		real(dp),	allocatable,	intent(out)		::	b_k(:,:), w_b(:)
-		integer										::	stat, qnn,  nn, start, end
-		real(dp)									::	b_vec(3), weight
-		character(len=*), 			parameter 		::	search_wout=" |                  b_k Vectors (Ang^-1) and Weights (Ang^2)                  |"
-
-		character(len=100)							::	line
-		logical										::	finished
-		!
-		allocate(	b_k(3,nntot_in)	)
-		allocate(	w_b(nntot_in)	)
+		real(dp),			intent(out)		::	b_k(:,:), w_b(:)
+		integer								::	stat, qnn,  nn, start, end
+		real(dp)							::	b_vec(3), weight
+		character(len=*), 	parameter 		::	search_wout=" |                  b_k Vectors (Ang^-1) and Weights (Ang^2)                  |"
+		character(len=100)					::	line
+		logical								::	finished
 		!
 		!READ .wout
 		finished = .false.
@@ -298,7 +293,7 @@ module w90Interface
 				read(335,*)
 				read(335,*)
 				read(335,*)
-				do qnn = 1, nntot_in
+				do qnn = 1, size(w_b)
 					!read line
 					read(335,"(a)",iostat=stat) line
 					!remove "|" from line  (this is neccessary to use pattern matching on string)
@@ -320,7 +315,7 @@ module w90Interface
 		close(335)
 		!
 		write(*,*)		" 	nn | 	b	| 	w_b "
-		do nn = 1, nntot_in
+		do nn = 1, size(w_b)
 			write(*,'(a,i2,a,f6.2,a,f6.2,a,f6.2,a,f6.2)')		"  ",nn," | (",b_k(1,nn),", ",b_k(2,nn),", ",b_k(3,nn),") |    ",w_b(nn)
 		end do
 
