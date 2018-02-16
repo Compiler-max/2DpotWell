@@ -214,21 +214,21 @@ module w90Interface
 		real(dp)									::	realBuff(2)
 		logical										:: 	foundFile
 		!
-		M_init = dcmplx(0.0_dp)
 		!check for file
 		inquire(file=w90_Dir//seedName//'.mmn', exist=foundFile)
 		if( .not. foundFile ) stop 'the .mmn file could not be found'
 		!
-		!read file
 		open(unit=120,file=w90_Dir//seedName//'.mmn',action='read',access='stream',form='formatted', status='old')
 		read(120,*)
 		read(120,*) f_num_bands, f_num_kpts, f_nntot		
-		
+		!		
 		allocate(	f_nnlist(			f_num_kpts, f_nntot					)	)
 		allocate(	f_nncell(	3,		f_num_kpts, f_nntot					)	)
-
 		allocate(	M_init(f_num_bands, f_num_bands, f_nntot, f_num_kpts	)	)
-
+		!
+		f_nnlist	= 0
+		f_nncell	= 0
+		M_init 		= dcmplx(0.0_dp)
 		!
 		do qi = 1, size(M_init,4)
 			do nn = 1, size(M_init,3)
