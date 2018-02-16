@@ -4,7 +4,7 @@ module potWellModel
 	use mpi
 	use omp_lib
 	use mathematics,	only:	dp, PI_dp,i_dp, machineP, myExp, &
-								eigSolverPART, isUnit, isHermitian
+								eigSolverPART, isUnit, isHermitian, aUtoEv
 	use sysPara				
 	use planeWave,		only:	calcVeloGrad, calcAmatANA, calcMmat
 	use basisIO,		only:	writeABiN_basVect, writeABiN_energy, writeABiN_basCoeff, writeABiN_velo, writeABiN_Amn, writeABiN_Mmn, &
@@ -125,7 +125,7 @@ module potWellModel
 			call writeABiN_velo(qi, velo_temp)
 
 			!FINALIZE
-			write(*,'(a,i3,a,i5,a,f6.2,a,i5,a,i5,a)')"[#",myID,", solveHam]: done for qi=",qi," lowest energy=",En_temp(1),"[Hatree] done tasks=(",qLoc,"/",qChunk,")"
+			write(*,'(a,i3,a,i5,a,f6.2,a,i5,a,i5,a)')"[#",myID,", solveHam]: done for qi=",qi," lowest energy=",En_temp(1)*aUtoEv,"[eV] done tasks=(",qLoc,"/",qChunk,")"
 			qLoc = qLoc + 1		
 		end do
 		!

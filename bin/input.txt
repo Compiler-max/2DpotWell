@@ -24,31 +24,31 @@
     Bext        =   0.0 0.0 1.0
 
 [numerics]
-    Gcut        =   5.0 # edited by statFlow
+    Gcut        =   10.0 # edited by statFlow
     nSolve      =   96 # edited by statFlow
-    nQx         =   4 # edited by statFlow
-    nQy         =   4 # edited by statFlow
-    nSCx        =   5 # edited by statFlow
-    nSCy        =   5 # edited by statFlow
-    nKx         =   4 # edited by statFlow
-    nKy         =   4 # edited by statFlow
+    nQx         =   8 # edited by statFlow
+    nQy         =   8 # edited by statFlow
+    nSCx        =   9 # edited by statFlow
+    nSCy        =   9 # edited by statFlow
+    nKx         =   8 # edited by statFlow
+    nKy         =   8 # edited by statFlow
     nRx         =   10
     nRy         =   10
     thres       =   0.1
 
 [methods]
-    doSolveHam  =   f
+    doSolveHam  =   t
     doMagHam    =   f
     doPw90      =   f
-    doBerry     =   t
+    doBerry     =   f
     writeBin    =   f
 
 [w90]
     seedName    =   'wf1'
-    useBloch    =   f
+    useBloch    =   t
     nShells     =   1
     shells      =   1 # edited by statFlow
-    nw90it      =   1000
+    nw90it      =   0
     pw90GaugeB  =   f
 
 [berry]
