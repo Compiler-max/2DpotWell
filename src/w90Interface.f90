@@ -408,7 +408,6 @@ module w90Interface
 		f_num_kpts 	= dumI(1)
 		f_num_wann	= dumI(2)
 
-		if( dumI(1) /= size(U_matrix,3) ) 	stop	"[readUmatrix]:  ERROR - wrong qmesh size found in file (doesn't match allo size)"
 		if(	dumI(3)	/= f_num_wann) 			stop	"[readUmatrix]:  ERROR - file specifies two differnt num_wann values"
 		
 
