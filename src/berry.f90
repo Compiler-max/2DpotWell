@@ -3,7 +3,7 @@ module berry
 	!	i.e. calculation of connection, velocities, curvatures and polarization
 	use omp_lib
 	use sysPara,		only:	Bext, prefactF3, &
-								nWfs, nQ, nSolve, &
+								nWfs, nQ, nSolve, vol, &
 								qpts, &
 								atPos, &
 								doGaugBack, doNiu, fastConnConv, doVeloNum 
@@ -189,12 +189,12 @@ module berry
 			!SUM OVER NN
 			do nn = 1, nntot
 				!
-				!WEIGHT OVERLAPS (Fast Convergence)
+				!(Fast Convergence)
 				if( fastConnConv ) then
 					A_conn(1,:,:,qi)	= A_conn(1,:,:,qi)	+	w_b(nn) * b_k(1,nn) * dimag( log(M_mat(:,:,nn,qi))	)
 					A_conn(2,:,:,qi)	= A_conn(2,:,:,qi)	+	w_b(nn) * b_k(2,nn) * dimag( log(M_mat(:,:,nn,qi))	)
 					A_conn(3,:,:,qi)	= A_conn(3,:,:,qi)	+	w_b(nn) * b_k(3,nn) * dimag( log(M_mat(:,:,nn,qi))	)
-				!WEIGHT OVERLAPS (Finite Difference)
+				!(Finite Difference)
 				else
 					do n = 1, size(M_mat,2)
 						do m = 1, size(M_mat,1)
@@ -222,9 +222,12 @@ module berry
 		! r_n 	= <0n|r|0n> 
 		!		=V/(2pi)**2 \integrate_BZ <unk|i \nabla_k|unk>
 		!		=V/(2pi)**2 \integrate_BZ A(k)
-		real(dp),			intent(in)		:: A_mat(:,:,:,:)			!A(2,	 nWfs, nWfs, nQ	)	
-		real(dp),			intent(out)		:: centers(:,:)
-		integer								:: n
+		real(dp),			intent(in)		:: 	A_mat(:,:,:,:)			!A(2,	 nWfs, nWfs, nQ	)	
+		real(dp),			intent(out)		:: 	centers(:,:)
+		integer								::	n
+		real(dp)							::	polQuantum
+		!
+		polQuantum = 1.0_dp / vol
 		!
 		centers = 0.0_dp
 		!$OMP PARALLEL DO SCHEDULE(STATIC) DEFAULT(SHARED) PRIVATE(n)
@@ -239,7 +242,8 @@ module berry
 		!$OMP END PARALLEL DO
 		!
 		do n = 1, size(A_mat,2)
-			write(*,'(a,i3,a,f6.2,a,f6.2,a,f6.2,a)')	"[calcPolViaA]: n=",n,"  r(n)=(",centers(1,n),", ", centers(2,n),",",centers(3,n), ")."
+			write(*,'(a,i3,a,f6.2,a,f6.2,a,f6.2,a)')	"[calcPolViaA]: n=",n,"  r(n)=(",centers(1,n),", ", centers(2,n),",",centers(3,n), ")=",&
+																"(",mod(centers(1,n),polQuantum),", ", mod(centers(2,n),polQuantum),",",mod(centers(3,n),polQuantum), ")."
 		end do
 		!		
 		return
