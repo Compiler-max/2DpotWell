@@ -59,7 +59,6 @@ module berry
 		!READ W90 Files
 		call read_M_initial(num_bands, num_kpts, nntot, nnlist, nncell, M_ham)
 		call read_U_matrix(num_wann, U_mat)
-		call read_FD_b_vectors(nntot, b_k, w_b)
 		
 		!WARNINGS & INFO
 		write(*,*)	"[berryMethod]: detected parameter info:"
@@ -71,6 +70,9 @@ module berry
 		if(	nntot /= 4 )				write(*,*)	"[berryMethod]: WARNING nntot is not equal 4"
 		write(*,*)	"*"
 
+		!fd-scheme allo
+		allocate(			w_b(		nntot	)	)
+		allocate(			b_k(	3,	nntot	)	)
 		!k-space allo
 		allocate(			M_wann(		num_wann	,	num_wann	,	nntot		,	num_kpts		)			)		
 		allocate(			Aconn_H(		3		, 	num_wann	,	num_wann	,	num_kpts		)			)
@@ -101,13 +103,14 @@ module berry
 
 		!0th HAM GAUGE
 		write(*,*)		"[berryMethod]: start (H) gauge calculation"
-		call calcConnOnCoarse(M_ham, Aconn_H)
+		call read_FD_b_vectors(b_k, w_b)
+		call calcConnOnCoarse(M_ham, w_b, b_k, Aconn_H)
 		call calcPolViaA(Aconn_H, berry_H_gauge)
 		!
 		!0th WANN GAUGE
 		write(*,*)		"[berryMethod]: start (W) gauge calculation"
 		call rot_M_matrix(M_ham, U_mat, M_wann)
-		call calcConnOnCoarse(M_wann, Aconn_W)
+		call calcConnOnCoarse(M_wann, w_b, b_k, Aconn_W)
 		call calcPolViaA(Aconn_W, berry_W_gauge)
 		!
 		!
@@ -166,12 +169,13 @@ module berry
 
 
 !private
-	subroutine calcConnOnCoarse(M_mat,  A_conn)
+	subroutine calcConnOnCoarse(M_mat, w_b, b_k, A_conn)
 		!calculates the Berry connection, based on finite differences
 		!nntot, nnlist, nncell list the nearest neighbours (k-space)
 		!b_k:	 non zero if qi at boundary of bz and nn accross bz
 		!w_b:	 weight of nn 
 		complex(dp),	intent(in)			:: 	M_mat(:,:,:,:)
+		real(dp),		intent(in)			::	w_b(:), b_k(:,:)
 		real(dp),		intent(out)			::	A_conn(:,:,:,:)
 		complex(dp)							::	delta
 		integer								::	qi, nn, n, m
