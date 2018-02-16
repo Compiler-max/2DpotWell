@@ -258,14 +258,13 @@ module w90Interface
 		write(125,*)	f_num_bands, f_num_kpts, nntot
 		do qi = 1, f_num_kpts
 			do nn = 1, f_nntot
-				write(125,*)	qi, nnlist(qi,nn),	nncell(1:3,qi,nn)
+				write(125,*)	qi, f_nnlist(qi,nn),	f_nncell(1:3,qi,nn)
 				do n = 1, f_num_bands
 					do m = 1, f_num_bands
 						write(125,*)	M_init(m,n,nn,qi)
 					end do
 				end do
 			end do
-			write(*,*)	"[read_M_initial]: wrote clone.mmn for qi=",qi
 		end do
 		close(125)
 		write(*,*)	"[read_M_initial]: wrote clone.mmn file"
