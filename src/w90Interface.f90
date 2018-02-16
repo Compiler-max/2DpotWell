@@ -222,22 +222,22 @@ module w90Interface
 		read(120,*)
 		read(120,*) f_num_bands, f_num_kpts, f_nntot		
 		!		
-		allocate(	f_nnlist(			f_num_kpts, f_nntot					)	)
-		allocate(	f_nncell(	3,		f_num_kpts, f_nntot					)	)
-		allocate(	M_init(f_num_bands, f_num_bands, f_nntot, f_num_kpts	)	)
+		allocate(	f_nnlist(			f_num_kpts, 	f_nntot					)	)
+		allocate(	f_nncell(	3,		f_num_kpts, 	f_nntot					)	)
+		allocate(	M_init(f_num_bands, f_num_bands, 	f_nntot, f_num_kpts		)	)
 		!
 		f_nnlist	= 0
 		f_nncell	= 0
 		M_init 		= dcmplx(0.0_dp)
 		!
-		do qi = 1, size(M_init,4)
-			do nn = 1, size(M_init,3)
+		do qi = 1, f_num_kpts
+			do nn = 1, f_nntot
 				!
 				read(120,*)	f_qi, f_nnlist(qi,nn), f_nncell(1:3,qi,nn)
 				if(	 qi /= 	f_qi )						stop	"[read_M_initial]: WARNING q mesh ordered differently"
 				!
-				do n = 1, size(M_init,2)
-					do m = 1, size(M_init,1)
+				do n = 1, f_num_bands
+					do m = 1, f_num_bands
 						read(120,*)	realBuff(1:2)
 						M_init(m,n,nn,qi)	= dcmplx( realBuff(1), realBuff(2) )
 					end do
@@ -256,11 +256,11 @@ module w90Interface
 		open(unit=125,file=w90_Dir//'clone'//'.mmn',action='write',access='stream',form='formatted', status='replace')
 		write(125,*)	"clone of the "//seedName//".mmn file"
 		write(125,*)	f_num_bands, f_num_kpts, nntot
-		do qi = 1, size(M_init,4)
-			do nn = 1, nntot
+		do qi = 1, f_num_kpts
+			do nn = 1, f_nntot
 				write(125,*)	qi, nnlist(qi,nn),	nncell(1:3,qi,nn)
-				do n = 1, size(M_init,2)
-					do m = 1, size(M_init,1)
+				do n = 1, f_num_bands
+					do m = 1, f_num_bands
 						write(125,*)	M_init(m,n,nn,qi)
 					end do
 				end do
