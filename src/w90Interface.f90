@@ -207,7 +207,7 @@ module w90Interface
 !PUBLIC READ
 	subroutine read_M_initial(f_num_bands, f_num_kpts, f_nntot, f_nnlist, f_nncell, M_init)
 		!read the M_matrix written by w90prepMmat	
-		integer,		intent(out)					::	f_num_bands, f_num_kpts, f_nntot
+		integer,						intent(out)	::	f_num_bands, f_num_kpts, f_nntot
 		integer,		allocatable,	intent(out)	::	f_nnlist(:,:), f_nncell(:,:,:)
 		complex(dp),	allocatable,	intent(out)	::	M_init(:,:,:,:)
 		integer										::	qi, f_qi, nn, n, m
@@ -229,6 +229,7 @@ module w90Interface
 		f_nnlist	= 0
 		f_nncell	= 0
 		M_init 		= dcmplx(0.0_dp)
+		write(*,*)	"[read_M_initial]: allocated the M matrix"
 		!
 		do qi = 1, f_num_kpts
 			do nn = 1, f_nntot
