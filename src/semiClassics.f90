@@ -33,7 +33,7 @@ module semiClassics
 		real(dp),		intent(out)		::  pol_F2(:,:), pol_F3(:,:)
 		!real(dp)						::	pnF2(3), pnF3(3)
 		real(dp)						:: 	F2(3,3), F3(3,3), F2k(3,3), F3k(3,3), sumF2(3), sumF3(3)
-		real(dp)						:: 	densCorr(3), polQuantum
+		real(dp)						:: 	densCorr(3), polQuantum, polUnitConv
 		integer							:: 	n, ki, kSize, ind
 		!
 		kSize		= size(Velo,4)

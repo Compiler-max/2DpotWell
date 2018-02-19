@@ -430,6 +430,7 @@ module output
 
 
 	subroutine writePolFile(w_centers, b_H_gauge, b_W_gauge, niu_polF2, niu_polF3)	!writePolFile(pWann, pBerry, pNiu, pPei )
+		!
 		real(dp),		intent(in)		::	w_centers(:,:),  b_H_gauge(:,:), b_W_gauge(:,:), niu_polF2(:,:), niu_polF3(:,:)
 		real(dp)						:: 	aUtoConv, polQuantum, &
 											pWann(3), pBerryH(3),pBerryW(3), &

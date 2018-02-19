@@ -64,6 +64,9 @@ module berry
 		call read_U_matrix(num_wann, U_mat)
 		
 		!WARNINGS & INFO
+		write(*,*)	"*"
+		write(*,*)	"*"
+		write(*,*)	"*"
 		write(*,*)	"[berryMethod]: detected parameter info:"
 		write(*,*)	"	num_kpts  =",num_kpts
 		write(*,*)	"	num_bands =",num_bands
@@ -93,6 +96,9 @@ module berry
 
 
 		!print atoms
+		write(*,*)	"*"
+		write(*,*)	"*"
+		write(*,*)	"*"
 		write(*,*)		"[berryMethod]: atom positions:"
 		write(*,*)		"	at | centers [Å] | V [eV]"
 		do n = 1, size(atPos,2)
@@ -100,6 +106,9 @@ module berry
 		end do
 	
 		!print w90 centers
+		write(*,*)	"*"
+		write(*,*)	"*"
+		write(*,*)	"*"
 		write(*,*)		"[berryMethod]: w90 centers:"
 		call read_wann_centers(w_centers)
 		write(*,*)		" #wf | 	<r>[Å]	"
@@ -111,12 +120,18 @@ module berry
 
 
 		!0th HAM GAUGE
+		write(*,*)	"*"
+		write(*,*)	"*"
+		write(*,*)	"*"
 		write(*,*)		"[berryMethod]: start (H) gauge calculation"
 		call read_FD_b_vectors(b_k, w_b)
 		call calcConnOnCoarse(M_ham, w_b, b_k, Aconn_H)
 		call calcPolViaA(Aconn_H, berry_H_gauge)
 		!
 		!0th WANN GAUGE
+		write(*,*)	"*"
+		write(*,*)	"*"
+		write(*,*)	"*"
 		write(*,*)		"[berryMethod]: start (W) gauge calculation"
 		call rot_M_matrix(M_ham, U_mat, M_wann)
 		call calcConnOnCoarse(M_wann, w_b, b_k, Aconn_W)
@@ -277,9 +292,10 @@ module berry
 		real(dp),			intent(in)		:: 	A_mat(:,:,:,:)			!A(2,	 nWfs, nWfs, nQ	)	
 		real(dp),			intent(out)		:: 	centers(:,:)
 		integer								::	n
-		real(dp)							::	polQuantum
+		real(dp)							::	polQuantum, centiMet
 		!
-		polQuantum = elemCharge / ( vol*aUtoAngstrm**2 ) 
+		polQuantum 	= elemCharge / ( vol*aUtoAngstrm**2 ) 
+		centiMet	= 1e+8_dp
 		write(*,'(a,e12.4,a)')	"[calcPolViaA]: the pol Quantum is p_quant=",polQuantum,"	[mu C/ Å²]"
 		!
 		centers = 0.0_dp
@@ -294,10 +310,10 @@ module berry
 		end do
 		!$OMP END PARALLEL DO
 		!
-		write(*,*)		" #state | 	<r>[Å]			| 	p[mu C / Å]"
+		write(*,*)		" #state | 	<r>[Å]			| 	p[	\{mu}C/cm	]"
 		do n = 1, size(A_mat,2)
 			write(*,'(i3,a,f6.2,a,f6.2,a,f6.2,a,a,e13.4,a,e13.4,a)') n,"  | ",centers(1,n),", ", centers(2,n),",",centers(3,n), "  | ",&
-																"(",mod(centers(1,n),polQuantum),", ", mod(centers(2,n),polQuantum), ")."
+																"(",mod(centers(1,n),polQuantum)*centiMet,", ", mod(centers(2,n),polQuantum)*centiMet, ")."
 		end do
 		!		
 		return
