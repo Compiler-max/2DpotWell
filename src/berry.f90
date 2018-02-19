@@ -315,7 +315,7 @@ module berry
 			write(*,'(i3,a,f6.2,a,f6.2,a,f6.2,a,a,e13.4,a,e13.4,a)') n,"  | ",centers(1,n),", ", centers(2,n),",",centers(3,n), "  | ",&
 																"(",centers(1,n)*polQuantum*centiMet,", ", centers(2,n)*polQuantum*centiMet, ")."
 		end do
-		write(*,)	"sum | 				(",sum(centers(1,:))*polQuantum*centiMet,", ",sum(centers(2,:))*polQuantum*centiMet,")."
+		write(*,'(a,e13.4,a,e13.4,a)')	"sum | 				(",sum(centers(1,:))*polQuantum*centiMet,", ",sum(centers(2,:))*polQuantum*centiMet,")."
 		!		
 		return
 	end subroutine
