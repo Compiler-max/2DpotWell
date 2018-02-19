@@ -233,7 +233,7 @@ module berry
 				!
 				!(Fast Convergence)
 				if( fastConnConv ) then
-					ln_tmp(:,:)			= aimag(	log(	M_mat(:,:,nn,qi)	)		)
+					ln_tmp(:,:)			= dimag(	log(	M_mat(:,:,nn,qi)	)		)
 					A_conn(1,:,:,qi)	= A_conn(1,:,:,qi)	+	w_b(nn) * b_k(1,nn) * ln_tmp(:,:)
 					A_conn(2,:,:,qi)	= A_conn(2,:,:,qi)	+	w_b(nn) * b_k(2,nn) * ln_tmp(:,:)
 					A_conn(3,:,:,qi)	= A_conn(3,:,:,qi)	+	w_b(nn) * b_k(3,nn) * ln_tmp(:,:)
