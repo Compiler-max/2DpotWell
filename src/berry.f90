@@ -96,8 +96,8 @@ module berry
 	
 		!print w90 centers
 		write(*,*)		"[berryMethod]: w90 centers:"
-		write(*,*)		" 	wf | 			<r>[Å]	"
 		call read_wann_centers(w_centers)
+		write(*,*)		" 	wf | 	<r>[Å]	"
 		do n = 1, size(w_centers,2)
 			write(*,'(i3,a,f6.2,a,f6.2,a,f6.2)')	n," | ",w_centers(1,n),", ",w_centers(2,n),", ",w_centers(3,n)
 		end do
