@@ -27,18 +27,26 @@ module planeWave
 		complex(dp),	intent(in)		:: 	ck(:,:)
 		complex(dp),	intent(out)		::	v_mat(:,:,:)
 		integer							::	qi, m, n, gi
+		real(dp)						::	hbar, me
 		!
-		v_mat = dcmplx(0.0_dp)
+		v_mat 	= dcmplx(0.0_dp)
+		hbar	= 1.0_dp
+		me 		= 1.0_dp
 		!
+		!get momentum
 		do m = 1, nSolve
 			do n = 1, nSolve
 				!
 				!SUM OVER BASIS FUNCTIONS
 				do gi = 1 , nGq(qi)
-					v_mat(1:2,n,m) = v_mat(1:2,n,m) -  dconjg(ck(gi,n)) *  ck(gi,m) *  Gvec(1:2,gi,qi)
+					v_mat(1:2,n,m) = v_mat(1:2,n,m) -  dconjg(ck(gi,n)) *  ( ck(gi,m) / hbar ) *  Gvec(1:2,gi,qi)
 				end do
 			end do
 		end do
+		!
+		!convert momentum into velocity
+		v_mat	= v_mat / me
+
 		!
 		return
 	end subroutine

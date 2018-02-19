@@ -276,7 +276,7 @@ module berry
 		real(dp)							::	polQuantum
 		!
 		polQuantum = elemCharge / ( vol*aUtoAngstrm**2 ) 
-		write(*,*)	"[calcPolViaA]: the pol Quantum is p_quant=",polQuantum,"	[mu C/ Å²]"
+		write(*,'(a,e12.4,a)')	"[calcPolViaA]: the pol Quantum is p_quant=",polQuantum,"	[mu C/ Å²]"
 		!
 		centers = 0.0_dp
 		!$OMP PARALLEL DO SCHEDULE(STATIC) DEFAULT(SHARED) PRIVATE(n)
