@@ -276,6 +276,7 @@ module berry
 		real(dp)							::	polQuantum
 		!
 		polQuantum = elemCharge / ( vol*aUtoAngstrm**2 ) 
+		write(*,*)	"[calcPolViaA]: the pol Quantum is p_quant=",polQuantum,"	[mu C/ Å²]"
 		!
 		centers = 0.0_dp
 		!$OMP PARALLEL DO SCHEDULE(STATIC) DEFAULT(SHARED) PRIVATE(n)
@@ -291,8 +292,8 @@ module berry
 		!
 		write(*,*)		" #state | 	<r>[Å]	| 	p[mu C / Å]"
 		do n = 1, size(A_mat,2)
-			write(*,'(i3,a,f6.2,a,f6.2,a,f6.2,a,a,e13.4,a,e13.4,a,e13.4,a)') n,"  | ",centers(1,n),", ", centers(2,n),",",centers(3,n), "  | ",&
-																"(",mod(centers(1,n),polQuantum),", ", mod(centers(2,n),polQuantum),",",mod(centers(3,n),polQuantum), ")."
+			write(*,'(i3,a,f6.2,a,f6.2,a,f6.2,a,a,e13.4,a,e13.4,a)') n,"  | ",centers(1,n),", ", centers(2,n),",",centers(3,n), "  | ",&
+																"(",mod(centers(1,n),polQuantum),", ", mod(centers(2,n),polQuantum), ")."
 		end do
 		!		
 		return
