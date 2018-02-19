@@ -93,7 +93,7 @@ module semiClassics
 		do n = 1, size(pol_F2,2)	
 			write(*,'(i3,a,e13.4,a,e13.4,a,e13.4,a,a,e13.4,a,e13.4,a)')		n," | ", pol_F2(1,n)*aUtoAngstrm,", ",pol_F2(2,n)*aUtoAngstrm, ", ", pol_F2(3,n)*aUtoAngstrm," | ", &
 																					" (",	mod( pol_F2(1,n)*aUtoAngstrm, polQuantum) * centiMet	 ,&
-																					", ",	mod( pol_F2(2,n)*aUtoAngstrm, polQuantum) * centMet		,")"
+																					", ",	mod( pol_F2(2,n)*aUtoAngstrm, polQuantum) * centiMet		,")"
 		end do
 		write(*,'(a,e13.4,a,e13.4,a,e13.4,a)')								"sum | 						|	(", sumF2(1),", ",sumF2(2), ", ", sumF2(3),")."
 		!
