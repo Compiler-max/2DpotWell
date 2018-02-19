@@ -23,7 +23,8 @@ module berry
 	integer, 		parameter 	:: 	dp 				= kind(0.d0)
 	real(dp), 		parameter	:: 	machineP 		= 1e-15_dp
 	complex(dp),	parameter 	::	i_dp 			= dcmplx(0.0_dp, 1.0_dp)
-		real(dp),	parameter 	::	aUtoEv	 		= 27.211385_dp
+	real(dp),		parameter 	::	aUtoEv	 		= 27.211385_dp
+	real(dp),		parameter	::	aUtoAngstrm 	= 0.52917721092_dp 
 
 	!read in parameters:
 	integer						::	num_wann, num_bands, num_kpts, num_stat, &
@@ -89,14 +90,14 @@ module berry
 		!print atoms
 		write(*,*)		"[berryMethod]: atom positions:"
 		do n = 1, size(atPos,2)
-				write(*,'(a,i3,a,f6.2,a,f6.2,a ,f6.2,a)')	"at=",n,"	atPos(at)=(",atPos(1,n),", ",atPos(2,n),"); Vpot(at)=",atPot(n)*aUtoEv,"[eV]"
+				write(*,'(a,i3,a,f6.2,a,f6.2,a ,f6.2,a)')	"at=",n,"	atPos(at)=(",atPos(1,n)*aUtoAngstrm,", ",atPos(2,n)*aUtoAngstrm,")[Å]; Vpot(at)=",atPot(n)*aUtoEv,"[eV]"
 		end do
 	
 		!print w90 centers
 		write(*,*)		"[berryMethod]: w90 centers:"
 		call read_wann_centers(w_centers)
 		do n = 1, size(w_centers,2)
-			write(*,'(a,i3,a,f6.2,a,f6.2,a,f6.2,a)')	"n=",n,"	p_w90(n)=(",w_centers(1,n),", ",w_centers(2,n),", ",w_centers(3,n),")."
+			write(*,'(a,i3,a,f6.2,a,f6.2,a,f6.2,a)')	"n=",n,"	p_w90(n)=(",w_centers(1,n),", ",w_centers(2,n),", ",w_centers(3,n),")[Å]."
 		end do
 
 
