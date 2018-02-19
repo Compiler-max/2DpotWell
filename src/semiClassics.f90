@@ -37,7 +37,7 @@ module semiClassics
 		integer							:: 	n, ki, kSize
 		!
 		kSize		= size(Velo,4)
-		polQuantum	= elemCharge / ( vol * aUtoAngstrm **2)
+		polQuantum	= elemCharge / ( cell_vol * aUtoAngstrm **2)
 		!
 		!
 		write(*,*)"[calcFirstOrdP]: start calculating P' via semiclassic approach"
