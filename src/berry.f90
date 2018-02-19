@@ -92,13 +92,13 @@ module berry
 		write(*,*)		"[berryMethod]: atom positions:"
 		write(*,*)		"	at | centers [Å] | V [eV]"
 		do n = 1, size(atPos,2)
-				write(*,'(i3,a,f6.2,a,f6.2,a ,f6.2)')	n," | ",atPos(1,n)*aUtoAngstrm,", ",atPos(2,n)*aUtoAngstrm," | ",atPot(n)*aUtoEv
+				write(*,'(i3,a,f6.2,a,f6.2,a ,f6.2)')	n," | ",atPos(1,n)*aUtoAngstrm,", ",atPos(2,n)*aUtoAngstrm," 	| ",atPot(n)*aUtoEv
 		end do
 	
 		!print w90 centers
 		write(*,*)		"[berryMethod]: w90 centers:"
 		call read_wann_centers(w_centers)
-		write(*,*)		" 	wf | 	<r>[Å]	"
+		write(*,*)		" #wf | 	<r>[Å]	"
 		do n = 1, size(w_centers,2)
 			write(*,'(i3,a,f6.2,a,f6.2,a,f6.2)')	n," | ",w_centers(1,n),", ",w_centers(2,n),", ",w_centers(3,n)
 		end do
@@ -275,7 +275,7 @@ module berry
 		integer								::	n
 		real(dp)							::	polQuantum
 		!
-		polQuantum = elemCharge / ( vol*aUtoAngstrm ) 
+		polQuantum = elemCharge / ( vol*aUtoAngstrm**2 ) 
 		!
 		centers = 0.0_dp
 		!$OMP PARALLEL DO SCHEDULE(STATIC) DEFAULT(SHARED) PRIVATE(n)
@@ -289,8 +289,9 @@ module berry
 		end do
 		!$OMP END PARALLEL DO
 		!
+		write(*,*)		" #state | 	<r>[Å]	| 	p[C / Å]"
 		do n = 1, size(A_mat,2)
-			write(*,'(a,i3,a,f6.2,a,f6.2,a,f6.2,a,a,f9.4,a,f9.4,a,f9.4,a)')	"[calcPolViaA]: n=",n,"  r(n)=(",centers(1,n),", ", centers(2,n),",",centers(3,n), ")=",&
+			write(*,'(i3,a,f6.2,a,f6.2,a,f6.2,a,a,f9.4,a,f9.4,a,f9.4,a)') n,"  | ",centers(1,n),", ", centers(2,n),",",centers(3,n), "  | ",&
 																"(",mod(centers(1,n),polQuantum),", ", mod(centers(2,n),polQuantum),",",mod(centers(3,n),polQuantum), ")."
 		end do
 		!		
