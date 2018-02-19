@@ -102,7 +102,7 @@ module semiClassics
 			write(*,'(i3,a,e13.4,a,e13.4,a,e13.4,a,a,e13.4,a,e13.4,a)')		n," | ", pol_F3(1,n)*aUtoAngstrm,", ",pol_F3(2,n)*aUtoAngstrm, ", ", pol_F3(3,n)*aUtoAngstrm,&
 																			" | ", " (",mod(pol_F3(1,n)*aUtoAngstrm,polQuantum) ,", ",mod(pol_F3(2,n)*aUtoAngstrm,polQuantum),")"
 		end do
-		write(*,'(a,e13.4,a,e13.4,a,e13.4,a)')								"sum | 						|	(", sumF2(1),", ",sumF2(2), ", ", sumF2(3),")."
+		write(*,'(a,e13.4,a,e13.4,a,e13.4,a)')								"sum | 						|	(", sumF3(1),", ",sumF3(2), ", ", sumF3(3),")."
 		!
 		!PRINT TOT
 		write(*,*)															"[calcFirstOrdP] total first order pol:"
