@@ -25,7 +25,7 @@ module berry
 	complex(dp),	parameter 	::	i_dp 			= dcmplx(0.0_dp, 1.0_dp)
 	real(dp),		parameter 	::	aUtoEv	 		= 27.211385_dp
 	real(dp),		parameter	::	aUtoAngstrm 	= 0.52917721092_dp
-	real(dp),		parameter 	::	elemCharge	 	= 1.6021766208 * 1e-19_dp !Coulomb
+	real(dp),		parameter 	::	elemCharge	 	= 1.6021766208 * 1e-19_dp  *1e+6_dp! mu Coulomb
 
 	!read in parameters:
 	integer						::	num_wann, num_bands, num_kpts, num_stat, &
@@ -289,9 +289,9 @@ module berry
 		end do
 		!$OMP END PARALLEL DO
 		!
-		write(*,*)		" #state | 	<r>[Å]	| 	p[C / Å]"
+		write(*,*)		" #state | 	<r>[Å]	| 	p[mu C / Å]"
 		do n = 1, size(A_mat,2)
-			write(*,'(i3,a,f6.2,a,f6.2,a,f6.2,a,a,f9.4,a,f9.4,a,f9.4,a)') n,"  | ",centers(1,n),", ", centers(2,n),",",centers(3,n), "  | ",&
+			write(*,'(i3,a,f6.2,a,f6.2,a,f6.2,a,a,e13.4,a,e13.4,a,e13.4,a)') n,"  | ",centers(1,n),", ", centers(2,n),",",centers(3,n), "  | ",&
 																"(",mod(centers(1,n),polQuantum),", ", mod(centers(2,n),polQuantum),",",mod(centers(3,n),polQuantum), ")."
 		end do
 		!		
