@@ -90,8 +90,9 @@ module berry
 		!
 		!print atoms
 		write(*,*)		"[berryMethod]: atom positions:"
+		write(*,*)		"	at | centers [Å] | V [eV]"
 		do n = 1, size(atPos,2)
-				write(*,'(a,i3,a,f6.2,a,f6.2,a ,f6.2,a)')	"at=",n,"	atPos(at)=(",atPos(1,n)*aUtoAngstrm,", ",atPos(2,n)*aUtoAngstrm,")[Å]; Vpot(at)=",atPot(n)*aUtoEv,"[eV]"
+				write(*,'(i3,a,f6.2,a,f6.2,a ,f6.2)')	n," | ",atPos(1,n)*aUtoAngstrm,", ",atPos(2,n)*aUtoAngstrm," | ",atPot(n)*aUtoEv
 		end do
 	
 		!print w90 centers
