@@ -369,7 +369,7 @@ module w90Interface
 		close(340)
 		!
 		!convert to [a.u.]
-		w_centers 	= w_centers 	/ aUtoAngstrm
+		w_centers 	= w_centers 	!/ aUtoAngstrm
 		write(*,*)	"[read_wann_centers]: read the .xyz file"
 		!
 		!
