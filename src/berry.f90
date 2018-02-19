@@ -88,6 +88,10 @@ module berry
 		allocate(			niu_polF3(		3,					num_wann					)			)
 		!
 		!
+		!print unit cell info
+		write(*,'(a,f8.3,a)')	"[berryMethod]: unit cell volume=",vol*aUtoAngstrm,"[Å] "
+
+
 		!print atoms
 		write(*,*)		"[berryMethod]: atom positions:"
 		write(*,*)		"	at | centers [Å] | V [eV]"
@@ -142,7 +146,7 @@ module berry
 			call calcCurv(FcurvQ)
 			!
 			!semiclassics
-			call calcFirstOrdP(Bext, prefactF3, FcurvQ, Aconn_W, veloQ, EnQ, niu_polF2, niu_polF3)
+			call calcFirstOrdP(vol, Bext, prefactF3, FcurvQ, Aconn_W, veloQ, EnQ, niu_polF2, niu_polF3)
 			!
 			write(*,*)	"[berryMethod]: done with semiclassics"
 		else

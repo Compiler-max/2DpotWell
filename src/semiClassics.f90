@@ -13,6 +13,8 @@ module semiClassics
 	integer, 		parameter 	:: 	dp 				= kind(0.d0)
 	real(dp), 		parameter	:: 	machineP 		= 1e-15_dp
 	real(dp)					:: 	acc				= 1e-7_dp
+	real(dp),		parameter	::	aUtoAngstrm 	= 0.52917721092_dp
+	real(dp),		parameter 	::	elemCharge	 	= 1.6021766208 * 1e-19_dp  *1e+6_dp! mu Coulomb
 
 
 	contains
@@ -23,18 +25,19 @@ module semiClassics
 
 
 !public
-	subroutine	calcFirstOrdP(Bext, prefactF3, Fcurv, Aconn, Velo, En, pol_F2, pol_F3)
+	subroutine	calcFirstOrdP(cell_vol, Bext, prefactF3, Fcurv, Aconn, Velo, En, pol_F2, pol_F3)
 		!calculates the first order polarization p1 according to
 		!	P'= -int_dk [0.5 (Curv.Velo)*B_ext + a']
-		real(dp),		intent(in)		::	Bext(3), prefactF3, Aconn(:,:,:,:), En(:,:)		
+		real(dp),		intent(in)		::	cell_vol, Bext(3), prefactF3, Aconn(:,:,:,:), En(:,:)		
 		complex(dp),	intent(in)		::	Fcurv(:,:,:,:), Velo(:,:,:,:)			
 		real(dp),		intent(out)		::  pol_F2(:,:), pol_F3(:,:)
 		!real(dp)						::	pnF2(3), pnF3(3)
 		real(dp)						:: 	F2(3,3), F3(3,3), F2k(3,3), F3k(3,3)
-		real(dp)						:: 	densCorr(3)
+		real(dp)						:: 	densCorr(3), polQuantum
 		integer							:: 	n, ki, kSize
 		!
-		kSize	= size(Velo,4)
+		kSize		= size(Velo,4)
+		polQuantum	= elemCharge / ( vol * aUtoAngstrm **2)
 		!
 		!
 		write(*,*)"[calcFirstOrdP]: start calculating P' via semiclassic approach"
@@ -76,6 +79,15 @@ module semiClassics
 		end do
 		!$OMP END DO
 		!$OMP END PARALLEL
+		!
+		!PRINT
+		write(*,*)	"[calcFirstOrdP]: F2 matrix contribution:"
+		write(*,*)	" #state | 	<r>[Å]	| 	p[mu C / Å]"
+		do n = 1, size(pol_F2,2)	
+			write(*,'(i3,a,e13.4,a,e13.4,a,e13.4,a,a,e13.4,a,e13.4,a)')		n," | ", pol_F2(1,n)*aUtoAngstrm,", ",pol_F2(2,n)*aUtoAngstrm, ", ", pol_F2(3,n)*aUtoAngstrm,&
+																			" | ", " (",mod(pol_F2(1,n)*aUtoAngstrm,polQuantum) ,", ",mod(pol_F2(2,n)*aUtoAngstrm,polQuantum),")"
+
+		end do
 		!
 		!DEBUG
 		if(	kSize /= size(En,2)	)	 write(*,*)"[calcFirstOrdP]: WARNING Energy and velocities live on different k meshes!"
