@@ -224,7 +224,7 @@ module berry
 		if(num_bands /= num_wann ) stop			"[calcConnONCoarse]: WARNING disentanglement not supported"
 		!
 		A_conn = 0.0_dp
-		!$OMP PARALLEL DEFAULT(SHARED) PRIVATE(qi, nn, n,m, delta)
+		!$OMP PARALLEL DEFAULT(SHARED) PRIVATE(qi, nn, n,m, delta, ln_tmp)
 		allocate(		ln_tmp( size(M_mat,1), size(M_mat,2) )			)
 		!$OMP DO SCHEDULE(STATIC)	
 		do qi = 1, num_kpts
@@ -254,7 +254,6 @@ module berry
 			!
 		end do
 		!$OMP END DO
-		deallocate( ln_tmp)
 		!$OMP END PARALLEL
 		write(*,*)	"[calcConnOnCoarse]: established connection"
 		!
@@ -279,9 +278,9 @@ module berry
 		do n 	= 1, size(A_mat,2)
 			!
 			!INTEGRATE
-			centers(1,n) = -1.0_dp * sum(A_mat(1,n,n,:)) / size(A_mat,4)
-			centers(2,n) = -1.0_dp * sum(A_mat(2,n,n,:)) / size(A_mat,4)
-			if(size(A_mat,1)==3)	centers(3,n) =  -1.0_dp * sum(A_mat(3,n,n,:)) / size(A_mat,4)
+			centers(1,n) = -1.0_dp * sum(A_mat(1,n,n,:)) / real(size(A_mat,4),dp)
+			centers(2,n) = -1.0_dp * sum(A_mat(2,n,n,:)) / real(size(A_mat,4),dp)
+			if(size(A_mat,1)==3)	centers(3,n) =  -1.0_dp * sum(A_mat(3,n,n,:)) / real(size(A_mat,4),dp)
 			!
 		end do
 		!$OMP END PARALLEL DO
