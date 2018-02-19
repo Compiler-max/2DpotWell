@@ -10,7 +10,7 @@ label='convTest'
 gVal=( 20.0 25.0 30.0 )
 qVal=( 8 16 32 64 )
 nSolve=96
-nProcs=$1
+
 
 
 
@@ -39,9 +39,9 @@ for g in ${gVal[*]}; do
 		#
 		#determine nShell depending of q grid spacing
 		if (( $q <= 4 )); then
-			nShell=1
+			nShell=3
 		elif (( $q <= 8 )); then
-			nShell=1
+			nShell=2
 		else
 			nShell=1
 		fi
@@ -78,13 +78,12 @@ for g in ${gVal[*]}; do
 		sed -i 	"/nKx/c\    nKx         = $nK $infoString" 			./input.txt
 		sed -i 	"/nKy/c\    nKy         = $nK $infoString" 			./input.txt
 		#
-		sed -i 	"/shells/c\    shells       = $nShell $infoString" 	./input.txt
+		sed -i 	"/shell/c\    shell       = $nShell $infoString" 	./input.txt
 		wait
 		#	
 		#execute calculation
-		./subStream.sh $nProcs
+		./subStream.sh
 		wait
-		rm -r rawData
 		echo '['$(date +"%T")']: finished subStream'
 			
 	

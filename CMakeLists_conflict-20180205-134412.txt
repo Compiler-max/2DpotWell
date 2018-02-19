@@ -9,7 +9,8 @@ set (cmakeTest_VERSION_MAJOR 1)
 set (cmakeTest_VERSION_MINOR 0)
 
 #set (MPI_Fortran_COMPILER mpiifort)
-
+#add_custom_target("/opt/intel/compilers_and_libraries_2018/linux/bin/compilervars.sh intel64")
+#add_custom_command(source /opt/intel/compilers_and_libraries_2018/linux/bin/compilervars.sh intel64)
 #set some directions
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
@@ -42,7 +43,7 @@ endif (Fortran_COMPILER_NAME MATCHES "gfortran.*")
 
 #set (CMAKE_Fortran_FLAGS "-mkl -O3 -g -Wall -qopenmp")
 #linker flags
-set(COVERAGE_LINK_FLAGS "-mkl -g   -CB -check all -fpe0 -warn -traceback -debug extended")
+set(COVERAGE_LINK_FLAGS "-mkl=sequential -g   -CB -check all -fpe0 -warn -traceback -debug extended")
 #set(COVERAGE_LINK_FLAGS "-mkl -O3 -openmp")
 #set(CMAKE_Fortran_FLAGS "-mkl -O3 -qopenmp")
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${COVERAGE_LINK_FLAGS}")
