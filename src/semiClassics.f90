@@ -32,9 +32,9 @@ module semiClassics
 		complex(dp),	intent(in)		::	Fcurv(:,:,:,:), Velo(:,:,:,:)			
 		real(dp),		intent(out)		::  pol_F2(:,:), pol_F3(:,:)
 		!real(dp)						::	pnF2(3), pnF3(3)
-		real(dp)						:: 	F2(3,3), F3(3,3), F2k(3,3), F3k(3,3)
+		real(dp)						:: 	F2(3,3), F3(3,3), F2k(3,3), F3k(3,3), sumF2(3), sumF3(3)
 		real(dp)						:: 	densCorr(3), polQuantum
-		integer							:: 	n, ki, kSize
+		integer							:: 	n, ki, kSize, ind
 		!
 		kSize		= size(Velo,4)
 		polQuantum	= elemCharge / ( cell_vol * aUtoAngstrm **2)
@@ -80,14 +80,34 @@ module semiClassics
 		!$OMP END DO
 		!$OMP END PARALLEL
 		!
-		!PRINT
+
+		do ind = 1, 3
+			sumF2(ind) 	= sum( 	mod(pol_F2(ind,:)*aUtoAngstrm, 	polQuantum)			)
+			sumF3(ind)	= sum(	mod(pol_F3(ind,:)*aUtoAngstrm,	polQuantum)			)
+		end do
+		!
+		!PRINT F2
 		write(*,*)	"[calcFirstOrdP]: F2 matrix contribution:"
-		write(*,*)	" #state | 	<r>[Å]	| 	p[mu C / Å]"
+		write(*,*)	" #state | 		<r>[Å]	| 		p[mu C / Å]"
 		do n = 1, size(pol_F2,2)	
 			write(*,'(i3,a,e13.4,a,e13.4,a,e13.4,a,a,e13.4,a,e13.4,a)')		n," | ", pol_F2(1,n)*aUtoAngstrm,", ",pol_F2(2,n)*aUtoAngstrm, ", ", pol_F2(3,n)*aUtoAngstrm,&
 																			" | ", " (",mod(pol_F2(1,n)*aUtoAngstrm,polQuantum) ,", ",mod(pol_F2(2,n)*aUtoAngstrm,polQuantum),")"
-
 		end do
+		write(*,'(a,e13.4,a,e13.4,a,e13.4,a)')								"sum | 						|	(", sumF2(1),", ",sumF2(2), ", ", sumF2(3),")."
+		!
+		!PRINT F3
+		write(*,*)															"[calcFirstOrdP]: F3 matrix contribution:"
+		write(*,*)															" #state | 		<r>[Å]	| 		p[mu C / Å]"
+		do n = 1, size(pol_F3,2)	
+			write(*,'(i3,a,e13.4,a,e13.4,a,e13.4,a,a,e13.4,a,e13.4,a)')		n," | ", pol_F3(1,n)*aUtoAngstrm,", ",pol_F3(2,n)*aUtoAngstrm, ", ", pol_F3(3,n)*aUtoAngstrm,&
+																			" | ", " (",mod(pol_F3(1,n)*aUtoAngstrm,polQuantum) ,", ",mod(pol_F3(2,n)*aUtoAngstrm,polQuantum),")"
+		end do
+		write(*,'(a,e13.4,a,e13.4,a,e13.4,a)')								"sum | 						|	(", sumF2(1),", ",sumF2(2), ", ", sumF2(3),")."
+		!
+		!PRINT TOT
+		write(*,*)															"[calcFirstOrdP] total first order pol:"
+		write(*,'(a,e13.4,a,e13.4,a,e13.4,a)')								"p'= (",sumF2(1)+sumF3(1),", ",sumF2(2)+sumF3(2),", ",sumF2(3)+sumF3(3),") [mu C/ Å] "
+
 		!
 		!DEBUG
 		if(	kSize /= size(En,2)	)	 write(*,*)"[calcFirstOrdP]: WARNING Energy and velocities live on different k meshes!"
