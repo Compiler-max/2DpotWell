@@ -5,7 +5,7 @@ module berry
 	use sysPara,		only:	Bext, prefactF3, &
 								nWfs, nQ, nSolve, vol, &
 								qpts, &
-								atPos, &
+								atPos, atPot, &
 								doGaugBack, doNiu, fastConnConv, doVeloNum 
 	
 	use w90Interface,	only:	read_U_matrix, read_M_initial, read_FD_b_vectors, read_wann_centers, &
@@ -23,6 +23,7 @@ module berry
 	integer, 		parameter 	:: 	dp 				= kind(0.d0)
 	real(dp), 		parameter	:: 	machineP 		= 1e-15_dp
 	complex(dp),	parameter 	::	i_dp 			= dcmplx(0.0_dp, 1.0_dp)
+		real(dp),	parameter 	::	aUtoEv	 		= 27.211385_dp
 
 	!read in parameters:
 	integer						::	num_wann, num_bands, num_kpts, num_stat, &
@@ -88,7 +89,7 @@ module berry
 		!print atoms
 		write(*,*)		"[berryMethod]: atom positions:"
 		do n = 1, size(atPos,2)
-				write(*,'(a,i3,a,f6.2,a,f6.2,a)')	"at=",n,"	atPos(at)=(",atPos(1,n),", ",atPos(2,n),")."
+				write(*,'(a,i3,a,f6.2,a,f6.2,a ,f6.2,a)')	"at=",n,"	atPos(at)=(",atPos(1,n),", ",atPos(2,n),"); Vpot(at)=",atPot(n)*aUtoEv,"[eV]"
 		end do
 	
 		!print w90 centers
@@ -169,6 +170,36 @@ module berry
 
 
 !private
+
+	!w90 subroutine :::   (rave are the centers)
+!	csheet = dcmplx(1.0_dp)
+!	sheet = 0.0_dp
+ !   do nkp = 1, num_kpts
+ !      do nn = 1, nntot
+ !         do n = 1, num_wann
+ !            ! Note that this ln_tmp is defined differently wrt the one in wann_omega
+ !            ln_tmp(n,nn,nkp)=wb(nn)*( aimag(log(csheet(n,nn,nkp) * m_matrix(n,n,nn,nkp))) - sheet(n,nn,nkp) )
+ !         end do
+ !     end do
+ !   end do
+!
+! !   ! recalculate rave
+! !   rave = 0.0_dp
+! !   do iw = 1, num_wann  
+! !      do ind = 1, 3  
+! !         do nkp = 1, num_kpts  
+! !            do nn = 1, nntot  
+! !               rave(ind,iw) = rave(ind,iw) +  bk(ind,nn,nkp) &
+! !                    * ln_tmp(iw,nn,nkp)
+! !            enddo
+! !         enddo
+! !      enddo
+! !   enddo
+ !   rave = -rave/real(num_kpts,dp)
+
+
+
+
 	subroutine calcConnOnCoarse(M_mat, w_b, b_k, A_conn)
 		!calculates the Berry connection, from the overlap matrix
 		! see Vanderbilt 1997, eq.(22) & eq.(31)
@@ -184,6 +215,7 @@ module berry
 		complex(dp),	intent(in)			:: 	M_mat(:,:,:,:)
 		real(dp),		intent(in)			::	w_b(:), b_k(:,:)
 		real(dp),		intent(out)			::	A_conn(:,:,:,:)
+		real(dp),		allocatable			::	ln_tmp(:,:)
 		complex(dp)							::	delta
 		integer								::	qi, nn, n, m
 		!
@@ -192,16 +224,19 @@ module berry
 		if(num_bands /= num_wann ) stop			"[calcConnONCoarse]: WARNING disentanglement not supported"
 		!
 		A_conn = 0.0_dp
-		!$OMP PARALLEL DO SCHEDULE(STATIC)	DEFAULT(SHARED) PRIVATE(qi, nn, n,m, delta)
+		!$OMP PARALLEL DEFAULT(SHARED) PRIVATE(qi, nn, n,m, delta)
+		allocate(		ln_tmp( size(M_mat,1), size(M_mat,2) )			)
+		!$OMP DO SCHEDULE(STATIC)	
 		do qi = 1, num_kpts
 			!SUM OVER NN
 			do nn = 1, nntot
 				!
 				!(Fast Convergence)
 				if( fastConnConv ) then
-					A_conn(1,:,:,qi)	= A_conn(1,:,:,qi)	+	w_b(nn) * b_k(1,nn) * dimag( log(M_mat(:,:,nn,qi))	)
-					A_conn(2,:,:,qi)	= A_conn(2,:,:,qi)	+	w_b(nn) * b_k(2,nn) * dimag( log(M_mat(:,:,nn,qi))	)
-					A_conn(3,:,:,qi)	= A_conn(3,:,:,qi)	+	w_b(nn) * b_k(3,nn) * dimag( log(M_mat(:,:,nn,qi))	)
+					ln_tmp(:,:)			= aimag(	log(	M_mat(:,:,nn,qi)	)		)
+					A_conn(1,:,:,qi)	= A_conn(1,:,:,qi)	+	w_b(nn) * b_k(1,nn) * ln_tmp(:,:)
+					A_conn(2,:,:,qi)	= A_conn(2,:,:,qi)	+	w_b(nn) * b_k(2,nn) * ln_tmp(:,:)
+					A_conn(3,:,:,qi)	= A_conn(3,:,:,qi)	+	w_b(nn) * b_k(3,nn) * ln_tmp(:,:)
 				!(Finite Difference)
 				else
 					do n = 1, size(M_mat,2)
@@ -218,7 +253,9 @@ module berry
 			!
 			!
 		end do
-		!$OMP END PARALLEL DO
+		!$OMP END DO
+		deallocate( ln_tmp)
+		!$OMP END PARALLEL
 		write(*,*)	"[calcConnOnCoarse]: established connection"
 		!
 		return

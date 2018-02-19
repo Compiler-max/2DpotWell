@@ -84,7 +84,7 @@ module potWellModel
 		!			solve Ham, write results and derived quantites														
 		complex(dp),	allocatable		::	Hmat(:,:) , ck_temp(:,:), Amn_temp(:,:), velo_temp(:,:,:)
 		real(dp),		allocatable		::	En_temp(:)
-		integer							:: 	qi, qLoc, found, Gsize
+		integer							:: 	qi, qLoc, found, Gsize, boundStates
 		!	
 		!
 		allocate(	Hmat(				Gmax,	Gmax				)	)
@@ -125,7 +125,12 @@ module potWellModel
 			call writeABiN_velo(qi, velo_temp)
 
 			!FINALIZE
-			write(*,'(a,i3,a,i5,a,f6.2,a,i5,a,i5,a)')"[#",myID,", solveHam]: done for qi=",qi," lowest energy=",En_temp(1)*aUtoEv,"[eV] done tasks=(",qLoc,"/",qChunk,")"
+			boundStates = 0
+			do while (	En_temp(boundStates+1) < 0.0_dp )
+				boundStates = boundStates + 1
+			end do
+			write(*,'(a,i3,a,i5,a,f6.2,a,a,i5,a,i5,a,i5,a)')"[#",myID,", solveHam]: qi=",qi," lowest energy=",En_temp(1)*aUtoEv,"[eV];",&
+														" found #",boundStates," bound states. done tasks=(",qLoc,"/",qChunk,")"
 			qLoc = qLoc + 1		
 		end do
 		!
