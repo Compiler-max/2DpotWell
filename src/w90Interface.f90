@@ -302,8 +302,8 @@ module w90Interface
 					!extract values from substring
 					read(line(start:end),*)	nn, b_vec, weight 
 					!convert to a.u.
-					b_k(1:3, nn) 	= b_vec(1:3)*aUtoAngstrm			![b_k] = (Ang^-1)
-					w_b(nn)			= weight / aUtoAngstrm**2			![w_b] = (Ang^2)
+					b_k(1:3, nn) 	= b_vec(1:3)!*aUtoAngstrm			![b_k] = (Ang^-1)
+					w_b(nn)			= weight !/ aUtoAngstrm**2			![w_b] = (Ang^2)
 					!debug
 					!write(*,'(i2,a,f6.4,a,f6.4,a,f6.4,a,f6.4)') nn," ",b_k(1,nn)," ",b_k(2,nn)," ",b_k(3,nn)," ",w_b(nn)
 					if( qnn /= nn ) write(*,*) "[readFDscheme]: WARNING, possibly mismatched nearest neighbours"
