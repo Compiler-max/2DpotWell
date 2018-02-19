@@ -666,6 +666,7 @@ module w90Interface
 		write(100,*)
 		!
 		!OUTPUT JOBS
+		write(100,*)	'length_unit = Ang'
 		write(100,*)	'write_u_matrices = .true.'
 		write(100,*)	'write_tb = .true.'
 		write(100,*)	'write_hr = .true.'
