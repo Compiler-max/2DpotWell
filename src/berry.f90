@@ -294,7 +294,7 @@ module berry
 		end do
 		!$OMP END PARALLEL DO
 		!
-		write(*,*)		" #state | 	<r>[Å]	| 	p[mu C / Å]"
+		write(*,*)		" #state | 	<r>[Å]			| 	p[mu C / Å]"
 		do n = 1, size(A_mat,2)
 			write(*,'(i3,a,f6.2,a,f6.2,a,f6.2,a,a,e13.4,a,e13.4,a)') n,"  | ",centers(1,n),", ", centers(2,n),",",centers(3,n), "  | ",&
 																"(",mod(centers(1,n),polQuantum),", ", mod(centers(2,n),polQuantum), ")."
