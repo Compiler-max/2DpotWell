@@ -24,7 +24,8 @@ module berry
 	real(dp), 		parameter	:: 	machineP 		= 1e-15_dp
 	complex(dp),	parameter 	::	i_dp 			= dcmplx(0.0_dp, 1.0_dp)
 	real(dp),		parameter 	::	aUtoEv	 		= 27.211385_dp
-	real(dp),		parameter	::	aUtoAngstrm 	= 0.52917721092_dp 
+	real(dp),		parameter	::	aUtoAngstrm 	= 0.52917721092_dp
+	real(dp),		parameter 	::	elemCharge	 	= 1.6021766208 * 1e-19_dp !Coulomb
 
 	!read in parameters:
 	integer						::	num_wann, num_bands, num_kpts, num_stat, &
@@ -272,7 +273,7 @@ module berry
 		integer								::	n
 		real(dp)							::	polQuantum
 		!
-		polQuantum = 1.0_dp / vol
+		polQuantum = elemCharge / ( vol*aUtoAngstrm ) 
 		!
 		centers = 0.0_dp
 		!$OMP PARALLEL DO SCHEDULE(STATIC) DEFAULT(SHARED) PRIVATE(n)

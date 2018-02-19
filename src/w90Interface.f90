@@ -314,7 +314,7 @@ module w90Interface
 		end do
 		close(335)
 		!
-		write(*,*)		" 	nn | 	b	| 	w_b "
+		write(*,*)		" 	nn | 	b[Å^-1]	| 	w_b[Å^2] "
 		do nn = 1, size(w_b)
 			write(*,'(a,i2,a,f6.2,a,f6.2,a,f6.2,a,f6.2)')		"  ",nn," | (",b_k(1,nn),", ",b_k(2,nn),", ",b_k(3,nn),") |    ",w_b(nn)
 		end do
