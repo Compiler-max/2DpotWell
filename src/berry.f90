@@ -313,7 +313,7 @@ module berry
 		write(*,*)		" #state | 	<r>[Å]			| 	p[	\{mu}C/cm	]"
 		do n = 1, size(A_mat,2)
 			write(*,'(i3,a,f6.2,a,f6.2,a,f6.2,a,a,e13.4,a,e13.4,a)') n,"  | ",centers(1,n),", ", centers(2,n),",",centers(3,n), "  | ",&
-																"(",mod(centers(1,n),polQuantum)*centiMet,", ", mod(centers(2,n),polQuantum)*centiMet, ")."
+																"(",centers(1,n)*polQuantum*centiMet,", ", centers(2,n)*polQuantum*centiMet, ")."
 		end do
 		!		
 		return
