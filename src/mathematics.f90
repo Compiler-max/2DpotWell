@@ -654,19 +654,6 @@ module mathematics
 
 
 
-	subroutine hiordqWrapper(dx,f,res)
-		!uses intlib routine for equally spaced data
-		real(dp), 	intent(in)		:: dx, f(:)
-		real(dp),	intent(out)		:: res
-		integer						:: ntab
-		real(dp), 	allocatable		:: work(:)
-		ntab = size(f)
-		allocate(	work(2*(ntab-1))	)
-		!
-		call  hiordq( ntab, dx, f, work, res )
-		return
-	end subroutine
-
 
 	!EIGSOLVER HELPERS
     subroutine errCheck(n,info, jobz)
