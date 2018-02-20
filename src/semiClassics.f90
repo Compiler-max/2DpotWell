@@ -74,8 +74,8 @@ module semiClassics
 			F3 = F3  / real(kSize,dp)
 		
 			!APPLY MATRIX 
-			centers_F2(:,n) = matmul(F2,Bext) 
-			centers_F3(:,n) = matmul(F3,Bext) 
+			centers_F2(:,n) = matmul(F2,Bext) * aUtoAngstrm
+			centers_F3(:,n) = matmul(F3,Bext) * aUtoAngstrm
 			!
 		end do
 		!$OMP END DO
@@ -83,17 +83,17 @@ module semiClassics
 		!
 
 		do ind = 1, 3
-			sumF2(ind) 	= sum( 	centers_F2(ind,:)*aUtoAngstrm * polQuantum *centiMet		)
-			sumF3(ind)	= sum(	centers_F3(ind,:)*aUtoAngstrm *	polQuantum *centiMet		)
+			sumF2(ind) 	= sum( 	centers_F2(ind,:) * polQuantum *centiMet		)
+			sumF3(ind)	= sum(	centers_F3(ind,:) * polQuantum *centiMet		)
 		end do
 		!
 		!PRINT F2
 		write(*,*)															"[calcFirstOrdP]: F2 matrix contribution:"
 		write(*,*)															" #state | 		<r>[Å]			| 		p[mu C / cm]"
 		do n = 1, size(centers_F2,2)	
-			write(*,'(i3,a,e13.4,a,e13.4,a,e13.4,a,a,e13.4,a,e13.4,a)')		n," | ", centers_F2(1,n)*aUtoAngstrm,", ",centers_F2(2,n)*aUtoAngstrm, ", ", centers_F2(3,n)*aUtoAngstrm," | ", &
-																					" (",	centers_F2(1,n)*aUtoAngstrm * polQuantum * centiMet		,&
-																					", ",	centers_F2(2,n)*aUtoAngstrm * polQuantum * centiMet		,")"
+			write(*,'(i3,a,e13.4,a,e13.4,a,e13.4,a,a,e13.4,a,e13.4,a)')		n," | ", centers_F2(1,n),", ",centers_F2(2,n), ", ", centers_F2(3,n)," | ", &
+																					" (",	centers_F2(1,n) * polQuantum * centiMet		,&
+																					", ",	centers_F2(2,n) * polQuantum * centiMet		,")"
 		end do
 		write(*,'(a,e13.4,a,e13.4,a,e13.4,a)')								"sum | 						|	(", sumF2(1),", ",sumF2(2), ", ", sumF2(3),")."
 		!
@@ -101,7 +101,7 @@ module semiClassics
 		write(*,*)															"[calcFirstOrdP]: F3 matrix contribution:"
 		write(*,*)															" #state | 		<r>[Å]			| 		p[mu C / cm]"
 		do n = 1, size(centers_F3,2)	
-			write(*,'(i3,a,e13.4,a,e13.4,a,e13.4,a,a,e13.4,a,e13.4,a)')		n," | ", centers_F3(1,n)*aUtoAngstrm,", ",centers_F3(2,n)*aUtoAngstrm, ", ", centers_F3(3,n)*aUtoAngstrm," | ", &
+			write(*,'(i3,a,e13.4,a,e13.4,a,e13.4,a,a,e13.4,a,e13.4,a)')		n," | ", centers_F3(1,n),", ",centers_F3(2,n) ", ", centers_F3(3,n)," | ", &
 																					" (",	centers_F3(1,n)*aUtoAngstrm * polQuantum * centiMet		, &
 																					", ",	centers_F3(2,n)*aUtoAngstrm * polQuantum * centiMet		,")"
 		end do
