@@ -296,7 +296,6 @@ module berry
 		real(dp),			intent(in)		:: 	polQuantum, centiMet, A_mat(:,:,:,:)			!A(2,	 nWfs, nWfs, nQ	)	
 		real(dp),			intent(out)		:: 	centers(:,:)
 		integer								::	n
-		real(dp)							::	polQuantum, centiMet
 		!
 	
 		write(*,'(a,e12.4,a)')	"[calcPolViaA]: the pol Quantum is p_quant=",polQuantum,"	[mu C/ Å²]"

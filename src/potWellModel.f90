@@ -195,33 +195,44 @@ module potWellModel
 
 
 
-	!POPULATION OF H MATRIX
+
+
+
+
+
+
+
+
+
+
+
+
+!POPULATION OF H MATRIX
 	subroutine populateH(qLoc, Hmat)
 		!populates the Hamiltonian matrix by adding 
 		!	1. kinetic energy terms (onSite)
 		!	2. potential terms V(qi,i,j)
 		!and checks if the resulting matrix is hermitian( for debugging)
-		integer,		intent(in)	:: qLoc
-		complex(dp), intent(inout) 	:: Hmat(:,:)
-		complex(dp)					:: onSite
-		integer						:: i, j
+		integer,		intent(in)	:: 	qLoc
+		complex(dp), intent(inout) 	:: 	Hmat(:,:)
+		integer						::	i
 		!init to zero
 		Hmat = dcmplx(0.0_dp) 
 		!
-		do j = 1, nGq(qLoc)
-			do i = 1, nGq(qLoc)
-				!KINETIC ENERGY + POTENTIAL WELLS
-				if(i == j )	then	
-					onSite	= 0.5_dp * 	dot_product(Gvec(:,i,qLoc),Gvec(:,i,qLoc))
-					Hmat(i,j)	=	V(qLoc, i,j)	+	onSite
-				else
-					Hmat(i,j)	=	V(qLoc, i,j)
-				end if
-			end do
+		!
+		!KINETIC ENERGY
+		do i = 1, size(Hmat,1)
+			Hmat(i,i) = 0.5_dp * dot_product(	Gvec(:,i,qLoc),	Gvec(:,i,qLoc)	)
 		end do
 		!
+		!POTENTIAL WELLS
+		call add_potWell(qLoc, Hmat)
+		!
+		!RASHBA LIKE
+		call add_rashba(qLoc, Hmat)
+
 		!ADD PEIERLS
-		if( doMagHam )	 call addMagHam( qLoc, Hmat)
+		if( doMagHam )	 call add_magHam( qLoc, Hmat)
 		!
 		!DEBUG
 		if(debugHam) then
@@ -235,23 +246,31 @@ module potWellModel
 
 
 
-!POTENTIAL WELLS	
-	complex(dp)	function V(qLoc, i,j)
-		integer,	intent(in)	::	qLoc, i, j
+
+	!POTENTIAL WELLS
+	subroutine add_potWell(qLoc, Hmat)
+		!adds kinetic energy and potential Well term to Hamiltonian
+		integer,		intent(in)		::	qLoc
+		complex(dp),	intent(inout)	::	Hmat(:,:)
+		integer							::	i, j
 		!
-		if( doVdesc ) then
-			V = Vdesc(qLoc, i,j)
-		else	
-			V = Vconst(qLoc, i,j)
-		end if
-		!
+		do j = 1, nGq(qLoc)
+			do i = 1, nGq(qLoc)
+				if( doVdesc )	then
+					Hmat(i,j)	= Hmat(i,j)		+ Vdesc(qLoc, i,j)
+				else
+					Hmat(i,j)	= Hmat(i,j)		+ Vconst(qLoc, i,j)
+				end if
+			end do
+		end do
 		!
 		return
-	end function
+	end subroutine
 
 
 	complex(dp) function Vconst(qLoc, i,j)
-		!calc potential matrix elements
+		!calc potential matrix elements for constant potential inside each well
+		!
 		!the integrals were solved analytical and are hard coded in this function
 		integer,	intent(in)	::	qLoc,  i, j
 		integer					::	at
@@ -275,8 +294,11 @@ module potWellModel
 				Vconst	= Vconst + Vpot  * i_dp 	* 	( xR - xL ) * ( myExp(dGy*yL) - myExp(dGy*yR) )	/ ( vol * dGy )
 			else if( abs(dGy) < machineP ) then
 				Vconst	= Vconst + Vpot * i_dp	 	* 	( yR - yL) 	* ( myExp(dGx*xL) - myExp(dGx*xR) ) / (vol * dGx )
-			else
+			!
+			else if( abs(dGx) >= machineP 	.and. 		abs(dGy) >= machineP )	then
 				Vconst	= Vconst -  Vpot 	 * ( myExp(dGx*xL) - myExp(dGx*xR) ) * ( myExp(dGy*yL) - myExp(dGy*yR) ) / (vol * dGx * dGy )
+			else
+				stop	"[Vconst]: reached forbidden region in dGx, dGy discussion"
 			end if
 		end do
 		!
@@ -285,7 +307,7 @@ module potWellModel
 
 
 	complex(dp) function Vdesc(qLoc, i,j)
-		!potential integration for a well linear descending in x direction
+		!potential integration for a well constant gradient in x direction (uniform electric field)
 		!it starts from V0 at xL till V0-dV at xR
 		integer,	intent(in)	::	qLoc, i, j
 		integer					::	at
@@ -323,13 +345,15 @@ module potWellModel
 				!
 				!
 				!
-			else
+			else if( abs(dGx) >= machineP 	.and. 		abs(dGy) >= machineP )	then
 				fact	= -1.0_dp * ( myExp(dGy*yL)-myExp(dGy*yR) ) 	/ ( dGx**2 * dGy * vol * (xL-xR) )
 				Vdesc	= Vdesc		+			fact * 			myExp(dGx*xL) * (dGx * Vpot			* (xL-xR) + i_dp * dV) 
 				Vdesc	= Vdesc		-			fact *			myExp(dGx*xR) * (dGx * (Vpot-dV)	* (xL-xR) + i_dp * dV)
 				!
 				!
 				!
+			else
+				stop	"[Vdesc]: reached forbidden region in dGx, dGy discussion"
 			end if
 		end do
 		!
@@ -339,13 +363,40 @@ module potWellModel
 
 
 
+	!RASHBA LIKE ( BREAKING OF TIME REVERSAL SYMMETRY )
+	subroutine add_Zeeman(qLoc, Hmat)
+		!adds the operator 
+		!				H_alpha = alpha ( op(x) op(p_y)	-	op(y) op(p_x)	)
+		!
+		!			this introduces a zeeman like spliting into Landau levels (breaks time reversal)
+		!			as a result of a coupling B cdot L
+		!			where B is the field breaking the symm
+		!			L is the orbital momentum inside the wells
+		!
+		integer,		intent(in)		::	qLoc
+		complex(dp),	intent(inout)	::	Hmat(:,:)
+		integer							::	i, j
+		real(dp)						::	dGx, dGy
+		!
+		write(*,*)	"[#",myID,";add_Zeeman]: my alphaZee=",alphaZee
+		!
+		do j = 1, nGq(qLoc)
+			do i = 1, nGq(qLoc)
+				if( i /= j )	then
+					dGx		= Gvec(1,j,qLoc) - Gvec(1,i,qLoc) 
+					dGy		= Gvec(2,j,qLoc) - Gvec(2,i,qLoc) 
+					Hmat(i,j)	= Hmat(i,j)		+ dcmplx( alphaZee ) * 0.0_dp 
+ 
+				end if
+			end do
+		end do
 
 
+		return
+	end subroutine
 
-
-
-!EXTERNAL MAGNETIC FIELD ( OSCILLATING )
-	subroutine addMagHam( qLoc, Hmat)
+	!EXTERNAL MAGNETIC FIELD ( OSCILLATING )
+	subroutine add_magHam(qLoc, Hmat)
 		!Performs Peierls substitution on plane wave basis.
 		!
 		!neglects terms which are second order in the external field
@@ -355,11 +406,12 @@ module potWellModel
 		integer,		intent(in)		::	qLoc
 		complex(dp),	intent(inout)	::	Hmat(:,:)
 		integer							::	i, j
-		real(dp)						::	H_prefact, qX_Period, dGx, dGy
+		real(dp)						::	qX_Period, dGx, dGy
+		complex(dp)						::	H_prefact
 		!
 		!period of oscillating B field
 		qX_period	=	2.0_dp * PI_dp / aX 
-		H_prefact 	= 	0.5_dp * Bext(3) / qX_period
+		H_prefact 	= 	dcmplx(	0.5_dp * Bext(3) / qX_period	)
 		!
 		!Add to Hamiltonian
 		do j = 1, nGq(qLoc)
@@ -370,8 +422,10 @@ module potWellModel
 						if( abs(dGx) > machineP  ) then
 							if( abs(dGy) < machineP ) then
 								Hmat(i,j)	= Hmat(i,j) + H_prefact * h1_gyZero( dGx, qX_period)
-							else 
+							else if( abs(dGy) >= machineP ) then
 								Hmat(i,j)	= Hmat(i,j) + H_prefact * h1_gyFull( dGx, dGy, qX_period)
+							else
+								stop "[add_magHam]: reached forbidden region in dGx, dGy discussion"
 							end if 
 						end if
 				end if
@@ -404,6 +458,16 @@ module potWellModel
 		!
 		return
 	end function
+
+
+
+
+
+
+
+
+
+
 
 
 end module potWellModel
