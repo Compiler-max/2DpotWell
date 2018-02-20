@@ -228,8 +228,8 @@ module potWellModel
 		!POTENTIAL WELLS
 		call add_potWell(qLoc, Hmat)
 		!
-		!RASHBA LIKE
-		call add_rashba(qLoc, Hmat)
+		!ZEEMAN LIKE
+		call add_Zeeman(qLoc, Hmat)
 
 		!ADD PEIERLS
 		if( doMagHam )	 call add_magHam( qLoc, Hmat)
