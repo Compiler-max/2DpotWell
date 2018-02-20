@@ -20,6 +20,7 @@
     nWfs        =   6
 
 [perturbation]
+    alphaZee    =   1.32
     B0          =   0.0               #hbar/(e*a0**2) = 2.35 * 10**5  T
     Bext        =   0.0 0.0 1.0  
 
