@@ -37,6 +37,8 @@ elseif (Fortran_COMPILER_NAME MATCHES "ifort.*")
   	#set(CMAKE_Fortrvo,an_FLAGS "-mkl -O3 -qopenmp")
 elseif (Fortran_COMPILER_NAME MATCHES "mpiifort.*")
 	set(CMAKE_Fortran_FLAGS "-mkl -qopenmp -g -CB -check all -fpe0 -warn -traceback -debug extended")
+	#set(CMAKE_Fortran_FLAGS "-mkl -O3 -openmp")
+  	#set(CMAKE_Fortrvo,an_FLAGS "-mkl -O3 -qopenmp")
 endif (Fortran_COMPILER_NAME MATCHES "gfortran.*")
 
 
@@ -49,5 +51,4 @@ set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${COVERAGE_LINK_FLAGS}")
 
 # generate executable and link library
 add_executable(main.exe ${sources})
-target_link_libraries(main.exe config_fortran ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/wannier90/libwannier.a quadpack)
-
+target_link_libraries(main.exe config_fortran ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/wannier90/libwannier.a)
