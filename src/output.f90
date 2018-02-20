@@ -429,17 +429,15 @@ module output
 
 
 
-	subroutine writePolFile(w_centers, b_H_gauge, b_W_gauge, niu_polF2, niu_polF3)	!writePolFile(pWann, pBerry, pNiu, pPei )
+	subroutine writePolFile(polQuantum, centiMet, w_centers, b_H_gauge, b_W_gauge, niu_centF2, niu_centF3)	!writePolFile(pWann, pBerry, pNiu, pPei )
 		!
-		real(dp),		intent(in)		::	w_centers(:,:),  b_H_gauge(:,:), b_W_gauge(:,:), niu_polF2(:,:), niu_polF3(:,:)
-		real(dp)						:: 	aUtoConv, polQuantum, &
-											pWann(3), pBerryH(3),pBerryW(3), &
+		real(dp),		intent(in)		::	polQuantum, centiMet, w_centers(:,:),  b_H_gauge(:,:), b_W_gauge(:,:), niu_centF2(:,:), niu_centF3(:,:) !CENTERS IN ANGSTROEM
+		real(dp)						:: 	pWann(3), pBerryH(3),pBerryW(3), &
 											pNiuF2(3), pNiuF3(3), pNiu(3), pFirst(3), Btesla(3)
 		real(dp),		allocatable		::	w_final(:,:), b_H_final(:,:), b_W_final(:,:)
 		integer							::	n, at, x
 		
-		!not Used jet:
-		polQuantum = 1.0_dp / vol
+
 
 		!GET CORRECTED VALUES
 		allocate(		w_final( 	size(w_centers,1),	size(w_centers,2) )		)
@@ -459,24 +457,25 @@ module output
 			w_final(1:2,n)		= w_centers(1:2,n) - atPos(1:2,at)
 			b_H_final(1:2,n)	= b_H_gauge(1:2,n) - atPos(1:2,at)
 			b_W_final(1:2,n)	= b_W_gauge(1:2,n) - atPos(1:2,at)
+			!
+			!ToDo: need niu cent as well ?
 		end do
 
 
 		!SUM OVER STATES
 		do x = 1, 3
-			pWann(	x)	= sum(	w_final(	x, :)		)
-			pBerryH(x)	= sum(	b_H_final(	x, :)		)
-			pBerryW(x)	= sum(	b_W_final(	x, :)		)
-			pNiuF2(	x)	= sum(	niu_polF2(	x, :)		)
-			pNiuF3(	x)	= sum(	niu_polF3(	x, :)		)
+			pWann(	x)	= sum(	w_final(	x, :)		)	 * polQuantum * centiMet ! muC/cm 
+			pBerryH(x)	= sum(	b_H_final(	x, :)		)	 * polQuantum * centiMet ! muC/cm
+			pBerryW(x)	= sum(	b_W_final(	x, :)		)	 * polQuantum * centiMet ! muC/cm
+			pNiuF2(	x)	= sum(	niu_centF2(	x, :)		)	 * polQuantum * centiMet ! muC/cm
+			pNiuF3(	x)	= sum(	niu_centF3(	x, :)		)	 * polQuantum * centiMet ! muC/cm
 		end do
 		!
-		pNiu 	=	pNiuF2 + pNiuF3
-		pFirst 	=	pBerryW + pNiu 
+		pNiu 	=	( pNiuF2 	+ pNiuF3 	)
+		pFirst 	=	( pBerryW 	+ pNiu 		) 
 
 
-		!	
-		aUtoConv = 1.602176565_dp / 5.2917721092_dp * 1e-4_dp  ! converts from [a.u.] to  [mücro C / cm]
+	
 		!	
 		open(unit=600,file=info_dir//'polOutput.txt',action='write')
 		write(600,*)"**************POLARIZATION OUTPUT FILE**********************"
@@ -492,8 +491,9 @@ module output
 		write(600,*)"ToDo: fix units etc. in this file (similiar to berry cli output)"
 		!
 		write(600,*)"**************ATOMS:"
-		do at = 1, nAt
-			write(600,'(a,i2,a,f6.2,a,f6.2,a)')		"atPos(at=",at,")=	(",atPos(1,at),", ", atPos(2,at)," ). [a.u.]"
+		write(600,*)		"	at | centers [Å] | V [eV]"
+		do n = 1, size(atPos,2)
+				write(600,'(i3,a,f6.2,a,f6.2,a ,f6.2)')	n," | ",atPos(1,n)*aUtoAngstrm,", ",atPos(2,n)*aUtoAngstrm," 	| ",atPot(n)*aUtoEv
 		end do
 		write(600,*)"*"
 		write(600,*)"*"
@@ -510,103 +510,81 @@ module output
 
 		!
 		write(600,*)"**************POL:"
-		write(600,*) "aX/vol=",aX/vol,"aY/vol=",aY/vol
-
-	
-		write(600,'(a,f6.2,a,f6.2,a,a,f6.2,a,f6.2,a)')	"pWann =  (",  pWann(1)	,	", ",	pWann(2),		") [a.u.],",& 
-												" moded=(",dmod(pWann(1),aX/vol)*aUtoConv,", ",dmod(pWann(2),aY/vol)*aUtoConv,") [muC/cm]."
-		!
-		write(600,'(a,f6.2,a,f6.2,a,f6.2,a,a,f6.2,a,f6.2,a)')	"pBerry=  (",		pBerryW(1)	,	", ",&	
-																					pBerryW(2), " ,", pBerryW(3)	,	") [a.u.],",& 
-												" moded=(",dmod(pBerryW(1),aX/vol)*aUtoConv,", ",dmod(pBerryW(2),aY/vol)*aUtoConv,") [muC/cm]."
-		!
-		
-		
-
-		if(.not. doMagHam) then
-			write(600,*)"**************FIRST ORDER POL:"
-			!NIU
-			write(600,'(a,f6.2)') "F3 prefactor = ",prefactF3
-			write(600,'(a,e16.7,a,e16.7,a,e16.7,a,a,e16.7,a,e16.7,a)')	"pNiuF2= (", 	pNiuF2(1),	", ",	pNiuF2(2),", ", pNiuF2(3),	")[a.u.]",&
-															" moded=(",dmod(pNiuF2(1),aX/vol)*aUtoConv,", ",dmod(pNiuF2(2),aY/vol)*aUtoConv,") [muC/cm]."
-			!
-			write(600,'(a,e16.7,a,e16.7,a,e16.7,a,a,e16.7,a,e16.7,a)')	"pNiuF3= (", 	pNiuF3(1),	", ",	pNiuF3(2),", ", pNiuF3(3),	")[a.u.]",&
-															" moded=(",dmod(pNiuF3(1),aX/vol)*aUtoConv,", ",dmod(pNiuF3(2),aY/vol)*aUtoConv,") [muC/cm]."
-			!
-			!												
-			write(600,'(a,e16.7,a,e16.7,a,e16.7,a,a,e16.7,a,e16.7,a)')	"pNiu  = (", 	pNiu(1),	", ",	pNiu(2),", ", pNiu(3),	")[a.u.]",&
-															" moded=(",dmod(pNiu(1),aX/vol)*aUtoConv,", ",dmod(pNiu(2),aY/vol)*aUtoConv,") [muC/cm]."
-			!	
-			!		
-			!0 + 1 order
-			pFirst = pBerryW + pNiu
-			write(600,'(a,e16.7,a,e16.7,a,e16.7,a,a,e16.7,a,e16.7,a)')	"p0+1  = (", 	pFirst(1),	", ",	pFirst(2),", ", pFirst(3),	")[a.u.]",&
-																	" moded=(",dmod(pFirst(1),aX/vol)*aUtoConv,", ",dmod(pFirst(2),aY/vol)*aUtoConv,") [muC/cm]."
-			write(600,*)" p0+1 = pBerry + pNiu"
-		end if
-
+		write(600,*)		" method | 	P[muC/cm]	"
+		write(600,'(a,e13.4,a,e13.4,a,e13.4,a)')		" w90    | 	(",	pWann(1)	,", ",	pWann(2)	,", ",	pWann(3)	,")"
+		write(600,'(a,e13.4,a,e13.4,a,e13.4,a)')		" B_H    | 	(",	pBerryH(1)	,", ",	pBerryH(2)	,", ",	pBerryH(3)	,")"
+		write(600,'(a,e13.4,a,e13.4,a,e13.4,a)')		" B_W    | 	(",	pBerryW(1)	,", ",	pBerryW(2)	,", ",	pBerryW(3)	,")"
+		write(600,'(a,e13.4,a,e13.4,a,e13.4,a)')		" nF2    | 	(",	pNiuF2(1)	,", ",	pNiuF2(2)	,", ",	pNiuF2(3)	,")"
+		write(600,'(a,e13.4,a,e13.4,a,e13.4,a)')		" nF3    | 	(",	pNiuF3(1)	,", ",	pNiuF3(2)	,", ",	pNiuF3(3)	,")"
+		write(600,'(a,e13.4,a,e13.4,a,e13.4,a)')		" niu    | 	(",	pNiu(1)		,", ",	pNiu(2)		,", ",	pNiu(3)		,")"
+		write(600,'(a,e13.4,a,e13.4,a,e13.4,a)')		" p0+p1  | 	(",	pFirst(1)	,", ",	pFirst(2)	,", ",	pFirst(3)	,")"
 
 
 
 		!STATE RESOLVED
-		write(600,*)	"raw results: (no atom center corrrection, no moding with pol quantum) & atom center corrected values"
+		write(600,*)	"band resolved results:"
 		write(600,*)	"*"
 		write(600,*)	"*"
 		write(600,*)	"*"
 		write(600,*)	"********wannier90 centers***********************"
+		write(*,*)		" #wf | 	<r>[Å]	"
 		do n = 1, size(w_centers,2)
-			write(600,'(a,i3,a,f7.3,a,f7.3,a,f7.3,a,a,f7.3,a,f7.3,a)')	"pWann(n=",n,")=	( ",w_centers(1,n),", ",w_centers(2,n),&
-																									", ",w_centers(3,n)," )", &
-												"=(",w_final(1,n),", ",w_final(2,n),") [a.u.: a0]."
+			write(600,'(i3,a,f6.2,a,f6.2,a,f6.2)')	n," | ",w_centers(1,n),", ",w_centers(2,n),", ",w_centers(3,n)
 		end do
-			write(600,'(a,f7.3,a,f7.3,a,f7.3,a)')	"pWann(SUM)=	( ",sum(w_final(1,:)),", ",sum(w_final(2,:)),", ",sum(w_final(3,:))," )"
+		write(600,'(a,f7.3,a,f7.3,a,f7.3,a)')	"pWann(SUM)=	( ",sum(w_centers(1,:)),", ",sum(w_centers(2,:)),", ",sum(w_centers(3,:))," )[Å]"
 
+		
 		write(600,*)	"*"
 		write(600,*)	"*"
 		write(600,*)	"*"
 		write(600,*)	"********Berry centers (k-space integral) (H-gauge)***********************"
+		write(600,*)		" #state | 	<r>[Å]			| 	p[	\{mu}C/cm	]"
 		do n = 1, size(b_H_gauge,2)
-			write(600,'(a,i3,a,f7.3,a,f7.3,a,f7.3,a,a,f7.3,a,f7.3,a)')	"pBerry_H(n=",n,")=	( ",b_H_gauge(1,n),", ",b_H_gauge(2,n),&
-																				", ",b_H_gauge(3,n)," )",&
-												"=(",b_H_final(1,n),", ",b_H_final(2,n),") [a.u.: a0]."
-
+			write(600,'(i3,a,f6.2,a,f6.2,a,f6.2,a,a,e13.4,a,e13.4,a)') n,"  | ",b_H_final(1,n),", ", b_H_final(2,n),",",b_H_final(3,n), "  | ",&
+																"(",b_H_final(1,n)*polQuantum*centiMet,", ", b_H_final(2,n)*polQuantum*centiMet, ")."
 		end do
-			write(600,'(a,f7.3,a,f7.3,a,f7.3,a)')	"pBerry_H(SUM)=	( ",sum(b_H_final(1,:)),", ",sum(b_H_final(2,:)),", ",sum(b_H_final(3,:))," )"
-
+		write(600,'(a,e13.4,a,e13.4,a)')	"sum | 				(",sum(b_H_final(1,:))*polQuantum*centiMet,", ",sum(b_H_final(2,:))*polQuantum*centiMet,")."
+		!		
 
 		
 		write(600,*)	"*"
 		write(600,*)	"*"
 		write(600,*)	"*"
 		write(600,*)	"********Berry centers (k-space integral) (W-gauge)***********************"
+		write(600,*)		" #state | 	<r>[Å]			| 	p[	\{mu}C/cm	]"
 		do n = 1, size(b_W_gauge,2)
-			write(600,'(a,i3,a,f7.3,a,f7.3,a,f7.3,a,a,f7.3,a,f7.3,a)')	"pBerry_W(n=",n,")=	( ",b_W_gauge(1,n),", ",b_W_gauge(2,n),&
-																					", ",b_W_gauge(3,n)," )",&
-												"=(",b_W_final(1,n),", ",b_W_final(2,n),") [a.u.: a0]."
+			write(600,'(i3,a,f6.2,a,f6.2,a,f6.2,a,a,e13.4,a,e13.4,a)') n,"  | ",b_W_final(1,n),", ", b_W_final(2,n),",",b_W_final(3,n), "  | ",&
+																"(",b_W_final(1,n)*polQuantum*centiMet,", ", b_W_final(2,n)*polQuantum*centiMet, ")."
 		end do
-			write(600,'(a,f7.3,a,f7.3,a,f7.3,a)')	"pBerry_W(SUM)=	( ",sum(b_W_final(1,:)),", ",sum(b_W_final(2,:)),", ",sum(b_W_final(3,:))," )"
+		write(600,'(a,e13.4,a,e13.4,a)')	"sum | 				(",sum(b_W_final(1,:))*polQuantum*centiMet,", ",sum(b_W_final(2,:))*polQuantum*centiMet,")."
 
 
 
 
 
-		if( .not. doMagHam ) then
-			write(600,*)	"*"
-			write(600,*)	"*"
-			write(600,*)	"*"
-			write(600,*)	"********Niu F2 (first order contribution)***********************"
-			do n = 1, size(niu_polF2,2)
-				write(600,'(a,i3,a,e16.7,a,e16.7,a,e16.7,a)')	"pNiuF2(n=",n,")=	( ",niu_polF2(1,n),", ", niu_polF2(2,n),", ", niu_polF2(3,n)," )"
-			end do
-			!
-			write(600,*)	"*"
-			write(600,*)	"*"
-			write(600,*)	"*"
-			write(600,*)	"********Niu F3 (first order contribution)***********************"
-			do n = 1, size(niu_polF3,2)
-				write(600,'(a,i3,a,e16.7,a,e16.7,a,e16.7,a)')	"pNiuF3(n=",n,")=	( ",niu_polF3(1,n),", ",niu_polF3(2,n),", ",niu_polF3(3,n)," )"
-			end do
-		end if
+		write(600,*)	"*"
+		write(600,*)	"*"
+		write(600,*)	"*"
+		write(600,*)	"********Niu F2 (first order contribution)***********************"
+		write(600,*)		" #state | 	<r>[Å]			| 	p[	\{mu}C/cm	]"
+		do n = 1, size(niu_centF2,2)
+			write(600,'(i3,a,f6.2,a,f6.2,a,f6.2,a,a,e13.4,a,e13.4,a)') n,"  | ",niu_centF2(1,n),", ", niu_centF2(2,n),",",niu_centF2(3,n), "  | ",&
+																"(",niu_centF2(1,n)*polQuantum*centiMet,", ", niu_centF2(2,n)*polQuantum*centiMet, ")."
+		end do
+		write(600,'(a,e13.4,a,e13.4,a)')	"sum | 				(",sum(niu_centF2(1,:))*polQuantum*centiMet,", ",sum(niu_centF2(2,:))*polQuantum*centiMet,")."
+
+
+		!
+		write(600,*)	"*"
+		write(600,*)	"*"
+		write(600,*)	"*"
+		write(600,*)	"********Niu F3 (first order contribution)***********************"
+		write(600,*)		" #state | 	<r>[Å]			| 	p[	\{mu}C/cm	]"
+		do n = 1, size(niu_centF3,2)
+			write(600,'(i3,a,f6.2,a,f6.2,a,f6.2,a,a,e13.4,a,e13.4,a)') n,"  | ",niu_centF3(1,n),", ", niu_centF3(2,n),",",niu_centF3(3,n), "  | ",&
+																"(",niu_centF3(1,n)*polQuantum*centiMet,", ", niu_centF3(2,n)*polQuantum*centiMet, ")."
+		end do
+		write(600,'(a,e13.4,a,e13.4,a)')	"sum | 				(",sum(niu_centF3(1,:))*polQuantum*centiMet,", ",sum(niu_centF3(2,:))*polQuantum*centiMet,")."
 
 
 
@@ -616,6 +594,7 @@ module output
 		!
 		return
 	end subroutine
+
 
 
 

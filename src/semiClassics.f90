@@ -25,20 +25,18 @@ module semiClassics
 
 
 !public
-	subroutine	calcFirstOrdP(cell_vol, Bext, prefactF3, Fcurv, Aconn, Velo, En, centers_F2, centers_F3)
+	subroutine	calcFirstOrdP(polQuantum, centiMet, Bext, prefactF3, Fcurv, Aconn, Velo, En, centers_F2, centers_F3)
 		!calculates the first order polarization p1 according to
 		!	P'= -int_dk [0.5 (Curv.Velo)*B_ext + a']
-		real(dp),		intent(in)		::	cell_vol, Bext(3), prefactF3, Aconn(:,:,:,:), En(:,:)		
+		real(dp),		intent(in)		::	polQuantum, centiMet, Bext(3), prefactF3, Aconn(:,:,:,:), En(:,:)		
 		complex(dp),	intent(in)		::	Fcurv(:,:,:,:), Velo(:,:,:,:)			
 		real(dp),		intent(out)		::  centers_F2(:,:), centers_F3(:,:)
 		!real(dp)						::	pnF2(3), pnF3(3)
 		real(dp)						:: 	F2(3,3), F3(3,3), F2k(3,3), F3k(3,3), sumF2(3), sumF3(3)
-		real(dp)						:: 	densCorr(3), polQuantum, centiMet
+		real(dp)						:: 	densCorr(3)
 		integer							:: 	n, ki, kSize, ind
 		!
 		kSize		= size(Velo,4)
-		polQuantum	= -1.0_dp * elemCharge / ( cell_vol * aUtoAngstrm **2)
-		centiMet	= 1e+8
 		!
 		!
 		write(*,*)"[calcFirstOrdP]: start calculating P' via semiclassic approach"

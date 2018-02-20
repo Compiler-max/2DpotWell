@@ -52,12 +52,16 @@ module berry
 		real(dp),		allocatable		::	Aconn_H(:,:,:,:), Aconn_W(:,:,:,:), &
 											EnQ(:,:), b_k(:,:), w_b(:), &
 											w_centers(:,:), berry_W_gauge(:,:),berry_H_gauge(:,:), niu_polF2(:,:), niu_polF3(:,:)
+		real(dp)						::	polQuantum, centiMet
 		integer							::	n
 		!
 		num_wann = nWfs		
 		num_kpts = nQ
 		num_stat = nSolve
 
+
+		polQuantum 	= -1.0_dp * elemCharge / ( vol*aUtoAngstrm**2 ) 
+		centiMet	= 1e+8_dp
 		
 		!READ W90 Files
 		call read_M_initial(num_bands, num_kpts, nntot, nnlist, nncell, M_ham)
@@ -126,7 +130,7 @@ module berry
 		write(*,*)		"[berryMethod]: start (H) gauge calculation"
 		call read_FD_b_vectors(b_k, w_b)
 		call calcConnOnCoarse(M_ham, w_b, b_k, Aconn_H)
-		call calcPolViaA(Aconn_H, berry_H_gauge)
+		call calcPolViaA(polQuantum, centiMet, Aconn_H, berry_H_gauge)
 		!
 		!0th WANN GAUGE
 		write(*,*)	"*"
@@ -135,7 +139,7 @@ module berry
 		write(*,*)		"[berryMethod]: start (W) gauge calculation"
 		call rot_M_matrix(M_ham, U_mat, M_wann)
 		call calcConnOnCoarse(M_wann, w_b, b_k, Aconn_W)
-		call calcPolViaA(Aconn_W, berry_W_gauge)
+		call calcPolViaA(polQuantum, centiMet, Aconn_W, berry_W_gauge)
 		!
 		!
 		!1st ORDER SEMICLASSICS
@@ -161,7 +165,7 @@ module berry
 			call calcCurv(FcurvQ)
 			!
 			!semiclassics
-			call calcFirstOrdP(vol, Bext, prefactF3, FcurvQ, Aconn_W, veloQ, EnQ, niu_polF2, niu_polF3)
+			call calcFirstOrdP(polQuantum, centiMet, Bext, prefactF3, FcurvQ, Aconn_W, veloQ, EnQ, niu_polF2, niu_polF3)
 			!
 			write(*,*)	"[berryMethod]: done with semiclassics"
 		else
@@ -173,7 +177,7 @@ module berry
 		write(*,*)		"*"
 		!
 		!OUTPUT
-		call writePolFile(w_centers, berry_H_gauge, berry_W_gauge, niu_polF2, niu_polF3)
+		call writePolFile(polQuantum, centiMet, w_centers, berry_H_gauge, berry_W_gauge, niu_polF2, niu_polF3)
 		write(*,*)		"[berryMethod]: wrote pol file"
 		call writeConnTxt( Aconn_W )
 		!call writeVeloHtxt( veloQ )		
@@ -284,18 +288,17 @@ module berry
 	end subroutine
 
 
-	subroutine calcPolViaA(A_mat, centers)
+	subroutine calcPolViaA(polQuantum, centiMet, A_mat, centers)
 		!calculates the polarization by integrating connection over the brillouin zone
 		! r_n 	= <0n|r|0n> 
 		!		=V/(2pi)**2 \integrate_BZ <unk|i \nabla_k|unk>
 		!		=V/(2pi)**2 \integrate_BZ A(k)
-		real(dp),			intent(in)		:: 	A_mat(:,:,:,:)			!A(2,	 nWfs, nWfs, nQ	)	
+		real(dp),			intent(in)		:: 	polQuantum, centiMet, A_mat(:,:,:,:)			!A(2,	 nWfs, nWfs, nQ	)	
 		real(dp),			intent(out)		:: 	centers(:,:)
 		integer								::	n
 		real(dp)							::	polQuantum, centiMet
 		!
-		polQuantum 	= -1.0_dp * elemCharge / ( vol*aUtoAngstrm**2 ) 
-		centiMet	= 1e+8_dp
+	
 		write(*,'(a,e12.4,a)')	"[calcPolViaA]: the pol Quantum is p_quant=",polQuantum,"	[mu C/ Å²]"
 		!
 		centers = 0.0_dp
