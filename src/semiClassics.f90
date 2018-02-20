@@ -14,7 +14,7 @@ module semiClassics
 	real(dp), 		parameter	:: 	machineP 		= 1e-15_dp
 	real(dp)					:: 	acc				= 1e-7_dp
 	real(dp),		parameter	::	aUtoAngstrm 	= 0.52917721092_dp
-	real(dp),		parameter 	::	elemCharge	 	= 1.6021766208 * 1e-19_dp  *1e+6_dp! mu Coulomb
+	real(dp),		parameter 	::	elemCharge	 	= 1.6021766208 * 1e-19_dp  *1e+6_dp! in  mu Coulomb
 
 
 	contains
@@ -25,32 +25,32 @@ module semiClassics
 
 
 !public
-	subroutine	calcFirstOrdP(cell_vol, Bext, prefactF3, Fcurv, Aconn, Velo, En, pol_F2, pol_F3)
+	subroutine	calcFirstOrdP(cell_vol, Bext, prefactF3, Fcurv, Aconn, Velo, En, centers_F2, centers_F3)
 		!calculates the first order polarization p1 according to
 		!	P'= -int_dk [0.5 (Curv.Velo)*B_ext + a']
 		real(dp),		intent(in)		::	cell_vol, Bext(3), prefactF3, Aconn(:,:,:,:), En(:,:)		
 		complex(dp),	intent(in)		::	Fcurv(:,:,:,:), Velo(:,:,:,:)			
-		real(dp),		intent(out)		::  pol_F2(:,:), pol_F3(:,:)
+		real(dp),		intent(out)		::  centers_F2(:,:), centers_F3(:,:)
 		!real(dp)						::	pnF2(3), pnF3(3)
 		real(dp)						:: 	F2(3,3), F3(3,3), F2k(3,3), F3k(3,3), sumF2(3), sumF3(3)
-		real(dp)						:: 	densCorr(3), polQuantum, polUnitConv, centiMet
+		real(dp)						:: 	densCorr(3), polQuantum, centiMet
 		integer							:: 	n, ki, kSize, ind
 		!
 		kSize		= size(Velo,4)
-		polQuantum	= elemCharge / ( cell_vol * aUtoAngstrm **2)
+		polQuantum	= -1.0_dp * elemCharge / ( cell_vol * aUtoAngstrm **2)
 		centiMet	= 1e+8
 		!
 		!
 		write(*,*)"[calcFirstOrdP]: start calculating P' via semiclassic approach"
 		write(*,*)"[calcFirstOrdP]: will use ",size(Velo,3)," states"
 
-		pol_F2 = 0.0_dp
-		pol_F3 = 0.0_dp
+		centers_F2 = 0.0_dp
+		centers_F3 = 0.0_dp
 		
 		!$OMP PARALLEL DEFAULT(SHARED)  &
 		!$OMP PRIVATE(n, ki, densCorr, F2, F2k, F3, F3k)
 		!$OMP DO SCHEDULE(STATIC)
-		do n = 1, size(pol_F2,2)
+		do n = 1, size(centers_F2,2)
 			F2 = 0.0_dp
 			F3 = 0.0_dp
 			!
@@ -74,8 +74,8 @@ module semiClassics
 			F3 = F3  / real(kSize,dp)
 		
 			!APPLY MATRIX 
-			pol_F2(:,n) = -1.0_dp * matmul(F2,Bext) 
-			pol_F3(:,n) = -1.0_dp * matmul(F3,Bext) 
+			centers_F2(:,n) = matmul(F2,Bext) 
+			centers_F3(:,n) = matmul(F3,Bext) 
 			!
 		end do
 		!$OMP END DO
@@ -83,27 +83,27 @@ module semiClassics
 		!
 
 		do ind = 1, 3
-			sumF2(ind) 	= sum( 	mod(pol_F2(ind,:)*aUtoAngstrm, 	polQuantum)	*centiMet		)
-			sumF3(ind)	= sum(	mod(pol_F3(ind,:)*aUtoAngstrm,	polQuantum)	*centiMet		)
+			sumF2(ind) 	= sum( 	centers_F2(ind,:)*aUtoAngstrm * polQuantum *centiMet		)
+			sumF3(ind)	= sum(	centers_F3(ind,:)*aUtoAngstrm *	polQuantum *centiMet		)
 		end do
 		!
 		!PRINT F2
 		write(*,*)															"[calcFirstOrdP]: F2 matrix contribution:"
 		write(*,*)															" #state | 		<r>[Å]			| 		p[mu C / cm]"
-		do n = 1, size(pol_F2,2)	
-			write(*,'(i3,a,e13.4,a,e13.4,a,e13.4,a,a,e13.4,a,e13.4,a)')		n," | ", pol_F2(1,n)*aUtoAngstrm,", ",pol_F2(2,n)*aUtoAngstrm, ", ", pol_F2(3,n)*aUtoAngstrm," | ", &
-																					" (",	mod( pol_F2(1,n)*aUtoAngstrm, polQuantum) * centiMet	 ,&
-																					", ",	mod( pol_F2(2,n)*aUtoAngstrm, polQuantum) * centiMet		,")"
+		do n = 1, size(centers_F2,2)	
+			write(*,'(i3,a,e13.4,a,e13.4,a,e13.4,a,a,e13.4,a,e13.4,a)')		n," | ", centers_F2(1,n)*aUtoAngstrm,", ",centers_F2(2,n)*aUtoAngstrm, ", ", centers_F2(3,n)*aUtoAngstrm," | ", &
+																					" (",	centers_F2(1,n)*aUtoAngstrm * polQuantum * centiMet		,&
+																					", ",	centers_F2(2,n)*aUtoAngstrm * polQuantum * centiMet		,")"
 		end do
 		write(*,'(a,e13.4,a,e13.4,a,e13.4,a)')								"sum | 						|	(", sumF2(1),", ",sumF2(2), ", ", sumF2(3),")."
 		!
 		!PRINT F3
 		write(*,*)															"[calcFirstOrdP]: F3 matrix contribution:"
 		write(*,*)															" #state | 		<r>[Å]			| 		p[mu C / cm]"
-		do n = 1, size(pol_F3,2)	
-			write(*,'(i3,a,e13.4,a,e13.4,a,e13.4,a,a,e13.4,a,e13.4,a)')		n," | ", pol_F3(1,n)*aUtoAngstrm,", ",pol_F3(2,n)*aUtoAngstrm, ", ", pol_F3(3,n)*aUtoAngstrm," | ", &
-																					" (",	mod( pol_F3(1,n)*aUtoAngstrm, polQuantum) * centiMet, &
-																					", ",	mod( pol_F3(2,n)*aUtoAngstrm, polQuantum) * centiMet,")"
+		do n = 1, size(centers_F3,2)	
+			write(*,'(i3,a,e13.4,a,e13.4,a,e13.4,a,a,e13.4,a,e13.4,a)')		n," | ", centers_F3(1,n)*aUtoAngstrm,", ",centers_F3(2,n)*aUtoAngstrm, ", ", centers_F3(3,n)*aUtoAngstrm," | ", &
+																					" (",	centers_F3(1,n)*aUtoAngstrm * polQuantum * centiMet		, &
+																					", ",	centers_F3(2,n)*aUtoAngstrm * polQuantum * centiMet		,")"
 		end do
 		write(*,'(a,e13.4,a,e13.4,a,e13.4,a)')								"sum | 						|	(", sumF3(1),", ",sumF3(2), ", ", sumF3(3),")."
 		!

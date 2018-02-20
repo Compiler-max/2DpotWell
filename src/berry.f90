@@ -294,7 +294,7 @@ module berry
 		integer								::	n
 		real(dp)							::	polQuantum, centiMet
 		!
-		polQuantum 	= elemCharge / ( vol*aUtoAngstrm**2 ) 
+		polQuantum 	= -1.0_dp * elemCharge / ( vol*aUtoAngstrm**2 ) 
 		centiMet	= 1e+8_dp
 		write(*,'(a,e12.4,a)')	"[calcPolViaA]: the pol Quantum is p_quant=",polQuantum,"	[mu C/ Å²]"
 		!
@@ -303,9 +303,9 @@ module berry
 		do n 	= 1, size(A_mat,2)
 			!
 			!INTEGRATE
-			centers(1,n) = -1.0_dp * sum(A_mat(1,n,n,:)) / real(size(A_mat,4),dp)
-			centers(2,n) = -1.0_dp * sum(A_mat(2,n,n,:)) / real(size(A_mat,4),dp)
-			if(size(A_mat,1)==3)	centers(3,n) =  -1.0_dp * sum(A_mat(3,n,n,:)) / real(size(A_mat,4),dp)
+			centers(1,n) = sum(A_mat(1,n,n,:)) / real(size(A_mat,4),dp)
+			centers(2,n) = sum(A_mat(2,n,n,:)) / real(size(A_mat,4),dp)
+			if(size(A_mat,1)==3)	centers(3,n) =  sum(A_mat(3,n,n,:)) / real(size(A_mat,4),dp)
 			!
 		end do
 		!$OMP END PARALLEL DO
