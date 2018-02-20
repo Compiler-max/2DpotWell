@@ -16,7 +16,7 @@ module sysPara
 				nShells, nw90it, shells, &
 				nBands, nWfs,   &
 				atPos, atR, qpts, rpts, Rcell, kpts, Zion, recpLatt, &
-				Bext, prefactF3, &
+				Bext, prefactF3, alphaZee, &
 				seedName, w90_dir, info_dir, mkdir, raw_dir,&
 				debugProj, debugHam, debugWann, doSolveHam, doMagHam, useBloch, doPw90, pw90GaugeB, doVdesc,  &
 				doBerry,  doWanni, doVeloNUM, doNiu, doPei, doGaugBack, writeBin, &
@@ -32,7 +32,7 @@ module sysPara
 														myID, nProcs, ierr, qChunk
 	integer,	parameter							::	root=0
 	real(dp) 										::	aX=0.0_dp, aY=0.0_dp,vol=0.0_dp, Gcut=2*PI_dp, thres,& 
-														dx, dy, dqx, dqy, dkx, dky, B0, Bext(3)	, prefactF3, recpLatt(2,2)
+														dx, dy, dqx, dqy, dkx, dky, B0, Bext(3)	, prefactF3, recpLatt(2,2), alphaZee
 	character(len=3)								::	seedName										
 	character(len=9)								::	w90_dir	="w90files/"
 	character(len=7)								::	info_dir="output/"
@@ -119,6 +119,7 @@ module sysPara
 		call CFG_add_get(my_cfg,	"wann%nBands"		,	nBands	 	,	"# of bands to project onto trial orbs"	)
 		call CFG_add_get(my_cfg,	"wann%nWfs"			,	nWfs	 	,	"# wannier functions to generate"		)
 		![perturbation]
+		call CFG_add_get(my_cfg,	"perturbation%alphaZee",alphaZee	,	"controls breaking of time reversal"	)		
 		call CFG_add_get(my_cfg,	"perturbation%B0"	,	B0			,	"scaling fact. of ext. magnetic field"	)
 		call CFG_add_get(my_cfg,	"perturbation%Bext"	,	Bext		,	"vector of ext. magnetic field"			)
 		![numerics]
@@ -206,6 +207,7 @@ module sysPara
 		call MPI_Bcast( nBands		,		1	,		MPI_INTEGER			,	root,	MPI_COMM_WORLD, ierr)		
 		call MPI_Bcast( nWfs		,		1	,		MPI_INTEGER			,	root,	MPI_COMM_WORLD, ierr)
 		![perturbation]
+		call MPI_Bcast(	alphaZee	,		1	,	MPI_DOUBLE_PRECISION	,	root,	MPI_COMM_WORLD, ierr)
 		call MPI_Bcast(	B0 			,		1	,	MPI_DOUBLE_PRECISION	,	root,	MPI_COMM_WORLD, ierr)		
 		call MPI_Bcast(	Bext 		,		3	,	MPI_DOUBLE_PRECISION	,	root,	MPI_COMM_WORLD, ierr)
 		![numerics]
