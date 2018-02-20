@@ -101,7 +101,7 @@ module semiClassics
 		write(*,*)															"[calcFirstOrdP]: F3 matrix contribution:"
 		write(*,*)															" #state | 		<r>[Å]			| 		p[mu C / cm]"
 		do n = 1, size(centers_F3,2)	
-			write(*,'(i3,a,e13.4,a,e13.4,a,e13.4,a,a,e13.4,a,e13.4,a)')		n," | ", centers_F3(1,n),", ",centers_F3(2,n) ", ", centers_F3(3,n)," | ", &
+			write(*,'(i3,a,e13.4,a,e13.4,a,e13.4,a,a,e13.4,a,e13.4,a)')		n," | ", centers_F3(1,n),", ",centers_F3(2,n),", ", centers_F3(3,n)," | ", &
 																					" (",	centers_F3(1,n)*aUtoAngstrm * polQuantum * centiMet		, &
 																					", ",	centers_F3(2,n)*aUtoAngstrm * polQuantum * centiMet		,")"
 		end do
