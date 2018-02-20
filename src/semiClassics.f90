@@ -74,8 +74,8 @@ module semiClassics
 			F3 = F3  / real(kSize,dp)
 		
 			!APPLY MATRIX 
-			pol_F2(:,n) = matmul(F2,Bext) 
-			pol_F3(:,n) = matmul(F3,Bext) 
+			pol_F2(:,n) = -1.0_dp * matmul(F2,Bext) 
+			pol_F3(:,n) = -1.0_dp * matmul(F3,Bext) 
 			!
 		end do
 		!$OMP END DO
