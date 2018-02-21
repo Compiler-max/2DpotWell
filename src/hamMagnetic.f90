@@ -44,19 +44,39 @@ module ham_Magnetic
 		!Add to Hamiltonian
 		do j = 1, nGq(qLoc)
 			do i = 1, nGq(qLoc)
+				!
+				!
+				!CASE 1: gives 0 
 				if( i/=j ) then
-						dGx		= Gvec(1,j,qLoc) - Gvec(1,i,qLoc) 
-						dGy		= Gvec(2,j,qLoc) - Gvec(2,i,qLoc) 
-						if( abs(dGx) > machineP  ) then
-							if( abs(dGy) < machineP ) then
-								Hmat(i,j)	= Hmat(i,j) + H_prefact * h1_gyZero( dGx, qX_period)
-							else if( abs(dGy) >= machineP ) then
-								Hmat(i,j)	= Hmat(i,j) + H_prefact * h1_gyFull( dGx, dGy, qX_period)
-							else
-								stop "[add_magHam]: reached forbidden region in dGx, dGy discussion"
-							end if 
-						end if
+					dGx		= Gvec(1,j,qLoc) - Gvec(1,i,qLoc) 
+					dGy		= Gvec(2,j,qLoc) - Gvec(2,i,qLoc) 
+					!
+					!
+					!
+					!CASE 2: dGx == 0 gives zero
+					if( abs(dGx) > machineP  ) then
+						!
+						!
+						!
+						!CASE 3: dGy == 0
+						if( abs(dGy) < machineP ) then
+							Hmat(i,j)	= Hmat(i,j) + H_prefact * h1_gyZero( dGx, qX_period)
+						
+						!-------------------------------------------------------------------------------------------------------------
+						!
+						!
+						!
+						!CASE 4: dGy /= 0
+						else if( abs(dGy) >= machineP ) then
+							Hmat(i,j)	= Hmat(i,j) + H_prefact * h1_gyFull( dGx, dGy, qX_period)						
+
+						!-------------------------------------------------------------------------------------------------------------								!						!DEFAULT						else							stop "[add_magHam]: reached forbidden region in dGx, dGy discussion"						end if 						!-------------------------------------------------------------------------------------------------------------
+					end if
+					!
+					!-----------------------------------------------------------------------------------------------------------------
 				end if
+				!
+				!---------------------------------------------------------------------------------------------------------------------
 			end do
 		end do
 		!
