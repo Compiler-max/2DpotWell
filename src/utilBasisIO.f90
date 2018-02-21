@@ -1,8 +1,9 @@
-module basisIO
-	use sysPara
+module util_basisIO
+	
 	use mpi
 	use omp_lib
-	use mathematics,	only:	dp, i_dp, PI_dp, machineP, aUtoEv, aUtoAngstrm
+	use util_sysPara
+	use	util_math,	only:	dp, i_dp, PI_dp, machineP, aUtoEv, aUtoAngstrm
 
 	implicit none
 
@@ -377,7 +378,7 @@ module basisIO
 
 
 
-end module basisIO
+end module util_basisIO
 
 
 

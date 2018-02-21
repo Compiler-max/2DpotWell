@@ -1,10 +1,13 @@
-module output
+module util_output
 	!module contains several routines for printing and writing data
 	use mpi
 	use omp_lib
-	use mathematics,	only:	dp, PI_dp, machineP, aUtoEv, aUtoAngstrm, aUtoTesla
-	use planeWave,		only:	calcBasis
-	use sysPara 
+
+	use util_sysPara 
+	use util_math,		only:	dp, PI_dp, machineP, aUtoEv, aUtoAngstrm, aUtoTesla
+
+	use ham_PWbasis,	only:	calcBasis
+
 
 
 	implicit none
@@ -687,4 +690,4 @@ module output
 
 
 
-end module output
+end module util_output

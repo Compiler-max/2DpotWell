@@ -1,7 +1,7 @@
 module wannInterp
-	use mathematics,	only:	dp, PI_dp, i_dp, acc, machineP, myExp, myLeviCivita, &
+	use util_math,		only:	dp, PI_dp, i_dp, acc, machineP, myExp, myLeviCivita, &
 								eigSolverFULL, rotMat, myCommutat, isHermitian, isUnit
-	use sysPara,		only:	kpts, pw90GaugeB
+	use util_sysPara,	only:	kpts, pw90GaugeB
 
 	!use 
 	implicit none

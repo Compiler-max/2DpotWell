@@ -1,19 +1,20 @@
-module berry
+module polBerry
 	!module contains methods related to the Berry phase theory of modern polarization
 	!	i.e. calculation of connection, velocities, curvatures and polarization
 	use omp_lib
-	use sysPara,		only:	Bext, prefactF3, &
+	use util_sysPara,	only:	Bext, prefactF3, &
 								nWfs, nQ, nSolve, vol, &
 								qpts, &
 								atPos, atPot, &
 								doGaugBack, doNiu, fastConnConv, doVeloNum 
 	
-	use w90Interface,	only:	read_U_matrix, read_M_initial, read_FD_b_vectors, read_wann_centers, &
+	use util_w90Interf,	only:	read_U_matrix, read_M_initial, read_FD_b_vectors, read_wann_centers, &
 								readBandVelo
-	use basisIO,		only:	read_energies, read_velo
-	use semiClassics,	only:	calcFirstOrdP
-	use output,			only:	writePolFile, writeVeloHtxt, writeConnTxt
+	use util_basisIO,	only:	read_energies, read_velo
+	use util_output,	only:	writePolFile, writeVeloHtxt, writeConnTxt
 
+	use pol_Niu,		only:	calcFirstOrdP
+	
 	implicit none
 
 	private
@@ -406,5 +407,5 @@ module berry
 
 
 
-end module berry
+end module polBerry
 

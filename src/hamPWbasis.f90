@@ -1,9 +1,9 @@
-module planeWave
+module hamPWbasis
 	!generates bloch and lattice periodidc functions given a basCoeff matrix
 	use omp_lib
-	use mathematics,	only:	dp, PI_dp,i_dp, acc, machineP,& 
+	use util_math,	only:	dp, PI_dp,i_dp, acc, machineP,& 
 									myExp
-	use sysPara
+	use util_sysPara
 
 	implicit none
 
@@ -379,7 +379,7 @@ module planeWave
 
 
 
-end module planeWave 
+end module hamPWbasis
 
 
 

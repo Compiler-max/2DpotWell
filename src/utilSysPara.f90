@@ -1,7 +1,7 @@
-module sysPara
+module util_sysPara
 	!this modules reads the input file and generates the meshes accordingly
 	use mpi
-	use mathematics, only: dp, PI_dp, setAcc, acc, machineP
+	use util_math, only: dp, PI_dp, setAcc, acc, machineP
 	use m_config
 	implicit none
 	!#include "mpif.h"
@@ -707,4 +707,4 @@ module sysPara
 
 
 
-end module sysPara
+end module util_sysPara

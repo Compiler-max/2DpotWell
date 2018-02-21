@@ -1,4 +1,4 @@
-module semiClassics
+module pol_Niu
 	!this module uses a semiclassic approach to calculate the first ordrer correction
 	!	to the polariztion induced by a perturbive magnetic field
 	! 	see Niu PRL 112, 166601 (2014)
@@ -289,4 +289,4 @@ module semiClassics
 
 
 
-end module semiClassics
+end module pol_Niu

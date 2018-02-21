@@ -1,13 +1,13 @@
 program main
 	!TWO dimensional potential well code
 	use mpi
-	use mathematics, 	only: 		dp, PI_dp
+	use util_math, 	only: 		dp, PI_dp
 
-	use sysPara
-	use potWellModel, 	only: 		potWellMethod
-	use berry,			only:		berryMethod
+	use util_sysPara
+	use ham_Solver, 	only: 		solveHam
+	use pol_Berry,		only:		berryMethod
 
-	use output,		 	only:		writeMeshInfo, writeMeshBin, writePolFile, write_K_lattices, & 
+	use util_output,	only:		writeMeshInfo, writeMeshBin, writePolFile, write_K_lattices, & 
 									printTiming, printBasisInfo	!printMat, printInp, printWannInfo,writeSysInfo  
 
 

@@ -1,4 +1,4 @@
-module mathematics
+module util_math
 	!module contains some basic constants, especially dp for double precision convention
 	!additionally it contains the matrix operation wrappers to call intel mkl
 	implicit none
@@ -699,4 +699,4 @@ module mathematics
 
 
 
-end module mathematics
+end module util_math

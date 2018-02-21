@@ -1,10 +1,9 @@
-module w90Interface	
+module util_w90Interf	
 
 	use mpi
-	use mathematics,	only:	dp, PI_dp, i_dp, machineP, aUtoAngstrm, aUtoEv, myExp, isUnit, isIdentity
-	use sysPara
-	use basisIO,		only:	read_energies, read_Amn, read_Mmn
-	use planeWave,		only:	calcMmat, calcAmatANA
+	use util_math,	only:	dp, PI_dp, i_dp, machineP, aUtoAngstrm, aUtoEv, myExp, isUnit, isIdentity
+	use util_sysPara
+	use util_basisIO,		only:	read_energies, read_Amn, read_Mmn
 
 	implicit none
 
@@ -736,6 +735,6 @@ module w90Interface
 
 
 
-end module
+end module util_w90Interf
 
 
