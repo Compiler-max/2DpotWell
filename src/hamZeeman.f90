@@ -41,8 +41,9 @@ module ham_Zeeman
 		integer,		intent(in)		::	qLoc
 		complex(dp),	intent(inout)	::	Hmat(:,:)
 		integer							::	i, j
-		real(dp)						::	dGx, dGy
-		complex(dp)						::	nom1, nom2, denom, prefact, integral
+		real(dp)						::	dGx, dGy, xL, xR, yL, yR
+		complex(dp)						::	num1, num2, denom, prefact, integral, &
+											num1a, num1b, num2b, num2a
 		!
 		!
 		do j = 1, nGq(qLoc)
@@ -51,43 +52,83 @@ module ham_Zeeman
 				if( i /= j )	then
 					dGx		= Gvec(1,j,qLoc) - Gvec(1,i,qLoc) 
 					dGy		= Gvec(2,j,qLoc) - Gvec(2,i,qLoc) 
-					
-
-					!todo: loop wells, get xR, xL, yL, yR
 					!
-					!
-					!CASE 2 (dGx==0)
-					if( abs(dGx) < machineP ) then
-						prefact		=	dcmplx(		Gvec(1,j,qLoc)*(xL-xR) 		)
-						denom		=	dcmplx(		2.0_dp * dGy**2				)
-						nom1		=	i_dp * 	myExp(dGy*yL) * ( 	2.0_dp*i_dp	 	+ 		(yL-yR)*dGy 		)
-						nom2		=			myExp(dGy*yR) * ( 	2.0_dp 			+ i_dp* (yL-yR)*dGy			)
-
+					!for each atom/well
+					do at = 1, nAt
+						xL	=	atPos(1,at) - atR(1,at)
+						xR	=	atPos(1,at)	+ atR(1,at)
+						yL	=	atPos(2,at)	- atR(2,at)
+						yR	=	atPos(2,at)	+ atR(2,at)
 						!
-						integral	=	prefact * ( nom1 + nom2 ) / denom
-					!------------------------------------------------------------------
-					!
-					!
-					!CASE 3 (dGy==0)
-					else if(	abs(dGy) < machineP	) then
-
-					!------------------------------------------------------------------
-					!
-					!
-					!CASE 4 (dGx/=0 and dGy/=0)
-					else if(	abs(dGx) >= machineP	 .and. 		abs(dGy) >= machineP	) then
-
-					!------------------------------------------------------------------
-					!
-					!
-					!DEFAULT
-					else
-						stop "[add_Zeeman]: reached forbidden default"
-					end if
-
-					Hmat(i,j)	= Hmat(i,j)		+ 	(alphaZee/vol) * nom/denom
- 
+						!
+						!CASE 2 (dGx==0)
+						if( abs(dGx) < machineP ) then
+							prefact		=	dcmplx(		Gvec(1,j,qLoc)*(xL-xR) 		)
+							denom		=	dcmplx(		2.0_dp * dGy**2				)
+							num1		=	i_dp * 	myExp(dGy*yL) * ( 	2.0_dp * i_dp	+ 			(yL-yR)*dGy 		)
+							num2		=			myExp(dGy*yR) * ( 	2.0_dp 			+ i_dp * 	(yL-yR)*dGy			)
+							!
+							!
+							integral	=	prefact * ( num1 + num2 ) / denom
+						!---------------------------------------------------------------------------------------------------------------
+						!
+						!
+						!CASE 3 (dGy==0)
+						else if(	abs(dGy) < machineP	) then
+							prefact		=	dcmplx(		Gvec(2,j,qLoc)*(yL-yR)		)
+							denom		=	dcmplx(		2.0_dp * dGx**2				)
+							num1		=			myExp(dGx*xL) * ( 	2.0_dp			+ i_dp *	(xR-xL)*dGx			)
+							num2		=	i_dp *	myExp(dGx*xR) * (	2.0_dp * i_dp	+			(xR-xL)*dGx			)
+							!
+							!
+							integral	=	prefact * ( num1 + num2 ) / denom
+						!---------------------------------------------------------------------------------------------------------------
+						!
+						!
+						!CASE 4 (dGx/=0 and dGy/=0)
+						else if(	abs(dGx) >= machineP	 .and. 		abs(dGy) >= machineP	) then
+							prefact		=	dcmplx(		1.0_dp						)
+							denom		=	dcmplx(		2.0_dp	* dGx**2 * dGy**2	)
+							!
+							!
+							num1a		=	-1.0_dp * myExp(dGy*yL) * (			Gvec(2,j,qLoc) 	*	( -2.0_dp*i_dp + (xL-xR)*dGx )	*	dGy	 &	
+																			+	Gvec(1,j,qLoc) 	*	(  2.0_dp*i_dp + (yL-yR)*dGy )	*	dGx	 )
+							!-----------------------------
+							num1b		=	+1.0_dp * myExp(dGy*yR) * (			Gvev(2,j,qLoc) 	*	( -2.0_dp*i_dp + (xL-xR)*dGx )	*	dGy	&
+																			+	Gvec(1,j,qLoc)	*	(  2.0_dp*i_dp - (yL-yR)*dGy )	*	dGx	)
+							!-----------------------------
+							num2a		=	+1.0_dp * myExp(dGy*yL) * (			Gvec(2,j,qLoc)	*	( -2.0_dp*i_dp - (xL-xR)*dGx )	*	dGy &
+																			+	Gvec(1,j,qLoc)	*	(  2.0_dp*i_dp + (yL-yR)*dGy )	*	dGx )
+							!-----------------------------
+							num2b		=	-1.0_dp * myExp(dGy*yR) * (			Gvec(2,j,qLoc)	*	( -2.0_dp*i_dp - (xL-xR)*dGx )	*	dGy &
+																			+	Gvec(1,j,qLoc)	*	(  2.0_dp*i_dp - (yL-yR)*dGy )	*	dGx )
+							!-----------------------------
+							!
+							!
+							num1		=	myExp(dGx*xR)	* 	(	num1a + num1b )
+							num2		=	myExp(dGx*xL)	*	(	num2a + num2b )
+							!
+							!
+							integral	=	prefact * ( num1 + num2 ) / denom	
+	
+						!---------------------------------------------------------------------------------------------------------------
+						!
+						!
+						!DEFAULT
+						else
+							integral 	= 	dcmplx(0.0_dp)
+							denom		= 	dcmplx(1.0_dp)
+							stop "[add_Zeeman]: reached forbidden default"
+						end if
+						!
+						!
+						Hmat(i,j)	= Hmat(i,j)		+ 	(alphaZee/vol) * integral
+						!
+						!
+					end do
 				end if
+				!
+				!
 			end do
 		end do
 
