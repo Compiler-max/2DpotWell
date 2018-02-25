@@ -68,7 +68,8 @@ module ham_Magnetic
 						!
 						!CASE 4: dGy /= 0
 						else if( abs(dGy) >= machineP ) then
-							Hmat(i,j)	= Hmat(i,j) + H_prefact * h1_gyFull( dGx, dGy, qX_period)						
+							Hmat(i,j)	= Hmat(i,j) + H_prefact * h1_gyFull( dGx, dGy, qX_period)	
+						end if					
 
 						!-------------------------------------------------------------------------------------------------------------								!						!DEFAULT						else							stop "[add_magHam]: reached forbidden region in dGx, dGy discussion"						end if 						!-------------------------------------------------------------------------------------------------------------
 					end if

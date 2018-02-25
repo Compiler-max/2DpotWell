@@ -40,7 +40,7 @@ module ham_Zeeman
 		!---------------------------------------------------------------------------
 		integer,		intent(in)		::	qLoc
 		complex(dp),	intent(inout)	::	Hmat(:,:)
-		integer							::	i, j
+		integer							::	i, j, at 
 		real(dp)						::	dGx, dGy, xL, xR, yL, yR
 		complex(dp)						::	num1, num2, denom, prefact, integral, &
 											num1a, num1b, num2b, num2a
@@ -94,7 +94,7 @@ module ham_Zeeman
 							num1a		=	-1.0_dp * myExp(dGy*yL) * (			Gvec(2,j,qLoc) 	*	( -2.0_dp*i_dp + (xL-xR)*dGx )	*	dGy	 &	
 																			+	Gvec(1,j,qLoc) 	*	(  2.0_dp*i_dp + (yL-yR)*dGy )	*	dGx	 )
 							!-----------------------------
-							num1b		=	+1.0_dp * myExp(dGy*yR) * (			Gvev(2,j,qLoc) 	*	( -2.0_dp*i_dp + (xL-xR)*dGx )	*	dGy	&
+							num1b		=	+1.0_dp * myExp(dGy*yR) * (			Gvec(2,j,qLoc) 	*	( -2.0_dp*i_dp + (xL-xR)*dGx )	*	dGy	&
 																			+	Gvec(1,j,qLoc)	*	(  2.0_dp*i_dp - (yL-yR)*dGy )	*	dGx	)
 							!-----------------------------
 							num2a		=	+1.0_dp * myExp(dGy*yL) * (			Gvec(2,j,qLoc)	*	( -2.0_dp*i_dp - (xL-xR)*dGx )	*	dGy &
@@ -110,14 +110,12 @@ module ham_Zeeman
 							!
 							!
 							integral	=	prefact * ( num1 + num2 ) / denom	
-	
 						!---------------------------------------------------------------------------------------------------------------
 						!
 						!
 						!DEFAULT
 						else
 							integral 	= 	dcmplx(0.0_dp)
-							denom		= 	dcmplx(1.0_dp)
 							stop "[add_Zeeman]: reached forbidden default"
 						end if
 						!

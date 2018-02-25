@@ -99,7 +99,7 @@ program main
 		if( myID == root ) 	write(*,*)	"[main]:**************************ELECTRONIC STRUCTURE RUN*************************"
 		!
 		!
-		call potWellMethod()
+		call solveHam()
 		!
 		!
 		if( myID == root )	call write_K_lattices()

@@ -1,4 +1,4 @@
-module polBerry
+module pol_Berry
 	!module contains methods related to the Berry phase theory of modern polarization
 	!	i.e. calculation of connection, velocities, curvatures and polarization
 	use omp_lib
@@ -407,5 +407,5 @@ module polBerry
 
 
 
-end module polBerry
+end module pol_Berry
 
