@@ -41,7 +41,7 @@
     doMagHam    =   f
 
 [methods]
-    doSolveHam  =   t
+    doSolveHam  =   f
     useBloch    =   f
     doPw90      =   f
     doBerry     =   t
