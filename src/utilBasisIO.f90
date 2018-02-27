@@ -45,7 +45,7 @@ module util_basisIO
 		!
 		!WRITE TO FILE
 		write(filename, format) raw_dir//'enK.',qi
-		open(unit=200, file=filename, form='unformatted', access='stream', action='write', status='unknown')
+		open(unit=200, file=filename, form='unformatted', access='stream', action='write', status='replace')
 		write(200)	En_loc(1:nSolve)
 		close(200)
 		!
@@ -270,6 +270,7 @@ module util_basisIO
 		!
 		return
 	end subroutine
+
 
 	subroutine readBasis()
 		!
