@@ -5,7 +5,6 @@
     aY          =   10
 
 [atoms]
-    doVdesc     =   f
     nAt         =   2
     relXpos     =   0.250 0.750
     relYpos     =   0.500 0.500
@@ -37,11 +36,12 @@
     thres       =   0.1
 
 [ham]
+    doVdesc     =   f
     doZeeman    =   t
     doMagHam    =   f
 
 [methods]
-    doSolveHam  =   f
+    doSolveHam  =   t
     useBloch    =   f
     doPw90      =   f
     doBerry     =   t
