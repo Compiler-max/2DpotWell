@@ -20,8 +20,7 @@
     nWfs        =   6
 
 [perturbation]
-    alphaZee    =   1.32
-    B0          =   0.0               #h in Tesla
+    B0          =   100.0               # in Tesla
     Bext        =   0.0 0.0 1.0
 
 [numerics]
@@ -38,6 +37,7 @@
     thres       =   0.1
 
 [methods]
+   fastConnConv =   t
     doSolveHam  =   f
     doMagHam    =   f
     useBloch    =   f
@@ -55,7 +55,7 @@
 [berry]
     useRot      =   t
     doVeloNUM   =   f
-    doNiu       =   f
+    doNiu       =   t
     doPei       =   f
     doWanni     =   f
     doGaugBack  =   f
