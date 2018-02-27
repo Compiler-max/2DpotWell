@@ -57,7 +57,7 @@ module ham_PotWell
 		dGy		= Gvec(2,j,qLoc) - Gvec(2,i,qLoc) 
 		!
 		do at = 1, nAt
-			Vpot	=	dcmplx(atPot(at))
+			Vpot	=	dcmplx(atPot(at))		!in hartree
 			xL	=	atPos(1,at) - atR(1,at)
 			xR	=	atPos(1,at) + atR(1,at) 
 			yL	=	atPos(2,at) - atR(2,at)
