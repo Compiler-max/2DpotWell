@@ -53,7 +53,7 @@ module ham_Zeeman
 											num1a, num1b, num2b, num2a
 		!
 		magMom		=	+0.5_dp 								!a.u.
-		alphaZee	=	dcmplx(-1.0_dp * magMom * Bext(3)	)	!hartree
+		alphaZee	=	dcmplx(	-1.0_dp * magMom * Bext(3)	)	!hartree
 
 		!
 		do j = 1, nGq(qLoc)
