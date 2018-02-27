@@ -25,9 +25,24 @@ module ham_Magnetic
 
 	!EXTERNAL MAGNETIC FIELD ( OSCILLATING )
 	subroutine add_magHam(qLoc, Hmat)
-		!Performs Peierls substitution on plane wave basis.
+		!adds oscillating magnetic field to hamiltonian via peierls sub
 		!
-		!neglects terms which are second order in the external field
+		!
+		!
+		!		H 	= (	p - e A )^2 / 2m
+		!			= p^2 /2m_e -  (pA  + Ap ) / 2m_e + e^2 A^2 / 2m_e
+		!			= p^2 /2m_e -  (pA  + Ap ) / 2m_e 					(neglects terms which are second order in the external field)
+		!
+		!	->H_mag = p	A / m_e
+		!
+		!		B	= 	B_ext*cos(q*r)
+		!		B	=  d A / dr 	-> 	  A = 1/q	* B_ext *	sin(q*r)
+		!
+		!	units:
+		!		[p]	= hbar / a0
+		!		[B] = hbar / (e a0^2)
+		!		[q]	= 1 / a0
+		!		[A] = e [B] / [q] e hbar / (e a0) = hbar / a0 = [p]
 		!
 		!only contribtutions if i/=j, i.e. to off-diagonal terms
 		! no contribution for dGx = 0
@@ -39,7 +54,7 @@ module ham_Magnetic
 		!
 		!period of oscillating B field
 		qX_period	=	2.0_dp * PI_dp / aX 
-		H_prefact 	= 	dcmplx(	0.5_dp * Bext(3) / qX_period	)
+		H_prefact 	= 	dcmplx(	Bext(3) / qX_period	)
 		!
 		!Add to Hamiltonian
 		do j = 1, nGq(qLoc)
