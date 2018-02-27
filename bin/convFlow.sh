@@ -12,7 +12,7 @@ qVal=( 8 16 32 64 )
 nSolve=96
 
 
-
+nProcs=16
 
 
 
@@ -82,7 +82,7 @@ for g in ${gVal[*]}; do
 		wait
 		#	
 		#execute calculation
-		./subStream.sh
+		./subStream.sh $nProcs
 		wait
 		echo '['$(date +"%T")']: finished subStream'
 			
