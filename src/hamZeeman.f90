@@ -26,6 +26,13 @@ module ham_Zeeman
 		!adds the operator 
 		!				H_alpha = alpha ( op(x) op(p_y)	-	op(y) op(p_x)	)
 		!
+		!			V_zeeman 	= 	- magMom \cdot B		  [hatreee]
+		!			magMom		=	mu_bohr * g_L * L / hbar    [a.u.=	e hbar/(2 m_e)]
+		!			g_L			= 	1.0
+		!		units:
+		!			[L]			=	hbar
+		!			[B]			= 	hbar / (e a0^2)
+		!			[magMom][B]	=	hbar^2 / ( m_e a0^2) = m_e c^2 alpha^2 = hartree
 		!			this introduces a zeeman like spliting into Landau levels (breaks time reversal)
 		!			as a result of a coupling B cdot L
 		!			where B is the field breaking the symm
@@ -41,10 +48,13 @@ module ham_Zeeman
 		integer,		intent(in)		::	qLoc
 		complex(dp),	intent(inout)	::	Hmat(:,:)
 		integer							::	i, j, at 
-		real(dp)						::	dGx, dGy, xL, xR, yL, yR
+		real(dp)						::	dGx, dGy, xL, xR, yL, yR, magMom, alphaZee
 		complex(dp)						::	num1, num2, denom, prefact, integral, &
 											num1a, num1b, num2b, num2a
 		!
+		magMom		=	+0.5_dp 					!a.u.
+		alphaZee	=	-1.0_dp * magMom * Bext(3)	!hartree
+
 		!
 		do j = 1, nGq(qLoc)
 			do i = 1, nGq(qLoc)

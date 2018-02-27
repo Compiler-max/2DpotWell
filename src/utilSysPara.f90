@@ -1,7 +1,7 @@
 module util_sysPara
 	!this modules reads the input file and generates the meshes accordingly
 	use mpi
-	use util_math, only: dp, PI_dp, setAcc, acc, machineP
+	use util_math, only: dp, PI_dp, setAcc, acc, machineP, aUtoTesla
 	use m_config
 	implicit none
 	!#include "mpif.h"
@@ -16,7 +16,7 @@ module util_sysPara
 				nShells, nw90it, shells, &
 				nBands, nWfs,   &
 				atPos, atR, qpts, rpts, Rcell, kpts, Zion, recpLatt, &
-				Bext, prefactF3, alphaZee, &
+				Bext, prefactF3, &
 				seedName, w90_dir, info_dir, mkdir, raw_dir,&
 				debugProj, debugHam, debugWann, doSolveHam, doMagHam, useBloch, doPw90, pw90GaugeB, doVdesc,  &
 				doBerry,  doWanni, doVeloNUM, doNiu, doPei, doGaugBack, writeBin, &
@@ -32,7 +32,7 @@ module util_sysPara
 														myID, nProcs, ierr, qChunk
 	integer,	parameter							::	root=0
 	real(dp) 										::	aX=0.0_dp, aY=0.0_dp,vol=0.0_dp, Gcut=2*PI_dp, thres,& 
-														dx, dy, dqx, dqy, dkx, dky, B0, Bext(3)	, prefactF3, recpLatt(2,2), alphaZee
+														dx, dy, dqx, dqy, dkx, dky, B0, Bext(3)	, prefactF3, recpLatt(2,2)
 	character(len=3)								::	seedName										
 	character(len=9)								::	w90_dir	="w90files/"
 	character(len=7)								::	info_dir="output/"
@@ -118,8 +118,7 @@ module util_sysPara
 		![wann]
 		call CFG_add_get(my_cfg,	"wann%nBands"		,	nBands	 	,	"# of bands to project onto trial orbs"	)
 		call CFG_add_get(my_cfg,	"wann%nWfs"			,	nWfs	 	,	"# wannier functions to generate"		)
-		![perturbation]
-		call CFG_add_get(my_cfg,	"perturbation%alphaZee",alphaZee	,	"controls breaking of time reversal"	)		
+		![perturbation]	
 		call CFG_add_get(my_cfg,	"perturbation%B0"	,	B0			,	"scaling fact. of ext. magnetic field"	)
 		call CFG_add_get(my_cfg,	"perturbation%Bext"	,	Bext		,	"vector of ext. magnetic field"			)
 		![numerics]
@@ -162,14 +161,19 @@ module util_sysPara
 		call CFG_add_get(my_cfg,	"debug%debugWann"	, 	debugWann	,	"switch for debuging in wannier"		)
 	
 		!SET
-		nGdim = getTestGridSize()	
-		nG	= nGdim**2
-		vol	=	aX 		* 	aY
-		nR 	= 	nRx 	*	nRy
-		nQ 	= 	nQx 	*	nQy
-		nSC =	nSCx	*	nSCy
-		nK =	nKx		*	nKy
+		nGdim 			= getTestGridSize()	
+		nG				= nGdim**2
+		vol				=	aX 		* 	aY
+		nR 				= 	nRx 	*	nRy
+		nQ 				= 	nQx 	*	nQy
+		nSC 			=	nSCx	*	nSCy
+		nK 				=	nKx		*	nKy
+		!
+		!
 		Bext=	B0 		* 	Bext
+		!CONVERT B FIELD FROM TESLA TO 	a.u.
+		Bext			=	Bext	/ aUtoTesla
+
 		!
 		recpLatt		= 0.0_dp
 		recpLatt(1,1)	= 2.0_dp * PI_dp * aY / vol
@@ -207,7 +211,6 @@ module util_sysPara
 		call MPI_Bcast( nBands		,		1	,		MPI_INTEGER			,	root,	MPI_COMM_WORLD, ierr)		
 		call MPI_Bcast( nWfs		,		1	,		MPI_INTEGER			,	root,	MPI_COMM_WORLD, ierr)
 		![perturbation]
-		call MPI_Bcast(	alphaZee	,		1	,	MPI_DOUBLE_PRECISION	,	root,	MPI_COMM_WORLD, ierr)
 		call MPI_Bcast(	B0 			,		1	,	MPI_DOUBLE_PRECISION	,	root,	MPI_COMM_WORLD, ierr)		
 		call MPI_Bcast(	Bext 		,		3	,	MPI_DOUBLE_PRECISION	,	root,	MPI_COMM_WORLD, ierr)
 		![numerics]
