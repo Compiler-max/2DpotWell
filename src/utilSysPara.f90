@@ -18,8 +18,8 @@ module util_sysPara
 				atPos, atR, qpts, rpts, Rcell, kpts, Zion, recpLatt, &
 				Bext, prefactF3, &
 				seedName, w90_dir, info_dir, mkdir, raw_dir,&
-				debugProj, debugHam, debugWann, doSolveHam, doMagHam, useBloch, doPw90, pw90GaugeB, doVdesc,  &
-				doBerry,  doWanni, doVeloNUM, doNiu, doPei, doGaugBack, writeBin, &
+				debugProj, debugHam, debugWann, doSolveHam, doMagHam, doZeeman, useBloch, doPw90, pw90GaugeB, doVdesc,  &
+				doBerry, doVeloNUM, doNiu, doGaugBack, writeBin, &
 				myID, nProcs, root, ierr, qChunk, fastConnConv
 
 
@@ -43,8 +43,9 @@ module util_sysPara
 
 	real(dp),	allocatable,	dimension(:,:,:)	::	Gvec
 	logical											::	debugHam, debugWann, debugProj, &
-														doSolveHam, doMagHam, doPw90, pw90GaugeB, useBloch, doVdesc , &
-														doBerry, doWanni, doVeloNUM, doNiu, doPei, doGaugBack, fastConnConv, &
+														doSolveHam, doVdesc, doZeeman, doMagHam, &
+														useBloch, doPw90, pw90GaugeB, & 
+														doBerry, doVeloNUM, doNiu, doGaugBack, fastConnConv, &
 														writeBin 
 
 
@@ -133,9 +134,12 @@ module util_sysPara
 		call CFG_add_get(my_cfg,	"numerics%nRx"     	,	nRx      	,	"amount of r points used"				)
 		call CFG_add_get(my_cfg,	"numerics%nRy"     	,	nRy      	,	"amount of r points used"				)
 		call CFG_add_get(my_cfg,	"numerics%thres"    ,	thres      	,	"threshold for overlap WARNINGs"		)
+		![ham]
+		call CFG_add_get(my_cfg,	"ham%doZeeman"		,	doZeeman	,	"include B-field via Zeeman in wells"	)
+		call CFG_add_get(my_cfg,	"ham%doMagHam"		,	doMagHam	,	"include osc. B-field via peierls sub"	)
 		![methods]
 		call CFG_add_get(my_cfg,	"methods%doSolveHam",	doSolveHam	,	"solve electronic structure or read in"	)
-		call CFG_add_get(my_cfg,	"methods%doMagHam"	,	doMagHam	,	"include B-field via peierls in ham."	)
+		
 		call CFG_add_get(my_cfg,	"methods%doPw90"	,	doPw90		,	"read in the matrices in wann base	"	)	
 		call CFG_add_get(my_cfg,	"methods%doBerry"	,	doBerry		,	"switch on/off 	berry( unk) method "	)
 		call CFG_add_get(my_cfg,	"methods%writeBin"	,	writeBin	,	"switch for writing binary files"		)
@@ -149,8 +153,6 @@ module util_sysPara
 		call CFG_add_get(my_cfg,	"berry%fastConnConv",fastConnConv	,	"try faster converging fd formula"		)
 		call CFG_add_get(my_cfg,	"berry%doVeloNUM"	,	doVeloNUM	,	"if true tb velocities, else analyitcal")
 		call CFG_add_get(my_cfg,	"berry%doNiu"		,	doNiu		,	"switch for nius first order pol"		)
-		call CFG_add_get(my_cfg,	"berry%doPei"		,	doPei		,	"switch for  peierls first order pol"	)
-		call CFG_add_get(my_cfg,	"berry%doWanni"		,	doWanni		,	"switch on/off 	wannier( wnf ) method"	)
 		call CFG_add_get(my_cfg,	"berry%doGaugBack"	,	doGaugBack	,	"switch for trafo: Wann to Ham gauge"	)
 		
 		![semiclassics]
@@ -226,9 +228,12 @@ module util_sysPara
 		call MPI_Bcast(	nRx			,		1	,		MPI_INTEGER			,	root,	MPI_COMM_WORLD, ierr)
 		call MPI_Bcast(	nRy			,		1	,		MPI_INTEGER			,	root,	MPI_COMM_WORLD, ierr)
 		call MPI_Bcast(	thres		,		1	,	MPI_DOUBLE_PRECISION	,	root,	MPI_COMM_WORLD, ierr)
+		![ham]
+		call MPI_Bcast(	doZeeman	,		1	,	MPI_LOGICAL				,	root,	MPI_COMM_WORLD, ierr)
+		call MPI_Bcast(	doMagHam	,		1	,	MPI_LOGICAL				,	root,	MPI_COMM_WORLD, ierr)
+
 		![methods]
 		call MPI_Bcast( doSolveHam	,		1	,	MPI_LOGICAL				,	root,	MPI_COMM_WORLD, ierr)
-		call MPI_Bcast(	doMagHam	,		1	,	MPI_LOGICAL				,	root,	MPI_COMM_WORLD, ierr)
 		call MPI_Bcast( doPw90		,		1	,	MPI_LOGICAL				,	root,	MPI_COMM_WORLD, ierr)
 		call MPI_Bcast( doBerry		,		1	,	MPI_LOGICAL				,	root,	MPI_COMM_WORLD, ierr)
 		call MPI_Bcast( writeBin	,		1	,	MPI_LOGICAL				,	root,	MPI_COMM_WORLD, ierr)
@@ -242,8 +247,6 @@ module util_sysPara
 		call MPI_Bcast(fastConnConv	,		1	,	MPI_LOGICAL				,	root,	MPI_COMM_WORLD,	ierr)
 		call MPI_Bcast( doVeloNUM	,		1	,	MPI_LOGICAL				,	root,	MPI_COMM_WORLD,	ierr)
 		call MPI_Bcast( doNiu		,		1	,	MPI_LOGICAL				,	root,	MPI_COMM_WORLD,	ierr)
-		call MPI_Bcast( doPei		,		1	,	MPI_LOGICAL				,	root,	MPI_COMM_WORLD,	ierr)
-		call MPI_Bcast( doWanni		,		1	,	MPI_LOGICAL				,	root,	MPI_COMM_WORLD,	ierr)
 		call MPI_Bcast( doGaugBack	,		1	,	MPI_LOGICAL				,	root,	MPI_COMM_WORLD,	ierr)
 		![semiclassics]
 		call MPI_Bcast( prefactF3	,		1	,	MPI_DOUBLE_PRECISION	,	root,	MPI_COMM_WORLD,	ierr)

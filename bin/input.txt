@@ -36,10 +36,12 @@
     nRy         =   10
     thres       =   0.1
 
-[methods]
-   fastConnConv =   t
-    doSolveHam  =   f
+[ham]
+    doZeeman    =   t
     doMagHam    =   f
+
+[methods]
+    doSolveHam  =   f
     useBloch    =   f
     doPw90      =   f
     doBerry     =   t
@@ -53,11 +55,9 @@
     pw90GaugeB  =   f
 
 [berry]
-    useRot      =   t
+    fastConnConv=   t
     doVeloNUM   =   f
     doNiu       =   t
-    doPei       =   f
-    doWanni     =   f
     doGaugBack  =   f
 
 [semiclassics]

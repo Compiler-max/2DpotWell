@@ -236,10 +236,10 @@ module ham_Solver
 		call add_potWell(qLoc, Hmat)
 		!
 		!ZEEMAN LIKE
-		call add_Zeeman(qLoc, Hmat)
+		if(	doZeeman )		call add_Zeeman(qLoc, Hmat)
 
 		!ADD PEIERLS
-		if( doMagHam )	 call add_magHam( qLoc, Hmat)
+		if( doMagHam )	 	call add_magHam( qLoc, Hmat)
 		!
 		!DEBUG
 		if(debugHam) then

@@ -501,7 +501,14 @@ module util_output
 		write(600,*)"*"
 		write(600,*)"*"
 		write(600,*)"**************PERTURBATION:"
+		!
+		!
+		write(600,*)"begin magnetic_field"
 		Btesla(1:3)	= Bext(1:3) * aUtoTesla
+		write(600,'(a,f6.2,a,f6.2,a,f6.2)')	"  ", 	Btesla(1),	" ",	Btesla(2)," ", Btesla(3)
+		write(600,*)"end magnetic_field"
+		!
+		!
 		write(600,*) "states considered for perturbation nStates=",nSolve 
 		if( norm2(Bext) > machineP ) then
 			write(600,*)	"no magnetic field applied ( norm of field is zero)"
@@ -599,6 +606,8 @@ module util_output
 	end subroutine
 
 
+
+	
 
 
 	subroutine printBasisInfo()
