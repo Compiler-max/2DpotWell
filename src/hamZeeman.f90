@@ -48,12 +48,12 @@ module ham_Zeeman
 		integer,		intent(in)		::	qLoc
 		complex(dp),	intent(inout)	::	Hmat(:,:)
 		integer							::	i, j, at 
-		real(dp)						::	dGx, dGy, xL, xR, yL, yR, magMom, alphaZee
-		complex(dp)						::	num1, num2, denom, prefact, integral, &
+		real(dp)						::	dGx, dGy, xL, xR, yL, yR, magMom
+		complex(dp)						::	num1, num2, denom, prefact, alphaZee, integral, &
 											num1a, num1b, num2b, num2a
 		!
-		magMom		=	+0.5_dp 					!a.u.
-		alphaZee	=	-1.0_dp * magMom * Bext(3)	!hartree
+		magMom		=	+0.5_dp 								!a.u.
+		alphaZee	=	dcmplx(-1.0_dp * magMom * Bext(3)	)	!hartree
 
 		!
 		do j = 1, nGq(qLoc)
