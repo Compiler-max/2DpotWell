@@ -25,11 +25,17 @@ function prepareInput {
 	#setup workDir & tasks for the input files
 	#
 	#create working directory
-	mkdir rawData
+	mkdir -p rawData
 	rm -r -f rawData/*
 
 	mkdir -p oldInput
 	rm -r -f oldInput/*
+
+	mkdir -p w90files
+	rm -r -f w90files/*
+
+	mkdir -p output
+	rm -r -f output/*
 
 	#save initial input file
 	cp input.txt input.orig
