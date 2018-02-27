@@ -46,7 +46,7 @@ module util_basisIO
 		!WRITE TO FILE
 		write(filename, format) raw_dir//'enK.',qi
 		open(unit=200, file=filename, form='unformatted', access='stream', action='write', status='unknown')
-		write(200)	En_loc
+		write(200)	En_loc(1:nSolve)
 		close(200)
 		!
 		!
