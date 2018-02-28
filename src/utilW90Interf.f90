@@ -74,9 +74,9 @@ module util_w90Interf
 
 		!WRITE INPUT FILE (wann setup)
 		call write_W90setup_input()
+		write(*,*)	"[w90Interf]: wrote w90 setup input file (.win)"
 		!
 		!W90 
-		write(*,*)	"[w90Interf]: wrote w90 setup input file (.win)"
 		call run_w90setup(nntot_out, nnlist_out, nncell_out)
 		write(*,*)	"[w90Interf]: done with w90 setup"
 		write(*,*)	"[w90Interf]: will use num_bands= ",num_bands, " bands"
@@ -521,7 +521,7 @@ module util_w90Interf
 		!write input file for wannier_setup call
 		integer	:: i
 		!
-		open(unit=100,file=seed_name//'.win',action='write',status='replace')
+		open(unit=100,file=seed_name//'.win',action='write',status='unknown')
 		!
 		!BASIC INFO
 		write(100,*)	'num_wann  = ',nWfs
