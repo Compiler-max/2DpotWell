@@ -531,7 +531,8 @@ module util_w90Interf
 		!
 		!FINITE DIFFERENCE
 		!write(100,*)	'search_shells = 200'
-		write(100,*)	'shell_list = ', (shells(i), i=1,size(shells) )
+		if(	nShells==1 )	write(100,*)	'shell_list =',	shells(1)
+		if( nShells > 1)	write(100,*)	'shell_list = ', (shells(i), i=1,size(shells) )
 		write(100,*)	'skip_b1_tests = .true.'
 		!
 
