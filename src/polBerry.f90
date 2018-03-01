@@ -11,7 +11,7 @@ module pol_Berry
 	use util_w90Interf,	only:	read_U_matrix, read_M_initial, read_FD_b_vectors, read_wann_centers, &
 								readBandVelo
 	use util_basisIO,	only:	read_energies, read_velo
-	use util_output,	only:	writePolFile, writeVeloHtxt, writeConnTxt
+	use util_output,	only:	writePolFile, writeVeloHtxt, writeConnTxt, writeEnTXT
 
 	use pol_Niu,		only:	calcFirstOrdP
 	
@@ -142,6 +142,8 @@ module pol_Berry
 		call calcConnOnCoarse(M_wann, w_b, b_k, Aconn_W)
 		call calcPolViaA(polQuantum, centiMet, Aconn_W, berry_W_gauge)
 		!
+		!read energies
+		call read_energies(EnQ)
 		!
 		!1st ORDER SEMICLASSICS
 		if(doNiu) then
@@ -149,12 +151,10 @@ module pol_Berry
 			write(*,*)	"*"
 			write(*,*)	"*"
 			write(*,*)	"[berryMethod]: **************SEMICLASSICS*************************"
-			allocate(	EnQ(		num_stat,				num_kpts)		)
+		
 			allocate(	FcurvQ(	3,	num_wann, num_wann,		num_kpts)		)
 			allocate(	veloQ(	3, 	num_stat, num_stat,		num_kpts)		)
-			
-			!get energies
-			call read_energies(EnQ)
+
 			!get velocities
 			if(	doVeloNum) then
 				if( .not. 	doGaugBack )	call calcVeloBLOUNT(Aconn_W, EnQ, veloQ)	
@@ -180,6 +180,9 @@ module pol_Berry
 		!OUTPUT
 		call writePolFile(polQuantum, centiMet, w_centers, berry_H_gauge, berry_W_gauge, niu_polF2, niu_polF3)
 		write(*,*)		"[berryMethod]: wrote pol file"
+		call writeEnTXT(EnQ)
+		write(*,*)		"[berryMethod]: wrote abinitio energy txt file"
+
 		call writeConnTxt( Aconn_W )
 		!call writeVeloHtxt( veloQ )		
 		!write(*,*)	"[berryMethod]: wrote k-space info files (connection & velocities)"			

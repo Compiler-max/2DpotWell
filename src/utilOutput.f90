@@ -14,9 +14,12 @@ module util_output
 	private
 
 	public ::	writeMeshInfo, writeMeshBin, write_K_lattices, & 
-				writeConnCurv, writeWannFiles, writePolFile, &
-				printMat, printTiming,  printBasisInfo, & 
-				writeVeloHtxt, writeConnTxt, writeVeloEffTB, writePeierls  
+				writePolFile, &
+				writeEnTXT, & 
+				writeVeloHtxt, writeConnTxt, writeVeloEffTB, &
+				printMat, printTiming,  printBasisInfo
+			
+
 				
 
 
@@ -232,6 +235,28 @@ module util_output
 	end subroutine
 
 
+	subroutine writeEnTXT(en)
+		real(dp),	intent(in)		:: 	en(:,:)
+		integer						::	qi, n
+		!
+		open(unit=810,file=info_dir//'enABiN.txt',action='write', form='formatted', status='replace')
+		write(810,*)		"abinitio energies "
+		write(810,*)		"nQ=", size(en,2)
+		write(810,*)		"nSolve=", size(en,1)
+		!
+		do qi = 1, size(en,2)
+			do n = 1, size(en,1)
+				write(810,*)	n," "," ",qi," ",en(n,qi)
+			end do
+		end do
+		!
+		close(810)
+		!
+		!
+		return
+	end subroutine
+
+
 	subroutine writeVeloEffTB(velo)
 		complex(dp),	intent(in)		:: 	velo(:,:,:,:) !veloK(3		, 	nWfs	,	nWfs	,	nK		)
 		integer							::	qi, n, m
@@ -287,127 +312,6 @@ module util_output
 
 
 
-	subroutine writeConnCurv(Aconn, Fcurv)
-		complex(dp),		intent(in)		:: Aconn(:,:,:,:), Fcurv(:,:,:,:)
-		real(dp),			allocatable		:: buffer(:,:,:)
-		integer								:: ki
-		!
-		allocate(	buffer( size(Aconn,1),size(Aconn,2),size(Aconn,3) )		)
-		!
-		!CONNECTION
-		open(unit=410,file=raw_dir//'AconnR.dat',form='unformatted',access='stream',action='write')
-		do ki = 1, size(Aconn,4)
-			buffer	= dreal(Aconn(:,:,:,ki))
-			write(410)	buffer
-		end do
-		close(410)
-		!
-		!
-		!CURVATURE
-		open(unit=420,file=raw_dir//'FcurvR.dat',form='unformatted',access='stream',action='write')
-		do ki = 1, size(Fcurv,4)
-			buffer	= dreal(Fcurv(:,:,:,ki))
-			write(420) buffer
-		end do	
-		close(420)
-		!
-		!
-		!
-		return
-	end subroutine
-
-
-
-	subroutine writeWannFiles(wnF, wCent, wSprd)
-		complex(dp),	intent(in)		:: wnF(:,:,:)
-		real(dp),		intent(in)		:: wCent(:,:), wSprd(:,:)
-		real(dp),		allocatable		:: wnfR(:,:,:), wnfI(:,:,:)
-		integer							:: n
-		!
-		allocate(	wnfR(	size(wnF,1), size(wnF,2), size(wnF,3)		)				)
-		allocate(	wnfI(	size(wnF,1), size(wnF,2), size(wnF,3)		)				)
-		!
-		wnfR	= dreal(wnF)
-		wnfI	= dimag(wnF)
-		!
-		!WANNIER FUNCTIONS:
-		open(unit=500,file=raw_dir//'wnfR.dat',form='unformatted',access='stream',action='write')
-		write(500)	wnfR
-		close(500)
-		!
-		open(unit=505,file=raw_dir//'wnfI.dat',form='unformatted',access='stream',action='write')
-		write(505)	wnfI
-		close(505)
-		!
-		!
-		!
-		!CENTERS AND SPREADS:
-		open(unit=510,file=raw_dir//'wCent.dat',form='unformatted',access='stream',action='write')
-		write(510)	wCent
-		close(510)
-		!
-		open(unit=515,file=raw_dir//'wSprd.dat',form='unformatted',access='stream',action='write')
-		write(515)	wCent
-		close(515)
-		!
-		!TEXT FILE
-		open(unit=516,file=info_dir//'wannier.txt',action='write')
-		write(516,'(a)')	"****************atom positions****************************"
-		do n = 1, nAt
-			write(516,'(a,i3,a,f6.3,a,f6.3,a)')	"atom=,",n,	"centered at (",atPos(1,n),", ",atPos(2,n),")."
-		end do
-		!
-		write(516,'(a)')	"****************Wannier functions****************************"
-		do n = 1, nWfs
-			write(516,'(a,i3,a,f10.5,a,f10.5,a,f10.5,a,f10.5)') &	
-					"n=",n	,"wCent= (",wCent(1,n),", ",wCent(2,n), &
-					").wSprd=(",wSprd(1,n),", ",wSprd(2,n)
-			write(516,'(a,i3,a,f10.5,a,f10.5,a,f10.5,a,f10.5)')	&
-					"n=",n	,"wCent= (",dmod(wCent(1,n),aX),", ",dmod(wCent(2,n),aY), & 
-					").wSprd=(",wSprd(1,n),", ",wSprd(2,n)
-		!															
-		end do
-		close(516)
-		!
-		!
-		return
-	end subroutine
-
-
-
-	subroutine writePeierls(ckP, EnP)
-		complex(dp),	intent(in)		:: ckP(:,:,:)
-		real(dp),		intent(in)		:: EnP(:,:)
-		real(dp),		allocatable		:: buffer(:,:)
-		integer							:: qi
-		!
-		allocate(	buffer( size(ckP,1)	,	size(ckP,2)		)	)
-		
-		!real(UNK)
-		
-		open(unit=700,file=raw_dir//'ckPeiR.dat',form='unformatted',access='stream',action='write')
-		do qi = 1, size(ckP,3)
-			buffer	= dreal(ckP(:,:,qi))
-			write(700)	buffer
-		end do
-		close(700)
-		!imag(UNK)
-		open(unit=705,file=raw_dir//'ckPeiI.dat',form='unformatted',access='stream',action='write')
-		do qi = 1, size(ckP,3)
-			buffer	= dimag(ckP(:,:,qi))
-			write(700)	buffer
-		end do
-		close(705)
-		!
-		!Conn
-		open(unit=710,file=raw_dir//'EnPei.dat',form='unformatted',access='stream',action='write')
-		write(710)	EnP
-		close(710)
-		!
-		
-		!
-		return
-	end subroutine
 
 
 	subroutine writeConnTxt( A_mat )

@@ -19,18 +19,18 @@
     nWfs        =   6
 
 [perturbation]
-    B0          =   100.0               # in Tesla
-    Bext        =   0.0 0.0 1.0
+    B0		= 0.0, # changed by probeB.sh
+	Bext	= 0.0 0.0 1.0 # changed by probeB.sh
 
 [numerics]
-    Gcut        =   8.0 # edited by statFlow
-    nSolve      =   96 # edited by statFlow
-    nQx         =   4 # edited by statFlow
-    nQy         =   4 # edited by statFlow
-    nSCx        =   5 # edited by statFlow
-    nSCy        =   5 # edited by statFlow
-    nKx         =   5 # edited by statFlow
-    nKy         =   5 # edited by statFlow
+   Gcut        = 10.0 # changed by probeB.sh
+   nSolve      = 96 # changed by probeB.sh
+   nQx         = 4 # changed by probeB.sh
+   nQy         = 4 # changed by probeB.sh
+   nSCx        = 5 # changed by probeB.sh
+   nSCy        = 5 # changed by probeB.sh
+   nKx         = 4 # changed by probeB.sh
+   nKy         = 4 # changed by probeB.sh
     nRx         =   10
     nRy         =   10
     thres       =   0.1
@@ -50,7 +50,7 @@
 [w90]
     seedName    =   'wf1'
     nShells     =   1
-    shells      =   1 # edited by statFlow
+   shells       = 1 # changed by probeB.sh
     nw90it      =   1000
     pw90GaugeB  =   f
 
