@@ -386,8 +386,6 @@ module util_w90Interf
 		real(dp)									:: 	val(2)
 		logical										::	file_exists
 		!
-		U_matrix	= dcmplx(0.0_dp)
-
 		!inquire file
 		inquire(file=w90_dir//seedName//'_u.mat',exist=file_exists)
 		if(.not. file_exists )	stop '[Umat_reader]: did not find U matrix'
@@ -409,6 +407,7 @@ module util_w90Interf
 		allocate(	U_matrix(	f_num_wann, f_num_wann, f_num_kpts	)	)
 		!
 		!body
+		U_matrix	= dcmplx(0.0_dp)
 		do qi = 1,  size(U_matrix,3)
 			read(300,*)
 			read(300,*) krel(1:3,qi)
