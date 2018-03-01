@@ -45,6 +45,7 @@ endif (Fortran_COMPILER_NAME MATCHES "gfortran.*")
 #set (CMAKE_Fortran_FLAGS "-mkl -O3 -g -Wall -qopenmp")
 #linker flags
 set(COVERAGE_LINK_FLAGS "-mkl -g   -CB -check all -fpe0 -warn -traceback -debug extended")
+set(CMAKE_Fortran_FLAGS "-mkl -g -CB -check all -fpe0 -warn -traceback -debug extended")
 #set(COVERAGE_LINK_FLAGS "-mkl -O3 -openmp")
 #set(CMAKE_Fortran_FLAGS "-mkl -O3 -qopenmp")
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${COVERAGE_LINK_FLAGS}")

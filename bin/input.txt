@@ -50,7 +50,7 @@
 [w90]
     seedName    =   'wf1'
     nShells     =   1
-    shells      =   3 # edited by statFlow
+    shells      =   1 # edited by statFlow
     nw90it      =   1000
     pw90GaugeB  =   f
 
