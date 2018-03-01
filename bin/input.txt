@@ -29,8 +29,8 @@
    nQy         = 4 # changed by probeB.sh
    nSCx        = 5 # changed by probeB.sh
    nSCy        = 5 # changed by probeB.sh
-   nKx         = 4 # changed by probeB.sh
-   nKy         = 4 # changed by probeB.sh
+   nKx         = 5 # changed by probeB.sh
+   nKy         = 5 # changed by probeB.sh
     nRx         =   10
     nRy         =   10
     thres       =   0.1

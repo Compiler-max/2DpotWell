@@ -240,13 +240,14 @@ module util_output
 		integer						::	qi, n
 		!
 		open(unit=810,file=info_dir//'enABiN.txt',action='write', form='formatted', status='replace')
-		write(810,*)		"abinitio energies "
+		write(810,*)		"#	abinitio energies and qpts"
 		write(810,*)		"nQ=", size(en,2)
 		write(810,*)		"nSolve=", size(en,1)
 		!
+		write(810,*)		"#	q_idx	| 			qx(1/ang)		 qy(1/ang)		 qz(1/ang)		|		Energy (eV)"
 		do qi = 1, size(en,2)
 			do n = 1, size(en,1)
-				write(810,*)	n," "," ",qi," ",en(n,qi)
+				write(810,'(i5,a,f15.10,a,f15.10,a,f15.10,a,f15.10)')		qi," ",qpts(1,qi)/aUtoAngstrm," ",qpts(2,qi)/aUtoAngstrm," ",0.0_dp," " ,en(n,qi)*aUtoEv
 			end do
 		end do
 		!

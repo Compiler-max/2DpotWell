@@ -483,9 +483,9 @@ module util_sysPara
 		!
 		if( myID == root ) then
 			kxMin	= -1.0_dp * PI_dp * aY / vol
-			dkx		=  2.0_dp * PI_dp * aY / (vol * nKx)
+			dkx		=  2.0_dp * PI_dp * aY / (vol * (nKx-1))
 			kyMin	= -1.0_dp * PI_dp * aX / vol
-			dky		=  2.0_dp * PI_dp * aX / (vol* nKy)
+			dky		=  2.0_dp * PI_dp * aX / (vol* (nKy-1))
 			!
 			do kIy = 1, nKy
 				do kIx = 1, nKx
