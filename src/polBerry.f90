@@ -88,6 +88,7 @@ module pol_Berry
 		allocate(			M_wann(		num_wann	,	num_wann	,	nntot		,	num_kpts		)			)		
 		allocate(			Aconn_H(		3		, 	num_wann	,	num_wann	,	num_kpts		)			)
 		allocate(			Aconn_W(		3		, 	num_wann	,	num_wann	,	num_kpts		)			)
+		allocate(			EnQ(				num_stat							,	num_kpts		)			)
 		!real-space
 		allocate(			w_centers(		3,					num_wann					)			)
 		allocate(			berry_W_gauge(	3,					num_wann					)			)
