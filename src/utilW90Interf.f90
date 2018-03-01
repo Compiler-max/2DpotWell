@@ -520,7 +520,7 @@ module util_w90Interf
 		!write input file for wannier_setup call
 		integer	:: i
 		!
-		open(unit=100,file=seed_name//'.win',action='write', form='formatted', status='unknown')
+		open(unit=100,file=seed_name//'.win',action='write', form='formatted', status='new')
 		!
 		!BASIC INFO
 		write(100,*)	'num_wann  = ',nWfs
