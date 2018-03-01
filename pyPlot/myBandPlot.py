@@ -315,4 +315,5 @@ ax.set_xlim(xticks[0],xticks[-1])
 #
 plt.ylabel('E [eV]',fontsize=16)
 
+plt.savefig('bands.pdf')
 plt.show()
