@@ -39,9 +39,9 @@ for g in ${gVal[*]}; do
 		#
 		#determine nShell depending of q grid spacing
 		if (( $q <= 4 )); then
-			nShell=3
+			nShell=1
 		elif (( $q <= 8 )); then
-			nShell=2
+			nShell=1
 		else
 			nShell=1
 		fi
@@ -78,7 +78,7 @@ for g in ${gVal[*]}; do
 		sed -i 	"/nKx/c\    nKx         = $nK $infoString" 			./input.txt
 		sed -i 	"/nKy/c\    nKy         = $nK $infoString" 			./input.txt
 		#
-		sed -i 	"/shell/c\    shell       = $nShell $infoString" 	./input.txt
+		sed -i 	"/shells/c\    shells       = $nShell $infoString" 	./input.txt
 		wait
 		#	
 		#execute calculation
