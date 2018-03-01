@@ -520,7 +520,7 @@ module util_w90Interf
 		!write input file for wannier_setup call
 		integer	:: i
 		!
-		open(unit=100,file=seed_name//'.win',action='write', form='formatted', status='new')
+		open(unit=100,file=seed_name//'.win',action='write', form='formatted', status='replace')
 		!
 		!BASIC INFO
 		write(100,*)	'num_wann  = ',nWfs
@@ -618,7 +618,7 @@ module util_w90Interf
 		integer				:: qi, at
 		!
 		!create new
-		open(unit=100,file=w90_Dir//seed_name//'.win',action='write',access='stream',form='formatted', status='unknown')
+		open(unit=100,file=w90_Dir//seed_name//'.win',action='write',access='stream',form='formatted', status='replace')
 		!
 		!BASIC INFO
 		write(100,*)	'num_wann  = ',nWfs
@@ -695,7 +695,7 @@ module util_w90Interf
 		!input file for post w90 module( energy and band derivative interpoltation)
 		integer						:: ki
 		!
-		open(unit=115,file=w90_Dir//seed_name//'_geninterp.kpt',action='write',access='stream',form='formatted', status='unknown')
+		open(unit=115,file=w90_Dir//seed_name//'_geninterp.kpt',action='write',access='stream',form='formatted', status='replace')
 		write(115,*)	'post w90 input file, gives info about interpolation mesh'
 		write(115,*)	"frac"
 		write(115,*)	nK
