@@ -7,12 +7,13 @@ module util_sysPara
 	!#include "mpif.h"
 
 	private
-	public :: 	readInp, insideAt, getRindex, getRleftX, getRrightX, getRleftY, getRrightY,& 
-				getKindex, getGammaPoint, getPot, &
+				!public routines:
+	public :: 	readInp, & 
+				!public para:
 				dim, aX, aY, vol, nAt, relXpos, relYpos, atRx, atRy, atPot, dVpot, &
 				nG, nGq, nG0, Gmax, GmaxGLOBAL, GminGLOBAL, Gcut, Gvec, Gtest, R0, nSolve, &
 				nQ, nQx, nQy, nKx, nKy, nK, nSC, nSCx, nSCy, dqx, dqy, dkx, dky, &
-				nR, nRx, nRy,  dx, dy, &
+				nR, nRx, nRy, nRz,  dx, dy, dz, &
 				nShells, nw90it, shells, &
 				nBands, nWfs,   &
 				atPos, atR, qpts, rpts, Rcell, kpts, Zion, recpLatt, &
@@ -28,11 +29,11 @@ module util_sysPara
 														nQx=1, nQy=1,nQ , nSCx=1, nSCy=1,& 
 														nKx=1, nKy=1, nK, R0,  &
 														nShells, nw90it,  &
-														nRx=10, nRy=10, nR, nBands=1,nWfs=1, nSC, &
+														nRx=10, nRy=10, nRz=2, nR, nBands=1,nWfs=1, nSC, &
 														myID, nProcs, ierr, qChunk
 	integer,	parameter							::	root=0
 	real(dp) 										::	aX=0.0_dp, aY=0.0_dp,vol=0.0_dp, Gcut=2*PI_dp, thres,& 
-														dx, dy, dqx, dqy, dkx, dky, B0, Bext(3)	, prefactF3, recpLatt(2,2)
+														dx, dy, dz, dqx, dqy, dkx, dky, B0, Bext(3)	, prefactF3, recpLatt(2,2)
 	character(len=3)								::	seedName										
 	character(len=9)								::	w90_dir	="w90files/"
 	character(len=7)								::	info_dir="output/"
@@ -101,7 +102,7 @@ module util_sysPara
 
 
 
-	
+!privat	
 !READ & DISTRIBUTION ROUTINES
 	subroutine rootRead()
 		type(CFG_t) :: my_cfg
@@ -130,8 +131,6 @@ module util_sysPara
 		call CFG_add_get(my_cfg,	"numerics%nSCy"     ,	nSCy   		,	"#			supercells "				)
 		call CFG_add_get(my_cfg,	"numerics%nKx"		,	nKx			,	"# k x points of interpolation mesh"	)
 		call CFG_add_get(my_cfg,	"numerics%nKy"		,	nKy			,	"# k x points of interpolation mesh"	)
-		call CFG_add_get(my_cfg,	"numerics%nRx"     	,	nRx      	,	"amount of r points used"				)
-		call CFG_add_get(my_cfg,	"numerics%nRy"     	,	nRy      	,	"amount of r points used"				)
 		call CFG_add_get(my_cfg,	"numerics%thres"    ,	thres      	,	"threshold for overlap WARNINGs"		)
 		![ham]
 		call CFG_add_get(my_cfg,	"ham%doVdesc"		,	doVdesc		,	"switch on lin. desc. pot inside wells"	)
@@ -149,6 +148,9 @@ module util_sysPara
 		call CFG_add_get(my_cfg,	"w90%nShells"		,	nShells		,	"number of shells to use for FD k-space")
 		call CFG_add_get(my_cfg,	"w90%nw90it"		, 	 nw90it		,	"number of iterations for wannnierisat,")
 		call CFG_add_get(my_cfg,	"w90%pw90GaugeB"	,	pw90GaugeB	,	"logical for switching gauge trafo	   ")
+		call CFG_add_get(my_cfg,	"w90%nRx"     		,	nRx      	,	"spacing of real space plot grid"		)
+		call CFG_add_get(my_cfg,	"w90%nRy"     		,	nRy      	,	"spacing of real space plot grid"		)
+		call CFG_add_get(my_cfg,	"w90%nRz"			,	nRz			,	"spacing of real space plot grid"		)
 		![berry]
 		call CFG_add_get(my_cfg,	"berry%fastConnConv",fastConnConv	,	"try faster converging fd formula"		)
 		call CFG_add_get(my_cfg,	"berry%doVeloNUM"	,	doVeloNUM	,	"if true tb velocities, else analyitcal")
@@ -166,7 +168,7 @@ module util_sysPara
 		nGdim 			= getTestGridSize()	
 		nG				= nGdim**2
 		vol				=	aX 		* 	aY
-		nR 				= 	nRx 	*	nRy
+		nR 				= 	nRx 	*	nRy   * nRz
 		nQ 				= 	nQx 	*	nQy
 		nSC 			=	nSCx	*	nSCy
 		nK 				=	nKx		*	nKy
@@ -227,6 +229,7 @@ module util_sysPara
 		call MPI_Bcast(	nKy			,		1	,		MPI_INTEGER			,	root,	MPI_COMM_WORLD, ierr)
 		call MPI_Bcast(	nRx			,		1	,		MPI_INTEGER			,	root,	MPI_COMM_WORLD, ierr)
 		call MPI_Bcast(	nRy			,		1	,		MPI_INTEGER			,	root,	MPI_COMM_WORLD, ierr)
+		call MPI_Bcast( nRz			,		1	,		MPI_INTEGER			,	root,	MPI_COMM_WORLD,	ierr)
 		call MPI_Bcast(	thres		,		1	,	MPI_DOUBLE_PRECISION	,	root,	MPI_COMM_WORLD, ierr)
 		![ham]
 		call MPI_Bcast(	doZeeman	,		1	,	MPI_LOGICAL				,	root,	MPI_COMM_WORLD, ierr)
@@ -263,7 +266,7 @@ module util_sysPara
 		!
 		if( myID /= root ) then
 			nG 	= 	nGdim**2
-			nR 	= 	nRx 	*	nRy
+			nR 	= 	nRx 	*	nRy * nRz
 			nQ 	= 	nQx 	*	nQy
 			nSC =	nSCx	*	nSCy
 			nK 	=	nKx		*	nKy
@@ -302,7 +305,7 @@ module util_sysPara
 		allocate(	Zion(nAt)			)
 		!meshes
 		allocate(	qpts(dim,nQ)		)
-		allocate(	rpts(dim,nR)		)
+		allocate(	rpts(3,nR)		)
 		allocate(	Rcell(dim,nSC)		)
 		allocate(	kpts(dim,nK)		)
 		!w90
@@ -347,99 +350,6 @@ module util_sysPara
 	end function
 
 
-	integer function getRindex(xi,yi)
-		integer,	intent(in)		:: xi, yi
-		!
-		getRindex = (yi-1) * nRx + xi
-		return
-	end function
-
-
-
-	integer function getRleftX(xi,yi)
-		integer,		intent(in)		:: xi, yi
-		!
-		if( xi == 1) then
-			getRleftX = getRindex(nRx,yi)
-		else
-			getRleftX = getRindex(xi-1,yi)
-		end if	 
-		!
-		return
-	end function
-
-
-	integer function getRrightX(xi,yi)
-		integer,		intent(in)		:: xi, yi
-		!
-		if( xi == nRx) then
-			getRrightX = getRindex(1,yi)
-		else
-			getRrightX = getRindex(xi+1,yi)
-		end if	 
-		!
-		return
-	end function
-
-
-
-	integer function getRleftY(xi,yi)
-		integer,		intent(in)		:: xi, yi
-		!
-		if( yi == 1) then
-			getRleftY = getRindex(xi,nRy)
-		else
-			getRleftY= getRindex(xi,yi-1)
-		end if	 
-		!
-		return
-	end function
-
-
-	integer function getRrightY(xi,yi)
-		integer,		intent(in)		:: xi, yi
-		!
-		if( yi == nRy) then
-			getRrightY = getRindex(xi,1)
-		else
-			getRrightY = getRindex(xi,yi+1)
-		end if	 
-		!
-		return
-	end function
-
-	integer function getKindex(qx,qy)
-		integer,	intent(in)		:: qx, qy
-		!
-		getKindex = (qy-1) * nQx + qx
-		return
-	end function
-
-
-	integer function getGammaPoint()
-		getGammaPoint	= getKindex(1+nQx/2,1+nQy/2)
-		return
-	end function
-
-
-	real(dp) function getPot(ri)
-		integer,	intent(in)	:: ri
-		integer					:: at
-		logical					:: found
-		found		= .false.
-		getPot 	= 0.0_dp
-		at			= 1
-		do while(at <= nAt .and. .not. found )
-			if( insideAt(at,rpts(:,ri)) ) then
-				getPot	= atPot(at)
-				found		= .true.
-			end if
-			at = at +1 
-		end do
-		!
-		!
-		return
-	end function
 
 
 
@@ -505,24 +415,31 @@ module util_sysPara
 	subroutine rmeshGen()
 		!generates the real space mash
 		!meshes from (0,0) to (aX*nSC,0) (0,aY*nSC) (aX*nSC,aY*nSC)
-		integer		:: rIx, rIy, rI
-		real(dp)	:: rxMin, ryMin
+		integer		:: rIx, rIy, rIz, rI
+		real(dp)	:: rxMin, ryMin, rzMin
 		!
 		if( myID == root ) then
-			rxMin	=  -real(nSCx-1,dp) * aX / 2.0_dp
-			dx		= real(nSCx,dp) * aX / real(nRx-1,dp)
-			ryMin	= -real(nSCy-1,dp) * aX / 2.0_dp
-			dy		= real(nSCy,dp) * aY / real(nRy-1,dp)
+			rxMin	= 0.0_dp
+			dx		= aX / real(nRx-1,dp)
+			ryMin	= 0.0_dp
+			dy		= aY / real(nRy-1,dp)
+			rzMin	= 0.0_dp
+			dz		= 0.0_dp
+			if( nRz > 1 )	dz		= min(aX,aY) * 0.99_dp / real(nRz-1,dp)
 			!
-			do rIy = 1, nRy
-				do rIx = 1, nRx
-					rI	=	(rIy-1) * nRx + rIx
-					rpts(1,rI)	= rxMin + (rIx-1) * dx		!x component
-					rpts(2,rI)	= ryMin + (rIy-1) * dy		!y component
+			do rIz = 1, nRz
+				do rIy = 1, nRy
+					do rIx = 1, nRx
+						rI	=	 (	(rIz-1) * nRy +(rIy-1) ) * nRx + rIx
+						write(*,*)	"[rmeshGen]: rI=",rI
+						rpts(1,rI)	= rxMin + (rIx-1) * dx		!x component
+						rpts(2,rI)	= ryMin + (rIy-1) * dy		!y component
+						rpts(3,rI)	= rzMin + (riZ-1) * dz
+					end do
 				end do
 			end do
 		end if
-		call MPI_Bcast(rpts, dim*nR, MPI_DOUBLE_PRECISION, root, MPI_COMM_WORLD, ierr)
+		call MPI_Bcast(rpts, size(rpts,1)*nR, MPI_DOUBLE_PRECISION, root, MPI_COMM_WORLD, ierr)
 		!
 		return
 	end subroutine
