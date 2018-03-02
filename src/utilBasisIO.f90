@@ -2,13 +2,13 @@ module util_basisIO
 	
 	use mpi
 	use omp_lib
-	use util_sysPara
 	use	util_math,	only:	dp, i_dp, PI_dp, machineP, aUtoEv, aUtoAngstrm
+	use util_sysPara
 
 	implicit none
 
 	private
-	public :: 		writeABiN_basVect, writeABiN_energy, writeABiN_basis, writeABiN_basCoeff, writeABiN_velo, writeABiN_Amn,  writeABiN_Mmn,&
+	public :: 		writeABiN_basVect, writeABiN_unkPS, writeABiN_energy, writeABiN_basis, writeABiN_basCoeff, writeABiN_velo, writeABiN_Amn,  writeABiN_Mmn,&
 					read_coeff, read_gVec, read_energies, read_velo, readBasis, read_Amn, read_Mmn
 
 
@@ -73,6 +73,37 @@ module util_basisIO
 		!
 		return
 	end subroutine
+
+
+	subroutine writeABiN_unkPS(qi, r_wvfn)
+		integer,		intent(in)		::	qi
+		complex(dp),	intent(in)		::	r_wvfn(:,:)
+		character(len=1024)				::	unkFORM='(a,i5.5,a,i1)'
+		character(len=15)				::	wfnname
+		integer							::	spin, loop_b, nbnd, nx
+		!
+		!FILENAME
+		spin 	= 1
+		nbnd	= size(r_wvfn,2)
+		write(wfnname, unkFORM) 'UNK',qi,'.', spin
+		!
+		!WRITE TO FILE
+		write(*,'(a,a,a,i3,a)')		"[writeABiN_unkPS]: try to write file: ",wfnname," for ",nbnd," bands"
+		open(unit=205, file=w90_dir//wfnname,	form='formatted', access='stream', action='write', status='replace')
+		!header
+		write(205,*)	nRx, nRy, nRz, qi, nbnd
+		!body
+		do loop_b = 1, nbnd
+			do nx = 1, nR
+				write(205,*)	dreal(r_wvfn(nx,loop_b))," ",dimag(r_wvfn(nx,loop_b))
+			end do
+		end do
+		close(205)
+		!
+		!
+		return
+	end subroutine
+
 
 
 	subroutine writeABiN_Amn(qi, Amn)

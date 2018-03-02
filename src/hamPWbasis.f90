@@ -8,7 +8,7 @@ module ham_PWbasis
 	implicit none
 
 	private
-	public	::	calcVeloGrad, calcMmat, calcAmatANA, calcBasis
+	public	::	calcVeloGrad, calcMmat, calcAmatANA, calcBasis, getUNKs
 
 
 	contains
@@ -150,6 +150,33 @@ module ham_PWbasis
 			end do
 		end if
 		!
+		!
+		return
+	end subroutine
+
+
+
+	subroutine getUNKs(qi, nG_qi, ck, Gvec, r_wvfn)
+		integer,						intent(in)		::	qi, nG_qi
+		complex(dp),					intent(in)		::	ck(:,:)
+		real(dp),						intent(in)		::	Gvec(:,:)
+		complex(dp),	allocatable,	intent(out)		::	r_wvfn(:,:)
+		integer											::	ix, loop_b, nbnd, ig
+		!
+		allocate(	r_wvfn( size(rpts,2) ,size(ck,2))	)
+		!
+		nbnd	= size(ck,2)
+		r_wvfn	= dcmplx(0.0_dp)
+		!
+		do loop_b = 1, nbnd
+			do ix = 1, nR
+				!SUM G-VEC
+				do ig = 1, nG_qi
+					r_wvfn(ix, loop_b)	= r_wvfn(ix, loop_b) & 
+								+ ck(ig, loop_b) 	* 	myExp( 		dot_product( Gvec(1:2,ig)-qpts(1:2,qi),	rpts(1:2,ix) )			)  / dcmplx(sqrt(vol))
+				end do
+			end do
+		end do
 		!
 		return
 	end subroutine

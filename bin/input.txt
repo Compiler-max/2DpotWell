@@ -25,14 +25,12 @@
 [numerics]
    Gcut        = 11.0 # changed by probeB.sh
    nSolve      = 96 # changed by probeB.sh
-   nQx         = 4 # changed by probeB.sh
-   nQy         = 4 # changed by probeB.sh
-   nSCx        = 5 # changed by probeB.sh
-   nSCy        = 5 # changed by probeB.sh
-   nKx         = 9 # changed by probeB.sh
-   nKy         = 9 # changed by probeB.sh
-    nRx         =   10
-    nRy         =   10
+   nQx         = 2 # changed by probeB.sh
+   nQy         = 2 # changed by probeB.sh
+   nSCx        = 3 # changed by probeB.sh
+   nSCy        = 3 # changed by probeB.sh
+   nKx         = 5 # changed by probeB.sh
+   nKy         = 5 # changed by probeB.sh
     thres       =   0.1
 
 [ham]
@@ -41,10 +39,10 @@
     doMagHam    =   f
 
 [methods]
-    doSolveHam  =   f
+    doSolveHam  =   t
     useBloch    =   t
     doPw90      =   f
-    doBerry     =   t
+    doBerry     =   f
     writeBin    =   f
 
 [w90]
@@ -53,6 +51,9 @@
    shells       = 1 # changed by probeB.sh
     nw90it      =   1000
     pw90GaugeB  =   f
+    nRx         =   10
+    nRy         =   10
+    nRz         =   2
 
 [berry]
     fastConnConv=   t

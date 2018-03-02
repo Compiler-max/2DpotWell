@@ -10,11 +10,12 @@ module ham_Solver
 	use	ham_PotWell,	only:	add_potWell
 	use	ham_Zeeman,		only:	add_Zeeman
 	use ham_Magnetic,	only:	add_magHam
+	use ham_PWbasis,	only:	getUNKs
 
 
 
 	use ham_PWbasis,	only:	calcVeloGrad, calcAmatANA, calcMmat
-	use util_basisIO,	only:	writeABiN_basVect, writeABiN_energy, writeABiN_basCoeff, writeABiN_velo, writeABiN_Amn, writeABiN_Mmn, &
+	use util_basisIO,	only:	writeABiN_basVect, writeABiN_unkPS, writeABiN_energy, writeABiN_basCoeff, writeABiN_velo, writeABiN_Amn, writeABiN_Mmn, &
 								read_coeff, read_gVec
 	use util_w90Interf,	only:	setup_w90, write_w90_matrices, printNNinfo
 	implicit none	
@@ -89,7 +90,7 @@ module ham_Solver
 !private:
 	subroutine worker()
 		!			solve Ham, write results and derived quantites														
-		complex(dp),	allocatable		::	Hmat(:,:) , ck_temp(:,:), Amn_temp(:,:), velo_temp(:,:,:)
+		complex(dp),	allocatable		::	Hmat(:,:) , ck_temp(:,:), Amn_temp(:,:), velo_temp(:,:,:), unk(:,:)
 		real(dp),		allocatable		::	En_temp(:)
 		integer							:: 	qi, qLoc, found, Gsize, boundStates
 		!	
@@ -99,6 +100,7 @@ module ham_Solver
 		allocate(	En_temp(				Gmax					)	)
 		allocate(	velo_temp(	3, 	nSolve,		nSolve				)	)	
 		allocate(	Amn_temp(		nBands,		nWfs				)	)
+		allocate(	unk(			nR,	nBands						)	)
 		!
 		qLoc = 1
 		call MPI_BARRIER( MPI_COMM_WORLD, ierr)
@@ -130,6 +132,11 @@ module ham_Solver
 			call writeABiN_energy(qi, En_temp(1:nSolve))
 			call writeABiN_Amn(qi, Amn_temp)
 			call writeABiN_velo(qi, velo_temp)
+			!
+			!w90 plot preparation
+			call getUNKs(qi, nGq(qLoc), ck_temp(:,1:nBands), Gvec(:,:,qLoc), unk)
+			call writeABiN_unkPS(qi, unk)
+
 
 			!FINALIZE
 			boundStates = 0
