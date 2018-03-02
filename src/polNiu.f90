@@ -14,6 +14,7 @@ module pol_Niu
 	real(dp), 		parameter	:: 	machineP 		= 1e-15_dp
 	real(dp)					:: 	acc				= 1e-7_dp
 	real(dp),		parameter	::	aUtoAngstrm 	= 0.52917721092_dp
+	real(dp),		parameter	::	aUtoTesla		= 235051.76_dp
 	real(dp),		parameter 	::	elemCharge	 	= 1.6021766208 * 1e-19_dp  *1e+6_dp! in  mu Coulomb
 
 
@@ -40,6 +41,7 @@ module pol_Niu
 		!
 		!
 		write(*,*)"[calcFirstOrdP]: start calculating P' via semiclassic approach"
+		write(*,'(a,f8.3,a,f8.3,a,f8.3,a)')"[calcFirstOrdP]: Bext=(",Bext(1)*auToTesla,", ",Bext(2)*auToTesla,", ",Bext(3)*auToTesla,") T"
 		write(*,*)"[calcFirstOrdP]: will use ",size(Velo,3)," states"
 
 		centers_F2 = 0.0_dp
