@@ -673,8 +673,10 @@ module util_w90Interf
 		write(100,*)	
 		!
 		!PLOTTING JOBS
-		!write(100,*)	'wannier_plot = .true.'
-		!write(100,*)	'wannier_plot_supercell =', nSCx, ' ', nSCy, ' ',1
+		write(100,*)	'wannier_plot = .true.'
+		write(100,*)	'wvfn_formatted = .true.'
+		write(100,*)	'wannier_plot_supercell =', nSCx, ' ', nSCy, ' ',1
+		
 		!
 		!POST W90 PARAMETER
 		write(100,*)	'kmesh = ', nKx, ' ', nKy, ' ', 1
