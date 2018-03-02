@@ -4,7 +4,7 @@ module pol_Berry
 	use omp_lib
 	use util_sysPara,	only:	Bext, prefactF3, &
 								nWfs, nQ, nSolve, vol, &
-								qpts, &
+								qpts, aY, vol,  &
 								atPos, atPot, &
 								doGaugBack, doNiu, fastConnConv, doVeloNum 
 	
@@ -23,6 +23,8 @@ module pol_Berry
 	!cloned from mathematics.f90:
 	integer, 		parameter 	:: 	dp 				= kind(0.d0)
 	real(dp), 		parameter	:: 	machineP 		= 1e-15_dp
+	real(dp),		parameter	::	FDtol			= 1e-8_dp
+	real(dp), 		parameter 	::	PI_dp 			= 4 * datan (1.0_dp)
 	complex(dp),	parameter 	::	i_dp 			= dcmplx(0.0_dp, 1.0_dp)
 	real(dp),		parameter 	::	aUtoEv	 		= 27.211385_dp
 	real(dp),		parameter	::	aUtoAngstrm 	= 0.52917721092_dp
@@ -61,7 +63,7 @@ module pol_Berry
 		num_stat = nSolve
 
 
-		polQuantum 	= -1.0_dp * elemCharge / ( vol*aUtoAngstrm**2 ) 
+		polQuantum 	= elemCharge / ( vol*aUtoAngstrm**2 ) 
 		centiMet	= 1e+8_dp
 		
 		!READ W90 Files
@@ -108,7 +110,7 @@ module pol_Berry
 		write(*,*)		"[berryMethod]: atom positions:"
 		write(*,*)		"	at | centers [Å] | V [eV]"
 		do n = 1, size(atPos,2)
-				write(*,'(i3,a,f6.2,a,f6.2,a ,f6.2)')	n," | ",atPos(1,n)*aUtoAngstrm,", ",atPos(2,n)*aUtoAngstrm," 	| ",atPot(n)*aUtoEv
+				write(*,'(i3,a,f8.4,a,f8.4,a ,f8.4)')	n," | ",atPos(1,n)*aUtoAngstrm,", ",atPos(2,n)*aUtoAngstrm," 	| ",atPot(n)*aUtoEv
 		end do
 	
 		!print w90 centers
@@ -119,7 +121,7 @@ module pol_Berry
 		call read_wann_centers(w_centers)
 		write(*,*)		" #wf | 	<r>[Å]	"
 		do n = 1, size(w_centers,2)
-			write(*,'(i3,a,f6.2,a,f6.2,a,f6.2)')	n," | ",w_centers(1,n),", ",w_centers(2,n),", ",w_centers(3,n)
+			write(*,'(i3,a,f8.4,a,f8.4,a,f8.4)')	n," | ",w_centers(1,n),", ",w_centers(2,n),", ",w_centers(3,n)
 		end do
 
 
@@ -131,7 +133,7 @@ module pol_Berry
 		write(*,*)	"*"
 		write(*,*)		"[berryMethod]: start (H) gauge calculation"
 		call read_FD_b_vectors(b_k, w_b)
-		call calcConnOnCoarse(M_ham, w_b, b_k, Aconn_H)
+		call calcConnOnCoarse(M_ham, Aconn_H)
 		call calcPolViaA(polQuantum, centiMet, Aconn_H, berry_H_gauge)
 		!
 		!0th WANN GAUGE
@@ -140,7 +142,7 @@ module pol_Berry
 		write(*,*)	"*"
 		write(*,*)		"[berryMethod]: start (W) gauge calculation"
 		call rot_M_matrix(M_ham, U_mat, M_wann)
-		call calcConnOnCoarse(M_wann, w_b, b_k, Aconn_W)
+		call calcConnOnCoarse(M_wann, Aconn_W)
 		call calcPolViaA(polQuantum, centiMet, Aconn_W, berry_W_gauge)
 		!
 		!read energies
@@ -232,7 +234,7 @@ module pol_Berry
 
 
 
-	subroutine calcConnOnCoarse(M_mat, w_b, b_k, A_conn)
+	subroutine calcConnOnCoarse(M_mat, A_conn)
 		!calculates the Berry connection, from the overlap matrix
 		! see Vanderbilt 1997, eq.(22) & eq.(31)
 		!b_k:	 non zero if qi at boundary of bz and nn accross bz
@@ -245,9 +247,9 @@ module pol_Berry
 		!			\vec{r_n} = 	1/N_k 	\sum_{k,b}	 w_b \vec{b} i_dp [ M(n,n,nn,qi) - 1.0_dp ]
 
 		complex(dp),	intent(in)			:: 	M_mat(:,:,:,:)
-		real(dp),		intent(in)			::	w_b(:), b_k(:,:)
 		real(dp),		intent(out)			::	A_conn(:,:,:,:)
 		real(dp),		allocatable			::	ln_tmp(:,:)
+		real(dp)							::	my_bk(3,nntot), my_wb(nntot), bk_abs, wb_test
 		complex(dp)							::	delta
 		integer								::	qi, nn, n, m
 		!
@@ -255,34 +257,59 @@ module pol_Berry
 		if( .not.	fastConnConv ) write(*,*)	"[calcConnOnCoarse]: use finite difference formula for connection" 
 		if(num_bands /= num_wann ) stop			"[calcConnONCoarse]: WARNING disentanglement not supported"
 		!
-		A_conn = 0.0_dp
+		A_conn 	= 0.0_dp
+
+		!get FD weights:
+		bk_abs	= norm2(	(qpts(1:2,nnlist(1,1)) + real(nncell(1:2,1,1)*2.0_dp * PI_dp * aY / vol) -qpts(1:2,1)) / aUtoAngstrm 	)
+		wb_test	= 3.0_dp / ( 6.0_dp * bk_abs**2)
+		!
+		write(*,*)	"[calcConnOnCoarse]: wb=",wb_test," (ang^2)"
+		write(*,*)	"[calcConnOnCoarse]: |b|=",bk_abs," (ang^-1)"		
+
+
 		!$OMP PARALLEL DEFAULT(SHARED) PRIVATE(qi, nn, n,m, delta, ln_tmp)
 		allocate(		ln_tmp( size(M_mat,1), size(M_mat,2) )			)
 		!$OMP DO SCHEDULE(STATIC)	
 		do qi = 1, num_kpts
 			!SUM OVER NN
+			my_bk	= 0.0_dp
 			do nn = 1, nntot
+				!
+				!GET WEIGHTS
+				my_bk(1:2,nn)	= 	(	(qpts(1:2, nnlist(qi,nn)) + real(nncell(1:2,qi,nn),dp)* 2.0_dp * PI_dp * aY / vol	) - qpts(1:2,qi) ) / aUtoAngstrm
+				if(	 ( bk_abs - norm2(my_bk(:,nn))	)	> 1e-8_dp	) then
+					write(*,*)	"*"
+					write(*,*)	"my_bk =",my_bk(:,nn)
+					write(*,*)	"b_k=",b_k(:,nn)
+				end if
+				my_wb(nn)		= 3.0_dp / 	(real(nntot+2,dp)*norm2(my_bk(:,nn))**2)
+
+				if( abs(my_wb(nn) - wb_test) > FDtol)	write(*,*)	"[calcConnOnCoarse]: warning, issue with weights detected" 
 				!
 				!(Fast Convergence)
 				if( fastConnConv ) then
 					ln_tmp(:,:)			= dimag(	log(	M_mat(:,:,nn,qi)	)		)
-					A_conn(1,:,:,qi)	= A_conn(1,:,:,qi)	+	w_b(nn) * b_k(1,nn) * ln_tmp(:,:)
-					A_conn(2,:,:,qi)	= A_conn(2,:,:,qi)	+	w_b(nn) * b_k(2,nn) * ln_tmp(:,:)
-					A_conn(3,:,:,qi)	= A_conn(3,:,:,qi)	+	w_b(nn) * b_k(3,nn) * ln_tmp(:,:)
+					A_conn(1,:,:,qi)	= A_conn(1,:,:,qi)	-	my_wb(nn) * my_bk(1,nn) * ln_tmp(:,:)
+					A_conn(2,:,:,qi)	= A_conn(2,:,:,qi)	-	my_wb(nn) * my_bk(2,nn) * ln_tmp(:,:)
+					A_conn(3,:,:,qi)	= A_conn(3,:,:,qi)	-	my_wb(nn) * my_bk(3,nn) * ln_tmp(:,:)
 				!(Finite Difference)
 				else
 					do n = 1, size(M_mat,2)
 						do m = 1, size(M_mat,1)
 							delta = dcmplx(0.0_dp)
 							if( n==m ) 	delta = dcmplx(1.0_dp)
-							A_conn(1,m,n,qi)		= 	A_conn(1,m,n,qi)	-	w_b(nn) * b_k(1,nn) * dreal( i_dp * (M_mat(m,n,nn,qi) - delta)  )					
-							A_conn(2,m,n,qi)		= 	A_conn(2,m,n,qi)	-	w_b(nn) * b_k(2,nn) * dreal( i_dp * (M_mat(m,n,nn,qi) - delta)  )
-							A_conn(3,m,n,qi)		= 	A_conn(3,m,n,qi)	-	w_b(nn) * b_k(3,nn) * dreal( i_dp * (M_mat(m,n,nn,qi) - delta)  )	
+							A_conn(1,m,n,qi)		= 	A_conn(1,m,n,qi)	-	my_wb(nn) * my_bk(1,nn) * dreal( i_dp * (M_mat(m,n,nn,qi) - delta)  )					
+							A_conn(2,m,n,qi)		= 	A_conn(2,m,n,qi)	-	my_wb(nn) * my_bk(2,nn) * dreal( i_dp * (M_mat(m,n,nn,qi) - delta)  )
+							A_conn(3,m,n,qi)		= 	A_conn(3,m,n,qi)	-	my_wb(nn) * my_bk(3,nn) * dreal( i_dp * (M_mat(m,n,nn,qi) - delta)  )	
 						end do
 					end do				
 				end if
 			end do
 			!
+			if( .not. FDcheck(my_wb, my_bk) ) then
+				write(*,*)	"[calcConnOnCoarse]: problems with FD scheme at qi=,",qi
+				stop	'[calcConnOnCoarse]: violated B1 condition'
+			end if
 			!
 		end do
 		!$OMP END DO
@@ -291,6 +318,39 @@ module pol_Berry
 		!
 		return
 	end subroutine
+
+
+	logical function FDcheck(wb, b_k)
+		!look at vanderbilt1997 (B1)
+		real(dp),	intent(in)		::	wb(:), b_k(:,:)
+		real(dp)					::	B1xy, B1xx, B1yy
+		logical						::	xy, xx, yy
+		!
+		xy	= .false. 
+		xx 	= .false.
+		yy	= .false.
+		!
+		B1xy = sum( wb(:)*b_k(1,:)*b_k(2,:)	)
+		B1xx = sum( wb(:)*b_k(1,:)*b_k(1,:)	)
+		B1yy = sum( wb(:)*b_k(2,:)*b_k(2,:)	)
+		!
+		if( abs(B1xy-0.0_dp) < FDtol) 		xy = .true.
+		if( abs(B1xx-1.0_dp) < FDtol)		xx = .true.
+		if( abs(B1yy-1.0_dp) < FDtol)		yy = .true.
+		!
+		if(	.not. xy ) 	write(*,*)	"[FDcheck]: B1_xy=", B1xy," (expected 0.0)"
+		if(	.not. xx ) 	write(*,*)	"[FDcheck]: B1_xx=", B1xx," (expected 1.0)"
+		if(	.not. yy ) 	write(*,*)	"[FDcheck]: B1_yy=", B1yy," (expected 1.0)"
+		!
+		FDcheck	=	(xy .and. xx .and. yy)
+		!
+		!
+	end function
+
+
+
+
+
 
 
 	subroutine calcPolViaA(polQuantum, centiMet, A_mat, centers)
@@ -319,7 +379,7 @@ module pol_Berry
 		!
 		write(*,*)		" #state | 	<r>[Å]			| 	p[	\{mu}C/cm	]"
 		do n = 1, size(A_mat,2)
-			write(*,'(i3,a,f6.2,a,f6.2,a,f6.2,a,a,e13.4,a,e13.4,a)') n,"  | ",centers(1,n),", ", centers(2,n),",",centers(3,n), "  | ",&
+			write(*,'(i3,a,f8.4,a,f8.4,a,f8.4,a,a,e13.4,a,e13.4,a)') n,"  | ",centers(1,n),", ", centers(2,n),",",centers(3,n), "  | ",&
 																"(",centers(1,n)*polQuantum*centiMet,", ", centers(2,n)*polQuantum*centiMet, ")."
 		end do
 		write(*,'(a,e13.4,a,e13.4,a)')	"sum | 				(",sum(centers(1,:))*polQuantum*centiMet,", ",sum(centers(2,:))*polQuantum*centiMet,")."
