@@ -100,11 +100,14 @@ program main
 		!
 		!
 		call solveHam()
-		!
-		!
-		if( myID == root )	call write_K_lattices()
 		call MPI_BARRIER( MPI_COMM_WORLD, ierr )
+		!
+		!finalize:
 		if( myID == root ) then
+			call write_K_lattices()
+			write(*,*)				"[main]:	...wrote k lattices to file"
+			call writeMeshInfo() 
+			write(*,*)				"[main]: ...wrote meshInfo.txt"
 			write(*,*)				"*"
 			write(*,*)				"*"
 			write(*,*)				"*"
@@ -156,8 +159,6 @@ program main
 		write(*,*)					"[main]:**************************WRITE OUTPUT*************************"
 		call cpu_time(T0)
 		!
-		call writeMeshInfo() 
-		write(*,*)					"[main]: ...wrote mesh info"
 		if( writeBin )	then
 			call writeMeshBin()
 			write(*,*)				"[main]: ...wrote mesh bin"
