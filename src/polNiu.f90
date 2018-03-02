@@ -33,7 +33,8 @@ module pol_Niu
 		complex(dp),	intent(in)		::	Fcurv(:,:,:,:), Velo(:,:,:,:)			
 		real(dp),		intent(out)		::  centers_F2(:,:), centers_F3(:,:)
 		!real(dp)						::	pnF2(3), pnF3(3)
-		real(dp)						:: 	F2(3,3), F3(3,3), F2k(3,3), F3k(3,3), sumF2(3), sumF3(3)
+		real(dp)						:: 	F2(3,3), F3(3,3), F2k(3,3), F3k(3,3), sumF2(3), sumF3(3), &
+											p2Test(3), p3Test(3), p2max, p3max
 		real(dp)						:: 	densCorr(3)
 		integer							:: 	n, ki, kSize, ind
 		!
@@ -55,6 +56,8 @@ module pol_Niu
 			F3 = 0.0_dp
 			!
 			!GET RESPONSE MATRIX
+			p2max	= 0.0_dp
+			p3max	= 0.0_dp
 			do ki = 1, kSize		
 				!
 				!PHASE SPACE DENSITY CORRECTION
@@ -67,8 +70,16 @@ module pol_Niu
 				!sum over K
 				F2 = F2 + F2k
 				F3 = F3 + F3k
+				!
+				!search for extrema
+				p2Test = matmul(F2k,Bext)
+				p3Test = matmul(F3k,Bext)
+				if( norm2(p2Test) > p2max) p2max = norm2(p2Test)
+				if( norm2(p3Test) > p3max) p3max = norm2(p3Test)
 			end do
 			!
+			write(*,'(a,i2,a,e13.4)')	"[calcFirstOrdP]: n=",n," largest F2 contribution (per k-pt): ",p2max
+			write(*,'(a,i2,a,e13.4)')	"[calcFirstOrdP]: n=",n," largest F3 contribution (per k-pt): ",p2max
 			!NORMALIZE
 			F2 = F2 / real(kSize,dp)
 			F3 = F3  / real(kSize,dp)
