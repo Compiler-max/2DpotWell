@@ -100,7 +100,7 @@ module pol_Berry
 		!
 		!
 		!print unit cell info
-		write(*,'(a,f8.3,a)')	"[berryMethod]: unit cell volume=",vol*aUtoAngstrm,"[Å] "
+		write(*,'(a,f8.3,a)')	"[berryMethod]: unit cell volume=",vol*aUtoAngstrm**2,"[Å^2] "
 
 
 		!print atoms
@@ -110,7 +110,7 @@ module pol_Berry
 		write(*,*)		"[berryMethod]: atom positions:"
 		write(*,*)		"	at | centers [Å] | V [eV]"
 		do n = 1, size(atPos,2)
-				write(*,'(i3,a,f8.4,a,f8.4,a ,f8.4)')	n," | ",atPos(1,n)*aUtoAngstrm,", ",atPos(2,n)*aUtoAngstrm," 	| ",atPot(n)*aUtoEv
+				write(*,'(i3,a,f16.8,a,f16.8,a ,f16.8)')	n," | ",atPos(1,n)*aUtoAngstrm,", ",atPos(2,n)*aUtoAngstrm," 	| ",atPot(n)*aUtoEv
 		end do
 	
 		!print w90 centers
@@ -121,7 +121,7 @@ module pol_Berry
 		call read_wann_centers(w_centers)
 		write(*,*)		" #wf | 	<r>[Å]	"
 		do n = 1, size(w_centers,2)
-			write(*,'(i3,a,f8.4,a,f8.4,a,f8.4)')	n," | ",w_centers(1,n),", ",w_centers(2,n),", ",w_centers(3,n)
+			write(*,'(i3,a,f16.8,a,f16.8,a,f16.8)')	n," | ",w_centers(1,n),", ",w_centers(2,n),", ",w_centers(3,n)
 		end do
 
 
@@ -379,7 +379,7 @@ module pol_Berry
 		!
 		write(*,*)		" #state | 	<r>[Å]			| 	p[	\{mu}C/cm	]"
 		do n = 1, size(A_mat,2)
-			write(*,'(i3,a,f8.4,a,f8.4,a,f8.4,a,a,e13.4,a,e13.4,a)') n,"  | ",centers(1,n),", ", centers(2,n),",",centers(3,n), "  | ",&
+			write(*,'(i3,a,f16.8,a,f16.8,a,f16.8,a,a,e13.4,a,e13.4,a)') n,"  | ",centers(1,n),", ", centers(2,n),",",centers(3,n), "  | ",&
 																"(",centers(1,n)*polQuantum*centiMet,", ", centers(2,n)*polQuantum*centiMet, ")."
 		end do
 		write(*,'(a,e13.4,a,e13.4,a)')	"sum | 				(",sum(centers(1,:))*polQuantum*centiMet,", ",sum(centers(2,:))*polQuantum*centiMet,")."

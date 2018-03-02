@@ -10,7 +10,7 @@
     relYpos     =   0.500 0.500
     atRx        =   1.010 1.010
     atRy        =   1.010 1.010
-    atPot       =   -3.20 -3.00
+    atPot       =   -3.00 -2.60
     dVpot       =   0.000 0.000
     Zion        =   1.000 1.000
 
@@ -23,14 +23,14 @@
 	Bext	= 0.0 0.0 1.0 # changed by probeB.sh
 
 [numerics]
-   Gcut        = 10.0 # changed by probeB.sh
+   Gcut        = 11.0 # changed by probeB.sh
    nSolve      = 96 # changed by probeB.sh
    nQx         = 4 # changed by probeB.sh
    nQy         = 4 # changed by probeB.sh
    nSCx        = 5 # changed by probeB.sh
    nSCy        = 5 # changed by probeB.sh
-   nKx         = 5 # changed by probeB.sh
-   nKy         = 5 # changed by probeB.sh
+   nKx         = 9 # changed by probeB.sh
+   nKy         = 9 # changed by probeB.sh
     nRx         =   10
     nRy         =   10
     thres       =   0.1
@@ -42,7 +42,7 @@
 
 [methods]
     doSolveHam  =   f
-    useBloch    =   f
+    useBloch    =   t
     doPw90      =   f
     doBerry     =   t
     writeBin    =   f
