@@ -55,7 +55,7 @@ module util_output
 		!R MESH
 		write(100,*)"*******************R POINT MESH******************************"
 		do i = 1, nR
-			write(100,'(a,i6,a,f15.7,a,f15.7,a)')				"r(",i,") = (", rpts(1,i) ,", ",rpts(2,i)," )"
+			write(100,'(a,i6,a,f15.7,a,f15.7,a,f15.7,a)')				"r(",i,") = (", rpts(1,i) ,", ",rpts(2,i),",",rpts(3,i)," )"
 		end do		
 		!
 		!R CELL	
