@@ -433,7 +433,6 @@ module util_sysPara
 				do rIy = 1, nRy
 					do rIx = 1, nRx
 						rI	=	 (	(rIz-1) * nRy +(rIy-1) ) * nRx + rIx
-						write(*,*)	"[rmeshGen]: rI=",rI
 						rpts(1,rI)	= rxMin + (rIx-1) * dx		!x component
 						rpts(2,rI)	= ryMin + (rIy-1) * dy		!y component
 						rpts(3,rI)	= rzMin + (riZ-1) * dz
