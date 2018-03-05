@@ -241,7 +241,7 @@ module util_output
 		!
 		open(unit=810,file=info_dir//'enABiN.txt',action='write', form='formatted', status='replace')
 		write(810,*)		"#	abinitio energies and qpts"
-		write(810,'(a,e13.4,a,e13.4,a,e13.4,a)')		"#	B_ext= ",Bext(1)*aUtoTesla, " ",Bext(2)*aUtoTesla," ", Bext(3)*aUtoTesla," T"
+		write(810,'(a,f13.6,a,f13.6,a,f13.6,a)')		"#	B_ext= ",Bext(1)*aUtoTesla, " ",Bext(2)*aUtoTesla," ", Bext(3)*aUtoTesla," T"
 		write(810,*)		"#	q_idx	| 			qx(1/ang)		 qy(1/ang)		 qz(1/ang)		|		Energy (eV)"
 		do qi = 1, size(en,2)
 			do n = 1, size(en,1)
