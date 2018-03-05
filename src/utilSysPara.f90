@@ -127,10 +127,6 @@ module util_sysPara
 		call CFG_add_get(my_cfg,	"numerics%nSolve"	,	nSolve	    ,	"number of eigenstates to find"			)
 		call CFG_add_get(my_cfg,	"numerics%nQx"     	,	nQx      	,	"amount of k points used"				)
 		call CFG_add_get(my_cfg,	"numerics%nQy"     	,	nQy      	,	"amount of k points used"				)
-		call CFG_add_get(my_cfg,	"numerics%nSCx"     ,	nSCx   		,	"#			supercells "				)
-		call CFG_add_get(my_cfg,	"numerics%nSCy"     ,	nSCy   		,	"#			supercells "				)
-		call CFG_add_get(my_cfg,	"numerics%nKx"		,	nKx			,	"# k x points of interpolation mesh"	)
-		call CFG_add_get(my_cfg,	"numerics%nKy"		,	nKy			,	"# k x points of interpolation mesh"	)
 		call CFG_add_get(my_cfg,	"numerics%thres"    ,	thres      	,	"threshold for overlap WARNINGs"		)
 		![ham]
 		call CFG_add_get(my_cfg,	"ham%doVdesc"		,	doVdesc		,	"switch on lin. desc. pot inside wells"	)
@@ -148,9 +144,15 @@ module util_sysPara
 		call CFG_add_get(my_cfg,	"w90%nShells"		,	nShells		,	"number of shells to use for FD k-space")
 		call CFG_add_get(my_cfg,	"w90%nw90it"		, 	 nw90it		,	"number of iterations for wannnierisat,")
 		call CFG_add_get(my_cfg,	"w90%pw90GaugeB"	,	pw90GaugeB	,	"logical for switching gauge trafo	   ")
-		call CFG_add_get(my_cfg,	"w90%nRx"     		,	nRx      	,	"spacing of real space plot grid"		)
-		call CFG_add_get(my_cfg,	"w90%nRy"     		,	nRy      	,	"spacing of real space plot grid"		)
-		call CFG_add_get(my_cfg,	"w90%nRz"			,	nRz			,	"spacing of real space plot grid"		)
+		![w90plot]
+		call CFG_add_get(my_cfg,	"w90plot%nSCx"	     ,	nSCx   		,	"#			supercells "				)
+		call CFG_add_get(my_cfg,	"w90plot%nSCy"	     ,	nSCy   		,	"#			supercells "				)
+		call CFG_add_get(my_cfg,	"w90plot%nRx"    	,	nRx      	,	"spacing of real space plot grid"		)
+		call CFG_add_get(my_cfg,	"w90plot%nRy"    	,	nRy      	,	"spacing of real space plot grid"		)
+		call CFG_add_get(my_cfg,	"w90plot%nRz"		,	nRz			,	"spacing of real space plot grid"		)
+		![w90interp]
+		call CFG_add_get(my_cfg,	"w90interp%nKx"		,	nKx			,	"# k x points of interpolation mesh"	)
+		call CFG_add_get(my_cfg,	"w90interp%nKy"		,	nKy			,	"# k x points of interpolation mesh"	)
 		![berry]
 		call CFG_add_get(my_cfg,	"berry%fastConnConv",fastConnConv	,	"try faster converging fd formula"		)
 		call CFG_add_get(my_cfg,	"berry%doVeloNUM"	,	doVeloNUM	,	"if true tb velocities, else analyitcal")

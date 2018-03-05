@@ -27,10 +27,6 @@
    nSolve      = 96 # changed by probeB.sh
    nQx         = 2 # changed by probeB.sh
    nQy         = 2 # changed by probeB.sh
-   nSCx        = 3 # changed by probeB.sh
-   nSCy        = 3 # changed by probeB.sh
-   nKx         = 5 # changed by probeB.sh
-   nKy         = 5 # changed by probeB.sh
     thres       =   0.1
 
 [ham]
@@ -39,10 +35,10 @@
     doMagHam    =   f
 
 [methods]
-    doSolveHam  =   t
+    doSolveHam  =   f
     useBloch    =   t
     doPw90      =   f
-    doBerry     =   f
+    doBerry     =   t
     writeBin    =   f
 
 [w90]
@@ -51,9 +47,17 @@
    shells       = 1 # changed by probeB.sh
     nw90it      =   1000
     pw90GaugeB  =   f
+
+[w90plot]
+    nSCx        = 3 # changed by probeB.sh
+    nSCy        = 3 # changed by probeB.sh
     nRx         =   10
     nRy         =   10
     nRz         =   2
+
+[w90interp]
+    nKx         = 5 # changed by probeB.sh
+    nKy         = 5 # changed by probeB.sh
 
 [berry]
     fastConnConv=   t
