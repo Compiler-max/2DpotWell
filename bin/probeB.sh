@@ -22,7 +22,7 @@ nShell=1
 
 #
 nSCx=$((nQx+1))
-nKx=$((nQx))
+nKx=$((nQx+1))
 
 
 #set numerics (for i1 & i2)

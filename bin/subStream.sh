@@ -87,7 +87,7 @@ function runCalc {
 	mv input.txt oldInput/inputBerry.txt
 	echo '['$(date +"%T")']: finished berry method'	
 
-	#finalize
+	#finalize( only keep energies & velocities for berry method) 
 	mv out*.txt output
 	mv input.orig input.txt
 	rm rawData/Mmn*

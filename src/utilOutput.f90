@@ -359,9 +359,9 @@ module util_output
 		do n = 1, size(w_centers,2)
 			at = mod(n,nAt)
 			if( at== 0) at = nAt
-			w_final(1:2,n)		= w_centers(1:2,n) - atPos(1:2,at)
-			b_H_final(1:2,n)	= b_H_gauge(1:2,n) - atPos(1:2,at)
-			b_W_final(1:2,n)	= b_W_gauge(1:2,n) - atPos(1:2,at)
+			w_final(1:2,n)		= w_centers(1:2,n) - atPos(1:2,at)*aUtoAngstrm
+			b_H_final(1:2,n)	= b_H_gauge(1:2,n) - atPos(1:2,at)*aUtoAngstrm
+			b_W_final(1:2,n)	= b_W_gauge(1:2,n) - atPos(1:2,at)*aUtoAngstrm
 			!
 			!ToDo: need niu cent as well ?
 		end do
@@ -443,12 +443,16 @@ module util_output
 		write(600,*)	"*"
 		write(600,*)	"*"
 		write(600,*)	"********wannier90 centers***********************"
-		write(*,*)		" #wf | 	<r>[Å]	"
+		write(600,*)		" #wf | 	<r>-atPos [Å]	| p[\{mu}C/cm]"
 		do n = 1, size(w_centers,2)
-			write(600,'(i3,a,f6.2,a,f6.2,a,f6.2)')	n," | ",w_centers(1,n),", ",w_centers(2,n),", ",w_centers(3,n)
+				write(600,'(i3,a,f6.2,a,f6.2,a,f6.2,a,a,e13.4,a,e13.4,a)') n,"  | ",w_final(1,n),", ", w_final(2,n),",",w_final(3,n), "  | ",&
+																"(",w_final(1,n)*polQuantum*centiMet,", ", w_final(2,n)*polQuantum*centiMet, ")."
 		end do
-		write(600,'(a,f7.3,a,f7.3,a,f7.3,a)')	"pWann(SUM)=	( ",sum(w_centers(1,:)),", ",sum(w_centers(2,:)),", ",sum(w_centers(3,:))," )[Å]"
-
+		write(600,*)	"begin zero_order"
+		write(600,'(a,f7.3,a,f7.3,a,f7.3,a)')	"		 ",sum(w_final(1,:))*polQuantum*centiMet," ",&
+															sum(w_final(2,:))*polQuantum*centiMet," ",&
+															sum(w_final(3,:))*polQuantum*centiMet," #muC/cm"
+		write(600,*)	"end zero_order"
 		
 		write(600,*)	"*"
 		write(600,*)	"*"
@@ -472,9 +476,9 @@ module util_output
 			write(600,'(i3,a,f6.2,a,f6.2,a,f6.2,a,a,e13.4,a,e13.4,a)') n,"  | ",b_W_final(1,n),", ", b_W_final(2,n),",",b_W_final(3,n), "  | ",&
 																"(",b_W_final(1,n)*polQuantum*centiMet,", ", b_W_final(2,n)*polQuantum*centiMet, ")."
 		end do
-		write(600,*)	"begin zero_order"
-		write(600,'(a,e13.4,a,e13.4,a)')	"				",sum(b_W_final(1,:))*polQuantum*centiMet," ",sum(b_W_final(2,:))*polQuantum*centiMet," #muC/cm"
-		write(600,*)	"end zero_order"
+		
+		write(600,'(a,e13.4,a,e13.4,a)')	"sum | 				",sum(b_W_final(1,:))*polQuantum*centiMet," ",sum(b_W_final(2,:))*polQuantum*centiMet," #muC/cm"
+
 
 
 
