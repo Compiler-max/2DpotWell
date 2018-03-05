@@ -400,6 +400,10 @@ module util_output
 		do n = 1, size(atPos,2)
 				write(600,'(i3,a,f6.2,a,f6.2,a ,f6.2)')	n," | ",atPos(1,n)*aUtoAngstrm,", ",atPos(2,n)*aUtoAngstrm," 	| ",atPot(n)*aUtoEv
 		end do
+		write(600,*)"begin atPot"
+		write(600,"(100f15.5)") ( atPot(n)*aUtoEv, n=1,size(atPot) )
+		write(600,*)"end atPot"
+
 		write(600,*)"*"
 		write(600,*)"*"
 		write(600,*)"**************PERTURBATION:"
