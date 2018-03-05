@@ -55,6 +55,8 @@ module pol_Niu
 			F2 = 0.0_dp
 			F3 = 0.0_dp
 			!
+			k2max = -1
+			k3max = -1
 			!GET RESPONSE MATRIX
 			p2max	= 0.0_dp
 			p3max	= 0.0_dp
