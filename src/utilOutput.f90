@@ -405,8 +405,8 @@ module util_output
 		write(600,*)"**************PERTURBATION:"
 		!
 		!
-		write(600,*)"begin magnetic_field"
 		Btesla(1:3)	= Bext(1:3) * aUtoTesla
+		write(600,*)"begin magnetic_field"
 		write(600,'(a,f6.2,a,f6.2,a,f6.2)')	"  ", 	Btesla(1),	" ",	Btesla(2)," ", Btesla(3)
 		write(600,*)"end magnetic_field"
 		!
@@ -468,7 +468,9 @@ module util_output
 			write(600,'(i3,a,f6.2,a,f6.2,a,f6.2,a,a,e13.4,a,e13.4,a)') n,"  | ",b_W_final(1,n),", ", b_W_final(2,n),",",b_W_final(3,n), "  | ",&
 																"(",b_W_final(1,n)*polQuantum*centiMet,", ", b_W_final(2,n)*polQuantum*centiMet, ")."
 		end do
-		write(600,'(a,e13.4,a,e13.4,a)')	"sum | 				(",sum(b_W_final(1,:))*polQuantum*centiMet,", ",sum(b_W_final(2,:))*polQuantum*centiMet,")."
+		write(600,*)	"begin zero_order"
+		write(600,'(a,e13.4,a,e13.4,a)')	"				",sum(b_W_final(1,:))*polQuantum*centiMet," ",sum(b_W_final(2,:))*polQuantum*centiMet," #muC/cm"
+		write(600,*)	"end zero_order"
 
 
 
@@ -483,8 +485,9 @@ module util_output
 			write(600,'(i3,a,f6.2,a,f6.2,a,f6.2,a,a,e13.4,a,e13.4,a)') n,"  | ",niu_centF2(1,n),", ", niu_centF2(2,n),",",niu_centF2(3,n), "  | ",&
 																"(",niu_centF2(1,n)*polQuantum*centiMet,", ", niu_centF2(2,n)*polQuantum*centiMet, ")."
 		end do
-		write(600,'(a,e13.4,a,e13.4,a)')	"sum | 				(",sum(niu_centF2(1,:))*polQuantum*centiMet,", ",sum(niu_centF2(2,:))*polQuantum*centiMet,")."
-
+		write(600,*)	"begin niu_f2"
+		write(600,'(a,e13.4,a,e13.4,a)')	"				",sum(niu_centF2(1,:))*polQuantum*centiMet," ",sum(niu_centF2(2,:))*polQuantum*centiMet," #muC/cm"
+		write(600,*)	"end niu_f2"
 
 		!
 		write(600,*)	"*"
@@ -496,8 +499,9 @@ module util_output
 			write(600,'(i3,a,f6.2,a,f6.2,a,f6.2,a,a,e13.4,a,e13.4,a)') n,"  | ",niu_centF3(1,n),", ", niu_centF3(2,n),",",niu_centF3(3,n), "  | ",&
 																"(",niu_centF3(1,n)*polQuantum*centiMet,", ", niu_centF3(2,n)*polQuantum*centiMet, ")."
 		end do
-		write(600,'(a,e13.4,a,e13.4,a)')	"sum | 				(",sum(niu_centF3(1,:))*polQuantum*centiMet,", ",sum(niu_centF3(2,:))*polQuantum*centiMet,")."
-
+		write(600,*)	"begin niu_f3"
+		write(600,'(a,e13.4,a,e13.4,a)')	"				",sum(niu_centF3(1,:))*polQuantum*centiMet," ",sum(niu_centF3(2,:))*polQuantum*centiMet," #muC/cm"
+		write(600,*)	"end niu_f3"
 
 
 
