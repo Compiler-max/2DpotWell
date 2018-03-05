@@ -37,6 +37,9 @@ function prepareInput {
 	mkdir -p output
 	rm -r -f output/*
 
+	mkdir -p results
+	rm -r -f results/*
+
 	#save initial input file
 	cp input.txt input.orig
 
@@ -86,6 +89,13 @@ function runCalc {
 	wait
 	mv input.txt oldInput/inputBerry.txt
 	echo '['$(date +"%T")']: finished berry method'	
+
+	
+	#cpy results to folder
+	cp output/polOutput.txt results/
+	cp output/enABiN.txt results/
+	cp w90files/*geninterp.dat results/
+	cp w90files/*.xsf /results
 
 	#finalize( only keep energies & velocities for berry method) 
 	mv out*.txt output
