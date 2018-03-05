@@ -1,10 +1,10 @@
 import matplotlib.pyplot as plt
 import numpy as np
+import re
 
 
 #dir to search
 dim			= 2 
-search_dir 	= 'rawData'
 w90_dir     = 'w90files'
 out_dir     = 'output'
 
@@ -15,7 +15,27 @@ print('*')
 print('*')
 print('*')
 print('********read abinitio energies:********************************')
-outFile     = open(out_dir+'/'+'enABiN.txt','rb')
+
+#Get external field
+with open(out_dir+'/'+'enABiN.txt','r') as f:
+    parser = False
+    for count,line in enumerate(f.readlines()):
+        if 'B_ext' in line:
+            #strip text around values
+            sub     = line.partition('=')
+            sub     = sub[2].partition('T')[0]
+               
+            #find all floats in the string "sub"
+            B_ext   = re.findall(r"[-+]?\d*\.\d+|\d+",sub)
+            #convert to float point
+            B_ext   = np.array(B_ext).astype(np.float)   
+
+print('detected B_ext=',B_ext)
+
+
+
+
+outFile     = open(out_dir+'/'+'enABiN.txt','r')
 data        = np.genfromtxt(outFile, dtype=[('int'),('float64'),('float64'),('float64'),('float64')])
 #
 qpts = []
@@ -40,7 +60,7 @@ print('*')
 print('*')
 print('*')
 print('********read w90 energies:********************************')
-w90interp   = open(w90_dir+'/'+'wf1_geninterp.dat','rb')
+w90interp   = open(w90_dir+'/'+'wf1_geninterp.dat','r')
 data        = np.genfromtxt(w90interp, dtype=[('int'),('float64'),('float64'),('float64'),('float64'),('float64'),('float64'),('float64')])
 #
 kpts = []
@@ -314,6 +334,13 @@ ax.set_xticklabels(xtickLabel,fontsize=14)
 ax.set_xlim(xticks[0],xticks[-1])
 #
 plt.ylabel('E [eV]',fontsize=16)
+
+
+
+ax.text(0.8, 0.9, 'B_z='+str(B_ext[2])+' T', horizontalalignment='center', verticalalignment='center',transform = ax.transAxes, fontsize=16, 
+        bbox={'facecolor':'white', 'alpha':0.8, 'pad':10})
+
+
 
 plt.savefig('bands.pdf')
 plt.show()
