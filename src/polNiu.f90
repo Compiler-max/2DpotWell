@@ -36,7 +36,7 @@ module pol_Niu
 		real(dp)						:: 	F2(3,3), F3(3,3), F2k(3,3), F3k(3,3), sumF2(3), sumF3(3), &
 											p2Test(3), p3Test(3), p2max, p3max
 		real(dp)						:: 	densCorr(3)
-		integer							:: 	n, ki, kSize, ind
+		integer							:: 	n, ki, kSize, ind, k2max, k3max
 		!
 		kSize		= size(Velo,4)
 		!
@@ -74,12 +74,18 @@ module pol_Niu
 				!search for extrema
 				p2Test = matmul(F2k,Bext)
 				p3Test = matmul(F3k,Bext)
-				if( norm2(p2Test) > p2max) p2max = norm2(p2Test)
-				if( norm2(p3Test) > p3max) p3max = norm2(p3Test)
+				if( norm2(p2Test) > p2max) then
+					p2max = norm2(p2Test)
+					k2max = ki
+				end if
+				if( norm2(p3Test) > p3max) then
+					p3max = norm2(p3Test)
+					k3max = ki
+				end if
 			end do
 			!
-			write(*,'(a,i2,a,e13.4)')	"[calcFirstOrdP]: n=",n," largest F2 contribution (per k-pt): ",p2max
-			write(*,'(a,i2,a,e13.4)')	"[calcFirstOrdP]: n=",n," largest F3 contribution (per k-pt): ",p3max
+			write(*,'(a,i2,a,i5,a,e13.4)')	"[calcFirstOrdP]: n=",n," largest F2 contribution (at #kpt=",k2max,"): ",p2max
+			write(*,'(a,i2,a,i5,a,e13.4)')	"[calcFirstOrdP]: n=",n," largest F3 contribution (at #kpt=",k3max,"): ",p3max
 			!NORMALIZE
 			F2 = F2 / real(kSize,dp)
 			F3 = F3  / real(kSize,dp)
