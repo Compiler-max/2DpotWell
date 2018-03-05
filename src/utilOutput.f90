@@ -494,7 +494,9 @@ module util_output
 																"(",niu_centF2(1,n)*polQuantum*centiMet,", ", niu_centF2(2,n)*polQuantum*centiMet, ")."
 		end do
 		write(600,*)	"begin niu_f2"
-		write(600,'(a,e13.4,a,e13.4,a)')	"				",sum(niu_centF2(1,:))*polQuantum*centiMet," ",sum(niu_centF2(2,:))*polQuantum*centiMet," #muC/cm"
+		write(600,'(a,e13.4,a,e13.4,a,e13.4,a)')	"				",sum(niu_centF2(1,:))*polQuantum*centiMet," ",&
+																sum(niu_centF2(2,:))*polQuantum*centiMet," ",&
+																sum(niu_centF2(3,:))*polQuantum*centiMet," #muC/cm"
 		write(600,*)	"end niu_f2"
 
 		!
@@ -508,7 +510,9 @@ module util_output
 																"(",niu_centF3(1,n)*polQuantum*centiMet,", ", niu_centF3(2,n)*polQuantum*centiMet, ")."
 		end do
 		write(600,*)	"begin niu_f3"
-		write(600,'(a,e13.4,a,e13.4,a)')	"				",sum(niu_centF3(1,:))*polQuantum*centiMet," ",sum(niu_centF3(2,:))*polQuantum*centiMet," #muC/cm"
+		write(600,'(a,e13.4,a,e13.4,a,e13.4,a)')	"				",sum(niu_centF3(1,:))*polQuantum*centiMet," ",&
+																sum(niu_centF3(2,:))*polQuantum*centiMet," ",&
+																sum(niu_centF3(3,:))*polQuantum*centiMet," #muC/cm"
 		write(600,*)	"end niu_f3"
 
 
