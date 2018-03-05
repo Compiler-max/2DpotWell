@@ -79,7 +79,7 @@ module pol_Niu
 			end do
 			!
 			write(*,'(a,i2,a,e13.4)')	"[calcFirstOrdP]: n=",n," largest F2 contribution (per k-pt): ",p2max
-			write(*,'(a,i2,a,e13.4)')	"[calcFirstOrdP]: n=",n," largest F3 contribution (per k-pt): ",p2max
+			write(*,'(a,i2,a,e13.4)')	"[calcFirstOrdP]: n=",n," largest F3 contribution (per k-pt): ",p3max
 			!NORMALIZE
 			F2 = F2 / real(kSize,dp)
 			F3 = F3  / real(kSize,dp)
