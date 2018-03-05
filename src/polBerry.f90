@@ -267,7 +267,7 @@ module pol_Berry
 		write(*,*)	"[calcConnOnCoarse]: |b|=",bk_abs," (ang^-1)"		
 
 
-		!$OMP PARALLEL DEFAULT(SHARED) PRIVATE(qi, nn, n,m, delta, ln_tmp)
+		!$OMP PARALLEL DEFAULT(SHARED) PRIVATE(qi, nn, n,m, delta, ln_tmp, my_bk, my_wb  ) FIRSTPRIVATE(bk_abs, wb_test)
 		allocate(		ln_tmp( size(M_mat,1), size(M_mat,2) )			)
 		!$OMP DO SCHEDULE(STATIC)	
 		do qi = 1, num_kpts
