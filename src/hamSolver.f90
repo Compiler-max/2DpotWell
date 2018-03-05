@@ -92,7 +92,7 @@ module ham_Solver
 		!			solve Ham, write results and derived quantites														
 		complex(dp),	allocatable		::	Hmat(:,:) , ck_temp(:,:), Amn_temp(:,:), velo_temp(:,:,:), unk(:,:)
 		real(dp),		allocatable		::	En_temp(:)
-		integer							:: 	qi, qLoc, found, Gsize, boundStates
+		integer							:: 	qi, qLoc, found, Gsize, boundStates, minBound
 		!	
 		!
 		allocate(	Hmat(				Gmax,	Gmax				)	)
@@ -102,7 +102,8 @@ module ham_Solver
 		allocate(	Amn_temp(		nBands,		nWfs				)	)
 		allocate(	unk(			nR,	nBands						)	)
 		!
-		qLoc = 1
+		qLoc 	= 1
+		minBound= nSolve
 		call MPI_BARRIER( MPI_COMM_WORLD, ierr)
 		do qi = myID*qChunk +1, myID*qChunk + qChunk
 			!
@@ -143,11 +144,13 @@ module ham_Solver
 			do while (	En_temp(boundStates+1) < 0.0_dp )
 				boundStates = boundStates + 1
 			end do
+			if(	boundStates < minBound )	minBound = boundStates
 			write(*,'(a,i3,a,i5,a,f6.2,a,a,i5,a,i5,a,i5,a)')"[#",myID,", solveHam]: qi=",qi," lowest energy=",En_temp(1)*aUtoEv,"[eV];",&
 														" found #",boundStates," bound states. done tasks=(",qLoc,"/",qChunk,")"
 			qLoc = qLoc + 1		
 		end do
 		!
+		if( minBound < nWfs) write(*,'(a,i3,a)') "[#",myID,", solveHam]: not enough bound states"
 		!
 		return
 	end subroutine
