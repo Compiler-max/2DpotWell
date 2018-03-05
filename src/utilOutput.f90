@@ -449,7 +449,7 @@ module util_output
 																"(",w_final(1,n)*polQuantum*centiMet,", ", w_final(2,n)*polQuantum*centiMet, ")."
 		end do
 		write(600,*)	"begin zero_order"
-		write(600,'(a,f7.3,a,f7.3,a,f7.3,a)')	"		 ",sum(w_final(1,:))*polQuantum*centiMet," ",&
+		write(600,'(a,e13.4,a,e13.4,a,e13.4,a)')	"		 ",sum(w_final(1,:))*polQuantum*centiMet," ",&
 															sum(w_final(2,:))*polQuantum*centiMet," ",&
 															sum(w_final(3,:))*polQuantum*centiMet," #muC/cm"
 		write(600,*)	"end zero_order"
