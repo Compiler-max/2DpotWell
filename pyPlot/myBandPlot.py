@@ -30,6 +30,8 @@ with open(out_dir+'/'+'enABiN.txt','r') as f:
             #convert to float point
             B_ext   = np.array(B_ext).astype(np.float)   
 
+if( len(B_ext) != 3):
+    print('WARNING: problems reading the external magnetic field (should be 3d vector)')
 print('detected B_ext=',B_ext)
 
 
