@@ -308,7 +308,10 @@ module pol_Berry
 			!
 			if( .not. FDcheck(my_wb, my_bk) ) then
 				write(*,*)	"[calcConnOnCoarse]: problems with FD scheme at qi=,",qi
-				stop	'[calcConnOnCoarse]: violated B1 condition'
+				do nn = 1, nntot
+					write(*,'(a,i3,a,f10.4,a,f10.4,a,f10.4,a,e14.5)')	"b_k(nn=",nn,")=	(",my_bk(1,nn),", ",my_bk(2,nn),", ",my_bk(3,nn),"); wb=",my_wb(nn)
+				end do
+				!stop	'[calcConnOnCoarse]: violated B1 condition'
 			end if
 			!
 		end do
