@@ -88,7 +88,7 @@ module util_basisIO
 		write(wfnname, unkFORM) 'UNK',qi,'.', spin
 		!
 		!WRITE TO FILE
-		write(*,'(a,a,a,i3,a)')		"[writeABiN_unkPS]: try to write file: ",wfnname," for ",nbnd," bands"
+		!write(*,'(a,a,a,i3,a)')		"[writeABiN_unkPS]: try to write file: ",wfnname," for ",nbnd," bands"
 		open(unit=205, file=w90_dir//wfnname,	form='formatted', access='stream', action='write', status='replace')
 		!header
 		write(205,*)	nRx, nRy, nRz, qi, nbnd
