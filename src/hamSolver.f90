@@ -153,7 +153,8 @@ module ham_Solver
 			minBound	= min(boundStates,minBound)
 			
 			!FINALIZE
-			write(*,'(a,i3,a,i5,a,f6.2,a,a,i5,a,i5,a,i5,a)')"[#",myID,", solveHam]: qi=",qi," lowest energy=",En_temp(1)*aUtoEv,"[eV];",&
+			write(*,'(a,i3,a,i5,a,f6.2,a,a,f6.2,a,a,i5,a,i5,a,i5,a)')"[#",myID,", solveHam]: qi=",qi," lowest energy=",En_temp(1)*aUtoEv,"[eV];",&
+														" highest en=",En_temp(nWfs)*aUtoEv,"[eV]",&
 														" found #",boundStates," bound states. done tasks=(",qLoc,"/",qChunk,")"
 			qLoc = qLoc + 1		
 		end do
