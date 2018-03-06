@@ -713,6 +713,8 @@ module util_w90Interf
 		write(100,*)	'num_wann  = ',nWfs
 		write(100,*)	'mp_grid   = ', mp_grid(1) , ' ', mp_grid(2), ' ', mp_grid(3)
 		write(100,*)	'num_iter  = ', nW90it
+		if( nW90it >= 100 )		write(100,*)	'num_print_cycles	=', (nw90it / 10)
+		 
 		write(100,*)	
 		write(100,*)	'shell_list =',shells
 		write(100,*)	'skip_b1_tests = .true.'
