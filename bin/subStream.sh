@@ -94,9 +94,12 @@ function runCalc {
 	#cpy results to folder
 	cp output/polOutput.txt results/
 	cp output/enABiN.txt results/
+	cp output/outABin.txt results/
+	cp output/outBerry.txt results/
 	cp w90files/*geninterp.dat results/
 	cp w90files/*.xsf results/
 	cp input.orig results/
+
 
 	#finalize( only keep energies & velocities for berry method) 
 	mv out*.txt output
