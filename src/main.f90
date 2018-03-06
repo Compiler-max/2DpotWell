@@ -7,6 +7,8 @@ program main
 	use ham_Solver, 	only: 		solveHam
 	use pol_Berry,		only:		berryMethod
 
+	use util_basisIO,	only:
+
 	use util_output,	only:		writeMeshInfo, writeMeshBin, writePolFile, write_K_lattices, & 
 									printTiming, printBasisInfo	!printMat, printInp, printWannInfo,writeSysInfo  
 

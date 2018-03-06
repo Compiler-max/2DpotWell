@@ -16,8 +16,9 @@ module ham_Solver
 
 	use ham_PWbasis,	only:	calcVeloGrad, calcAmatANA, calcMmat
 	use util_basisIO,	only:	writeABiN_basVect, writeABiN_unkPS, writeABiN_energy, writeABiN_basCoeff, writeABiN_velo, writeABiN_Amn, writeABiN_Mmn, &
-								read_coeff, read_gVec
+								read_coeff, read_gVec, read_energies
 	use util_w90Interf,	only:	setup_w90, write_w90_matrices, printNNinfo
+	use util_output,	only:	writeEnTXT
 	implicit none	
 	!#include "mpif.h"
 
@@ -40,6 +41,7 @@ module ham_Solver
 
 		integer							::	nntotMax, nntot
 		integer,		allocatable		::	nnlist(:,:), nncell(:,:,:)
+		real(dp),		allocatable		::	EnQ(:,:)
 		!	
 		!
 		nntotMax = 12
@@ -77,6 +79,10 @@ module ham_Solver
 			write(*,'(a,i3,a)')		"[#",myID,";solveHam]: wrote Mmn files, now collect files to write wannier90 input files"
 			call write_w90_matrices()
 			write(*,'(a,i3,a)')		"[#",myID,";solveHam]: wrote w90 matrix input files (.amn, .mmn, .eig)"
+			allocate(	EnQ(nSolve,nQ)	)
+			call read_energies(EnQ)
+			call writeEnTXT(EnQ)
+			write(*,'(a,i3,a)')		"[#",myID,";solveHam]: wrote energies to txt file"
 		end if
 
 

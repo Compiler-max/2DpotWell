@@ -11,7 +11,7 @@ module pol_Berry
 	use util_w90Interf,	only:	read_U_matrix, read_M_initial, read_FD_b_vectors, read_wann_centers, &
 								readBandVelo
 	use util_basisIO,	only:	read_energies, read_velo
-	use util_output,	only:	writePolFile, writeVeloHtxt, writeConnTxt, writeEnTXT
+	use util_output,	only:	writePolFile, writeVeloHtxt, writeConnTxt, writeEnTXT, readEnTXT
 
 	use pol_Niu,		only:	calcFirstOrdP
 	
@@ -53,10 +53,10 @@ module pol_Berry
 		complex(dp),	allocatable		:: 	U_mat(:,:,:), M_ham(:,:,:,:), M_wann(:,:,:,:), &
 											FcurvQ(:,:,:,:),veloQ(:,:,:,:) 		
 		real(dp),		allocatable		::	Aconn_H(:,:,:,:), Aconn_W(:,:,:,:), &
-											EnQ(:,:), b_k(:,:), w_b(:), &
+											EnQ(:,:), EnClone(:,:), b_k(:,:), w_b(:), &
 											w_centers(:,:), berry_W_gauge(:,:),berry_H_gauge(:,:), niu_polF2(:,:), niu_polF3(:,:)
 		real(dp)						::	polQuantum, centiMet
-		integer							::	n
+		integer							::	n, qi
 		!
 		num_wann = nWfs		
 		num_kpts = nQ
@@ -145,8 +145,8 @@ module pol_Berry
 		call calcConnOnCoarse(M_wann, Aconn_W)
 		call calcPolViaA(polQuantum, centiMet, Aconn_W, berry_W_gauge)
 		!
-		!read energies
-		call read_energies(EnQ)
+		
+
 		!
 		!1st ORDER SEMICLASSICS
 		if(doNiu) then
@@ -157,6 +157,10 @@ module pol_Berry
 		
 			allocate(	FcurvQ(	3,	num_wann, num_wann,		num_kpts)		)
 			allocate(	veloQ(	3, 	num_stat, num_stat,		num_kpts)		)
+
+			!read energies
+			call readEnTXT(EnQ)
+
 
 			!get velocities
 			if(	doVeloNum) then
@@ -183,8 +187,17 @@ module pol_Berry
 		!OUTPUT
 		call writePolFile(polQuantum, centiMet, w_centers, berry_H_gauge, berry_W_gauge, niu_polF2, niu_polF3)
 		write(*,*)		"[berryMethod]: wrote pol file"
-		call writeEnTXT(EnQ)
-		write(*,*)		"[berryMethod]: wrote abinitio energy txt file"
+		
+		
+		!TEST READING THE ENERGY FILE
+		allocate(	EnClone(size(EnQ,1),size(EnQ,2)))
+		call readEnTXT(EnClone)
+
+		do qi = 1, size(EnQ,2)
+			do n = 1, size(EnQ,1)
+				if( abs(EnQ(n,qi)-EnClone(n,qi))> 1e-8_dp ) write(*,'(a,i3,a,i5)')	"[berryMethod]: error while reading en txt file at n=",n," qi=",qi
+			end do
+		end do
 
 		call writeConnTxt( Aconn_W )
 		!call writeVeloHtxt( veloQ )		
