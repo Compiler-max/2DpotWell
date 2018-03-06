@@ -257,7 +257,7 @@ module util_output
 
 
 	subroutine readEnTXT(en)
-		real(dp),	intent(in)		:: 	en(:,:)
+		real(dp),	intent(out)		:: 	en(:,:)
 		integer						::	qi, n, f_qi
 		real(dp)					::	f_qpt(3)
 		!
@@ -268,7 +268,7 @@ module util_output
 		!
 		do qi = 1, size(en,2)
 			do n = 1, size(en,1)
-				read(815,*) 	 qi, f_qpt(1:3), en(n,qi)
+				read(815,*) 	 f_qi, f_qpt(1:3), en(n,qi)
 			end do
 		end do
 		!
