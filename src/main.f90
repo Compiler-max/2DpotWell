@@ -6,6 +6,7 @@ program main
 	use util_sysPara
 	use ham_Solver, 	only: 		solveHam
 	use pol_Berry,		only:		berryMethod
+	use tb_interpolator,only:		tb_method
 
 	use util_basisIO,	only:
 
@@ -131,8 +132,9 @@ program main
 		!EFF TB - post w90
 		call cpu_time(T0)
 		if(	doPw90 ) then
-			write(*,*)				"[main]:**************************POST WANNIER90 *************************"
-			write(*,*)				"[main]: postw90 deprecated, not used in this version any more"
+			write(*,*)				"[main]:**************************POST WANNIER90 (TB interpolation) *************************"
+			call tb_method()
+			write(*,*)				"[main]: done with interpolation"
 			write(*,*)				"*"
 			write(*,*)				"*"
 			write(*,*)				"*"
@@ -156,6 +158,9 @@ program main
 		end if
 		call cpu_time(T1)
 		berryT	= T1 - T0
+
+
+	
 
 		!OUTPUT
 		write(*,*)					"[main]:**************************WRITE OUTPUT*************************"
