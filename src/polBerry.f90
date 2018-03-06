@@ -3,14 +3,15 @@ module pol_Berry
 	!	i.e. calculation of connection, velocities, curvatures and polarization
 	use omp_lib
 	use util_sysPara,	only:	Bext, prefactF3, &
-								nWfs, nQ, nSolve, vol, &
+								nWfs, nQ, nK, nSolve, vol, &
 								qpts, aY, vol,  &
 								atPos, atPot, &
 								doGaugBack, doNiu, fastConnConv, doVeloNum 
 	
 	use util_w90Interf,	only:	read_U_matrix, read_M_initial, read_FD_b_vectors, read_wann_centers, &
-								readBandVelo
+								read_band_interp, read_tb_basis
 	use util_basisIO,	only:	read_energies, read_velo
+	use tb_interpolation,only:	tb_interpolator
 	use util_output,	only:	writePolFile, writeVeloHtxt, writeConnTxt, writeEnTXT, readEnTXT
 
 	use pol_Niu,		only:	calcFirstOrdP
@@ -158,24 +159,15 @@ module pol_Berry
 			allocate(	FcurvQ(	3,	num_wann, num_wann,		num_kpts)		)
 			allocate(	veloQ(	3, 	num_stat, num_stat,		num_kpts)		)
 
-			!read energies
+			!read abinitio files
 			call readEnTXT(EnQ)
-
-
-			!get velocities
-			if(	doVeloNum) then
-				if( .not. 	doGaugBack )	call calcVeloBLOUNT(Aconn_W, EnQ, veloQ)	
-				if(			doGaugBack )	call calcVeloBLOUNT(Aconn_H, EnQ, veloQ)	
-			else
-				call read_velo(veloQ)
-			end if
+			call read_velo(veloQ)
 			!get curvature (toDo) 
 			call calcCurv(FcurvQ)
-			!
 			!semiclassics
 			call calcFirstOrdP(polQuantum, centiMet, Bext, prefactF3, FcurvQ, Aconn_W, veloQ, EnQ, niu_polF2, niu_polF3)
-			!
 			write(*,*)	"[berryMethod]: done with semiclassics"
+		
 		else
 			niu_polF2 = 0.0_dp
 			niu_polF3 = 0.0_dp
@@ -183,25 +175,18 @@ module pol_Berry
 		end if
 		write(*,*)		"*"
 		write(*,*)		"*"
+	
 		!
 		!OUTPUT
 		call writePolFile(polQuantum, centiMet, w_centers, berry_H_gauge, berry_W_gauge, niu_polF2, niu_polF3)
 		write(*,*)		"[berryMethod]: wrote pol file"
 		
-		
-		!TEST READING THE ENERGY FILE
-		allocate(	EnClone(size(EnQ,1),size(EnQ,2)))
-		call readEnTXT(EnClone)
-
-		do qi = 1, size(EnQ,2)
-			do n = 1, size(EnQ,1)
-				if( abs(EnQ(n,qi)-EnClone(n,qi))> 1e-8_dp ) write(*,'(a,i3,a,i5)')	"[berryMethod]: error while reading en txt file at n=",n," qi=",qi
-			end do
-		end do
-
+	
 		call writeConnTxt( Aconn_W )
-		!call writeVeloHtxt( veloQ )		
-		!write(*,*)	"[berryMethod]: wrote k-space info files (connection & velocities)"			
+		call writeVeloHtxt( veloQ )
+		write(*,*)	"[berryMethod]: wrote k-space info files (connection & velocities)"		
+		!		
+		!	
 		!
 		!
 		return
@@ -449,40 +434,7 @@ module pol_Berry
 
 
 
-	subroutine calcVeloBLOUNT(A_conn, En_vec ,  v_mat)
-		!use Blount 1962 formu.la
-		! 
-		real(dp),		intent(in)		::	A_conn(:,:,:,:)
-		real(dp),		intent(in)		::	En_vec(:,:)
-		complex(dp),	intent(out)		::	v_mat(:,:,:,:)
-		real(dp),		allocatable		::	v_Band(:,:,:)
-		integer							::	n, m, qi
-		!
-		allocate(	v_Band(	3,	num_wann,	num_kpts)		)
-		!
-		v_mat	= dcmplx(0.0_dp)
-		!
-		!DEBUG
-		if( size(A_conn,1) /= size(v_mat,1)	)	write(*,*)	"[calcVeloBLOUNT]: A_conn and v_mat have different real space dimensionality"
-		if( size(A_conn,2) /= size(v_mat,2) )	stop		"[calcVeloBLOUNT]: A_conn and v_mat have different amount of states covered"
-		if( size(A_conn,3) /= size(v_mat,3) )	stop		"[calcVeloBLOUNT]: A_conn and v_mat have different amount of states covered"
-		if( size(A_conn,4) /= size(v_mat,4) )	stop		"[calcVeloBLOUNT]: A_conn and v_mat live on different k meshes"
-		!
-		!GET DIAGONAL ELEMENTS
-		call readBandVelo( v_Band ) !=band derivative
-		!FILL MATRIX
-		do qi = 1, size(A_conn,4)
-			do m = 1, size(v_mat,3)
-				do n = 1, size(v_mat,2)
-					if(n==m)	v_mat(1:3,n,n,qi)	= dcmplx(v_Band(1:3,n,qi) )
-					if(n/=m) 	v_mat(1:3,n,m,qi)	= dcmplx(		0.0_dp,		-1.0_dp * (En_vec(m,qi)-En_vec(n,qi)) * A_conn(1:3,n,m,qi)		 )
-				end do
-			end do
-		end do	
-		!
-		!
-		return
-	end subroutine
+
 
 
 
