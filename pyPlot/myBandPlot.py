@@ -344,5 +344,5 @@ ax.text(0.8, 0.9, 'B_z='+str(B_ext[2])+' T', horizontalalignment='center', verti
 
 
 
-plt.savefig('bands.pdf')
+plt.savefig('enB'+str(B_ext[2])'.pdf')
 plt.show()
