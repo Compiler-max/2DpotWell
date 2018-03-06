@@ -9,7 +9,7 @@ module util_w90Interf
 
 	private
 	public ::					setup_w90, write_w90_matrices, &
-								read_M_initial, read_FD_b_vectors,  read_U_matrix, readBandVelo, read_wann_centers, & 
+								read_M_initial, read_FD_b_vectors, read_U_matrix, read_band_interp, read_tb_basis, read_wann_centers, & 
 								printNNinfo, &
 								seed_name
 
@@ -442,8 +442,8 @@ module util_w90Interf
 
 
 
-	subroutine readBandVelo( v_vec )
-		real(dp),		intent(out)		::	v_vec(:,:,:)
+	subroutine read_band_interp(kpts, en, v_vec )
+		real(dp),		intent(out)		::	kpts(:,:), en(:,:), v_vec(:,:,:)
 		real(dp)						::	buffer(7)
 		integer							::	stat, qi, n, qInd
 		logical							::	file_exists
@@ -457,9 +457,11 @@ module util_w90Interf
 		read(320,*)
 		read(320,*)
 		read(320,*)
-		do qi = 1, nQ
+		do qi = 1, nK
 			do n = 1, nWfs
 				read(320,*)	qInd, buffer
+				if( n==1 )	kpts(1:3,qi) = buffer(1:3) * aUtoAngstrm  
+				en(n,qInd)		= buffer(4)
 				v_vec(1,n,qInd)	= buffer(5)
 				v_vec(2,n,qInd)	= buffer(6)
 				v_vec(3,n,qInd)	= buffer(7) 
@@ -468,12 +470,99 @@ module util_w90Interf
 		close(320)
 		!
 		!ATOMIC UNITS CONVERSION:
+		en		= en	/ (	aUtoEv)
 		v_vec 	= v_vec  / (aUtoEv  * aUtoAngstrm)	 ! [v_vec] = eV / Angstroem
 		write(*,*)	"[readBandVelo]: read the geninterp.dat file"
 		!
 		!	
 		return
 	end subroutine
+
+
+
+	subroutine read_tb_basis( Rcell, tHopp, rHopp)
+		real(dp),		intent(out), allocatable			::	Rcell(:,:)
+		complex(dp),	intent(out), allocatable			:: 	tHopp(:,:,:), rHopp(:,:,:,:)
+		integer												::	stat, f_nwfs, f_nSC, readLines, line, &
+																cell, n
+		integer												::	cell_rel(3), index(2)
+		real(dp)											::	unit_cell(3,3), compl1(2),compl3(6), rTest(3)
+
+		
+
+		open(unit=330,iostat=stat, file=w90_dir//seedName//'_tb.dat',form='formatted', status='old', action='read')
+
+		!read unit cell
+		read(330,*)
+		read(330,*)	unit_cell(1,1:3) !x comp
+		read(330,*)	unit_cell(2,1:3) !y comp
+		read(330,*)	unit_cell(3,1:3) !z comp
+		unit_cell = unit_cell / aUtoAngstrm
+		
+		if( abs(unit_cell(1,1)-aX) > 1e-8_dp) 	write(*,*)	"[read_tb_basis]: WARNING problem reading aX"
+		if( abs(unit_cell(2,2)-aY) > 1e-8_dp) 	write(*,*)	"[read_tb_basis]: WARNING problem reading aY"
+		if( unit_cell(3,3) > unit_cell(1,1) .or. unit_cell(3,3)  > unit_cell(2,2) )	write(*,*)	"[read_tb_basis]: WARNING aZ is to large"
+
+		!read basis size
+		read(330,*)	f_nwfs
+		read(330,*)	f_nSC
+
+		!allocate targets
+		allocate(	Rcell(3,						f_nSC		)	)
+		allocate(	rHopp(3,	f_nwfs, f_nwfs,		f_nSC		)	)
+		allocate(	tHopp(		f_nwfs,	f_nwfs,		f_nSC		)	)
+
+
+		!debug warnings
+		if(	f_nwfs 	== nWfs )	write(*,'(a,i4,a,i4,a)')	"[read_tb_basis]: WARNING wrong nWfs detected: got ",f_nwfs," (expected ",nWfs,")."
+		if(	f_nSC	== nSC )	write(*,'(a,i4,a,i4,a)')	"[read_tb_basis]: WARNING wrong nSC detected: got ",f_nSC," (expected ",nSC,")."
+
+		!dummy read the degeneracy list
+		readLines = ceiling( real(f_nSC,dp) / real(15,dp)		)
+		do line = 1, readLines
+			read(330,*)
+		end do
+
+		!read tHopp (eV)
+		do cell = 1, nSC
+			read(330,*)
+			read(330,*) cell_rel(1:3)
+
+			Rcell(1:3,cell)	= matmul(unit_cell,	real(cell_rel(1:3),dp)	)
+			do n = 1, nWfs**2
+				read(330,*)	index(1:2), compl1(1:2)
+				!
+				tHopp(index(1),index(2), cell)	= dcmplx(	compl1(1), compl1(2)		)
+			end do
+		end do
+		
+
+		!read rHopp (ang)
+		do cell = 1, nSC
+			read(330,*)
+			read(330,*)	cell_rel(1:3)
+
+			rTest(1:3)	= matmul(unit_cell,	real(cell_rel(1:3),dp)	)
+			if(		 norm2( rTest(1:3) - Rcell(1:3,cell) )	> 1e-8_dp		) write(*,*)	"[read_tb_basis]: WARNING rHopp has different sc order then tHopp"
+
+			do n = 1, nWfs**2
+				read(330,*)	index(1:2), compl3(1:6)
+
+				rHopp(1,	index(1), index(2), cell)	= dcmplx( compl3(1), compl3(2)	)
+				rHopp(2,	index(1), index(2), cell)	= dcmplx( compl3(3), compl3(4)	)
+				rHopp(3,	index(1), index(2), cell)	= dcmplx( compl3(5), compl3(6)	)
+			end do
+		end do 
+		!
+		close(330)
+		!
+		!convert to a.u.
+		tHopp	= 	tHopp / aUtoEv
+		rHopp	= 	rHopp / aUtoAngstrm
+		!
+		!
+		return
+	end subroutine 
 
 
 
