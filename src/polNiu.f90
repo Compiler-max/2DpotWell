@@ -29,8 +29,8 @@ module pol_Niu
 	subroutine	calcFirstOrdP(polQuantum, centiMet, Bext, prefactF3, Fcurv, Aconn, Velo, En, centers_F2, centers_F3)
 		!calculates the first order polarization p1 according to
 		!	P'= -int_dk [0.5 (Curv.Velo)*B_ext + a']
-		real(dp),		intent(in)		::	polQuantum, centiMet, Bext(3), prefactF3, Aconn(:,:,:,:), En(:,:)		
-		complex(dp),	intent(in)		::	Fcurv(:,:,:,:), Velo(:,:,:,:)			
+		real(dp),		intent(in)		::	polQuantum, centiMet, Bext(3), prefactF3, Fcurv(:,:,:,:), Aconn(:,:,:,:), En(:,:)		
+		complex(dp),	intent(in)		::	Velo(:,:,:,:)			
 		real(dp),		intent(out)		::  centers_F2(:,:), centers_F3(:,:)
 		!real(dp)						::	pnF2(3), pnF3(3)
 		real(dp)						:: 	F2(3,3), F3(3,3), F2k(3,3), F3k(3,3), sumF2(3), sumF3(3), &
@@ -63,7 +63,7 @@ module pol_Niu
 			do ki = 1, kSize		
 				!
 				!PHASE SPACE DENSITY CORRECTION
-				densCorr(1:3)	= 0.5_dp * dot_product(		dreal(Fcurv(1:3,n,n,ki)), Aconn(1:3,n,n,ki)	)		* Bext
+				densCorr(1:3)	= 0.5_dp * dot_product(		Fcurv(1:3,n,n,ki), Aconn(1:3,n,n,ki)	)		* Bext
 				if( norm2(densCorr) > acc ) write(*,*)	"[calcFirstOrdP]: WARNING the densCorr is none zero, norm2(densCorr)=",norm2(densCorr)
 				!
 				!POSITIONAL SHIFT
