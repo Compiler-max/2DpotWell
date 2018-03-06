@@ -6,7 +6,7 @@ program main
 	use util_sysPara
 	use ham_Solver, 	only: 		solveHam
 	use pol_Berry,		only:		berryMethod
-	use tb_interpolator,only:		tb_method
+	use tb_interp,		only:		tb_method
 
 	use util_basisIO,	only:
 

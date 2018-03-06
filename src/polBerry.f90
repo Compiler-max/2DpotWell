@@ -11,7 +11,6 @@ module pol_Berry
 	use util_w90Interf,	only:	read_U_matrix, read_M_initial, read_FD_b_vectors, read_wann_centers, &
 								read_band_interp, read_tb_basis
 	use util_basisIO,	only:	read_energies, read_velo
-	use tb_interpolation,only:	tb_interpolator
 	use util_output,	only:	writePolFile, writeVeloHtxt, writeConnTxt, writeEnTXT, readEnTXT
 
 	use pol_Niu,		only:	calcFirstOrdP
@@ -52,12 +51,12 @@ module pol_Berry
 !public
 	subroutine berryMethod()
 		complex(dp),	allocatable		:: 	U_mat(:,:,:), M_ham(:,:,:,:), M_wann(:,:,:,:), &
-											FcurvQ(:,:,:,:),veloQ(:,:,:,:) 		
-		real(dp),		allocatable		::	Aconn_H(:,:,:,:), Aconn_W(:,:,:,:), &
-											EnQ(:,:), EnClone(:,:), b_k(:,:), w_b(:), &
+											veloQ(:,:,:,:) 		
+		real(dp),		allocatable		::	Aconn_H(:,:,:,:), Aconn_W(:,:,:,:), FcurvQ(:,:,:,:),&
+											EnQ(:,:),  b_k(:,:), w_b(:), &
 											w_centers(:,:), berry_W_gauge(:,:),berry_H_gauge(:,:), niu_polF2(:,:), niu_polF3(:,:)
 		real(dp)						::	polQuantum, centiMet
-		integer							::	n, qi
+		integer							::	n
 		!
 		num_wann = nWfs		
 		num_kpts = nQ
@@ -422,11 +421,11 @@ module pol_Berry
 
 	subroutine calcCurv(Fcurv_mat)
 		!todo: implement this in case of 3d system
-		complex(dp),		intent(out)		:: Fcurv_mat(:,:,:,:)
+		real(dp),		intent(out)		:: Fcurv_mat(:,:,:,:)
 		!
 		write(*,*)	"[calcCurv]: WARNING - calcCurv is not implemented (irrelevant for 2D system)"
 		!
-		Fcurv_mat = dcmplx(0.0_dp)
+		Fcurv_mat = 0.0_dp
 		!
 		!
 		return

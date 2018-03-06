@@ -1,8 +1,8 @@
-module tb_interpolation
+module tb_interp
 
 
 	use omp_lib
-	use util_sysPara,	only:	Bext, prefactF3, &
+	use util_sysPara,	only:	Bext, prefactF3
 								
 	
 	use util_w90Interf,	only:	read_band_interp, read_tb_basis
@@ -15,6 +15,7 @@ module tb_interpolation
 
 	integer, 		parameter 	:: 	dp 				= kind(0.d0)
 	real(dp),		parameter	::	centiMet		= 1e+8_dp		!converts pol from 1/angsroem to 1/cm
+	real(dp),		parameter	::	aUtoAngstrm 	= 0.52917721092_dp
 	integer						::	num_wann, num_kpts, num_sc
 
 
@@ -25,37 +26,104 @@ module tb_interpolation
 	subroutine tb_method()
 
 		real(dp),		allocatable		::	A_interp(:,:,:,:), curv_interp(:,:,:,:), En_interp(:,:), &
-											pol0(:,:), cF2(:,:), cF3(:,:)
+											pol0(:,:), centF2(:,:), centF3(:,:)
 		complex(dp),	allocatable		::	v_interp(:,:,:,:)
-		integer							::	dim
-		real(dp),						::	polQuantum
+		integer							::	dim, n
+		real(dp)						::	polQuantum
 
 		call tb_interpolator(A_interp, curv_interp, En_interp, v_interp)
-
+		!
 		allocate(	pol0(	3,	num_wann)	)
-		allocate(	cF2(	3,	num_wann)	)
-		allocate(	cF3(	3,	num_wann)	)
-
-
-
+		allocate(	centF2(	3,	num_wann)	)
+		allocate(	centF3(	3,	num_wann)	)
+		!
 		!get zero order
 		do n = 1, num_wann
 			do dim = 1, 3
 				pol0(dim,n)	= sum(	A_interp(dim,n,n,:)	) / real(size(A_interp,4),dp)
+			end do		
 		end do
+		pol0 	= pol0 		*	aUtoAngstrm
+		!print zero order
+		do n = 1, num_wann
+			write(*,'(i3,a,f16.8,a,f16.8,a,f16.8)')		n," ",pol0(1,n)," ",pol0(2,n)," ",pol0(3,n)
+		end do
+
 
 		!get first order
 		!calcFirstOrdP(polQuantum, centiMet, Bext, prefactF3, Fcurv, Aconn, Velo, En, centers_F2, centers_F3)
 		call calcFirstOrdP(polQuantum, centiMet, Bext, prefactF3, curv_interp, A_interp, v_interp, En_interp, centF2, centF3 )
 
+
+		!convert centers to angstroem
+		centF2	= centF2	*	aUtoAngstrm
+		centF3	= centF3	*	aUtoAngstrm
+
+		
 		!write output file
 			!todo!!!!!!!!!
+
+		call writePolTB(polQuantum, centiMet, pol0, centF2, centF3)
+
 		return
 	end subroutine
 
 
 
+	subroutine	writePolTB(polQuantum, centiMet, pol0, centF2, centF3)
+		real(dp),		intent(in)			::	polQuantum, centiMet, pol0(:,:), centF2(:,:), centF3(:,:)
+		integer								::	n
 
+
+
+		open(unit=100,file='polInterp.txt',action='write')
+		!
+		write(100,*)	"# centers are given in angstroem. Electric polarization given in muC/cm"
+		!
+		!
+		!RAW CENTERS
+		write(100,*)	"begin centers"
+		!----------------------------------------------------------------------------------------------------------------------------------------		
+		write(100,*)
+		write(100,*)	"begin zero_order_centers"
+		do n = 1, size(pol0,2)
+			write(100,'(a,i4,a,f16.8,a,f16.8,a,f16.8)')	n," ",pol0(1,n)," ",pol0(2,n)," ",pol0(3,n)
+		end do
+		write(100,*)	"end zero_order_centers"
+		!----------------------------------------------------------------------------------------------------------------------------------------
+		!+++
+		!----------------------------------------------------------------------------------------------------------------------------------------
+		write(100,*)
+		write(100,*)	"begin f2_centers"
+		do n = 1, size(centF2,2)
+			write(100,'(a,i4,a,f16.8,a,f16.8,a,f16.8)')	n," ",centF2(1,n)," ",centF2(2,n)," ",centF2(3,n)
+		end do
+		write(100,*)	"end f2_centers"
+		!----------------------------------------------------------------------------------------------------------------------------------------
+		!+++
+		!----------------------------------------------------------------------------------------------------------------------------------------
+		write(100,*)
+		write(100,*)	"begin f3_centers"
+		do n = 1, size(centF3,2)
+			write(100,'(a,i4,a,f16.8,a,f16.8,a,f16.8)')	n," ",centF3(1,n)," ",centF3(2,n)," ",centF3(3,n)
+		end do
+		write(100,*)	"end f3_centers"
+		!----------------------------------------------------------------------------------------------------------------------------------------
+		write(100,*)	"end centers"
+
+
+		!MODIFIED POLARIZATION
+		write(100,*)	"begin pol"
+		write(100,*)	"		todo"
+		write(100,*)	"end pol"
+
+			!TODO!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1
+
+		close(100)
+		!
+		!
+		return
+	end subroutine
 
 !private:
 	subroutine tb_interpolator(A_interp, curv_interp, En_interp, v_interp)
@@ -152,4 +220,4 @@ subroutine calcVeloBLOUNT(A_conn, En_vec , en_deriv,  v_mat)
 
 
 
-end module tb_interpolation
+end module tb_interp
