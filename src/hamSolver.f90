@@ -145,18 +145,21 @@ module ham_Solver
 			call writeABiN_unkPS(qi, unk)
 
 
-			!FINALIZE
+			!check how many states are insulating
 			boundStates = 0
 			do while (	En_temp(boundStates+1) < 0.0_dp )
 				boundStates = boundStates + 1
 			end do
-			if(	boundStates < minBound )	minBound = boundStates
+			minBound	= min(boundStates,minBound)
+			
+			!FINALIZE
 			write(*,'(a,i3,a,i5,a,f6.2,a,a,i5,a,i5,a,i5,a)')"[#",myID,", solveHam]: qi=",qi," lowest energy=",En_temp(1)*aUtoEv,"[eV];",&
 														" found #",boundStates," bound states. done tasks=(",qLoc,"/",qChunk,")"
 			qLoc = qLoc + 1		
 		end do
 		!
-		if( minBound < nWfs) write(*,'(a,i3,a)') "[#",myID,", solveHam]: not enough bound states"
+		if( minBound < nWfs) write(*,'(a,i3,a)') "[#",myID,", solveHam]: WARNING not enough bound states "
+
 		!
 		return
 	end subroutine
