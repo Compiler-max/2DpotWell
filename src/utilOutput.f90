@@ -15,7 +15,7 @@ module util_output
 
 	public ::	writeMeshInfo, writeMeshBin, write_K_lattices, & 
 				writePolFile, &
-				writeEnTXT, & 
+				writeEnTXT,readEnTXT, & 
 				writeVeloHtxt, writeConnTxt, writeVeloEffTB, &
 				printMat, printTiming,  printBasisInfo
 			
@@ -255,6 +255,30 @@ module util_output
 		return
 	end subroutine
 
+
+	subroutine readEnTXT(en)
+		real(dp),	intent(in)		:: 	en(:,:)
+		integer						::	qi, n, f_qi
+		real(dp)					::	f_qpt(3)
+		!
+		open(unit=815,file=info_dir//'enABiN.txt',action='read', form='formatted')
+		read(815,*)
+		read(815,*)
+		read(815,*)
+		!
+		do qi = 1, size(en,2)
+			do n = 1, size(en,1)
+				read(815,*) 	 qi, f_qpt(1:3), en(n,qi)
+			end do
+		end do
+		!
+		close(815)
+		!
+		!CONVERT FROM EV TO AU
+		en = en / aUtoEv
+		!
+		return
+	end subroutine
 
 	subroutine writeVeloEffTB(velo)
 		complex(dp),	intent(in)		:: 	velo(:,:,:,:) !veloK(3		, 	nWfs	,	nWfs	,	nK		)
