@@ -134,7 +134,6 @@ module util_sysPara
 		call CFG_add_get(my_cfg,	"ham%doMagHam"		,	doMagHam	,	"include osc. B-field via peierls sub"	)
 		![methods]
 		call CFG_add_get(my_cfg,	"methods%doSolveHam",	doSolveHam	,	"solve electronic structure or read in"	)
-		
 		call CFG_add_get(my_cfg,	"methods%doPw90"	,	doPw90		,	"read in the matrices in wann base	"	)	
 		call CFG_add_get(my_cfg,	"methods%doBerry"	,	doBerry		,	"switch on/off 	berry( unk) method "	)
 		call CFG_add_get(my_cfg,	"methods%writeBin"	,	writeBin	,	"switch for writing binary files"		)
@@ -582,6 +581,7 @@ module util_sysPara
 			
 
 			do at = 1, nAt
+				!test if inside unit cell
 				if( relXpos(at) < 0.0_dp .or. relXpos(at) > 1.0_dp ) stop '[popAtPos]: relXpos out of bounds'
 				if( relYpos(at) < 0.0_dp .or. relYpos(at) > 1.0_dp ) stop '[popAtPos]: relYpos out of bounds'
 				atPos(1,at)	= relXpos(at) * aX	!x component
@@ -606,7 +606,13 @@ module util_sysPara
 			do at = 1, nAt
 				atR(1,at)	= atRx(at)
 				atR(2,at)	= atRy(at)
+
+				!Test if well exceeds unit cell
+				if( (atPos(1,at)-atR(1,at)) < 0.0_dp .or. (atPos(1,at)+atR(1,at)) > aX ) stop'[popAtR]: wells exceed unit cell (x-dir)'
+				if( (atPos(2,at)-atR(2,at)) < 0.0_dp .or. (atPos(2,at)+atR(2,at)) > aY ) stop'[popAtR]: wells exceed unit cell (x-dir)'
 			end do
+			!ToDo: test if wells overlap
+
 		end if
 		call MPI_Bcast(atR, dim*nAt, MPI_DOUBLE_PRECISION, root, MPI_COMM_WORLD, ierr)
 		!
