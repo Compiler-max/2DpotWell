@@ -579,10 +579,18 @@ module util_sysPara
 		integer		:: at
 		!
 		if(myID == root ) then
+			
+
 			do at = 1, nAt
+				if( relXpos(at) < 0.0_dp .or. relXpos(at) > 1.0_dp ) stop '[popAtPos]: relXpos out of bounds'
+				if( relYpos(at) < 0.0_dp .or. relYpos(at) > 1.0_dp ) stop '[popAtPos]: relYpos out of bounds'
 				atPos(1,at)	= relXpos(at) * aX	!x component
 				atPos(2,at)	= relYpos(at) * aY	!y component
 			end do
+
+
+
+
 		end if
 		call MPI_Bcast(atPos, dim*nAt, MPI_DOUBLE_PRECISION, root, MPI_COMM_WORLD, ierr)
 		!
