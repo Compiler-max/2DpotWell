@@ -422,7 +422,7 @@ module util_output
 		write(600,*)"**************ATOMS:"
 		write(600,*)		"	at | centers [Å] | V [eV]"
 		do n = 1, size(atPos,2)
-				write(600,'(i3,a,f6.2,a,f6.2,a ,f6.2)')	n," | ",atPos(1,n)*aUtoAngstrm,", ",atPos(2,n)*aUtoAngstrm," 	| ",atPot(n)*aUtoEv
+				write(600,'(i3,a,f14.6,a,f14.6,a ,f14.6)')	n," | ",atPos(1,n)*aUtoAngstrm,", ",atPos(2,n)*aUtoAngstrm," 	| ",atPot(n)*aUtoEv
 		end do
 		write(600,*)"begin atPot"
 		write(600,"(100f15.5)") ( atPot(n)*aUtoEv, n=1,size(atPot) )
@@ -469,7 +469,7 @@ module util_output
 		write(600,*)	"********wannier90 centers***********************"
 		write(600,*)		" #wf | 	<r>-atPos [Å]	| p[\{mu}C/cm]"
 		do n = 1, size(w_centers,2)
-				write(600,'(i3,a,f6.2,a,f6.2,a,f6.2,a,a,e13.4,a,e13.4,a)') n,"  | ",w_final(1,n),", ", w_final(2,n),",",w_final(3,n), "  | ",&
+				write(600,'(i3,a,f14.6,a,f14.6,a,f14.6,a,a,e13.4,a,e13.4,a)') n,"  | ",w_final(1,n),", ", w_final(2,n),",",w_final(3,n), "  | ",&
 																"(",w_final(1,n)*polQuantum*centiMet,", ", w_final(2,n)*polQuantum*centiMet, ")."
 		end do
 		write(600,*)	"begin zero_order"
