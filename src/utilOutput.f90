@@ -418,7 +418,6 @@ module util_output
 		write(600,*)"*"
 		write(600,*)"*"
 		write(600,*)"*"
-		write(600,*)"ToDo: fix units etc. in this file (similiar to berry cli output)"
 		!
 		write(600,*)"**************ATOMS:"
 		write(600,*)		"	at | centers [Å] | V [eV]"
