@@ -61,7 +61,6 @@
 
 [berry]
     fastConnConv=   t
-    doVeloNUM   =   f
     doNiu       =   t
     doGaugBack  =   f
 

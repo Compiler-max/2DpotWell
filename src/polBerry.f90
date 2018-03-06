@@ -6,7 +6,7 @@ module pol_Berry
 								nWfs, nQ, nK, nSolve, vol, &
 								qpts, aY, vol,  &
 								atPos, atPot, &
-								doGaugBack, doNiu, fastConnConv, doVeloNum 
+								doGaugBack, doNiu, fastConnConv
 	
 	use util_w90Interf,	only:	read_U_matrix, read_M_initial, read_FD_b_vectors, read_wann_centers, &
 								read_band_interp, read_tb_basis

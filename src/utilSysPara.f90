@@ -20,7 +20,7 @@ module util_sysPara
 				Bext, prefactF3, &
 				seedName, w90_dir, info_dir, mkdir, raw_dir,&
 				debugProj, debugHam, debugWann, doSolveHam, doMagHam, doZeeman, useBloch, doPw90, pw90GaugeB, doVdesc,  &
-				doBerry, doVeloNUM, doNiu, doGaugBack, writeBin, &
+				doBerry, doNiu, doGaugBack, writeBin, &
 				myID, nProcs, root, ierr, qChunk, fastConnConv
 
 
@@ -46,7 +46,7 @@ module util_sysPara
 	logical											::	debugHam, debugWann, debugProj, &
 														doSolveHam, doVdesc, doZeeman, doMagHam, &
 														useBloch, doPw90, pw90GaugeB, & 
-														doBerry, doVeloNUM, doNiu, doGaugBack, fastConnConv, &
+														doBerry, doNiu, doGaugBack, fastConnConv, &
 														writeBin 
 
 
@@ -154,7 +154,6 @@ module util_sysPara
 		call CFG_add_get(my_cfg,	"w90interp%nKy"		,	nKy			,	"# k x points of interpolation mesh"	)
 		![berry]
 		call CFG_add_get(my_cfg,	"berry%fastConnConv",fastConnConv	,	"try faster converging fd formula"		)
-		call CFG_add_get(my_cfg,	"berry%doVeloNUM"	,	doVeloNUM	,	"if true tb velocities, else analyitcal")
 		call CFG_add_get(my_cfg,	"berry%doNiu"		,	doNiu		,	"switch for nius first order pol"		)
 		call CFG_add_get(my_cfg,	"berry%doGaugBack"	,	doGaugBack	,	"switch for trafo: Wann to Ham gauge"	)
 		
@@ -249,7 +248,6 @@ module util_sysPara
 		call MPI_Bcast( pw90GaugeB	,		1	,	MPI_LOGICAL				,	root,	MPI_COMM_WORLD, ierr)
 		![berry]
 		call MPI_Bcast(fastConnConv	,		1	,	MPI_LOGICAL				,	root,	MPI_COMM_WORLD,	ierr)
-		call MPI_Bcast( doVeloNUM	,		1	,	MPI_LOGICAL				,	root,	MPI_COMM_WORLD,	ierr)
 		call MPI_Bcast( doNiu		,		1	,	MPI_LOGICAL				,	root,	MPI_COMM_WORLD,	ierr)
 		call MPI_Bcast( doGaugBack	,		1	,	MPI_LOGICAL				,	root,	MPI_COMM_WORLD,	ierr)
 		![semiclassics]
