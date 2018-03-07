@@ -1,7 +1,7 @@
 program main
 	!TWO dimensional potential well code
 	use mpi
-	use util_math, 	only: 		dp, PI_dp
+	use util_math, 	only: 		dp, PI_dp, aUtoTesla
 
 	use util_sysPara
 	use ham_Solver, 	only: 		solveHam
@@ -38,7 +38,7 @@ program main
     	outT 	= 0.0
     	mastT	= 0.0
     	!
-   		write(*,*)					"[main]:**************************setup Grids*************************"
+   		write(*,*)								"[main]:**************************setup Grids*************************"
    		call cpu_time(mastT0)
    		call cpu_time(T0)
     end if
@@ -46,48 +46,49 @@ program main
     !read & distribute input
   	call readInp()
 	if(myID == root ) then
-		write(*,*)					"*"
-		write(*,*)					"*"
-		write(*,*)					"*"
-		write(*,*)					"*"
+		write(*,*)								"*"
+		write(*,*)								"*"
+		write(*,*)								"*"
+		write(*,*)								"*"
 	end if
 	!
 	!check if equal kpt distribution among mpi procs is possible -> if not break
-	if( mod(nQ,nProcs)/=0)  stop 	'[main]: ERROR mpi threads have to be integer fraction of nQ'
+	if( mod(nQ,nProcs)/=0)  stop 				'[main]: ERROR mpi threads have to be integer fraction of nQ'
 	!
 	!print info
 	if( myID == root .and. doSolveHam ) then
-		write(*,*)					"*"
-		write(*,*)					"*"
-		write(*,*)					"[main]:**************************Infos about this run*************************"
-		write(*,'(a,i3,a,i3,a)')	"[main]: q mesh nQx=",nQx," nQy=",nQy
-		write(*,'(a,f8.3,a,f8.3)')	"[main]: dqx=",dqx, " dqy=",dqy
-		write(*,*)					"[main]: interpolation mesh        nK=",nK
-		write(*,*)					"[main]: basis cutoff parameter  Gcut=",Gcut
-		write(*,'(a,i7,a,i7,a)')	"[main]: basis function   maximum  nG=",GmaxGLOBAL," of ",nG," trial basis functions"
-		write(*,*)					"[main]: only solve for        nSolve=",nSolve
-    	write(*,*)					"[main]: nBands=", nBands
-		write(*,*)					"[main]: nWfs  =", nWfs
-		write(*,*)					"[main]: nAt   =", nAt
-		write(*,'(a,i3,a)')			"[main]: project ",nWfs/nAt," states onto each atom"
-		write(*,*)					"[main]: w90 seed_name= ", seedName	
-		write(*,*)					"*"
-		write(*,*)					"*"
-		write(*,*)					"*"
-		write(*,*)					"*"
+		write(*,*)								"*"
+		write(*,*)								"*"
+		write(*,*)								"[main]:**************************Infos about this run*************************"
+		write(*,'(a,i3,a,i3,a)')				"[main]: q mesh nQx=",nQx," nQy=",nQy
+		write(*,'(a,f8.3,a,f8.3)')				"[main]: dqx=",dqx, " dqy=",dqy
+		write(*,*)								"[main]: interpolation mesh        nK=",nK
+		write(*,*)								"[main]: basis cutoff parameter  Gcut=",Gcut
+		write(*,'(a,i7,a,i7,a)')				"[main]: basis function   maximum  nG=",GmaxGLOBAL," of ",nG," trial basis functions"
+		write(*,*)								"[main]: only solve for        nSolve=",nSolve
+    	write(*,*)								"[main]: nBands=", nBands
+		write(*,*)								"[main]: nWfs  =", nWfs
+		write(*,*)								"[main]: nAt   =", nAt
+		write(*,'(a,i3,a)')						"[main]: project ",nWfs/nAt," states onto each atom"
+		write(*,*)								"[main]: w90 seed_name= ", seedName	
+		write(*,'(a,f6.3,a,f6.3,a,f6.3,a)')		"[main]: Bext = ",Bext(1)*aUtoTesla,", ",Bext(2)*aUtoTesla, ", ",Bext(3)*aUtoTesla," T"
+		write(*,*)								"*"
+		write(*,*)								"*"
+		write(*,*)								"*"
+		write(*,*)								"*"
 		!
 		call cpu_time(T1)
 		alloT = T1 - T0
 
 
 		!try to print some WARNINGs for to small Gcut
-		write(*,*)					"[main]:**************************BASIS SET DEBUG*************************"
+		write(*,*)								"[main]:**************************BASIS SET DEBUG*************************"
 		call printBasisInfo()
-		write(*,*)					"[main]: ...wrote basis set debug info"
-		write(*,*)					"*"
-		write(*,*)					"*"
-		write(*,*)					"*"
-		write(*,*)					"*"
+		write(*,*)								"[main]: ...wrote basis set debug info"
+		write(*,*)								"*"
+		write(*,*)								"*"
+		write(*,*)								"*"
+		write(*,*)								"*"
 		call cpu_time(T1)
 		outT = T1 - T0
 	end if
@@ -99,7 +100,7 @@ program main
 	if( doSolveHam ) then
 		!
 		if( myID == root )	call cpu_time(T0)
-		if( myID == root ) 	write(*,*)	"[main]:**************************ELECTRONIC STRUCTURE RUN*************************"
+		if( myID == root ) 	write(*,*)			"[main]:**************************ELECTRONIC STRUCTURE RUN*************************"
 		!
 		!
 		call solveHam()
@@ -108,14 +109,14 @@ program main
 		!finalize:
 		if( myID == root ) then
 			call write_K_lattices()
-			write(*,*)				"[main]:	...wrote k lattices to file"
+			write(*,*)							"[main]:	...wrote k lattices to file"
 			call writeMeshInfo() 
-			write(*,*)				"[main]: ...wrote meshInfo.txt"
-			write(*,*)				"*"
-			write(*,*)				"*"
-			write(*,*)				"*"
-			write(*,*)				"*"
-			write(*,*)				"[main]: done solving Schroedinger eq., please execute wannier90 now"
+			write(*,*)							"[main]: ...wrote meshInfo.txt"
+			write(*,*)							"*"
+			write(*,*)							"*"
+			write(*,*)							"*"
+			write(*,*)							"*"
+			write(*,*)							"[main]: done solving Schroedinger eq., please execute wannier90 now"
 			call cpu_time(T1)
 			hamT = T1-T0
 		end if
@@ -132,13 +133,13 @@ program main
 		!EFF TB - post w90
 		call cpu_time(T0)
 		if(	doPw90 ) then
-			write(*,*)				"[main]:**************************POST WANNIER90 (TB interpolation) *************************"
+			write(*,*)							"[main]:**************************POST WANNIER90 (TB interpolation) *************************"
 			call tb_method()
-			write(*,*)				"[main]: done with interpolation"
-			write(*,*)				"*"
-			write(*,*)				"*"
-			write(*,*)				"*"
-			write(*,*)				"*"
+			write(*,*)							"[main]: done with interpolation"
+			write(*,*)							"*"
+			write(*,*)							"*"
+			write(*,*)							"*"
+			write(*,*)							"*"
 		end if
 		call cpu_time(T1)
 		postWT	= T1-T0
@@ -148,13 +149,13 @@ program main
 		call cpu_time(T0)
 		
 		if ( doBerry ) then
-			write(*,*)				"[main]:**************************BERRY METHOD*************************"
+			write(*,*)							"[main]:**************************BERRY METHOD*************************"
 			call berryMethod()
-			write(*,*)				"[main]: done with wavefunction method "
-			write(*,*)				"*"
-			write(*,*)				"*"
-			write(*,*)				"*"
-			write(*,*)				"*"
+			write(*,*)							"[main]: done with wavefunction method "
+			write(*,*)							"*"
+			write(*,*)							"*"
+			write(*,*)							"*"
+			write(*,*)							"*"
 		end if
 		call cpu_time(T1)
 		berryT	= T1 - T0
@@ -163,29 +164,29 @@ program main
 	
 
 		!OUTPUT
-		write(*,*)					"[main]:**************************WRITE OUTPUT*************************"
+		write(*,*)								"[main]:**************************WRITE OUTPUT*************************"
 		call cpu_time(T0)
 		!
 		if( writeBin )	then
 			call writeMeshBin()
-			write(*,*)				"[main]: ...wrote mesh bin"
-			write(*,*)				"[main]: ...wrote binary files for meshes and unks"
+			write(*,*)							"[main]: ...wrote mesh bin"
+			write(*,*)							"[main]: ...wrote binary files for meshes and unks"
 		end if
 		!
-		write(*,*)					"*"
-		write(*,*)					"*"
-		write(*,*)					"*"
-		write(*,*)					"*"
+		write(*,*)								"*"
+		write(*,*)								"*"
+		write(*,*)								"*"
+		write(*,*)								"*"
 		!
 		!TIMING INFO SECTION
 		call cpu_time(mastT1)
 		mastT= mastT1-mastT0
-		write(*,*) 					"[main]:**************TIMING INFORMATION************************"
+		write(*,*) 								"[main]:**************TIMING INFORMATION************************"
 		call printTiming(alloT,hamT,wannT,postWT,berryT,outT,mastT)
-		write(*,*)					"*"
-		write(*,*)					"*"
-		write(*,*)					"*"
-		write(*,*)					"*"
+		write(*,*)								"*"
+		write(*,*)								"*"
+		write(*,*)								"*"
+		write(*,*)								"*"
 	end if
 
 	!MPI FINALIZE
