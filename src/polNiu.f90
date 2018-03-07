@@ -49,7 +49,7 @@ module pol_Niu
 		centers_F3 = 0.0_dp
 		
 		!$OMP PARALLEL DEFAULT(SHARED)  &
-		!$OMP PRIVATE(n, ki, densCorr, F2, F2k, F3, F3k)
+		!$OMP PRIVATE(n, ki, densCorr, F2, F2k, F3, F3k, p2max, p2min, p3max, p3min, p2Test, p3Test)
 		!$OMP DO SCHEDULE(STATIC)
 		do n = 1, size(centers_F2,2)
 			F2 = 0.0_dp
