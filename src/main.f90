@@ -70,8 +70,9 @@ program main
 		write(*,*)								"[main]: nWfs  =", nWfs
 		write(*,*)								"[main]: nAt   =", nAt
 		write(*,'(a,i3,a)')						"[main]: project ",nWfs/nAt," states onto each atom"
+		write(*,'(a,f6.3,a,f6.3,a,f6.3,a)')		"[main]: Bext = (",Bext(1)*aUtoTesla,", ",Bext(2)*aUtoTesla, ", ",Bext(3)*aUtoTesla,") (T)"
 		write(*,*)								"[main]: w90 seed_name= ", seedName	
-		write(*,'(a,f6.3,a,f6.3,a,f6.3,a)')		"[main]: Bext = ",Bext(1)*aUtoTesla,", ",Bext(2)*aUtoTesla, ", ",Bext(3)*aUtoTesla," T"
+		
 		write(*,*)								"*"
 		write(*,*)								"*"
 		write(*,*)								"*"
