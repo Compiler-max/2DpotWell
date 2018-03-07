@@ -10,14 +10,13 @@ nProcs=16
 #data to calculate
 Bz=( -1.0 0.0 1.0 ) #10.0 100.0 1000.0 )
 
-Vpot=-2.8				#atom 1 = Vpot
-Vpot2=( -2.8 -2.9 ) #)-3.0 -3.2 -3.4 )	#atom 2 = Vpot - dV
+
 
 
 #set numerical paras
-gCut=10.0	#set Gcut
+gCut=28.0	#set Gcut
 nSolve=96
-nQx=4
+nQx=16
 nShell=1
 
 #
@@ -60,7 +59,7 @@ for bfield in ${Bz[*]}; do
 		echo '['$(date +"%T")']: start Bz='$bfield'T; V1='$Vpot'; V2='$v2'; nShell='$nShell
 		#	
 		#creates directories
-		dir=$label'/b'$bfield'dV'$v2
+		dir=$label'/b'$bfield
 		if [[ ! -e $dir ]]; then
    		 	mkdir $dir
    		 	echo '['$(date +"%T")']: created dir '$dir
@@ -77,9 +76,7 @@ for bfield in ${Bz[*]}; do
 		#
 		#prepare input file
 		cd $dir
-		sed -i "/B0/c\   B0		= $Bz $infoString"	./input.txt
-		sed -i "/Bext/c\   Bext	= 0.0 0.0 1.0 $infoString" ./input.txt
-		sed -i "/atPot/c\   atPot	= $Vpot $v2 $infoString" ./input.txt
+		sed -i "/B0/c\   B0		= $bfield $infoString"	./input.txt	
 		wait
 		#	
 		#execute calculation
