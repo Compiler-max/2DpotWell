@@ -151,7 +151,7 @@ subroutine getConn(kpt, Rcell, kpts, rHopp, A_conn)
 		!DEBUG (real conversion)
 		do m = 1, num_wann
 			do n = 1, num_wann
-				if( abs(dimag(Atmp(n,m)))	> 1e-8_dp ) write(*,*)	"[getConn]: WARNING non vanishing imag of connection at #kpt=",kpt	
+				if( abs(dimag(Atmp(n,m)))	> 1e-8_dp ) write(*,'(a,e16.8,a,i5)')	"[getConn]: WARNING non vanishing imag(=",dimag(Atmp(n,m)),") of connection at #kpt=",kpt	
 			end do
 		end do
 	end do
@@ -210,7 +210,7 @@ subroutine getCurv(kpt, Rcell, kpts, rHopp, F_curv)
 		!DEBUG (real conversion)
 		do m = 1, num_wann
 			do n= 1, num_wann
-				if( abs(dimag(Om_tmp(n,m)))	> 1e-8_dp	)		write(*,*)		"[getCurv]: WARNING non zero imag curvature at #kpt=",kpt
+				if( abs(dimag(Om_tmp(n,m)))	> 1e-8_dp	)	write(*,'(a,e16.8,a,i5)')	"[getCurv]: WARNING non zero imag(=",dimag(Om_tmp(n,m)),") curvature at #kpt=",kpt
 			end do
 		end do
 	end do
@@ -271,10 +271,8 @@ subroutine calcVeloBLOUNT(A_conn, En_vec , en_deriv,  v_mat)
 			at = mod(n,size(atPos,2))
 			if( at== 0) at = size(atPos,2)
 			polC(1:2,n)		= pol0(1:2,n) - atPos(1:2,at)*aUtoAngstrm
-			!b_H_final(1:2,n)	= b_H_gauge(1:2,n) - atPos(1:2,at)*aUtoAngstrm
-			!b_W_final(1:2,n)	= b_W_gauge(1:2,n) - atPos(1:2,at)*aUtoAngstrm
-			!
-			!ToDo: need niu cent as well ?
+			
+			!niu ?!
 		end do
 
 
