@@ -262,14 +262,15 @@ subroutine calcVeloBLOUNT(A_conn, En_vec , en_deriv,  v_mat)
 	subroutine	writePolTB(polQuantum, centiMet, pol0, centF2, centF3)
 		real(dp),		intent(in)			::	polQuantum, centiMet, pol0(:,:), centF2(:,:), centF3(:,:)
 		integer								::	n, at
+		real(dp),		allocatable			::	polC(:,:)
 
-
-
+		allocate(	polC(size(pol0,1),size(pol0,2)) )
+		polC = 0.0_dp
 		!substract atom centers
-		do n = 1, size(w_centers,2)
-			at = mod(n,nAt)
-			if( at== 0) at = nAt
-			pol0(1:2,n)		= pol0(1:2,n) - atPos(1:2,at)*aUtoAngstrm
+		do n = 1, size(pol0,2)
+			at = mod(n,size(atPos,2))
+			if( at== 0) at = size(atPos,2)
+			polC(1:2,n)		= pol0(1:2,n) - atPos(1:2,at)*aUtoAngstrm
 			!b_H_final(1:2,n)	= b_H_gauge(1:2,n) - atPos(1:2,at)*aUtoAngstrm
 			!b_W_final(1:2,n)	= b_W_gauge(1:2,n) - atPos(1:2,at)*aUtoAngstrm
 			!
