@@ -86,8 +86,8 @@ module pol_Niu
 				end if
 			end do
 			!
-			write(*,'(a,i2,a,i5,a,e13.4)')	"[calcFirstOrdP]: n=",n," largest F2 contribution (at #kpt=",k2max,"): ",p2max
-			write(*,'(a,i2,a,i5,a,e13.4)')	"[calcFirstOrdP]: n=",n," largest F3 contribution (at #kpt=",k3max,"): ",p3max
+			write(*,'(a,i2,a,i5,a,e13.4,a)')	"[calcFirstOrdP]: n=",n," largest F2 contribution (at #kpt=",k2max,"): ",p2max * aUtoAngstrm, "angs"
+			write(*,'(a,i2,a,i5,a,e13.4,a)')	"[calcFirstOrdP]: n=",n," largest F3 contribution (at #kpt=",k3max,"): ",p3max * aUtoAngstrm, "angs"
 			!NORMALIZE
 			F2 = F2 / real(kSize,dp)
 			F3 = F3  / real(kSize,dp)
