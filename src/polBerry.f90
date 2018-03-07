@@ -34,7 +34,6 @@ module pol_Berry
 	integer						::	num_wann, num_bands, num_kpts, num_stat, &
 									nntot
 	integer,		allocatable	::	nnlist(:,:), nncell(:,:,:)
-	real(dp),		allocatable	::	b_k(:,:), w_b(:)
 
 
 
@@ -52,8 +51,8 @@ module pol_Berry
 	subroutine berryMethod()
 		complex(dp),	allocatable		:: 	U_mat(:,:,:), M_ham(:,:,:,:), M_wann(:,:,:,:), &
 											veloQ(:,:,:,:) 		
-		real(dp),		allocatable		::	Aconn_H(:,:,:,:), Aconn_W(:,:,:,:), FcurvQ(:,:,:,:),&
-											EnQ(:,:),  b_k(:,:), w_b(:), &
+		real(dp),		allocatable		::	A_conn(:,:,:,:), FcurvQ(:,:,:,:),&
+											EnQ(:,:), &
 											w_centers(:,:), berry_W_gauge(:,:),berry_H_gauge(:,:), niu_polF2(:,:), niu_polF3(:,:)
 		real(dp)						::	polQuantum, centiMet
 		integer							::	n
@@ -83,14 +82,10 @@ module pol_Berry
 		if(	nntot /= 4 )				write(*,*)	"[berryMethod]: WARNING nntot is not equal 4"
 		write(*,*)	"*"
 
-		!fd-scheme allo
-		allocate(			w_b(		nntot	)	)
-		allocate(			b_k(	3,	nntot	)	)
+		
 		!k-space allo
 		allocate(			M_wann(		num_wann	,	num_wann	,	nntot		,	num_kpts		)			)		
-		allocate(			Aconn_H(		3		, 	num_wann	,	num_wann	,	num_kpts		)			)
-		allocate(			Aconn_W(		3		, 	num_wann	,	num_wann	,	num_kpts		)			)
-		allocate(			EnQ(				num_stat							,	num_kpts		)			)
+		allocate(			A_conn(		3		, 		num_wann	,	num_wann	,	num_kpts		)			)
 		!real-space
 		allocate(			w_centers(		3,					num_wann					)			)
 		allocate(			berry_W_gauge(	3,					num_wann					)			)
@@ -132,9 +127,8 @@ module pol_Berry
 		write(*,*)	"*"
 		write(*,*)	"*"
 		write(*,*)		"[berryMethod]: start (H) gauge calculation"
-		call read_FD_b_vectors(b_k, w_b)
-		call calcConnOnCoarse(M_ham, Aconn_H)
-		call calcPolViaA(polQuantum, centiMet, Aconn_H, berry_H_gauge)
+		call calcConnOnCoarse(M_ham, A_conn)
+		call calcPolViaA(polQuantum, centiMet, A_conn, berry_H_gauge)
 		!
 		!0th WANN GAUGE
 		write(*,*)	"*"
@@ -142,8 +136,8 @@ module pol_Berry
 		write(*,*)	"*"
 		write(*,*)		"[berryMethod]: start (W) gauge calculation"
 		call rot_M_matrix(M_ham, U_mat, M_wann)
-		call calcConnOnCoarse(M_wann, Aconn_W)
-		call calcPolViaA(polQuantum, centiMet, Aconn_W, berry_W_gauge)
+		call calcConnOnCoarse(M_wann, A_conn)
+		call calcPolViaA(polQuantum, centiMet, A_conn, berry_W_gauge)
 		!
 		
 
@@ -155,8 +149,9 @@ module pol_Berry
 			write(*,*)	"*"
 			write(*,*)	"[berryMethod]: **************SEMICLASSICS*************************"
 		
-			allocate(	FcurvQ(	3,	num_wann, num_wann,		num_kpts)		)
-			allocate(	veloQ(	3, 	num_stat, num_stat,		num_kpts)		)
+			allocate(	FcurvQ(	3,	num_wann,	num_wann,		num_kpts)		)
+			allocate(	veloQ(	3, 	num_stat,	num_stat,		num_kpts)		)
+			allocate(	EnQ(					num_stat,		num_kpts)		)
 
 			!read abinitio files
 			call readEnTXT(EnQ)
@@ -164,7 +159,7 @@ module pol_Berry
 			!get curvature (toDo) 
 			call calcCurv(FcurvQ)
 			!semiclassics
-			call calcFirstOrdP(polQuantum, centiMet, Bext, prefactF3, FcurvQ, Aconn_W, veloQ, EnQ, niu_polF2, niu_polF3)
+			call calcFirstOrdP(polQuantum, centiMet, Bext, prefactF3, FcurvQ, A_conn, veloQ, EnQ, niu_polF2, niu_polF3)
 			write(*,*)	"[berryMethod]: done with semiclassics"
 		
 		else
@@ -181,7 +176,7 @@ module pol_Berry
 		write(*,*)		"[berryMethod]: wrote pol file"
 		
 	
-		call writeConnTxt( Aconn_W )
+		call writeConnTxt( A_conn )
 		call writeVeloHtxt( veloQ )
 		write(*,*)	"[berryMethod]: wrote k-space info files (connection & velocities)"		
 		!		
@@ -277,7 +272,7 @@ module pol_Berry
 				if(	 ( bk_abs - norm2(my_bk(:,nn))	)	> 1e-8_dp	) then
 					write(*,*)	"*"
 					write(*,*)	"my_bk =",my_bk(:,nn)
-					write(*,*)	"b_k=",b_k(:,nn)
+					write(*,*)	"bk_abs=",bk_abs
 				end if
 				my_wb(nn)		= 3.0_dp / 	(real(nntot+2,dp)*norm2(my_bk(:,nn))**2)
 
