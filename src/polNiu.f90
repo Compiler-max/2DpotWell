@@ -34,9 +34,9 @@ module pol_Niu
 		real(dp),		intent(out)		::  centers_F2(:,:), centers_F3(:,:)
 		!real(dp)						::	pnF2(3), pnF3(3)
 		real(dp)						:: 	F2(3,3), F3(3,3), F2k(3,3), F3k(3,3), sumF2(3), sumF3(3), &
-											p2Test(3), p3Test(3), p2max, p3max
+											p2Test(3), p3Test(3), p2max, p3max, p2min, p3min
 		real(dp)						:: 	densCorr(3)
-		integer							:: 	n, ki, kSize, ind, k2max, k3max
+		integer							:: 	n, ki, kSize, ind, k2max, k3max, k2min, k3min
 		!
 		kSize		= size(Velo,4)
 		!
@@ -57,9 +57,17 @@ module pol_Niu
 			!
 			k2max = -1
 			k3max = -1
+			k2min = -1
+			k3min = -1
+
 			!GET RESPONSE MATRIX
 			p2max	= 0.0_dp
 			p3max	= 0.0_dp
+			p2min	= 100.0_dp
+			p3min	= 100.0_dp
+
+
+
 			do ki = 1, kSize		
 				!
 				!PHASE SPACE DENSITY CORRECTION
@@ -79,15 +87,23 @@ module pol_Niu
 				if( norm2(p2Test) > p2max) then
 					p2max = norm2(p2Test)
 					k2max = ki
+				else if (norm2(p2Test) < p2min) then
+					p2min = norm2(p2Test)
+					k2min = ki
 				end if
 				if( norm2(p3Test) > p3max) then
 					p3max = norm2(p3Test)
 					k3max = ki
+				else if (norm2(p3Test) < p3min) then
+					p3min = norm2(p3Test)
+					k3min = ki
 				end if
 			end do
 			!
-			write(*,'(a,i2,a,i5,a,e13.4,a)')	"[calcFirstOrdP]: n=",n," largest F2 contribution (at #kpt=",k2max,"): ",p2max * aUtoAngstrm, "angs"
-			write(*,'(a,i2,a,i5,a,e13.4,a)')	"[calcFirstOrdP]: n=",n," largest F3 contribution (at #kpt=",k3max,"): ",p3max * aUtoAngstrm, "angs"
+			write(*,'(a,i2,a,i5,a,e13.4)')	"[calcFirstOrdP]: n=",n," largest F2 contribution (at #kpt=",k2max,"): ",p2max * aUtoAngstrm, "angs"
+			write(*,'(a,i2,a,i5,a,e13.4)')	"[calcFirstOrdP]: n=",n," smalles F2 contribution (at #kpt=",k2min,"): ",p2min * aUtoAngstrm, "angs"
+			write(*,'(a,i2,a,i5,a,e13.4)')	"[calcFirstOrdP]: n=",n," largest F3 contribution (at #kpt=",k3max,"): ",p3max * aUtoAngstrm, "angs"
+			write(*,'(a,i2,a,i5,a,e13.4)')	"[calcFirstOrdP]: n=",n," smalles F3 contribution (at #kpt=",k3min,"): ",p3min * aUtoAngstrm, "angs"
 			!NORMALIZE
 			F2 = F2 / real(kSize,dp)
 			F3 = F3  / real(kSize,dp)
