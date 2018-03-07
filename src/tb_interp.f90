@@ -2,6 +2,7 @@ module tb_interp
 
 
 	use omp_lib
+	use util_math,		only:	myExp
 	use util_sysPara,	only:	Bext, prefactF3
 								
 	
@@ -44,9 +45,10 @@ module tb_interp
 			end do		
 		end do
 		pol0 	= pol0 		*	aUtoAngstrm
-		!print zero order
+		write(*,*)	"num_wann | <r> (angs)"
+		write(*,*)	"---------------------------------------------------------------------------------------------"
 		do n = 1, num_wann
-			write(*,'(i3,a,f16.8,a,f16.8,a,f16.8)')		n," ",pol0(1,n)," ",pol0(2,n)," ",pol0(3,n)
+			write(*,'(i3,a,f16.8,a,f16.8,a,f16.8)')		n," | ",pol0(1,n)," ",pol0(2,n)," ",pol0(3,n)
 		end do
 
 
@@ -61,8 +63,6 @@ module tb_interp
 
 		
 		!write output file
-			!todo!!!!!!!!!
-
 		call writePolTB(polQuantum, centiMet, pol0, centF2, centF3)
 
 		return
@@ -131,7 +131,8 @@ module tb_interp
 		complex(dp),	intent(out), allocatable		::	v_interp(:,:,:,:)
 		real(dp),		allocatable						::	kpts(:,:), en_deriv(:,:,:), Rcell(:,:)
 		complex(dp),	allocatable						::	tHopp(:,:,:), rHopp(:,:,:,:)
-		integer											::	kpt
+		complex(dp)										::	phase
+		integer											::	kpt, cell, dim
 		!	
 		
 		!
@@ -161,6 +162,16 @@ module tb_interp
 		!interpolate connection & curvature
 		do kpt = 1, num_kpts
 			write(*,*)"[tb_interpolator]: warning interpolation not implemented "
+
+			do cell = 1, num_sc
+				phase				= myExp( 	dot_product(kpts(1:3,kpt),Rcell(1:3,cell))		) 
+
+				do dim = 1,3
+					!A_interp(dim,:,:,kpt)	= phase *
+				end do
+
+			end do
+
 
 			write(*,'(a,f6.2,a,f6.2,a,f6.2,a)')	"[tb_interpolatior]: done interpolating to k= (",kpts(1,kpt),", ",kpts(2,kpt),", ",kpts(3,kpt),") [a.u.]. "
 		end do

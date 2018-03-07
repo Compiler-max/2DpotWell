@@ -18,9 +18,9 @@
     nBands      =   6
     nWfs        =   6
 
-[perturbation]
-    B0		= 0.0, # changed by probeB.sh
-	Bext	= 0.0 0.0 1.0 # changed by probeB.sh
+[field]
+    B0  =       4.0               # changed by probeB.sh
+    Bext = 0.0 0.0 1.0             # changed by probeB.sh
 
 [numerics]
    Gcut        = 11.0 # changed by probeB.sh
@@ -35,7 +35,7 @@
     doMagHam    =   f
 
 [methods]
-    doSolveHam  =   t
+    doSolveHam  =   f
     doPw90      =   f
     doBerry     =   f
     writeBin    =   f

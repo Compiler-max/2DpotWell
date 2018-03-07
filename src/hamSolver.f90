@@ -104,7 +104,7 @@ module ham_Solver
 		allocate(	Hmat(				Gmax,	Gmax				)	)
 		allocate(	ck_temp(		GmaxGLOBAL, nSolve				)	)
 		allocate(	En_temp(				Gmax					)	)
-		!
+		
 		allocate(	velo_temp(	3, 	nSolve,		nSolve				)	)	
 		allocate(	Amn_temp(		nBands,		nWfs				)	)
 		!
