@@ -2,8 +2,8 @@ module tb_interp
 
 
 	use omp_lib
-	use util_math,		only:	myExp, i_dp, dp, myLeviCivita
-	use util_sysPara,	only:	Bext, prefactF3, nSolve, nK
+	use util_math,		only:	myExp, i_dp, dp, myLeviCivita, aUtoAngstrm
+	use util_sysPara,	only:	Bext, prefactF3, nSolve, nK, atPos
 								
 	
 	use util_w90Interf,	only:	read_band_interp, read_tb_basis
@@ -15,7 +15,6 @@ module tb_interp
 	public	::					tb_method
 
 	real(dp),		parameter	::	centiMet		= 1e+8_dp		!converts pol from 1/angsroem to 1/cm
-	real(dp),		parameter	::	aUtoAngstrm 	= 0.52917721092_dp
 	integer						::	num_wann, num_kpts, num_sc
 
 
@@ -262,7 +261,20 @@ subroutine calcVeloBLOUNT(A_conn, En_vec , en_deriv,  v_mat)
 
 	subroutine	writePolTB(polQuantum, centiMet, pol0, centF2, centF3)
 		real(dp),		intent(in)			::	polQuantum, centiMet, pol0(:,:), centF2(:,:), centF3(:,:)
-		integer								::	n
+		integer								::	n, at
+
+
+
+		!substract atom centers
+		do n = 1, size(w_centers,2)
+			at = mod(n,nAt)
+			if( at== 0) at = nAt
+			pol0(1:2,n)		= pol0(1:2,n) - atPos(1:2,at)*aUtoAngstrm
+			!b_H_final(1:2,n)	= b_H_gauge(1:2,n) - atPos(1:2,at)*aUtoAngstrm
+			!b_W_final(1:2,n)	= b_W_gauge(1:2,n) - atPos(1:2,at)*aUtoAngstrm
+			!
+			!ToDo: need niu cent as well ?
+		end do
 
 
 
@@ -275,6 +287,7 @@ subroutine calcVeloBLOUNT(A_conn, En_vec , en_deriv,  v_mat)
 		write(100,*)	"begin centers"
 		!----------------------------------------------------------------------------------------------------------------------------------------		
 		write(100,*)
+		write(100,*)	"nWf	|  <r> - r_atomCenter (ang)"
 		write(100,*)	"begin zero_order_centers"
 		do n = 1, size(pol0,2)
 			write(100,'(i4,a,f16.8,a,f16.8,a,f16.8)')	n," ",pol0(1,n)," ",pol0(2,n)," ",pol0(3,n)
