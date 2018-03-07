@@ -100,10 +100,10 @@ module pol_Niu
 				end if
 			end do
 			!
-			write(*,'(a,i2,a,i5,a,e13.4)')	"[calcFirstOrdP]: n=",n," largest F2 contribution (at #kpt=",k2max,"): ",p2max * aUtoAngstrm, "angs"
-			write(*,'(a,i2,a,i5,a,e13.4)')	"[calcFirstOrdP]: n=",n," smalles F2 contribution (at #kpt=",k2min,"): ",p2min * aUtoAngstrm, "angs"
-			write(*,'(a,i2,a,i5,a,e13.4)')	"[calcFirstOrdP]: n=",n," largest F3 contribution (at #kpt=",k3max,"): ",p3max * aUtoAngstrm, "angs"
-			write(*,'(a,i2,a,i5,a,e13.4)')	"[calcFirstOrdP]: n=",n," smalles F3 contribution (at #kpt=",k3min,"): ",p3min * aUtoAngstrm, "angs"
+			write(*,'(a,i2,a,i5,a,e13.4)')	"[calcFirstOrdP]: n=",n," largest F2 shift (at #kpt=",k2max,"): ",p2max * aUtoAngstrm, "(ang)"
+			write(*,'(a,i2,a,i5,a,e13.4)')	"[calcFirstOrdP]: n=",n," smalles F2 shift (at #kpt=",k2min,"): ",p2min * aUtoAngstrm, "(ang)"
+			write(*,'(a,i2,a,i5,a,e13.4)')	"[calcFirstOrdP]: n=",n," largest F3 shift (at #kpt=",k3max,"): ",p3max * aUtoAngstrm, "(ang)"
+			write(*,'(a,i2,a,i5,a,e13.4)')	"[calcFirstOrdP]: n=",n," smalles F3 shift (at #kpt=",k3min,"): ",p3min * aUtoAngstrm, "(ang)"
 			!NORMALIZE
 			F2 = F2 / real(kSize,dp)
 			F3 = F3  / real(kSize,dp)
