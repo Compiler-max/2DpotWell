@@ -10,12 +10,12 @@ module ham_Solver
 	use	ham_PotWell,	only:	add_potWell
 	use	ham_Zeeman,		only:	add_Zeeman
 	use ham_Magnetic,	only:	add_magHam
-	use ham_PWbasis,	only:	getUNKs
+	use ham_PWbasis,	only:	writeUNKs
 
 
 
 	use ham_PWbasis,	only:	calcVeloGrad, calcAmatANA, calcMmat
-	use util_basisIO,	only:	writeABiN_basVect, writeABiN_unkPS, writeABiN_energy, writeABiN_basCoeff, writeABiN_velo, writeABiN_Amn, writeABiN_Mmn, &
+	use util_basisIO,	only:	writeABiN_basVect, writeABiN_energy, writeABiN_basCoeff, writeABiN_velo, writeABiN_Amn, writeABiN_Mmn, &
 								read_coeff, read_gVec, read_energies
 	use util_w90Interf,	only:	setup_w90, write_w90_matrices, printNNinfo
 	use util_output,	only:	writeEnTXT
@@ -96,7 +96,7 @@ module ham_Solver
 !private:
 	subroutine worker()
 		!			solve Ham, write results and derived quantites														
-		complex(dp),	allocatable		::	Hmat(:,:) , ck_temp(:,:), Amn_temp(:,:), velo_temp(:,:,:), unk(:,:)
+		complex(dp),	allocatable		::	Hmat(:,:) , ck_temp(:,:), Amn_temp(:,:), velo_temp(:,:,:)
 		real(dp),		allocatable		::	En_temp(:)
 		integer							:: 	qi, qLoc, found, Gsize, boundStates, minBound
 		!	
@@ -104,9 +104,9 @@ module ham_Solver
 		allocate(	Hmat(				Gmax,	Gmax				)	)
 		allocate(	ck_temp(		GmaxGLOBAL, nSolve				)	)
 		allocate(	En_temp(				Gmax					)	)
+		!
 		allocate(	velo_temp(	3, 	nSolve,		nSolve				)	)	
 		allocate(	Amn_temp(		nBands,		nWfs				)	)
-		allocate(	unk(			nR,	nBands						)	)
 		!
 		qLoc 	= 1
 		minBound= nSolve
@@ -141,8 +141,7 @@ module ham_Solver
 			call writeABiN_velo(qi, velo_temp)
 			!
 			!w90 plot preparation
-			call getUNKs(qi, nGq(qLoc), ck_temp(:,1:nBands), Gvec(:,:,qLoc), unk)
-			call writeABiN_unkPS(qi, unk)
+			call writeUNKs(qi, nGq(qLoc), ck_temp(:,1:nBands), Gvec(:,:,qLoc))
 
 
 			!count insulating states
