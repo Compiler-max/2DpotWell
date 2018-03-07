@@ -8,7 +8,7 @@ module ham_PWbasis
 	implicit none
 
 	private
-	public	::	calcVeloGrad, calcMmat, calcAmatANA, calcBasis, getUNKs
+	public	::	calcVeloGrad, calcMmat, calcAmatANA, calcBasis, writeUNKs
 
 
 	contains
@@ -156,27 +156,36 @@ module ham_PWbasis
 
 
 
-	subroutine getUNKs(qi, nG_qi, ck, Gvec, r_wvfn)
+	subroutine writeUNKs(qi, nG_qi, ck, Gvec)
 		integer,						intent(in)		::	qi, nG_qi
 		complex(dp),					intent(in)		::	ck(:,:)
 		real(dp),						intent(in)		::	Gvec(:,:)
-		complex(dp),	allocatable,	intent(out)		::	r_wvfn(:,:)
-		integer											::	ix, loop_b, nbnd, ig
+		complex(dp)										::	tmp
+		integer											::	ix, loop_b, nbnd, ig, spin
+		character(len=1024)								::	unkFORM='(a,i5.5,a,i1)'
+		character(len=15)								::	wfnname
 		!
-		allocate(	r_wvfn( size(rpts,2) ,size(ck,2))	)
-		!
+		!filename
+		spin	= 1
 		nbnd	= size(ck,2)
-		r_wvfn	= dcmplx(0.0_dp)
-		!
+		write(wfnname, unkFORM) 'UNK',qi,'.', spin
+
+		open(unit=205, file=w90_dir//wfnname,	form='formatted', access='stream', action='write', status='replace')
+		!write to file
+		write(205,*)	nRx, nRy, nRz, qi, nbnd
 		do loop_b = 1, nbnd
 			do ix = 1, nR
 				!SUM G-VEC
+				tmp = dcmplx(0.0_dp)
 				do ig = 1, nG_qi
-					r_wvfn(ix, loop_b)	= r_wvfn(ix, loop_b) & 
-								+ ck(ig, loop_b) 	* 	myExp( 		dot_product( Gvec(1:2,ig)-qpts(1:2,qi),	rpts(1:2,ix) )			)  / dcmplx(sqrt(vol))
+					tmp	= tmp & 
+						+ ck(ig, loop_b) 	* 	myExp( 		dot_product( Gvec(1:2,ig)-qpts(1:2,qi),	rpts(1:2,ix) )		)  / dcmplx(sqrt(vol))
 				end do
+				!write result
+				write(205,*) dreal(tmp)," ",dimag(tmp)
 			end do
 		end do
+		close(205)
 		!
 		return
 	end subroutine
