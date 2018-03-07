@@ -3,7 +3,7 @@ module tb_interp
 
 	use omp_lib
 	use util_math,		only:	myExp
-	use util_sysPara,	only:	Bext, prefactF3
+	use util_sysPara,	only:	Bext, prefactF3, nSolve, nK
 								
 	
 	use util_w90Interf,	only:	read_band_interp, read_tb_basis
@@ -87,7 +87,7 @@ module tb_interp
 		write(100,*)
 		write(100,*)	"begin zero_order_centers"
 		do n = 1, size(pol0,2)
-			write(100,'(a,i4,a,f16.8,a,f16.8,a,f16.8)')	n," ",pol0(1,n)," ",pol0(2,n)," ",pol0(3,n)
+			write(100,'(i4,a,f16.8,a,f16.8,a,f16.8)')	n," ",pol0(1,n)," ",pol0(2,n)," ",pol0(3,n)
 		end do
 		write(100,*)	"end zero_order_centers"
 		!----------------------------------------------------------------------------------------------------------------------------------------
@@ -96,7 +96,7 @@ module tb_interp
 		write(100,*)
 		write(100,*)	"begin f2_centers"
 		do n = 1, size(centF2,2)
-			write(100,'(a,i4,a,f16.8,a,f16.8,a,f16.8)')	n," ",centF2(1,n)," ",centF2(2,n)," ",centF2(3,n)
+			write(100,'(i4,a,f16.8,a,f16.8,a,f16.8)')	n," ",centF2(1,n)," ",centF2(2,n)," ",centF2(3,n)
 		end do
 		write(100,*)	"end f2_centers"
 		!----------------------------------------------------------------------------------------------------------------------------------------
@@ -105,7 +105,7 @@ module tb_interp
 		write(100,*)
 		write(100,*)	"begin f3_centers"
 		do n = 1, size(centF3,2)
-			write(100,'(a,i4,a,f16.8,a,f16.8,a,f16.8)')	n," ",centF3(1,n)," ",centF3(2,n)," ",centF3(3,n)
+			write(100,'(i4,a,f16.8,a,f16.8,a,f16.8)')	n," ",centF3(1,n)," ",centF3(2,n)," ",centF3(3,n)
 		end do
 		write(100,*)	"end f3_centers"
 		!----------------------------------------------------------------------------------------------------------------------------------------
@@ -149,10 +149,13 @@ module tb_interp
 		num_kpts	= num_sc
 		write(*,*)	"[tb_interpolator]: read w90 tight binding basis"
 		!
-		allocate(	kpts(		3,							num_kpts	)		)
-		allocate(	A_interp(	3,	num_wann, num_wann, 	num_kpts	)		)
-		allocate(	curv_interp(3,	num_wann, num_wann,		num_kpts	)		)
-		allocate(	v_interp(	3,	num_wann, num_wann,		num_kpts	)		)
+		allocate(	kpts(		3,							nK	)		)
+		allocate(	A_interp(	3,	num_wann, num_wann, 	nK	)		)
+		allocate(	curv_interp(3,	num_wann, num_wann,		nK	)		)
+		allocate(	v_interp(	3,	num_wann, num_wann,		nK	)		)
+
+		allocate(	En_interp(			nSolve, 			nK			)		)
+		allocate(	en_deriv(	3,		nSolve,				nK			)		)
 		!
 		!get bands & derivs
 		call read_band_interp(kpts, en_interp, en_deriv) !todo: read interp mesh
