@@ -119,9 +119,9 @@ module util_sysPara
 		![wann]
 		call CFG_add_get(my_cfg,	"wann%nBands"		,	nBands	 	,	"# of bands to project onto trial orbs"	)
 		call CFG_add_get(my_cfg,	"wann%nWfs"			,	nWfs	 	,	"# wannier functions to generate"		)
-		![perturbation]	
-		call CFG_add_get(my_cfg,	"perturbation%B0"	,	B0			,	"scaling fact. of ext. magnetic field"	)
-		call CFG_add_get(my_cfg,	"perturbation%Bext"	,	Bext		,	"vector of ext. magnetic field"			)
+		![field]	
+		call CFG_add_get(my_cfg,	"field%B0"			,	B0			,	"scaling fact. of ext. magnetic field"	)
+		call CFG_add_get(my_cfg,	"field%Bext"		,	Bext		,	"vector of ext. magnetic field"			)
 		![numerics]
 		call CFG_add_get(my_cfg,	"numerics%Gcut"		,	Gcut	    ,	"k space cut of parameter"				)
 		call CFG_add_get(my_cfg,	"numerics%nSolve"	,	nSolve	    ,	"number of eigenstates to find"			)
@@ -174,8 +174,10 @@ module util_sysPara
 		nK 				=	nKx		*	nKy
 		!
 		!
+
+		!scale the field
 		Bext=	B0 		* 	Bext
-		!CONVERT B FIELD FROM TESLA TO 	a.u.
+		!convert to a.u.
 		Bext			=	Bext	/ aUtoTesla
 
 		!
@@ -214,7 +216,7 @@ module util_sysPara
 		![wann]
 		call MPI_Bcast( nBands		,		1	,		MPI_INTEGER			,	root,	MPI_COMM_WORLD, ierr)		
 		call MPI_Bcast( nWfs		,		1	,		MPI_INTEGER			,	root,	MPI_COMM_WORLD, ierr)
-		![perturbation]
+		![field]
 		call MPI_Bcast(	B0 			,		1	,	MPI_DOUBLE_PRECISION	,	root,	MPI_COMM_WORLD, ierr)		
 		call MPI_Bcast(	Bext 		,		3	,	MPI_DOUBLE_PRECISION	,	root,	MPI_COMM_WORLD, ierr)
 		![numerics]
