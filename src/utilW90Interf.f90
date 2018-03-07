@@ -486,7 +486,7 @@ module util_w90Interf
 		integer												::	stat, f_nwfs, f_nSC, readLines, line, &
 																cell, n
 		integer												::	cell_rel(3), index(2)
-		real(dp)											::	unit_cell(3,3), compl1(2),compl3(6), rTest(3)
+		real(dp)											::	unit_cell(3,3), compl1(2),compl3(6), rTest(3), real3(3)
 
 		
 
@@ -494,10 +494,15 @@ module util_w90Interf
 
 		!read unit cell
 		read(330,*)
-		read(330,*)	unit_cell(1,1:3) !x comp
-		read(330,*)	unit_cell(2,1:3) !y comp
-		read(330,*)	unit_cell(3,1:3) !z comp
+		read(330,*)	real3
+		unit_cell(1,1:3)	= real3
+		read(330,*)	 real3
+		unit_cell(2,1:3) 	= real3
+		read(330,*)	 real3
+		unit_cell(3,1:3)	= real3
 		unit_cell = unit_cell / aUtoAngstrm
+
+
 		
 		if( abs(unit_cell(1,1)-aX) > 1e-8_dp) 	write(*,*)	"[read_tb_basis]: WARNING problem reading aX"
 		if( abs(unit_cell(2,2)-aY) > 1e-8_dp) 	write(*,*)	"[read_tb_basis]: WARNING problem reading aY"
@@ -513,9 +518,10 @@ module util_w90Interf
 		allocate(	tHopp(		f_nwfs,	f_nwfs,		f_nSC		)	)
 
 
+		
 		!debug warnings
-		if(	f_nwfs 	== nWfs )	write(*,'(a,i4,a,i4,a)')	"[read_tb_basis]: WARNING wrong nWfs detected: got ",f_nwfs," (expected ",nWfs,")."
-		if(	f_nSC	== nSC )	write(*,'(a,i4,a,i4,a)')	"[read_tb_basis]: WARNING wrong nSC detected: got ",f_nSC," (expected ",nSC,")."
+		if(	f_nwfs 	/= nWfs )	write(*,'(a,i4,a,i4,a)')	"[read_tb_basis]: WARNING wrong nWfs detected: got ",f_nwfs," (expected ",nWfs,")."
+		if(	f_nSC	/= nSC )	write(*,'(a,i4,a,i4,a)')	"[read_tb_basis]: WARNING wrong nSC detected: got ",f_nSC," (expected ",nSC,")."
 
 		!dummy read the degeneracy list
 		readLines = ceiling( real(f_nSC,dp) / real(15,dp)		)
