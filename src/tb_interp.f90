@@ -266,6 +266,7 @@ subroutine calcVeloBLOUNT(A_conn, En_vec , en_deriv,  v_mat)
 		real(dp),		intent(in)			::	polQuantum, centiMet, pol0(:,:), centF2(:,:), centF3(:,:)
 		integer								::	n, at
 		real(dp),		allocatable			::	polC(:,:)
+		real(dp)							::	scal
 
 		allocate(	polC(size(pol0,1),size(pol0,2)) )
 		polC = 0.0_dp
@@ -278,6 +279,9 @@ subroutine calcVeloBLOUNT(A_conn, En_vec , en_deriv,  v_mat)
 			!niu ?!
 		end do
 
+		!factor to scal to muC/cm units
+		scal	= polQuantum * centiMet
+
 
 
 		open(unit=100,file='polInterp.txt',action='write')
@@ -289,68 +293,83 @@ subroutine calcVeloBLOUNT(A_conn, En_vec , en_deriv,  v_mat)
 		write(100,*)	"begin centers"
 		!----------------------------------------------------------------------------------------------------------------------------------------		
 		write(100,*)
-		write(100,*)	"nWf	|  <r> - r_atomCenter (ang)"
-		write(100,*)	"begin zero_order_centers"
+		write(100,*)	"	nWf	|  <r> - r_atomCenter (ang)"
+		write(100,*)	"	begin zero_order_centers"
 		do n = 1, size(pol0,2)
-			write(100,'(i4,a,f16.8,a,f16.8,a,f16.8)')	n," ",pol0(1,n)," ",pol0(2,n)," ",pol0(3,n)
+			write(100,'(a,i4,a,f16.8,a,f16.8,a,f16.8)')	"	",n," ",pol0(1,n)," ",pol0(2,n)," ",pol0(3,n)
 		end do
-		write(100,*)	"end zero_order_centers"
-
+		write(100,*)	"	end zero_order_centers"
 		!----------------------------------------------------------------------------------------------------------------------------------------
 		!+++
 		!----------------------------------------------------------------------------------------------------------------------------------------
 		write(100,*)
-		write(100,*)	"begin f2_centers"
+		write(100,*)	"	begin f2_centers"
 		do n = 1, size(centF2,2)
-			write(100,'(i4,a,f16.8,a,f16.8,a,f16.8)')	n," ",centF2(1,n)," ",centF2(2,n)," ",centF2(3,n)
+			write(100,'(a,i4,a,f16.8,a,f16.8,a,f16.8)')	"	",n," ",centF2(1,n)," ",centF2(2,n)," ",centF2(3,n)
 		end do
-		write(100,*)	"end f2_centers"
+		write(100,*)	"	end f2_centers"
 		!----------------------------------------------------------------------------------------------------------------------------------------
 		!+++
 		!----------------------------------------------------------------------------------------------------------------------------------------
 		write(100,*)
-		write(100,*)	"begin f3_centers"
+		write(100,*)	"	begin f3_centers"
 		do n = 1, size(centF3,2)
-			write(100,'(i4,a,f16.8,a,f16.8,a,f16.8)')	n," ",centF3(1,n)," ",centF3(2,n)," ",centF3(3,n)
+			write(100,'(a,i4,a,f16.8,a,f16.8,a,f16.8)')	"	",n," ",centF3(1,n)," ",centF3(2,n)," ",centF3(3,n)
 		end do
-		write(100,*)	"end f3_centers"
+		write(100,*)	"	end f3_centers"
 		!----------------------------------------------------------------------------------------------------------------------------------------
 		write(100,*)	"end centers"
 		!
 		!
+		write(100,*)
+		write(100,*)
+		write(100,*)
 		!
 		!MODIFIED POLARIZATION
 		write(100,*)	"begin pol"
 		!----------------------------------------------------------------------------------------------------------------------------------------
-		write(100,*)	"begin zero_order_pol"
-
-		write(100,*)	"end zero_order_pol"
+		write(100,*)
+		write(100,*)	"	n |pol (muC/cm)"
+		write(100,*)	"	begin zero_order_pol"
+		do n = 1, size(pol0,2)
+			write(100,'(a,i4,a,e17.10,a,e17.10,a,e17.10)')	"	",n," ",polC(1,n)*scal," ",polC(2,n)*scal," ",polC(3,n)*scal
+		end do
+		write(100,*)	"	end zero_order_pol"
 		!+
-		write(100,*)	"begin zero_order_sum"
-
-		write(100,*)	"end zero_order_sum"
+		write(100,*)	"	begin zero_order_sum"
+		write(100,'(a,e17.10,a,e17.10,a,e17.10)')	"	",sum(polC(1,:))*scal," ",sum(polC(2,:))*scal," ",sum(polC(3,:))*scal
+		write(100,*)	"	end zero_order_sum"
 		!----------------------------------------------------------------------------------------------------------------------------------------
 		!+++
 		!----------------------------------------------------------------------------------------------------------------------------------------
-		write(100,*)	"begin f2_pol"		
-
-		write(100,*)	"end f2_pol"
+		write(100,*)
+		write(100,*)	"	n |pol (muC/cm)"
+		write(100,*)	"	begin f2_pol"		
+		do n = 1, size(centF2,2)
+			write(100,'(a,i4,a,e17.10,a,e17.10,a,e17.10)')	"	",n," ",centF2(1,n)*scal," ",centF2(2,n)*scal," ",centF2(3,n)*scal
+		end do
+		write(100,*)	"	end f2_pol"
 		!+
-		write(100,*)	"begin f2_sum"		
-
-		write(100,*)	"end f2_sum"
+		write(100,*)	"	begin f2_sum"		
+		write(100,'(a,e17.10,a,e17.10,a,e17.10)')	"	",sum(centF2(1,:))*scal," ",sum(centF2(2,:))*scal," ",sum(centF2(3,:))*scal
+		write(100,*)	"	end f2_sum"
 		!----------------------------------------------------------------------------------------------------------------------------------------
 		!+++
 		!----------------------------------------------------------------------------------------------------------------------------------------
-		write(100,*)	"begin f3_pol"		
-
-		write(100,*)	"end f3_pol"
+		write(100,*)
+		write(100,*)	"	n |pol (muC/cm)"
+		write(100,*)	"	begin f3_pol"		
+		do n = 1, size(centF3,2)
+			write(100,'(a,i4,a,e17.10,a,e17.10,a,e17.10)')	"	",n," ",centF3(1,n)*scal," ",centF3(2,n)*scal," ",centF3(3,n)*scal
+		end do
+		write(100,*)	"	end f3_pol"
 		!+
-		write(100,*)	"begin f2_sum"		
-
-		write(100,*)	"end f2_sum"
+		write(100,*)	"	begin f3_sum"		
+		write(100,'(a,e17.10,a,e17.10,a,e17.10)')	"	",sum(centF3(1,:))*scal," ",sum(centF3(2,:))*scal," ",sum(centF3(3,:))*scal
+		write(100,*)	"	end f3_sum"
 
 		!----------------------------------------------------------------------------------------------------------------------------------------
+		write(100,*)
 		write(100,*)	"end pol"
 		!
 		!
