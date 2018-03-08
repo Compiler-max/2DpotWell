@@ -51,7 +51,7 @@ function prepareInput {
 	#post w90 - berry method
 	cp input.txt inputBerry.txt
 	sed -i "/doSolveHam/c\    doSolveHam  = f $infoString" 	./inputBerry.txt
-	sed -i "/doPw90/c\    doPw90      = f $infoString" 		./inputBerry.txt
+	sed -i "/doPw90/c\    doPw90      = t $infoString" 		./inputBerry.txt
 	sed -i "/doBerry/c\    doBerry     = t $infoString" 	./inputBerry.txt
 	sed -i "/doNiu/c\        doNiu = t $infoString" 		./inputBerry.txt
 }
@@ -100,6 +100,7 @@ function runCalc {
 	cp w90files/*geninterp.dat results/
 	cp w90files/*.xsf results/
 	cp input.orig results/
+	cp polInterp.txt results/
 
 
 	#
