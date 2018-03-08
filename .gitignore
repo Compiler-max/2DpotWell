@@ -45,6 +45,7 @@ bin/**
 **/wannier90
 **/w90files
 **/config_fortran
+**/__pycache__
 thirdparty/cmake_install.cmake
 *Makefile
 *.cmake
