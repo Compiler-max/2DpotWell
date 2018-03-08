@@ -131,19 +131,6 @@ program main
 	!POST HAM SOLVER
 	if( .not. doSolveHam .and. myID == root ) then	
 
-		!EFF TB - post w90
-		call cpu_time(T0)
-		if(	doPw90 ) then
-			write(*,*)							"[main]:**************************POST WANNIER90 (TB interpolation) *************************"
-			call tb_method()
-			write(*,*)							"[main]: done with interpolation"
-			write(*,*)							"*"
-			write(*,*)							"*"
-			write(*,*)							"*"
-			write(*,*)							"*"
-		end if
-		call cpu_time(T1)
-		postWT	= T1-T0
 	
 	
 		!K SPACE METHOD
@@ -162,6 +149,19 @@ program main
 		berryT	= T1 - T0
 
 
+		!EFF TB - post w90
+		call cpu_time(T0)
+		if(	doPw90 ) then
+			write(*,*)							"[main]:**************************POST WANNIER90 (TB interpolation) *************************"
+			call tb_method()
+			write(*,*)							"[main]: done with interpolation"
+			write(*,*)							"*"
+			write(*,*)							"*"
+			write(*,*)							"*"
+			write(*,*)							"*"
+		end if
+		call cpu_time(T1)
+		postWT	= T1-T0
 	
 
 		!OUTPUT
