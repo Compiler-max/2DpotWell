@@ -423,7 +423,7 @@ module util_output
 		write(600,*)"end gCut"
 
 		write(600,*)"begin mp_grid"
-		write(600,'(a,i3,a,i3,a,i3)')	nQx," ",nQy," ",1
+		write(600,'(i3,a,i3,a,i3)')	nQx," ",nQy," ",1
 		write(600,*)"end mp_grid"
 		!
 		write(600,*)"**************ATOMS:"
@@ -446,7 +446,10 @@ module util_output
 		write(600,*)"end magnetic_field"
 		!
 		!
-		write(600,*) "states considered for perturbation nStates=",nSolve 
+		write(600,*) "states considered for perturbation:" 
+		write(600,*) "begin nSolve"
+		write(600,*)	nSolve
+		write(600,*) "end nSolve" 
 		if( norm2(Bext) > machineP ) then
 			write(600,*)	"no magnetic field applied ( norm of field is zero)"
 		else
