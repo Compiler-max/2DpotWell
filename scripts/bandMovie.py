@@ -11,7 +11,7 @@ maxEn = +50.0
 for dirpath, dirnames, filenames in os.walk("."):
 	print('search directory:',dirpath)
 	#create the pdf plots
-	if dirpath.endswith("results"):
+	if dirpath is not ".":
 		ax = plotBands(dirpath,dirpath, minEn, maxEn)
 		plt.show()
 
