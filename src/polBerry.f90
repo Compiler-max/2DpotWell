@@ -177,7 +177,7 @@ module pol_Berry
 		
 	
 		call writeConnTxt( A_conn )
-		call writeVeloHtxt( veloQ )
+		!call writeVeloHtxt( veloQ ) !huge out file !!!!
 		write(*,*)	"[berryMethod]: wrote k-space info files (connection & velocities)"		
 		!		
 		!	
