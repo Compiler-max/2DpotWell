@@ -42,38 +42,38 @@ p0		= []
 pf2	= []
 pf3	= []			
 
+p0_interp	= []
+pf2_interp	= []
+pf3_interp 	= []
+
 for dirpath, dirnames, filenames in os.walk("."):
 	print('search directory:',dirpath)
+	#GET BERRY
 	for filename in [f for f in filenames if f.endswith("polOutput.txt")]:
 		print('found new file:')
 		print('')
-
-		#print os.path.join(dirpath, filename)
 		filepath = dirpath+'/'+filename
-		atPot.append(	getData(filepath,'atPot')			)
-		Bfield.append(	getData(filepath,'magnetic_field')	)
-		p0.append(		getData(filepath,'zero_order')		)
-		pf2.append(		getData(filepath,'niu_f2')			)
-		pf3.append(		getData(filepath,'niu_f3')			)
 		
-		#print('atPot	=',	atPot[-1],		potUnit)
-		#print('Bfield	=',	Bfield[-1],		BUnit)
-		#print('p_0	=',		p0[-1],			polUnit)
-		#print('p_f2	=',		pf2[-1],		polUnit)
-		#print('p_f3	=',		pf3[-1],		polUnit)
-		#print('')
-		#print('+++')
-		#print('+++')
-		#print('+++')
+		atPot.append(		getData(filepath,'atPot')			)
+		Bfield.append(		getData(filepath,'magnetic_field')	)
+		p0.append(			getData(filepath,'zero_order')		)
+		pf2.append(			getData(filepath,'niu_f2')			)
+		pf3.append(			getData(filepath,'niu_f3')			)
+		#
+	#GET INTERPOLATION
+	for filename in [f for f in filenames if f.endswith("polInterp.txt")]:
+		print('found new interp file:')
+		print('')
+		filepath = dirpath+'/'+filename
+		
+		p0_interp.append(	getData(filepath,'zero_order_sum')	)
+		pf2_interp.append(	getData(filepath,'f2_sum')			)
+		pf3_interp.append(	getData(filepath,'f3_sum')			)
+		
 
 
-print('found ', len(atPot), ' data file(s)')
-
-
-#print('Bfield=',getData(filename,'magnetic_field'),BUnit)
-#print('p_0 =',getData(filename,'zero_order'),		polUnit)
-#print('p_f2=',getData(filename,'niu_f2'),			polUnit)
-#print('p_f3=',getData(filename,'niu_f3'),			polUnit)
+print('found ', len(atPot)		,	' data file(s)')
+print('found ', len(p0_interp)	,	' interpolation data file(s)')
 
 
 
