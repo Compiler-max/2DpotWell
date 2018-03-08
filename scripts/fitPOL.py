@@ -101,38 +101,44 @@ pf3		= np.array(pf3)
 
 #fit
 fitfunc = lambda p, x: p[0]*x**2 + p[1]*x + p[2] # Target function
-
 errfunc = lambda p, x, y: fitfunc(p, x) - y # Distance to the target function
+fitderiv= lambda p, x: 2.0*p[0]*x + p[1]
 
 
 
 
-
-
-
-
-#plot
-fig, ax = plt.subplots(1,1)
 
 B_z		= Bfield[:,2]
 p0_x 	= p0[:,0]
 pf2_x	= pf2[:,0]
 pf3_x	= pf3[:,0]
 
+print('*****data **************************')
 print('x-axis  B_z: ',B_z)
 print('y-axis p0_x: ',p0_x)
-print('niu f2     :',pf2_x)
-print('niu f3     :',pf3_x)
+print('slope niuf2:',pf2_x)
+print('slope niuf3:',pf3_x)
+print(' ')
 
-# Initial guess for the parameters & fit
 pGuess = [1.0, 0.1, min(p0_x)]
 p0fit, success = optimize.leastsq(errfunc, pGuess[:], args=(B_z, p0_x))
 
+print('*****parabula fit*******************')
+print(str(p0fit[0])+'	B**2 + '+str(p0fit[1])+'	B +'+str(p0fit[2]))
+# Initial guess for the parameters & fit
+
+
+
+
+
+#plot parabula
+fig, ax = plt.subplots(1,1)
 
 #plot zero order
 ax.plot(B_z, p0_x, '+', color='red'	)
 
 #plot parabula interpolation
+print('interpolate in range B_z=['+str(B_z.min())+':'+str(B_z.max())+'] (T)')
 Blin = np.linspace(B_z.min(),B_z.max(),100)
 ax.plot(Blin, fitfunc(p0fit,Blin))
 
@@ -145,9 +151,36 @@ for npt, Bpoint in enumerate(B_z):
 	ax.plot(Bvecin, slope, color='green')
 
 
+#plot limits
+ax.set_xlim(B_z.min(),B_z.max())
 
+xlabel = 'B (T)'
 
 plt.ylabel('pol')
-plt.xlabel('B (T)')
+plt.xlabel(xlabel)
+
+plt.show()
+
+
+
+
+
+#slop plot:
+pf_x = pf2_x + pf3_x
+fig, ax = plt.subplots(1,1)
+
+#plot fit slope
+ax.plot(Blin, fitderiv(p0fit,Blin), color='blue'	)
+
+#plot niu slopes
+ax.plot(B_z, pf_x ,'*',color='red')
+
+#plot limits
+ax.set_xlim(B_z.min(),B_z.max())
+
+
+#labels
+plt.title('slopes')
+plt.xlabel(xlabel)
 
 plt.show()
