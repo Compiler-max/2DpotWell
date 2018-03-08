@@ -12,6 +12,25 @@ polUnit		= 'mu C/cm'
 potUnit		= 'eV'
 
 
+#plots
+fitCol		= 'blue'
+dataCol		= 'red'
+interpCol	= 'orange'
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 def getData(filename, descriptor):
 	#read array between lines start and finish
 	start	= 'begin '+descriptor
@@ -75,7 +94,9 @@ for dirpath, dirnames, filenames in os.walk("."):
 print('found ', len(atPot)		,	' data file(s)')
 print('found ', len(p0_interp)	,	' interpolation data file(s)')
 
-
+foundInterp = False
+if len(p0_interp) > 0:
+	foundInterp = True
 
 
 
@@ -91,15 +112,19 @@ print('found ', len(p0_interp)	,	' interpolation data file(s)')
 
 
 #convert list of np.arrays into 2D np array
-Bfield 	= np.array(Bfield)
-p0		= np.array(p0)
-pf2		= np.array(pf2)
-pf3		= np.array(pf3)
+Bfield 		= np.array(	Bfield			)
+p0			= np.array(	p0				)
+pf2			= np.array(	pf2				)
+pf3			= np.array(	pf3				)
+
+p0_interp 	= np.array(	p0_interp		)
+pf2_interp	= np.array( pf2_interp		)
+pf3_interp	= np.array( pf3_interp)
 
 
 
 
-#fit
+#fit function
 fitfunc = lambda p, x: p[0]*x**2 + p[1]*x + p[2] # Target function
 errfunc = lambda p, x, y: fitfunc(p, x) - y # Distance to the target function
 fitderiv= lambda p, x: 2.0*p[0]*x + p[1]
@@ -107,11 +132,19 @@ fitderiv= lambda p, x: 2.0*p[0]*x + p[1]
 
 
 
+#Get the desired vectorial components
+B_z			= Bfield[:,2]
+p0_x 		= p0[:,0]
+pf2_x		= pf2[:,0]
+pf3_x		= pf3[:,0]
 
-B_z		= Bfield[:,2]
-p0_x 	= p0[:,0]
-pf2_x	= pf2[:,0]
-pf3_x	= pf3[:,0]
+if foundInterp:
+	p0_interp_x	= p0_interp[:,0]
+	pf2_interp_x= pf2_interp[:,0]
+	pf3_interp_x= pf3_interp[:,0]
+
+
+
 
 print('*****data **************************')
 print('x-axis  B_z: ',B_z)
@@ -122,6 +155,9 @@ print(' ')
 
 pGuess = [1.0, 0.1, min(p0_x)]
 p0fit, success = optimize.leastsq(errfunc, pGuess[:], args=(B_z, p0_x))
+
+if not success:
+	print('WARNING: optimizer is stuggling')
 
 print('*****parabula fit*******************')
 print(str(p0fit[0])+'	B**2 + '+str(p0fit[1])+'	B +'+str(p0fit[2]))
@@ -135,20 +171,22 @@ print(str(p0fit[0])+'	B**2 + '+str(p0fit[1])+'	B +'+str(p0fit[2]))
 fig, ax = plt.subplots(1,1)
 
 #plot zero order
-ax.plot(B_z, p0_x, '+', color='red'	)
+ax.plot(B_z, p0_x, '.', color=dataCol	)
+if foundInterp:
+	ax.plot(B_z, p0_interp_x, '+',	color=fitCol	)
 
 #plot parabula interpolation
 print('interpolate in range B_z=['+str(B_z.min())+':'+str(B_z.max())+'] (T)')
 Blin = np.linspace(B_z.min(),B_z.max(),100)
 ax.plot(Blin, fitfunc(p0fit,Blin))
 
-#plot slops
+#plot slops (niu)
 dB = .25
 for npt, Bpoint in enumerate(B_z):
 	Bvecin = np.linspace(Bpoint-dB,Bpoint+dB,100)
 	slope =  (pf2_x[npt]+pf3_x[npt])*(Bvecin-dB) + p0_x[npt] 
 
-	ax.plot(Bvecin, slope, color='green')
+	ax.plot(Bvecin, slope, color=dataCol)
 
 
 #plot limits
@@ -166,14 +204,21 @@ plt.show()
 
 
 #slop plot:
-pf_x = pf2_x + pf3_x
-fig, ax = plt.subplots(1,1)
+pf_x 		= pf2_x + pf3_x
+if foundInterp:
+	pf_interp_x	= pf2_interp_x + pf3_interp_x
+
+
+fig, ax 	= plt.subplots(1,1)
 
 #plot fit slope
-ax.plot(Blin, fitderiv(p0fit,Blin), color='blue'	)
+ax.plot(Blin, fitderiv(p0fit,Blin), color=fitCol	)
 
 #plot niu slopes
-ax.plot(B_z, pf_x ,'*',color='red')
+ax.plot(B_z, pf_x ,'*',color=dataCol)
+
+if foundInterp:
+	ax.plot(B_z, pf_interp_x,'*',color=interpCol)
 
 #plot limits
 ax.set_xlim(B_z.min(),B_z.max())
