@@ -54,7 +54,6 @@ printf "*\n*\n"
 
 #body
 for bfield in ${Bz[*]}; do
-	for v2 in ${Vpot2[*]}; do
 		#
 		echo '['$(date +"%T")']: start Bz='$bfield'T; V1='$Vpot'; V2='$v2'; nShell='$nShell
 		#	
@@ -84,11 +83,18 @@ for bfield in ${Bz[*]}; do
 		wait
 		echo '['$(date +"%T")']: finished subStream'
 		#
+		rm ./main.exe
+		rm ./subStream.sh
+		rm -r w90files
+		rm -r output
+		rm -r oldInput
+		rm -r rawData
+
+
 		#jump back to root
 		cd $root
 		echo '['$(date +"%T")']: done current calc'
 		printf '*\n*\n'
-	done
 done
 
 echo '['$(date +"%T")']: all done, by'

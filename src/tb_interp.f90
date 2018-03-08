@@ -3,7 +3,7 @@ module tb_interp
 
 	use omp_lib
 	use util_math,		only:	myExp, i_dp, dp, myLeviCivita, aUtoAngstrm
-	use util_sysPara,	only:	Bext, prefactF3, nSolve, nK, atPos
+	use util_sysPara,	only:	Bext, prefactF3, nSolve, nK, atPos, vol
 								
 	
 	use util_w90Interf,	only:	read_band_interp, read_tb_basis
@@ -15,6 +15,7 @@ module tb_interp
 	public	::					tb_method
 
 	real(dp),		parameter	::	centiMet		= 1e+8_dp		!converts pol from 1/angsroem to 1/cm
+	real(dp),		parameter 	::	elemCharge	 	= 1.6021766208 * 1e-19_dp  *1e+6_dp! mu Coulomb
 	integer						::	num_wann, num_kpts, num_sc
 
 
@@ -30,6 +31,8 @@ module tb_interp
 		integer							::	dim, n
 		real(dp)						::	polQuantum
 
+		polQuantum 	= elemCharge / ( vol*aUtoAngstrm**2 ) 
+		!
 		call tb_interpolator(A_interp, curv_interp, En_interp, v_interp)
 		!
 		allocate(	pol0(	3,	num_wann)	)
@@ -312,15 +315,30 @@ subroutine calcVeloBLOUNT(A_conn, En_vec , en_deriv,  v_mat)
 		write(100,*)	"end f3_centers"
 		!----------------------------------------------------------------------------------------------------------------------------------------
 		write(100,*)	"end centers"
-
-
+		!
+		!
+		!
 		!MODIFIED POLARIZATION
 		write(100,*)	"begin pol"
 		write(100,*)	"		todo"
+		write(100,*)	"begin zero_order_pol"
+
+		write(100,*)	"end zero_order_pol"
+		!
+		!
+		write(100,*)	"start f2_pol"		
+
+		write(100,*)	"end f2_pol"	
+		!
+		!
+		write(100,*)	"start f3_pol"		
+
+		write(100,*)	"end f3_pol"
+		!
+		!
 		write(100,*)	"end pol"
-
-			!TODO!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1
-
+		!
+		!
 		close(100)
 		!
 		!
