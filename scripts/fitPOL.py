@@ -37,10 +37,13 @@ def getData(filename, descriptor):
 	finish	= 'end '+descriptor
 
 	parser	= False
+	found	= False
+	data = []
 	with open(filename) as f:
 		for counter,line in enumerate(f):
 			if finish in line:
-				parser = False
+				parser	= False
+				found	= True
 				break
 			if parser:
 				data = np.fromstring( line, dtype=np.float, sep=' ' )	
@@ -51,28 +54,35 @@ def getData(filename, descriptor):
 			if start in line:
 				parser = True
 
+	if not found:
+		print('WARNING: could not file descriptor"'+descriptor'" in file "'+filename+'"')
 	return data
 	
 
 
-atPot 	= []
-Bfield 	= []
-p0		= []
-pf2	= []
-pf3	= []			
+gCut 		= []
+mpGrid		= []
+
+atPot 		= []
+Bfield 		= []
+p0			= []
+pf2			= []
+pf3			= []
+			
 
 p0_interp	= []
 pf2_interp	= []
 pf3_interp 	= []
 
 for dirpath, dirnames, filenames in os.walk("."):
-	print('search directory:',dirpath)
 	#GET BERRY
 	for filename in [f for f in filenames if f.endswith("polOutput.txt")]:
-		print('found new file:')
-		print('')
 		filepath = dirpath+'/'+filename
+		print('found new file:'+filepath)
 		
+		gCut.append(		getData(filepath,'gCut')			)
+		mpGrid.append(		getData(filepath,'mp_grid'))
+
 		atPot.append(		getData(filepath,'atPot')			)
 		Bfield.append(		getData(filepath,'magnetic_field')	)
 		p0.append(			getData(filepath,'zero_order')		)
@@ -81,9 +91,8 @@ for dirpath, dirnames, filenames in os.walk("."):
 		#
 	#GET INTERPOLATION
 	for filename in [f for f in filenames if f.endswith("polInterp.txt")]:
-		print('found new interp file:')
-		print('')
 		filepath = dirpath+'/'+filename
+		print('found new interp file:'+filepath)
 		
 		p0_interp.append(	getData(filepath,'zero_order_sum')	)
 		pf2_interp.append(	getData(filepath,'f2_sum')			)
@@ -93,6 +102,12 @@ for dirpath, dirnames, filenames in os.walk("."):
 
 print('found ', len(atPot)		,	' data file(s)')
 print('found ', len(p0_interp)	,	' interpolation data file(s)')
+
+
+print('gCut:'+str(gCut))
+print('mpGrid:'+str(mpGrid))
+
+print('p0-interp:'+str(p0_interp) )
 
 foundInterp = False
 if len(p0_interp) > 0:
