@@ -100,7 +100,7 @@ function runCalc {
 	cp w90files/*geninterp.dat results/
 	cp w90files/*.xsf results/
 	cp input.orig results/
-	cp polInterp.txt results/
+	mv polInterp.txt results/
 
 
 	#
