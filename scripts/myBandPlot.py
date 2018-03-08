@@ -344,6 +344,7 @@ def plotBands(w90_dir,out_dir, minEn, maxEn):
             bbox={'facecolor':'white', 'alpha':0.8, 'pad':10})
 
 
+    return ax
 
     plt.savefig('enB'+str(B_ext[2])+'bands.pdf')
     #plt.show()
