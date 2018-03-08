@@ -8,7 +8,7 @@ nProcs=16
 
 
 #data to calculate
-Bz=( -1.0 0.0 1.0 ) #10.0 100.0 1000.0 )
+Bz=( -10.0 -5.0 -1.0 0.0 1.0 2.0 3.0 4.0 5.0 6.0 7.0 8.0 9.0 10.0 25.0 ) #10.0 100.0 1000.0 )
 
 
 
@@ -78,7 +78,7 @@ for bfield in ${Bz[*]}; do
 	#
 	#set magnetic field amplitude
 	cd $dir
-	sed -i "/B0/c\   B0		= $bfield $infoString"	./input.txt	
+	sed -i "/B0/c\    B0  =  $bfield " ./input.txt
 	wait
 	#	
 	#execute calculation
