@@ -93,6 +93,10 @@ for bfield in ${Bz[*]}; do
 	rm -r oldInput
 	rm -r rawData
 	rm ./input.txt
+	wait
+	cp results/* ./
+	wait
+	rm -r results
 
 
 	#jump back to root
