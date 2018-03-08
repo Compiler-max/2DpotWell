@@ -418,6 +418,13 @@ module util_output
 		write(600,*)"*"
 		write(600,*)"*"
 		write(600,*)"*"
+		write(600,*)"begin gCut"
+		write(600,*)	Gcut
+		write(600,*)"end gCut"
+
+		write(600,*)"begin mp_grid"
+		write(600,'(a,i3,a,i3,a,i3)')	nQx," ",nQy," ",1
+		write(600,*)"end mp_grid"
 		!
 		write(600,*)"**************ATOMS:"
 		write(600,*)		"	at | centers [Å] | V [eV]"
