@@ -252,21 +252,21 @@ module util_w90Interf
 		write(*,*)	"[read_M_initial]: read the .mmn file"
 		!
 		!WRITE CLONE FOR DEBUG
-		open(unit=125,file=w90_Dir//'clone'//'.mmn',action='write',access='stream',form='formatted', status='replace')
-		write(125,*)	"clone of the "//seedName//".mmn file"
-		write(125,*)	f_num_bands, f_num_kpts, f_nntot
-		do qi = 1, f_num_kpts
-			do nn = 1, f_nntot
-				write(125,*)	qi, f_nnlist(qi,nn),	f_nncell(1:3,qi,nn)
-				do n = 1, f_num_bands
-					do m = 1, f_num_bands
-						write(125,*)	M_init(m,n,nn,qi)
-					end do
-				end do
-			end do
-		end do
-		close(125)
-		write(*,*)	"[read_M_initial]: wrote clone.mmn file"
+		!open(unit=125,file=w90_Dir//'clone'//'.mmn',action='write',access='stream',form='formatted', status='replace')
+		!write(125,*)	"clone of the "//seedName//".mmn file"
+		!write(125,*)	f_num_bands, f_num_kpts, f_nntot
+		!do qi = 1, f_num_kpts
+		!	do nn = 1, f_nntot
+		!		write(125,*)	qi, f_nnlist(qi,nn),	f_nncell(1:3,qi,nn)
+		!		do n = 1, f_num_bands
+		!			do m = 1, f_num_bands
+		!				write(125,*)	M_init(m,n,nn,qi)
+		!			end do
+		!		end do
+		!	end do
+		!end do
+		!close(125)
+		!write(*,*)	"[read_M_initial]: wrote clone.mmn file"
 		!
 		return
 	end subroutine
