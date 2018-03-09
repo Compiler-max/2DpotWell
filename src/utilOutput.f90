@@ -442,7 +442,7 @@ module util_output
 		!
 		Btesla(1:3)	= Bext(1:3) * aUtoTesla
 		write(600,*)"begin magnetic_field"
-		write(600,'(a,f6.2,a,f6.2,a,f6.2)')	"  ", 	Btesla(1),	" ",	Btesla(2)," ", Btesla(3)
+		write(600,'(a,e13.6,a,e13.6,a,e13.6)')	"  ", 	Btesla(1),	" ",	Btesla(2)," ", Btesla(3)
 		write(600,*)"end magnetic_field"
 		!
 		!
