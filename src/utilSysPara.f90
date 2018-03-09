@@ -221,17 +221,22 @@ module util_sysPara
 		call MPI_Bcast(	Bext 		,		3	,	MPI_DOUBLE_PRECISION	,	root,	MPI_COMM_WORLD, ierr)
 		![numerics]
 		call MPI_Bcast(	nGdim		, 		1	, 		MPI_INTEGER			,	root, 	MPI_COMM_WORLD, ierr)
+		call MPI_Bcast(	nG			,		1	,	MPI_DOUBLE_PRECISION	,	root,	MPI_COMM_WORLD, ierr)
 		call MPI_Bcast(	Gcut		,		1	,	MPI_DOUBLE_PRECISION	,	root,	MPI_COMM_WORLD, ierr)
 		call MPI_Bcast(	nSolve		,		1	,		MPI_INTEGER			,	root,	MPI_COMM_WORLD, ierr)
 		call MPI_Bcast(	nQx			,		1	,		MPI_INTEGER			,	root,	MPI_COMM_WORLD, ierr)
 		call MPI_Bcast(	nQy			,		1	,		MPI_INTEGER			,	root,	MPI_COMM_WORLD, ierr)
+		call MPI_Bcast(	nQ			,		1	,		MPI_INTEGER			,	root,	MPI_COMM_WORLD, ierr)
 		call MPI_Bcast(	nSCx		,		1	,		MPI_INTEGER			,	root,	MPI_COMM_WORLD, ierr)
 		call MPI_Bcast(	nSCy		,		1	,		MPI_INTEGER			,	root,	MPI_COMM_WORLD, ierr)
+		call MPI_Bcast(	nSC			,		1	,		MPI_INTEGER			,	root,	MPI_COMM_WORLD, ierr)
 		call MPI_Bcast(	nKx			,		1	,		MPI_INTEGER			,	root,	MPI_COMM_WORLD, ierr)
 		call MPI_Bcast(	nKy			,		1	,		MPI_INTEGER			,	root,	MPI_COMM_WORLD, ierr)
+		call MPI_Bcast( nK			,		1	,	MPI_DOUBLE_PRECISION	,	root,	MPI_COMM_WORLD,	ierr)
 		call MPI_Bcast(	nRx			,		1	,		MPI_INTEGER			,	root,	MPI_COMM_WORLD, ierr)
 		call MPI_Bcast(	nRy			,		1	,		MPI_INTEGER			,	root,	MPI_COMM_WORLD, ierr)
 		call MPI_Bcast( nRz			,		1	,		MPI_INTEGER			,	root,	MPI_COMM_WORLD,	ierr)
+		call MPI_Bcast( nR			,		1	,		MPI_INTEGER			,	root,	MPI_COMM_WORLD,	ierr)
 		call MPI_Bcast(	thres		,		1	,	MPI_DOUBLE_PRECISION	,	root,	MPI_COMM_WORLD, ierr)
 		![ham]
 		call MPI_Bcast(	doZeeman	,		1	,	MPI_LOGICAL				,	root,	MPI_COMM_WORLD, ierr)
@@ -265,23 +270,12 @@ module util_sysPara
 		call MPI_Bcast( vol			,		1	,	MPI_DOUBLE_PRECISION	,	root,	MPI_COMM_WORLD,	ierr)
 		!
 		!
-		if( myID /= root ) then
-			nG 	= 	nGdim**2
-			nR 	= 	nRx 	*	nRy * nRz
-			nQ 	= 	nQx 	*	nQy
-			nSC =	nSCx	*	nSCy
-			nK 	=	nKx		*	nKy
-			Bext=	B0 		* 	Bext
-		end if
-		!
-		!
 		if( myID /= root ) call allocateArrays()
 		!
 		!
 		call MPI_BARRIER(MPI_COMM_WORLD, ierr)
 		call MPI_Bcast(	shells	,		nShells,	MPI_INTEGER				,	root,	MPI_COMM_WORLD, ierr)
 		call MPI_Bcast(	atPot	,		nAt		,	MPI_DOUBLE_PRECISION	,	root,	MPI_COMM_WORLD, ierr)
-		
 		!
 		return
 	end subroutine

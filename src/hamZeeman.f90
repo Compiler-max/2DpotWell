@@ -52,9 +52,9 @@ module ham_Zeeman
 		complex(dp)						::	num1, num2, denom, prefact, alphaZee, integral, &
 											num1a, num1b, num2b, num2a
 		!
-		magMom		=	+0.5_dp 								!a.u.
+		magMom		=	+ 0.5_dp 								!a.u.
 		alphaZee	=	dcmplx(	-1.0_dp * magMom * Bext(3)	)	!hartree
-		write(*,*)"[add_Zeeman]: prefact=",alphaZee
+
 
 		!
 		do j = 1, nGq(qLoc)
