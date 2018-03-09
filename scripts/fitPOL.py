@@ -108,11 +108,11 @@ print('found ', len(p0_interp)	,	' interpolation data file(s)')
 print('gCut:'+str(gCut))
 print('mpGrid:'+str(mpGrid))
 
-print('p0-interp:'+str(p0_interp) )
 
 foundInterp = False
-if len(p0_interp) > 0:
+if len(p0_interp[0]) > 0:
 	foundInterp = True
+	print('found interpolation data')
 
 
 

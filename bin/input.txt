@@ -31,7 +31,7 @@
 
 [ham]
     doVdesc     =   f
-    doZeeman    =   t
+    doZeeman    =   f
     doMagHam    =   f
 
 [methods]

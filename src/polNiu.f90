@@ -3,6 +3,7 @@ module pol_Niu
 	!	to the polariztion induced by a perturbive magnetic field
 	! 	see Niu PRL 112, 166601 (2014)
 	use omp_lib
+	use util_sysPara,	only:	info_dir, qpts, kpts
 	implicit none
 
 
@@ -34,12 +35,15 @@ module pol_Niu
 		real(dp),		intent(out)		::  centers_F2(:,:), centers_F3(:,:)
 		!real(dp)						::	pnF2(3), pnF3(3)
 		real(dp)						:: 	F2(3,3), F3(3,3), F2k(3,3), F3k(3,3), sumF2(3), sumF3(3), &
-											p2Test(3), p3Test(3), p2max, p3max, p2min, p3min
+											p2Test(3), p3Test(3), p2max, p3max, p2min, p3min, kpt(3)
 		real(dp)						:: 	densCorr(3)
 		integer							:: 	n, ki, kSize, ind, k2max, k3max, k2min, k3min
+		character(len=12)				::	fname
 		!
 		kSize		= size(Velo,4)
 		!
+		if(	kSize == size(qpts,2)	)	fname = 'response.txt' 
+		if(	kSize == size(kpts,2)	)	fname = 'interpol.txt'
 		!
 		write(*,*)"[calcFirstOrdP]: start calculating P' via semiclassic approach"
 		write(*,'(a,f8.3,a,f8.3,a,f8.3,a)')"[calcFirstOrdP]: Bext=(",Bext(1)*auToTesla,", ",Bext(2)*auToTesla,", ",Bext(3)*auToTesla,") T"
@@ -48,9 +52,26 @@ module pol_Niu
 		centers_F2 = 0.0_dp
 		centers_F3 = 0.0_dp
 		
-		!$OMP PARALLEL DEFAULT(SHARED)  &
-		!$OMP PRIVATE(n, ki, densCorr, F2, F2k, F3, F3k, p2max, p2min, p3max, p3min, p2Test, p3Test)
-		!$OMP DO SCHEDULE(STATIC)
+		!!!!$OMP PARALLEL DEFAULT(SHARED)  &
+		!!!!$OMP PRIVATE(n, ki, densCorr, F2, F2k, F3, F3k, p2max, p2min, p3max, p3min, p2Test, p3Test)
+		!!!!$OMP DO SCHEDULE(STATIC)
+
+
+		open(unit=200,file=info_dir//'f2'//fname,action='write',status='replace')
+		open(unit=300,file=info_dir//'f3'//fname,action='write',status='replace')
+
+		write(200,*)	"# f2 positional shift for each wf n, at each kpt"
+		write(300,*)	"# f3 positional shift for each wf n, at each kpt"
+
+		write(200,*)	"# nStat | kpt(1:3) |	a_f2 (1:3,kpt)"		
+		write(300,*)	"# nStat | kpt(1:3) |	a_f3 (1:3,kpt)"
+		
+		write(200,*)	size(centers_F2,2)," ",kSize 
+		write(200,*)	Bext(3)*auToTesla
+		write(300,*)	size(centers_F3,2)," ",kSize
+		write(300,*)	Bext(3)*auToTesla
+
+
 		do n = 1, size(centers_F2,2)
 			F2 = 0.0_dp
 			F3 = 0.0_dp
@@ -65,8 +86,6 @@ module pol_Niu
 			p3max	= 0.0_dp
 			p2min	= 100.0_dp
 			p3min	= 100.0_dp
-
-
 
 			do ki = 1, kSize		
 				!
@@ -84,6 +103,14 @@ module pol_Niu
 				!search for extrema
 				p2Test = matmul(F2k,Bext)
 				p3Test = matmul(F3k,Bext)
+
+				kpt = 0.0_dp
+				if( kSize == size(qpts,2)	)	kpt(1:2) 	= qpts(1:2,ki)
+				if( kSize == size(kpts,2)	)	kpt(1:2)	= kpts(1:2,ki)
+				
+				write(200,'(i3,a,i5,a,e16.9,a,e16.9,a,e16.9,a,e16.9,a,e16.9,a,e16.9)')	n," ",ki," ",kpt(1)," ",kpt(2)," ",kpt(3)," ",p2Test(1)," ",p2Test(2)," ",p2Test(3)
+				write(300,'(i3,a,i5,a,e16.9,a,e16.9,a,e16.9,a,e16.9,a,e16.9,a,e16.9)')	n," ",ki," ",kpt(1)," ",kpt(2)," ",kpt(3)," ",p3Test(1)," ",p3Test(2)," ",p3Test(3)
+
 				if( norm2(p2Test) > p2max) then
 					p2max = norm2(p2Test)
 					k2max = ki
@@ -113,8 +140,14 @@ module pol_Niu
 			centers_F3(:,n) = matmul(F3,Bext) * aUtoAngstrm
 			!
 		end do
-		!$OMP END DO
-		!$OMP END PARALLEL
+
+
+		close(200)
+		close(300)
+
+
+		!!!!$OMP END DO
+		!!!!$OMP END PARALLEL
 		!
 
 		do ind = 1, 3
