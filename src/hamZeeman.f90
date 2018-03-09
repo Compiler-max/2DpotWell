@@ -48,12 +48,15 @@ module ham_Zeeman
 		integer,		intent(in)		::	qLoc
 		complex(dp),	intent(inout)	::	Hmat(:,:)
 		integer							::	i, j, at 
-		real(dp)						::	dGx, dGy, xL, xR, yL, yR, magMom
+		real(dp)						::	dGx, dGy, xL, xR, yL, yR, magMom, minI, maxI
 		complex(dp)						::	num1, num2, denom, prefact, alphaZee, integral, &
-											num1a, num1b, num2b, num2a
+											num1a, num1b, num2b, num2a, ham
 		!
 		magMom		=	+ 0.5_dp 								!a.u.
 		alphaZee	=	dcmplx(	-1.0_dp * magMom * Bext(3)	)	!hartree
+
+
+
 
 
 		!
@@ -130,8 +133,19 @@ module ham_Zeeman
 							stop "[add_Zeeman]: reached forbidden default"
 						end if
 						!
+						!add Ham
+						ham = 	(alphaZee/vol) * integral 
+						Hmat(i,j)	= Hmat(i,j)		+ 	ham
 						!
-						Hmat(i,j)	= Hmat(i,j)		+ 	(alphaZee/vol) * integral
+						!
+						!GET MAX MIN CONTRIBUTION
+						if( i==2 .and. j==1 ) then
+							minI = abs(ham)
+							maxI = minI
+						end if
+						!
+						minI = min(	minI, abs(ham))
+						maxI = max( maxI, abs(ham))
 						!
 						!
 					end do
@@ -141,6 +155,8 @@ module ham_Zeeman
 			end do
 		end do
 
+		write(*,*)	"[#",myID,";add_Zeeman]: min contribution:", minI
+		write(*,*)	"[#",myID,";add_Zeeman]: max contribution:", maxI
 
 		return
 	end subroutine
