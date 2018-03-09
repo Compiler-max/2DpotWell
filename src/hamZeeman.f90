@@ -54,6 +54,7 @@ module ham_Zeeman
 		!
 		magMom		=	+0.5_dp 								!a.u.
 		alphaZee	=	dcmplx(	-1.0_dp * magMom * Bext(3)	)	!hartree
+		write(*,*)"[add_Zeeman]: prefact=",alphaZee
 
 		!
 		do j = 1, nGq(qLoc)
