@@ -32,6 +32,7 @@ bin/**
 *.mmn
 *.amn
 *.dat
+*.pdf
 *.nb
 *.mod
 *.tar.gz
