@@ -1,16 +1,16 @@
 #Input for 2D pot well code
 
 [unitCell]
-    aX          =   6
-    aY          =   6
+    aX          =   10
+    aY          =   10
 
 [atoms]
     nAt         =   2
-    relXpos     =   0.300 0.700
+    relXpos     =   0.400 0.600
     relYpos     =   0.500 0.500
-    atRx        =   1.010 1.010
-    atRy        =   1.010 1.010
-    atPot       =   -3.30 -3.10
+    atRx        =   0.901 0.901
+    atRy        =   0.901 0.901
+    atPot       =   -4.50 -4.00
     dVpot       =   0.000 0.000
     Zion        =   1.000 1.000
 
@@ -25,8 +25,8 @@
 [numerics]
    Gcut        = 11.0 # changed by probeB.sh
    nSolve      = 96 # changed by probeB.sh
-   nQx         = 2 # changed by probeB.sh
-   nQy         = 2 # changed by probeB.sh
+   nQx         = 4 # changed by probeB.sh
+   nQy         = 4 # changed by probeB.sh
     thres       =   0.1
 
 [ham]
@@ -36,7 +36,7 @@
 
 [methods]
     doSolveHam  =   f
-    doPw90      =   t
+    doPw90      =   f
     doBerry     =   t
     writeBin    =   f
 
