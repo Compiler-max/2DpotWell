@@ -187,6 +187,7 @@ module util_sysPara
 		!
 		call allocateArrays()
 		!
+		!read the arrays:
 		![atoms]
 		call CFG_add_get(my_cfg,	"atoms%relXpos"		,	relXpos		,	"relative positions in unit cell"		)
 		call CFG_add_get(my_cfg,	"atoms%relYpos"		,	relYpos		,	"relative positions in unit cell"		)
@@ -195,10 +196,12 @@ module util_sysPara
 		call CFG_add_get(my_cfg,	"atoms%atPot"		,	atPot		,	"potential depth in hartree"			)
 		call CFG_add_get(my_cfg,	"atoms%dVpot"		,	dVpot		,	"potential gradient"					)
 		call CFG_add_get(my_cfg,	"atoms%Zion"		,	Zion		,	"effective charge of the ions"			)
+		![wann]
+		call CFG_add_get(my_cfg,	"wann%projAt"		,	proj_at		,	"list of atoms to project to (init guess)")
+		call CFG_add_get(my_cfg,	"wann%projState"	,	proj_stat	,	"on which state to project"				)
 		![w90]
 		call CFG_add_get(my_cfg,	"w90%shells"		, 	shells		,	"list of shells used for FD connection"	)
-		call CFG_add_get(my_cfg,	"w90$proj_at"		,	proj_at		,	"list of atoms to project to (init guess)")
-		call CFG_add_get(my_cfg,	"w90$proj_stat"		,	proj_stat	,	"on which state to project"				)
+	
 		!
 		!
 		return
@@ -218,8 +221,6 @@ module util_sysPara
 		![wann]
 		call MPI_Bcast( nBands		,		1	,		MPI_INTEGER			,	root,	MPI_COMM_WORLD, ierr)		
 		call MPI_Bcast( nWfs		,		1	,		MPI_INTEGER			,	root,	MPI_COMM_WORLD, ierr)
-		call MPI_Bcast(	proj_at		,	nWfs	,		MPI_INTEGER			,	root,	MPI_COMM_WORLD,	ierr)
-		call MPI_Bcast( proj_stat	,	nWfs	,		MPI_INTEGER			,	root,	MPI_COMM_WORLD,	ierr)
 		![field]
 		call MPI_Bcast(	B0 			,		1	,	MPI_DOUBLE_PRECISION	,	root,	MPI_COMM_WORLD, ierr)		
 		call MPI_Bcast(	Bext 		,		3	,	MPI_DOUBLE_PRECISION	,	root,	MPI_COMM_WORLD, ierr)
@@ -281,6 +282,9 @@ module util_sysPara
 		call MPI_BARRIER(MPI_COMM_WORLD, ierr)
 		call MPI_Bcast(	shells	,		nShells,	MPI_INTEGER				,	root,	MPI_COMM_WORLD, ierr)
 		call MPI_Bcast(	atPot	,		nAt		,	MPI_DOUBLE_PRECISION	,	root,	MPI_COMM_WORLD, ierr)
+
+		call MPI_Bcast(	proj_at		,	nWfs	,		MPI_INTEGER			,	root,	MPI_COMM_WORLD,	ierr)
+		call MPI_Bcast( proj_stat	,	nWfs	,		MPI_INTEGER			,	root,	MPI_COMM_WORLD,	ierr)
 		!
 		return
 	end subroutine
