@@ -54,7 +54,7 @@ module ham_Magnetic
 		!
 		!period of oscillating B field
 		qX_period	=	2.0_dp * PI_dp / aX 
-		H_prefact 	= 	dcmplx(	Bext(3) / qX_period	)
+		H_prefact 	= 	dcmplx( 0.5_dp *	Bext(3) / qX_period	)
 		!
 		!Add to Hamiltonian
 		do j = 1, nGq(qLoc)
