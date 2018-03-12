@@ -15,7 +15,7 @@ module util_sysPara
 				nQ, nQx, nQy, nKx, nKy, nK, nSC, nSCx, nSCy, dqx, dqy, dkx, dky, &
 				nR, nRx, nRy, nRz,  dx, dy, dz, &
 				nShells, nw90it, shells, &
-				nBands, nWfs,   &
+				nBands, nWfs, proj_at, proj_stat,  &
 				atPos, atR, qpts, rpts, Rcell, kpts, Zion, recpLatt, &
 				Bext, prefactF3, &
 				seedName, w90_dir, info_dir, mkdir, raw_dir,&
@@ -38,7 +38,7 @@ module util_sysPara
 	character(len=9)								::	w90_dir	="w90files/"
 	character(len=7)								::	info_dir="output/"
 	character(len=8)								::	raw_dir	="rawData/", mkdir="mkdir ./"	!to use with system(mkdir//$dir_path) 
-	integer,	allocatable,	dimension(:)		::	nGq, shells
+	integer,	allocatable,	dimension(:)		::	nGq, shells, proj_at, proj_stat
 	real(dp),	allocatable,	dimension(:)		::	relXpos, relYpos, atRx, atRy, atPot, dVpot, Zion
 	real(dp),	allocatable,	dimension(:,:)		::	Gtest , atPos, atR, qpts, rpts, Rcell, kpts 
 
@@ -197,6 +197,8 @@ module util_sysPara
 		call CFG_add_get(my_cfg,	"atoms%Zion"		,	Zion		,	"effective charge of the ions"			)
 		![w90]
 		call CFG_add_get(my_cfg,	"w90%shells"		, 	shells		,	"list of shells used for FD connection"	)
+		call CFG_add_get(my_cfg,	"w90$proj_at"		,	proj_at		,	"list of atoms to project to (init guess)")
+		call CFG_add_get(my_cfg,	"w90$proj_stat"		,	proj_stat	,	"on which state to project"				)
 		!
 		!
 		return
@@ -216,6 +218,8 @@ module util_sysPara
 		![wann]
 		call MPI_Bcast( nBands		,		1	,		MPI_INTEGER			,	root,	MPI_COMM_WORLD, ierr)		
 		call MPI_Bcast( nWfs		,		1	,		MPI_INTEGER			,	root,	MPI_COMM_WORLD, ierr)
+		call MPI_Bcast(	proj_at		,	nWfs	,		MPI_INTEGER			,	root,	MPI_COMM_WORLD,	ierr)
+		call MPI_Bcast( proj_stat	,	nWfs	,		MPI_INTEGER			,	root,	MPI_COMM_WORLD,	ierr)
 		![field]
 		call MPI_Bcast(	B0 			,		1	,	MPI_DOUBLE_PRECISION	,	root,	MPI_COMM_WORLD, ierr)		
 		call MPI_Bcast(	Bext 		,		3	,	MPI_DOUBLE_PRECISION	,	root,	MPI_COMM_WORLD, ierr)
@@ -253,6 +257,7 @@ module util_sysPara
 		call MPI_Bcast( nShells		,		1	,	MPI_INTEGER				,	root,	MPI_COMM_WORLD, ierr)
 		call MPI_Bcast( nw90it		,		1	,	MPI_INTEGER				,	root,	MPI_COMM_WORLD, ierr)		
 		call MPI_Bcast( pw90GaugeB	,		1	,	MPI_LOGICAL				,	root,	MPI_COMM_WORLD, ierr)
+
 		![berry]
 		call MPI_Bcast(fastConnConv	,		1	,	MPI_LOGICAL				,	root,	MPI_COMM_WORLD,	ierr)
 		call MPI_Bcast( doNiu		,		1	,	MPI_LOGICAL				,	root,	MPI_COMM_WORLD,	ierr)
@@ -300,11 +305,13 @@ module util_sysPara
 		allocate(	Zion(nAt)			)
 		!meshes
 		allocate(	qpts(dim,nQ)		)
-		allocate(	rpts(3,nR)		)
+		allocate(	rpts(3,nR)			)
 		allocate(	Rcell(dim,nSC)		)
 		allocate(	kpts(dim,nK)		)
 		!w90
 		allocate(	shells(nShells)		)
+		allocate(	proj_at(nWfs)		)
+		allocate(	proj_stat(nWfs)		)
 		!
 		!
 		return
