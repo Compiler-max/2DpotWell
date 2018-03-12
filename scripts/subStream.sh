@@ -107,8 +107,6 @@ function runCalc {
 	mv polInterp.txt results/
 
 
-	#
-	rm w90files/UNK*
 
 	#finalize( only keep energies & velocities for berry method) 
 	mv input.orig input.txt
