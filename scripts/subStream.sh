@@ -99,6 +99,7 @@ function runCalc {
 	cp output/outBerry.txt results/
 	cp w90files/*geninterp.dat results/
 	cp w90files/*.xsf results/
+	cp w90files/*.wout results/
 	mv output/f2response.txt results/
 	mv output/f3response.txt results/
 
