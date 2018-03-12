@@ -105,7 +105,7 @@ function runCalc {
 
 	cp input.orig results/
 	mv polInterp.txt results/
-
+	cp output/*.txt results/
 
 
 	#finalize( only keep energies & velocities for berry method) 
