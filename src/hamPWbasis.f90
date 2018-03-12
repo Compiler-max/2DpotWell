@@ -102,53 +102,27 @@ module ham_PWbasis
 		integer,		intent(in)	:: 	qi
 		complex(dp),	intent(in)	:: 	ckH(:,:)
 		complex(dp),	intent(out)	:: 	A_matrix(:,:) !A(nBands,nWfs)
-		real(dp)					::	r_state
-		integer						:: 	n, m, perAtom, at, state
+		integer						:: 	nWf, m
 		!
 		A_matrix	= dcmplx(0.0_dp)
 		!
-		perAtom	= nWfs / nAt
-		!
-		if( perAtom == 1 ) then
-			do n = 1, nWfs
+		do nWf = 1, nWfs
+			if( proj_at(nWf) > nAt ) then
+				write(*,'(a,i3,a,i2,a,i4,a)')	"[#",myID,"calcAmatANA]: can not project onto state atom",proj_at(nWf)," (unit cell contains: ",nAt," atoms)"
+				write(*,'(a,i3,a,i2,a,i4,a)')	"[#",myID,"calcAmatANA]: projected atom out of bounds, will use unitary matrix..."
+				A_matrix(nWf,nWf)	= dcmplx(1.0_dp)
+			else
 				do m = 1, nBands
-					at	= n
-					A_matrix(m,n)	= g1Int(qi,m, at, ckH)
-				end do
-			end do
-		else if( perAtom == 3 ) then
-			do n = 1, nWfs
-				do m = 1, nBands
-					!DETERMINE ATOM AND STATE TO PROJECT
-					at 		= mod(n, nAt)
-					if( at == 0) 	at = nAt
-					r_state	= real(n,dp) / real(nAt,dp)
-					if(	r_state <= 1) then
-						state = 1
-					else if( r_state <= 2) then
-						state = 2
-					else if( r_state <= 3) then
-						state = 3
-					else 
-						state = 0
-					write(*,*)	"[calcAmatANA]: WARNING! will set A_matrix component to identity, try to run wannier with use_bloch switch"
+					if(	proj_stat(nWf) == 1)	A_matrix(m,nWf)	= g1Int(qi,m, proj_at(nWf), ckH)
+					if( proj_stat(nWf) == 2)	A_matrix(m,nWf) = g2Int(qi,m, proj_at(nWf), cKH)
+					if( proj_stat(nWf) == 3)	A_matrix(m,nWf) = g3Int(qi,m, proj_at(nWf), cKH)					
+					if( proj_stat(nWf) > 3 )	then
+						write(*,'(a,i3,a,i2,a)')	"[#",myID,"calcAmatANA]: can not project onto state #",proj_stat(nWf)," (maximum supported: 3)"
+						A_matrix(m,nWf) = gDefaultInt(m, nWf)
 					end if
-					!
-					!DO PROJECTION
-					if(	state == 1 ) A_matrix(m,n) 	= g1Int(qi,m, at, ckH)
-					if( state == 2 ) A_matrix(m,n)	= g2Int(qi,m, at, ckH)
-					if( state == 3 ) A_matrix(m,n)	= g3Int(qi,m, at, ckH)
-					if( state == 0 ) A_matrix(m,n)	= dcmplx(0.0_dp)
 				end do
-			end do
-		else
-			write(*,*)	"[calcAmatANA]: only 1 or 3 states per atom supported. set A_mat to identity"
-			do n = 1, size(A_matrix,2)
-				do m = 1, size(A_matrix,1)
-					if( m==n ) A_matrix(m,n) = dcmplx(1.0_dp)
-				end do
-			end do
-		end if
+			end if
+		end do
 		!
 		!
 		return
@@ -410,6 +384,15 @@ module ham_PWbasis
 		return
 	end function
 
+
+	complex(dp) function gDefaultInt(m, nWf)
+		integer,		intent(in)	:: m, nWf
+		!
+		gDefaultInt =  dcmplx(0.0_dp)
+		if( m == nWf ) 	gDefaultInt = dcmplx(1.0_dp)
+		!
+		return
+	end function
 
 
 
