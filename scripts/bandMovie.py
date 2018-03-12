@@ -16,9 +16,9 @@ for dirpath, dirnames, filenames in os.walk("."):
 	if dirpath is not ".":
 		ax = plotBands(dirpath,dirpath, minEn, maxEn)
 		plt.show()
-		for n in range(1,nWfs+1)
-		plotNiuColor(dirpath,"f2response.txt",n)
-		plotNiuColor(dirpath,"f3response.txt",n)
+		for n in range(1,nWfs+1):
+			plotNiuColor(dirpath,"f2response.txt",n)
+			plotNiuColor(dirpath,"f3response.txt",n)
 
 	#look for them
 for dirpat, dirnames, filenames in os.walk("."):

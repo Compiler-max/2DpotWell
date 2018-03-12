@@ -78,7 +78,7 @@ def plotNiuColor(searchDir,filename,plotState):
 
 
 #test
-searchDir 	= '../bin/output/'
-fileName 	= 'f2response.txt'
-plotState	= 3
-plotNiuColor(searchDir, fileName, plotState)
+#searchDir 	= '../bin/output'
+#fileName 	= 'f2response.txt'
+#plotState	= 3
+#plotNiuColor(searchDir, fileName, plotState)

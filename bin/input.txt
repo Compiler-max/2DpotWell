@@ -17,6 +17,8 @@
 [wann]
     nBands      =   6
     nWfs        =   6
+    projAt      =   1 2 1 2 1 2
+    projState   =   1 1 2 2 3 3 
 
 [field]
     B0  =       1.0               # changed by probeB.sh
