@@ -98,7 +98,7 @@ module ham_Solver
 		!			solve Ham, write results and derived quantites														
 		complex(dp),	allocatable		::	Hmat(:,:) , ck_temp(:,:), Amn_temp(:,:), velo_temp(:,:,:)
 		real(dp),		allocatable		::	En_temp(:)
-		integer							:: 	qi, qLoc, found, Gsize, boundStates, minBound
+		integer							:: 	qi, qLoc, found, Gsize, boundStates, loc_minBound, loc_maxBound, glob_minBound, glob_maxBound
 		!	
 		!
 		allocate(	Hmat(				Gmax,	Gmax				)	)
@@ -109,7 +109,8 @@ module ham_Solver
 		allocate(	Amn_temp(		nBands,		nWfs				)	)
 		!
 		qLoc 	= 1
-		minBound= nSolve
+		loc_minBound = nSolve
+		loc_maxBound = -1
 		call MPI_BARRIER( MPI_COMM_WORLD, ierr)
 		do qi = myID*qChunk +1, myID*qChunk + qChunk
 			!
@@ -149,19 +150,43 @@ module ham_Solver
 			do while (	En_temp(boundStates+1) < 0.0_dp )
 				boundStates = boundStates + 1
 			end do
+			loc_minBound = min(loc_minBound,boundStates)
+			loc_maxBound = max(loc_maxBound,boundStates)
 			
 			!FINALIZE
 			write(*,'(a,i3,a,i5,a,f6.2,a,f6.2,a,a,i3,a,i5,a,i5,a)')"[#",myID,", solveHam]: qi=",qi," wann energy window= [",En_temp(1)*aUtoEv," : ",&
 														En_temp(nWfs)*aUtoEv,"] (eV).",&
 														" insulating states: #",boundStates,". done tasks=(",qLoc,"/",qChunk,")"
-			if( boundStates < nWfs) write(*,'(a,i3,a,f8.3,a,f8.3,a)') "[#",myID,", solveHam]: WARNING not enough bound states at qpt=(",qpts(1,qi),",",qpts(2,qi),")."
+			!if( boundStates < nWfs) write(*,'(a,i3,a,f8.3,a,f8.3,a)') "[#",myID,", solveHam]: WARNING not enough bound states at qpt=(",qpts(1,qi),",",qpts(2,qi),")."
 			
 			!goto next qpt
 			qLoc = qLoc + 1		
 		end do
 		!
-		
-
+		!ANALYZE BANDS
+		call MPI_REDUCE(loc_minBound, 	glob_minBound, 	1, MPI_INTEGER, 	MPI_MIN,	root, MPI_COMM_WORLD, ierr)
+		call MPI_REDUCE(loc_maxBound, 	glob_maxBound, 	1, MPI_INTEGER, 	MPI_MAX,	root, MPI_COMM_WORLD, ierr)
+		!
+		if( myID == root ) then
+			write(*,*)	"*"
+			write(*,*)	"*"
+			write(*,*)	"*"
+			write(*,'(a,i3,a)')	"[#",myID,", solveHam]:********band structure analysis:****************************************"
+			!
+			!TEST FOR METALLIC BANDS
+			if( glob_minBound == glob_maxBound	) then
+				write(*,'(a,i3,a)')	"[#",myID,", solveHam]: found system with #",glob_minBound," insulating states"
+			else
+				write(*,'(a,i3,a,i3,a)')	"[#",myID,", solveHam]: WARNING: ",glob_maxBound-glob_minBound," insulating states get metallic at points of BZ"
+			end if
+			!
+			!TEST IF ENOUGH BANDS FOR W90
+			if( glob_minBound < nWfs	) then
+				write(*,'(a,i3,a)')	"[#",myID,", solveHam]: WARNING: not enough localized states for w90"
+			end if
+			write(*,*)	"*"
+		end if
+		!
 		!
 		return
 	end subroutine
