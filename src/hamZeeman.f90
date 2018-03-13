@@ -48,12 +48,12 @@ module ham_Zeeman
 		integer,		intent(in)		::	qLoc
 		complex(dp),	intent(inout)	::	Hmat(:,:)
 		integer							::	i, j, at 
-		real(dp)						::	dGx, dGy, xL, xR, yL, yR, magMom, minI, maxI
-		complex(dp)						::	num1, num2, denom, prefact, alphaZee, integral, &
-											num1a, num1b, num2b, num2a, ham
-		!
-		magMom		=	+ 0.5_dp 								!a.u.
-		alphaZee	=	dcmplx(	-1.0_dp * magMom * Bext(3)	)	!hartree
+		real(dp)						::	dGx, dGy, Gjx, Gjy, x0, y0, at_rad, magMom, minI, maxI
+		complex(dp)						::	ham, alphaZee, integral, &
+											num, denom, prefact, numA, numB
+																!UNITS:
+		magMom		=	+ 0.5_dp 								!a.u.= e hbar/( 2 m_e)
+		alphaZee	=	dcmplx(	-1.0_dp * magMom * Bext(3)	)	! [magMom] [Bext]
 		!
 		!
 		do j = 1, nGq(qLoc)
@@ -62,64 +62,52 @@ module ham_Zeeman
 				if( i /= j )	then
 					dGx		= Gvec(1,j,qLoc) - Gvec(1,i,qLoc) 
 					dGy		= Gvec(2,j,qLoc) - Gvec(2,i,qLoc) 
+					Gjx		= Gvec(1,j,qLoc)
+					Gjy		= Gvec(2,j,qLoc)
 					!
 					!for each atom/well
 					do at = 1, nAt
-						xL	=	atPos(1,at) - atR(1,at)
-						xR	=	atPos(1,at)	+ atR(1,at)
-						yL	=	atPos(2,at)	- atR(2,at)
-						yR	=	atPos(2,at)	+ atR(2,at)
+						x0		= atPos(1,at)
+						y0		= atPos(2,at)
+						at_rad 	= atR(1,at)
+						if( atR(2,at) /= at_rad)		stop '[hamZeeman]: only quadratic wells are supported'
+						!
 						!
 						!
 						!CASE 2 (dGx==0)
 						if( abs(dGx) < machineP ) then
-							prefact		=	dcmplx(		Gvec(1,j,qLoc)*(xL-xR) 		)
-							denom		=	dcmplx(		2.0_dp * dGy**2				)
-							num1		=	i_dp * 	myExp(dGy*yL) * ( 	2.0_dp * i_dp	+ 			(yL-yR)*dGy 		)
-							num2		=			myExp(dGy*yR) * ( 	2.0_dp 			+ i_dp * 	(yL-yR)*dGy			)
+							prefact		=	i_dp * dcmplx(4.0_dp * at_rad * Gjx												) * myExp(dGy*y0)
+							num			=	dcmplx(		at_rad * dGy * cos(at_rad*dGy) 		- 		sin(at_rad*dGy)			)
+							denom		=	dcmplx(										dGy**2								)
 							!
-							!
-							integral	=	prefact * ( num1 + num2 ) / denom
+							integral	=	prefact * num / denom
 						!---------------------------------------------------------------------------------------------------------------
+						!
 						!
 						!
 						!CASE 3 (dGy==0)
 						else if(	abs(dGy) < machineP	) then
-							prefact		=	dcmplx(		Gvec(2,j,qLoc)*(yL-yR)		)
-							denom		=	dcmplx(		2.0_dp * dGx**2				)
-							num1		=			myExp(dGx*xL) * ( 	2.0_dp			+ i_dp *	(xR-xL)*dGx			)
-							num2		=	i_dp *	myExp(dGx*xR) * (	2.0_dp * i_dp	+			(xR-xL)*dGx			)
+							prefact		=	i_dp * dcmplx(-4.0_dp * at_rad * Gjy											) * myExp(dGx*x0)					
+							num			=	dcmplx(		at_rad * dGx * cos(at_rad*dGx)		-		sin(at_rad*dGx)			)		
+							denom		=	dcmplx(										dGx**2								)
 							!
-							!
-							integral	=	prefact * ( num1 + num2 ) / denom
+							integral	=	prefact * num / denom
 						!---------------------------------------------------------------------------------------------------------------
+						!
 						!
 						!
 						!CASE 4 (dGx/=0 and dGy/=0)
 						else if(	abs(dGx) >= machineP	 .and. 		abs(dGy) >= machineP	) then
-							prefact		=	dcmplx(		1.0_dp						)
-							denom		=	dcmplx(		2.0_dp	* dGx**2 * dGy**2	)
+							prefact		=	i_dp * dcmplx(4.0_dp 															) * myExp(dGx*x0+dGy*y0) 
+			
+							numA 		=	sin(at_rad*dGx) *		( 		at_rad * Gjx * dGx * dGy * cos(at_rad*dGy)		)
+							numB		= -	sin(at_rad*dGy) *		(		at_rad * Gjy * dGx * dGy * cos(at_rad*dGx)	&
+																		+	( Gjx*dGx - Gjy*dGy )	 * sin(at_rad*dGx)		)
+							
+							denom		=	dcmplx(		dGx**2 * dGy**2														)
 							!
 							!
-							num1a		=	-1.0_dp * myExp(dGy*yL) * (			Gvec(2,j,qLoc) 	*	( -2.0_dp*i_dp + (xL-xR)*dGx )	*	dGy	 &	
-																			+	Gvec(1,j,qLoc) 	*	(  2.0_dp*i_dp + (yL-yR)*dGy )	*	dGx	 )
-							!-----------------------------
-							num1b		=	+1.0_dp * myExp(dGy*yR) * (			Gvec(2,j,qLoc) 	*	( -2.0_dp*i_dp + (xL-xR)*dGx )	*	dGy	&
-																			+	Gvec(1,j,qLoc)	*	(  2.0_dp*i_dp - (yL-yR)*dGy )	*	dGx	)
-							!-----------------------------
-							num2a		=	+1.0_dp * myExp(dGy*yL) * (			Gvec(2,j,qLoc)	*	( -2.0_dp*i_dp - (xL-xR)*dGx )	*	dGy &
-																			+	Gvec(1,j,qLoc)	*	(  2.0_dp*i_dp + (yL-yR)*dGy )	*	dGx )
-							!-----------------------------
-							num2b		=	-1.0_dp * myExp(dGy*yR) * (			Gvec(2,j,qLoc)	*	( -2.0_dp*i_dp - (xL-xR)*dGx )	*	dGy &
-																			+	Gvec(1,j,qLoc)	*	(  2.0_dp*i_dp - (yL-yR)*dGy )	*	dGx )
-							!-----------------------------
-							!
-							!
-							num1		=	myExp(dGx*xR)	* 	(	num1a + num1b )
-							num2		=	myExp(dGx*xL)	*	(	num2a + num2b )
-							!
-							!
-							integral	=	prefact * ( num1 + num2 ) / denom	
+							integral	=	prefact * ( numA + numB ) / denom	
 						!---------------------------------------------------------------------------------------------------------------
 						!
 						!
@@ -130,7 +118,7 @@ module ham_Zeeman
 						end if
 						!
 						!add Ham
-						ham = 	(alphaZee/vol) * integral 
+						ham = 	(alphaZee/dcmplx(vol)) * integral 
 						Hmat(i,j)	= Hmat(i,j)		+ 	ham
 						!
 						!
