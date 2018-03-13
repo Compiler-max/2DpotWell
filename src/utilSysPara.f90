@@ -16,7 +16,7 @@ module util_sysPara
 				nR, nRx, nRy, nRz,  dx, dy, dz, &
 				nShells, nw90it, shells, &
 				nBands, nWfs, proj_at, proj_nX, proj_nY,  &
-				atPos, atR, qpts, rpts, Rcell, kpts, Zion, recpLatt, &
+				atPos, atR, qpts, rpts, kpts, Zion, recpLatt, &
 				Bext, prefactF3, &
 				seedName, w90_dir, info_dir, mkdir, raw_dir,&
 				debugProj, debugHam, debugWann, doSolveHam, doMagHam, doZeeman, useBloch, doPw90, pw90GaugeB, doVdesc,  &
@@ -40,7 +40,7 @@ module util_sysPara
 	character(len=8)								::	raw_dir	="rawData/", mkdir="mkdir ./"	!to use with system(mkdir//$dir_path) 
 	integer,	allocatable,	dimension(:)		::	nGq, shells, proj_at, proj_nX, proj_nY
 	real(dp),	allocatable,	dimension(:)		::	relXpos, relYpos, atRx, atRy, atPot, dVpot, Zion
-	real(dp),	allocatable,	dimension(:,:)		::	Gtest , atPos, atR, qpts, rpts, Rcell, kpts 
+	real(dp),	allocatable,	dimension(:,:)		::	Gtest , atPos, atR, qpts, rpts, kpts 
 
 	real(dp),	allocatable,	dimension(:,:,:)	::	Gvec
 	logical											::	debugHam, debugWann, debugProj, &
@@ -81,7 +81,6 @@ module util_sysPara
 		call popGvec()
 		call popAtPos()
 		call popAtR()
-		call calcRcell()
 		call kWmeshGen()
 		!
 		!MAKE DIRECTORIES
@@ -316,7 +315,6 @@ module util_sysPara
 		!meshes
 		allocate(	qpts(dim,nQ)		)
 		allocate(	rpts(3,nR)			)
-		allocate(	Rcell(dim,nSC)		)
 		allocate(	kpts(dim,nK)		)
 		!w90
 		allocate(	shells(nShells)		)
@@ -629,26 +627,6 @@ module util_sysPara
 	end subroutine
 
 
-	subroutine calcRcell()
-		integer		:: nI, nJ, n
-		!
-		R0 = 1
-		if(myID == root ) then
-			do nJ = 1, nSCy
-				do nI = 1, nSCx
-					n = (nJ-1) * nSCx + nI  !rI	=	(rIy-1) * nRy + rIx
-					Rcell(1,n)	= real((nI-1),dp) * aX -real(nSCx-1,dp) * aX / 2.0_dp
-					Rcell(2,n)	= real((nJ-1),dp) * aY -real(nSCy-1,dp) * aY / 2.0_dp
-					if(abs(Rcell(1,n))< machineP .and. abs(Rcell(2,n))< machineP ) R0 = n
-				end do
-			end do
-		end if
-		call MPI_Bcast(Rcell, dim*nSC, MPI_DOUBLE_PRECISION, root, MPI_COMM_WORLD, ierr)
-		!
-		return
-	end subroutine
-
-
 
 
 
@@ -656,3 +634,40 @@ module util_sysPara
 
 
 end module util_sysPara
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+!	subroutine calcRcell()
+!		integer		:: nI, nJ, n
+!		!
+!		R0 = 1
+!		if(myID == root ) then
+!			do nJ = 1, nSCy
+!				do nI = 1, nSCx
+!					n = (nJ-1) * nSCx + nI  !rI	=	(rIy-1) * nRy + rIx
+!					Rcell(1,n)	= real((nI-1),dp) * aX -real(nSCx-1,dp) * aX / 2.0_dp
+!					Rcell(2,n)	= real((nJ-1),dp) * aY -real(nSCy-1,dp) * aY / 2.0_dp
+!					if(abs(Rcell(1,n))< machineP .and. abs(Rcell(2,n))< machineP ) R0 = n
+!				end do
+!			end do
+!		end if
+!		call MPI_Bcast(Rcell, dim*nSC, MPI_DOUBLE_PRECISION, root, MPI_COMM_WORLD, ierr)
+!		!
+!		return
+!	end subroutine

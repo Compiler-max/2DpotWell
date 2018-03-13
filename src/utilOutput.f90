@@ -58,13 +58,6 @@ module util_output
 			write(100,'(a,i6,a,f15.7,a,f15.7,a,f15.7,a)')				"r(",i,") = (", rpts(1,i) ,", ",rpts(2,i),",",rpts(3,i)," )"
 		end do		
 		!
-		!R CELL	
-		write(100,*)"*******************RCELL VECTOR******************************"
-		do i = 1, nSC
-			write(100,'(a,i6,a,f15.7,a,f15.7,a)')				"R(",i,") = (", Rcell(1,i) ,", ", Rcell(2,i), " )"
-		end do
-
-		!
 		!G VECTOR
 		write(100,*)"*******************G VECTOR  test MESH******************************"
 		write(100,*)"nG0=",nG0

@@ -34,7 +34,7 @@
 
 [ham]
     doVdesc     =   f
-    doZeeman    =   f
+    doZeeman    =   t
     doMagHam    =   f
 
 [methods]
@@ -72,7 +72,7 @@
 
 
 [debug]
-    debugHam    =   f
+    debugHam    =   t
     debugProj   =   f
     debugWann   =   f
 
