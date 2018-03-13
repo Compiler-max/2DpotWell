@@ -38,9 +38,9 @@
     doMagHam    =   f
 
 [methods]
-    doSolveHam  =   t
+    doSolveHam  =   f
     doPw90      =   f
-    doBerry     =   f
+    doBerry     =   t
     writeBin    =   f
 
 [w90]

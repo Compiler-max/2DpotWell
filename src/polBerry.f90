@@ -254,7 +254,7 @@ module pol_Berry
 
 		!get FD weights:
 		bk_test(1)	= (qpts(1,nnlist(1,1)) + real(nncell(1,1,1),dp)*2.0_dp * PI_dp * aY / vol -qpts(1,1)) / aUtoAngstrm 
-		bk_test(2)	= (qpts(2,nnlist(1,1)) + real(nncell(2,1,1),dp)*2.0_dp * PI_dp * aX / vol -qpts(1,1)) / aUtoAngstrm 
+		bk_test(2)	= (qpts(2,nnlist(1,1)) + real(nncell(2,1,1),dp)*2.0_dp * PI_dp * aX / vol -qpts(2,1)) / aUtoAngstrm 
 		bk_abs		= norm2( bk_test	) 
 		wb_test		= 3.0_dp / ( 6.0_dp * bk_abs**2)
 		!
