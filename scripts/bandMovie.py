@@ -13,7 +13,7 @@ nWfs 	= 6
 for dirpath, dirnames, filenames in os.walk("."):
 	print('search directory:',dirpath)
 	#create the pdf plots
-	if dirpath is not ".":
+	if dirnames is not "__pycache__":
 		ax = plotBands(dirpath,dirpath, minEn, maxEn)
 		plt.show()
 		for n in range(1,nWfs+1):
@@ -21,9 +21,9 @@ for dirpath, dirnames, filenames in os.walk("."):
 			plotNiuColor(dirpath,"f3response.txt",n)
 
 	#look for them
-for dirpat, dirnames, filenames in os.walk("."):
-	for filename in [f for f in filenames if f.endswith(".pdf")]:
-		print('found file in '+dirpath)
+#for dirpat, dirnames, filenames in os.walk("."):
+#	for filename in [f for f in filenames if f.endswith(".pdf")]:
+#		print('found file in '+dirpath)
 		#plotBands()
 
 
