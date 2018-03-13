@@ -4,7 +4,7 @@ module pol_Berry
 	use omp_lib
 	use util_sysPara,	only:	Bext, prefactF3, &
 								nWfs, nQ, nK, nSolve, vol, &
-								qpts, aY, vol,  &
+								qpts, aX, aY, vol,  &
 								atPos, atPot, &
 								doGaugBack, doNiu, fastConnConv
 	
@@ -242,7 +242,7 @@ module pol_Berry
 		complex(dp),	intent(in)			:: 	M_mat(:,:,:,:)
 		real(dp),		intent(out)			::	A_conn(:,:,:,:)
 		real(dp),		allocatable			::	ln_tmp(:,:)
-		real(dp)							::	my_bk(3,nntot), my_wb(nntot), bk_abs, wb_test
+		real(dp)							::	my_bk(3,nntot), my_wb(nntot), bk_test(2), bk_abs, wb_test
 		complex(dp)							::	delta
 		integer								::	qi, nn, n, m
 		!
@@ -253,8 +253,10 @@ module pol_Berry
 		A_conn 	= 0.0_dp
 
 		!get FD weights:
-		bk_abs	= norm2(	(qpts(1:2,nnlist(1,1)) + real(nncell(1:2,1,1)*2.0_dp * PI_dp * aY / vol) -qpts(1:2,1)) / aUtoAngstrm 	)
-		wb_test	= 3.0_dp / ( 6.0_dp * bk_abs**2)
+		bk_test(1)	= (qpts(1,nnlist(1,1)) + real(nncell(1,1,1),dp)*2.0_dp * PI_dp * aY / vol -qpts(1,1)) / aUtoAngstrm 
+		bk_test(2)	= (qpts(2,nnlist(1,1)) + real(nncell(2,1,1),dp)*2.0_dp * PI_dp * aX / vol -qpts(1,1)) / aUtoAngstrm 
+		bk_abs		= norm2( bk_test	) 
+		wb_test		= 3.0_dp / ( 6.0_dp * bk_abs**2)
 		!
 		write(*,*)	"[calcConnOnCoarse]: wb=",wb_test," (ang^2)"
 		write(*,*)	"[calcConnOnCoarse]: |b|=",bk_abs," (ang^-1)"		
@@ -269,7 +271,8 @@ module pol_Berry
 			do nn = 1, nntot
 				!
 				!GET WEIGHTS
-				my_bk(1:2,nn)	= 	(	(qpts(1:2, nnlist(qi,nn)) + real(nncell(1:2,qi,nn),dp)* 2.0_dp * PI_dp * aY / vol	) - qpts(1:2,qi) ) / aUtoAngstrm
+				my_bk(1,nn)	= 	(	(qpts(1, nnlist(qi,nn)) + real(nncell(1,qi,nn),dp)* 2.0_dp * PI_dp * aY / vol	) - qpts(1,qi) ) / aUtoAngstrm
+				my_bk(2,nn)	= 	(	(qpts(2, nnlist(qi,nn)) + real(nncell(2,qi,nn),dp)* 2.0_dp * PI_dp * aX / vol	) - qpts(2,qi) ) / aUtoAngstrm
 				if(	 ( bk_abs - norm2(my_bk(:,nn))	)	> 1e-8_dp	) then
 					write(*,*)	"*"
 					write(*,*)	"my_bk =",my_bk(:,nn)
