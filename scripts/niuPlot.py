@@ -6,7 +6,7 @@ from scipy.interpolate import griddata
 
 
 def plotNiuColor(searchDir,filename,plotState):
-	fpath	= searchDir+'/'+fileName
+	fpath	= searchDir+'/'+filename
 	
 	#read header
 	with open(fpath) as f:
@@ -64,7 +64,7 @@ def plotNiuColor(searchDir,filename,plotState):
 	CS = plt.contourf(xi, yi, pf2x_zi, 15, cmap=plt.cm.rainbow)#,
 	 #                 vmax=zmax, vmin=zmin)
 	
-	descriptor = fileName[:-12]
+	descriptor = filename[:-12]
 	
 	plt.title(descriptor+': n='+str(plotState)+' Bz='+str(bz)+'T')
 	plt.ylabel('ky (a.u.)')

@@ -110,9 +110,10 @@ print('mpGrid:'+str(mpGrid))
 
 
 foundInterp = False
-if len(p0_interp[0]) > 0:
-	foundInterp = True
-	print('found interpolation data')
+if len(p0_interp) > 0:
+	if len(p0_interp[0]) > 0:
+		foundInterp = True
+		print('found interpolation data')
 
 
 

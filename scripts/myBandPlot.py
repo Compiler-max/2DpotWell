@@ -89,9 +89,13 @@ def plotBands(w90_dir,out_dir, minEn, maxEn):
     print('*')
     print('********get k-space pathes********************************')
     #get q point path
-    tol     = 1e-8
-    qxmin   = min(qpts[:,0])
-    qymin   = min(qpts[:,1]) 
+    tol         = 1e-8
+    qxmin       = min(qpts[:,0])
+    qymin       = min(qpts[:,1]) 
+
+    M_vec       = np.array([qxmin,qymin,0.0])
+    M_norm      = np.linalg.norm(M_vec)
+    eM_vec      = M_vec / M_norm
 
     qpathI   = []#np.empty([0,0,0],dtype=int)
     qpathII  = []
@@ -100,36 +104,62 @@ def plotBands(w90_dir,out_dir, minEn, maxEn):
     qpathV   = []
 
 
-    for ind,q in enumerate(qpts):
-        if q[0]<= 0.0 and q[1]<=0.0:
-            
+    for ind,q_vec in enumerate(qpts):
+        if q_vec[0]<= 0.0 and q_vec[1]<=0.0:
+            q_norm  = np.linalg.norm(q_vec)
+            eQ_vec  = q_vec / q_norm
+
             #I  :    M->X
-            if abs(q[0]-qxmin) < tol:
-                qpathI.append( ([ind,q[0],q[1]])        )
+            if abs(q_vec[0]-qxmin) < tol:
+                qpathI.append( ([ind,q_vec[0],q_vec[1]])        )
                 
             #II :    X->Gamma
-            if abs(q[1]) < tol:
-                qpathII.append( ([ind,q[0],q[1]])        )
+            if abs(q_vec[1]) < tol:
+                qpathII.append( ([ind,q_vec[0],q_vec[1]])        )
 
 
             #III:   Gamma->M
-            if abs(q[0]-q[1]) < tol:
-                qpathIII.append( ([ind,q[0],q[1]])        )
+            if np.linalg.norm( eQ_vec - eM_vec) < tol:
+                if q_norm <= M_norm:
+                    qpathIII.append( ([ind,q_vec[0],q_vec[1]])        )
+                else:
+                    print('WARNING: found q-vector of of bounds:',q_vec)
 
             #IV :    M->Y
-            if abs(q[1]-qymin) < tol:
-                qpathIV.append( ([ind,q[0],q[1]])        )
+            if abs(q_vec[1]-qymin) < tol:
+                qpathIV.append( ([ind,q_vec[0],q_vec[1]])      )
 
             #V  :   Y->Gamma
-            if abs(q[0]) < tol:
-                qpathV.append( ([ind,q[0],q[1]])        )
+            if abs(q_vec[0]) < tol:
+                qpathV.append( ([ind,q_vec[0],q_vec[1]])        )
 
+
+    #add gamma point to start of pathIII
+    qpathTmp = ([qpathII[-1]])
+    for qpt in qpathIII:
+        qpathTmp.append((qpt))
+    qpathIII = qpathTmp
 
     qpathI  = sorted(qpathI,    key= lambda elem: elem[2]               )
     qpathII = sorted(qpathII,   key= lambda elem: elem[1]               )
     qpathIII= sorted(qpathIII,  key= lambda elem: elem[1], reverse=True )
     qpathIV = sorted(qpathIV,   key= lambda elem: elem[1]               )
     qpathV  = sorted(qpathV,    key= lambda elem: elem[2]               )
+
+
+    print('start point:',qpathI[0][:])
+
+       #check if q indices of start and end points match
+    if qpathI[-1][0] is not qpathII[0][0]:
+        print('WARNING: Q-path not smoth at I->II')
+    if qpathII[-1][0] is not  qpathIII[0][0]:
+        print('WARNING: Q-path not smoth at II->III')
+    if qpathIII[-1][0] is not qpathIV[0][0]:
+        print('WARNING: Q-path not smoth at III->IV')
+    if qpathIV[-1][0] is not  qpathV[0][0]:
+        print('WARNING: Q-path not smoth at IV->V')
+  
+
 
     qpath   = []
     qpath.append(   qpathI     )
@@ -138,12 +168,12 @@ def plotBands(w90_dir,out_dir, minEn, maxEn):
     qpath.append(   qpathIV    )
     qpath.append(   qpathV     )
 
-    print('sorted q-paths (abi):')
-    print('I  :',qpath[0]   )
-    print('II :',qpath[1]   )
-    print('III:',qpath[2]   )
-    print('IV :',qpath[3]   )
-    print('V  :',qpath[4]   )
+    #print('sorted q-paths (abi):')
+    #print('I  :',qpath[0]   )
+    #print('II :',qpath[1]   )
+    #print('III:',qpath[2]   )
+    #print('IV :',qpath[3]   )
+    #print('V  :',qpath[4]   )
 
 
 
@@ -152,6 +182,9 @@ def plotBands(w90_dir,out_dir, minEn, maxEn):
     kxmin   = min(kpts[:,0])
     kymin   = min(kpts[:,1]) 
 
+    M_vec       = np.array([kxmin,kymin,0.0])
+    M_norm      = np.linalg.norm(M_vec)
+    eM_vec      = M_vec / M_norm
 
 
     kpathI   = []#np.empty([0,0,0],dtype=int)
@@ -161,36 +194,59 @@ def plotBands(w90_dir,out_dir, minEn, maxEn):
     kpathV   = []
 
 
-    for ind,k in enumerate(kpts):
-        if k[0]<= 0.0 and k[1]<=0.0:
-            
+    
+    for ind,k_vec in enumerate(kpts):
+        if k_vec[0]<= 0.0 and k_vec[1]<=0.0:
+            k_norm  = np.linalg.norm(k_vec)
+            eK_vec  = k_vec / k_norm
+
             #I  :    M->X
-            if abs(k[0]-kxmin) < tol:
-                kpathI.append( ([ind,k[0],k[1]])        )
+            if abs(k_vec[0]-kxmin) < tol:
+                kpathI.append( ([ind,k_vec[0],k_vec[1]])        )
                 
             #II :    X->Gamma
-            if abs(k[1]) < tol:
-                kpathII.append( ([ind,k[0],k[1]])        )
+            if abs(k_vec[1]) < tol:
+                kpathII.append( ([ind,k_vec[0],k_vec[1]])        )
 
 
             #III:   Gamma->M
-            if abs(k[0]-k[1]) < tol:
-                kpathIII.append( ([ind,k[0],k[1]])        )
+            if np.linalg.norm( eK_vec - eM_vec) < tol:
+                if k_norm <= M_norm:
+                    kpathIII.append( ([ind,k_vec[0],k_vec[1]])        )
+                else:
+                    print('WARNING: found k-vector of of bounds:',k_vec)
 
             #IV :    M->Y
-            if abs(k[1]-kymin) < tol:
-                kpathIV.append( ([ind,k[0],k[1]])        )
+            if abs(k_vec[1]-kymin) < tol:
+                kpathIV.append( ([ind,k_vec[0],k_vec[1]])      )
 
             #V  :   Y->Gamma
-            if abs(k[0]) < tol:
-                kpathV.append( ([ind,k[0],k[1]])        )
+            if abs(k_vec[0]) < tol:
+                kpathV.append( ([ind,k_vec[0],k_vec[1]])        )
 
+
+    #add gamma point to start of pathIII
+    kpathTmp = ([kpathII[-1]])
+    for kpt in kpathIII:
+        kpathTmp.append((kpt))
+    kpathIII = kpathTmp
 
     kpathI  = sorted(kpathI,    key= lambda elem: elem[2]               )
     kpathII = sorted(kpathII,   key= lambda elem: elem[1]               )
     kpathIII= sorted(kpathIII,  key= lambda elem: elem[1], reverse=True )
     kpathIV = sorted(kpathIV,   key= lambda elem: elem[1]               )
     kpathV  = sorted(kpathV,    key= lambda elem: elem[2]               )
+
+    #check smoothness of path
+    if kpathI[-1][0] is not kpathII[0][0]:
+        print('WARNING: K-path not smoth at I->II')
+    if kpathII[-1][0] is not kpathIII[0][0]:
+        print('WARNING: K-path not smoth at II->III')
+    if kpathIII[-1][0] is not kpathIV[0][0]:
+        print('WARNING: K-path not smoth at III->IV')
+    if kpathIV[-1][0] is not kpathV[0][0]:
+        print('WARNING: K-path not smoth at IV->V')
+  
 
     kpath   = []
     kpath.append(kpathI)
@@ -200,13 +256,12 @@ def plotBands(w90_dir,out_dir, minEn, maxEn):
     kpath.append(kpathV)
 
 
-    print('sorted k-paths (w90):')
-
-    print('I  :',kpath[0])
-    print('II :',kpath[1])
-    print('III:',kpath[2])
-    print('IV :',kpath[3])
-    print('V  :',kpath[4])
+    #print('sorted k-paths (w90):')
+    #print('I  :',kpath[0])
+    #print('II :',kpath[1])
+    #print('III:',kpath[2])
+    #print('IV :',kpath[3])
+    #print('V  :',kpath[4])
 
 
 
