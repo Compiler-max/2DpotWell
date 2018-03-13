@@ -15,7 +15,7 @@ module util_sysPara
 				nQ, nQx, nQy, nKx, nKy, nK, nSC, nSCx, nSCy, dqx, dqy, dkx, dky, &
 				nR, nRx, nRy, nRz,  dx, dy, dz, &
 				nShells, nw90it, shells, &
-				nBands, nWfs, proj_at, proj_stat,  &
+				nBands, nWfs, proj_at, proj_nX, proj_nY,  &
 				atPos, atR, qpts, rpts, Rcell, kpts, Zion, recpLatt, &
 				Bext, prefactF3, &
 				seedName, w90_dir, info_dir, mkdir, raw_dir,&
@@ -38,7 +38,7 @@ module util_sysPara
 	character(len=9)								::	w90_dir	="w90files/"
 	character(len=7)								::	info_dir="output/"
 	character(len=8)								::	raw_dir	="rawData/", mkdir="mkdir ./"	!to use with system(mkdir//$dir_path) 
-	integer,	allocatable,	dimension(:)		::	nGq, shells, proj_at, proj_stat
+	integer,	allocatable,	dimension(:)		::	nGq, shells, proj_at, proj_nX, proj_nY
 	real(dp),	allocatable,	dimension(:)		::	relXpos, relYpos, atRx, atRy, atPot, dVpot, Zion
 	real(dp),	allocatable,	dimension(:,:)		::	Gtest , atPos, atR, qpts, rpts, Rcell, kpts 
 
@@ -197,8 +197,9 @@ module util_sysPara
 		call CFG_add_get(my_cfg,	"atoms%dVpot"		,	dVpot		,	"potential gradient"					)
 		call CFG_add_get(my_cfg,	"atoms%Zion"		,	Zion		,	"effective charge of the ions"			)
 		![wann]
-		call CFG_add_get(my_cfg,	"wann%projAt"		,	proj_at		,	"list of atoms to project to (init guess)")
-		call CFG_add_get(my_cfg,	"wann%projState"	,	proj_stat	,	"on which state to project"				)
+		call CFG_add_get(my_cfg,	"wann%projAt"		,	proj_at		,	"list of atoms to project to (init U)"	)
+		call CFG_add_get(my_cfg,	"wann%projnX"		,	proj_nX		,	"on which state to project x-dir"		)
+		call CFG_add_get(my_cfg,	"wann%projnY"		,	proj_nY		,	"on which state to project y_dir"		)
 		![w90]
 		call CFG_add_get(my_cfg,	"w90%shells"		, 	shells		,	"list of shells used for FD connection"	)
 	
@@ -284,7 +285,8 @@ module util_sysPara
 		call MPI_Bcast(	atPot	,		nAt		,	MPI_DOUBLE_PRECISION	,	root,	MPI_COMM_WORLD, ierr)
 
 		call MPI_Bcast(	proj_at		,	nWfs	,		MPI_INTEGER			,	root,	MPI_COMM_WORLD,	ierr)
-		call MPI_Bcast( proj_stat	,	nWfs	,		MPI_INTEGER			,	root,	MPI_COMM_WORLD,	ierr)
+		call MPI_Bcast( proj_nX		,	nWfs	,		MPI_INTEGER			,	root,	MPI_COMM_WORLD,	ierr)
+		call MPI_Bcast( proj_nY		,	nWfs	,		MPI_INTEGER			,	root,	MPI_COMM_WORLD,	ierr)
 		!
 		return
 	end subroutine
@@ -307,6 +309,10 @@ module util_sysPara
 		allocate(	atPos(dim,nAt)		)
 		allocate(	atR(dim,nAt) 		)
 		allocate(	Zion(nAt)			)
+		!wann
+		allocate(	proj_at(nWfs)		)
+		allocate(	proj_nX(nWfs)		)
+		allocate(	proj_nY(nWfs)		)
 		!meshes
 		allocate(	qpts(dim,nQ)		)
 		allocate(	rpts(3,nR)			)
@@ -314,8 +320,6 @@ module util_sysPara
 		allocate(	kpts(dim,nK)		)
 		!w90
 		allocate(	shells(nShells)		)
-		allocate(	proj_at(nWfs)		)
-		allocate(	proj_stat(nWfs)		)
 		!
 		!
 		return
