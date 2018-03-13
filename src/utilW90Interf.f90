@@ -613,7 +613,8 @@ module util_w90Interf
 !PREPARE & RUN W90
 	subroutine write_W90setup_input()
 		!write input file for wannier_setup call
-		integer	:: i
+		integer	:: i, hStates, heStates
+		character(len=30)	:: 	H_char, He_char
 		!
 		open(unit=100,file=seed_name//'.win',action='write', form='formatted', status='replace')
 		!
@@ -636,11 +637,19 @@ module util_w90Interf
 		write(100,*)
 		!
 		!PROJECTIONS
+		hStates 	= nWfs/nAt
+		heStates	= hStates
+		if( hStates + heStates < nWfs) 	hStates = hstates + (nWfs-hStates-heStates)
+
+		call randomProjString(hStates, 	H_char	)
+		call randomProjString(heStates, He_char	)
+
 		write(100,*)	'Begin Projections'
-		if(nWfs / nAt == 3) write(100,*)	'H: l=0;l=1,mr=2,3'
-		if(nWfs / nAt == 1) write(100,*)	'H: l=0'
+		write(100,*)	'H: '//H_char
+		if(nAt > 1 )	write(100,*)	'He: '//He_char
+		!if(nWfs / nAt == 1) write(100,*)	'H: l=0'
 		write(100,*)	'End Projections'
-		write(100,*)
+		
 		!
 		!
 		close(100)
@@ -648,6 +657,36 @@ module util_w90Interf
 	end subroutine
 
 
+	subroutine randomProjString(nStates,string)
+		integer,			intent(in)			:: nStates
+		character(len=30), 	intent(out)			:: string
+		!
+		select case(nStates)
+			case (1)
+				string = 'l=0;' 							! s
+			case (2)
+				string = 'l=0; l=1, mr=2'	 				! s ; px
+			case (3)
+				string = 'l=0; l=1, mr=2,3'					! s ; px py
+			case (4)
+				string = 'l=0; l=1, mr=2,3; l=2, mr=4'		! s	; px py ; dx**2-y**2
+			case (5)
+				string = 'l=0; l=1, mr=2,3; l=2, mr=4,5'	! s ; px py ; dx**2-y**2 dxy
+			!case (6)
+			!	string = 'l=0; l=1; l=2, mr=4,5'			!random
+			!case (7)
+			!	string = 'l=0; l=1; l=2, mr=3,4,5'			!random
+			!case (8)
+			!	string = 'l=0; l=1; l=2, mr=2,3,4,5'		!random
+			!case (9)
+			!	string = 'l=0; l=1; l=2'					!random
+			case default
+				string = ''
+				write(*,*)	"[randomProjString]: only defined up to 9 states per atom at the moment"
+		end select 
+		!
+		return
+	end subroutine
 
 
 	subroutine run_w90setup(nntot_out, nnlist_out, nncell_out)
@@ -673,7 +712,8 @@ module util_w90Interf
 		!
 		!fill atom related arrays
 		do	at = 1, num_atoms
-			atom_symbols(at)	= 'H'
+			if( mod(at,2) == 0)	atom_symbols(at)	= 'H'
+			if(	mod(at,2) == 1)	atom_symbols(at)	= 'He'
 			atoms_cart(1:2,at)	= atPos(1:2,at)*aUtoAngstrm
 			atoms_cart(3,at)	= 0.0_dp
 		end do
@@ -755,11 +795,11 @@ module util_w90Interf
         write(100,*)
         !
         !PROJECTIONS
-		write(100,*)	'Begin Projections'
-		if( nWfs/ nAt == 3)	write(100,*)	'H: l=0;l=1,mr=2,3'	
-		if( nWfs/ nAt == 1)	write(100,*)	'H: l=0'
-		write(100,*)	'End Projections'
-		write(100,*)
+		!write(100,*)	'Begin Projections'
+		!if( nWfs/ nAt == 3)	write(100,*)	'H: l=0;l=1,mr=2,3'	
+		!if( nWfs/ nAt == 1)	write(100,*)	'H: l=0'
+		!write(100,*)	'End Projections'
+		!write(100,*)
 		!
 		!OUTPUT JOBS
 		write(100,*)	'length_unit = Ang'
