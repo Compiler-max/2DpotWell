@@ -54,11 +54,7 @@ module ham_Zeeman
 		!
 		magMom		=	+ 0.5_dp 								!a.u.
 		alphaZee	=	dcmplx(	-1.0_dp * magMom * Bext(3)	)	!hartree
-
-
-
-
-
+		!
 		!
 		do j = 1, nGq(qLoc)
 			do i = 1, nGq(qLoc)
@@ -155,8 +151,7 @@ module ham_Zeeman
 			end do
 		end do
 
-		write(*,*)	"[#",myID,";add_Zeeman]: min contribution:", minI
-		write(*,*)	"[#",myID,";add_Zeeman]: max contribution:", maxI
+		write(*,'(a,i3,a,e16.8,a,e16.8,a)')	"[#",myID,";add_Zeeman]: min/max contribution: [", minI," : ",maxI,"]."
 
 		return
 	end subroutine
