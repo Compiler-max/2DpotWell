@@ -99,6 +99,8 @@ module ham_PWbasis
 	subroutine calcAmatANA(qi,ckH, A_matrix)
 		!analytic projection with hard coded integrals
 		!	projection onto sin**2, sin cos, cos sin
+		!
+		!	Amn = <Psi_m|g_n>
 		integer,		intent(in)	:: 	qi
 		complex(dp),	intent(in)	:: 	ckH(:,:)
 		complex(dp),	intent(out)	:: 	A_matrix(:,:) !A(nBands,nWfs)
@@ -113,13 +115,14 @@ module ham_PWbasis
 				A_matrix(nWf,nWf)	= dcmplx(1.0_dp)
 			else
 				do m = 1, nBands
-					if(	proj_stat(nWf) == 1)	A_matrix(m,nWf)	= g1Int(qi,m, proj_at(nWf), ckH)
-					if( proj_stat(nWf) == 2)	A_matrix(m,nWf) = g2Int(qi,m, proj_at(nWf), cKH)
-					if( proj_stat(nWf) == 3)	A_matrix(m,nWf) = g3Int(qi,m, proj_at(nWf), cKH)					
-					if( proj_stat(nWf) > 3 )	then
-						write(*,'(a,i3,a,i2,a)')	"[#",myID,"calcAmatANA]: can not project onto state #",proj_stat(nWf)," (maximum supported: 3)"
-						A_matrix(m,nWf) = gDefaultInt(m, nWf)
-					end if
+					A_matrix(m,nWf)	= infiniteWell(qi, m, ckH, proj_at(nWf), proj_nX(nWf), proj_nY(nWf))
+					!if(	proj_stat(nWf) == 1)	A_matrix(m,nWf)	= g1Int(qi,m, proj_at(nWf), ckH)
+					!if( proj_stat(nWf) == 2)	A_matrix(m,nWf) = g2Int(qi,m, proj_at(nWf), cKH)
+					!if( proj_stat(nWf) == 3)	A_matrix(m,nWf) = g3Int(qi,m, proj_at(nWf), cKH)					
+					!if( proj_stat(nWf) > 3 )	then
+					!	write(*,'(a,i3,a,i2,a)')	"[#",myID,"calcAmatANA]: can not project onto state #",proj_stat(nWf)," (maximum supported: 3)"
+					!	A_matrix(m,nWf) = gDefaultInt(m, nWf)
+					!end if
 				end do
 			end if
 		end do
@@ -187,209 +190,117 @@ module ham_PWbasis
 
 
 
-!prviat
-		complex(dp) function g1Int(qi,m, at,ckH)
-		integer,		intent(in)	:: qi, m, at
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+!prviat:
+		complex(dp) function infiniteWell(qi,m, ckH, at, nx, ny)
+		!	calculates the integral
+		!
+		!		sin(nx*k*x ) * sin( ny*k*y) 	
+		!
+		!
+		!
+		integer,		intent(in)	:: qi, m, at, nx, ny
 		complex(dp),	intent(in)	:: ckH(:,:)
 		complex(dp)					:: num1, num2, denom
-		real(dp)					:: kappa, xL, xR, yL, yR, Gx, Gy, xc, yc
+		real(dp)					:: kappaX, kappaY, xL, xR, yL, yR, Gx, Gy, xc, yc, at_rad
 		integer						:: gi
 		!
 		!TRIAL ORBITAL:
-		kappa	= PI_dp / ( 2.0_dp * atR(1,at) )
-		if( atR(1,at) /= atR(2,at) )	stop	"[g1Int]: ERROR analytic projection can not handle non cubic wells"
-		xc		= atPos(1,at) - atR(1,at)
-		yc		= atPos(2,at) - atR(2,at)
+		kappaX	= real(nx,dp) * PI_dp / ( 2.0_dp * atR(1,at) )
+		kappaY 	= real(ny,dp) * PI_dp / ( 2.0_dp * atR(2,at) )
+		if( atR(1,at) /= atR(2,at) )	stop	"[infiniteWell]: ERROR analytic projection can not handle non cubic wells"
+		at_rad 	= atR(1,at)
+		xc		= atPos(1,at)
+		yc		= atPos(2,at)
 		xL 		= atPos(1,at) - atR(1,at) 
 		xR		= atPos(1,at) + atR(1,at)
 		yL		= atPos(2,at) - atR(2,at)
 		yR		= atPos(2,at) + atR(2,at)
 		!
 		!SUMMATION OVER G:
-		g1Int 	= dcmplx(0.0_dp)
+		infiniteWell 	= dcmplx(0.0_dp)
 		do gi = 1, nGq(qi)
 			Gx 		= Gvec(1,gi,qi)
 			Gy		= Gvec(2,gi,qi)
 			!
 			!
+			!
+			!
+			!CASE 1 (Gx==0 && Gy==0)
 			if( 	abs(Gx) < machineP 	.and.	 abs(Gy) < machineP 	) then
-				num1	= dcos((xL-xc)*kappa) - dcos((xR-xc)*kappa)
-				num2	= dcos((yL-yc)*kappa) - dcos((yR-yc)*kappa)
-				denom	= kappa**2
+				num1	= dcos((xL-xc+at_rad)*kappaX) - dcos((xR-xc+at_rad)*kappaX)
+				num2	= dcos((yL-yc+at_rad)*kappaY) - dcos((yR-yc+at_rad)*kappaY)
+				denom	= at_rad * kappaX*kappaY
+			!----------------------------------------------------------------------------------------------------------------------------------------------
 			!
+			!	ToDo:
+			!CASE 2 (Gx!=0	&& Gy==0)
 			else if( abs(Gy) < machineP ) then
-				num1	= 	myExp(-Gx*(xL+xR)) 	* 	( 			dcos((yL-yc)*kappa) - 				dcos((yR-yc)*kappa)	)
-				num2	= 			myExp(Gx*xR)* 	( kappa * 	dcos((xL-xc)*kappa) + i_dp * Gx * 	dsin((xL-xc)*kappa)	)
-				num2	= num2  - 	myExp(Gx*xL)* 	( kappa *	dcos((xR-xc)*kappa) + i_dp * Gx *	dsin((xR-xc)*kappa)	)
-				denom	= kappa * ( kappa**2 - Gx**2)
+				num1	= 	myExp(-Gx*(xL+xR)) 	* 	( 				dcos((yL-yc+at_rad)*kappaY) - 				dcos((yR-yc+at_rad)*kappaY)	)
+				num2	= 		-	myExp(Gx*xR)* 	( 	kappaX * 	dcos((xL-xc+at_rad)*kappaX) + i_dp * Gx * 	dsin((xL-xc+at_rad)*kappaX)	)
+				num2	= num2  + 	myExp(Gx*xL)* 	( 	kappaX *	dcos((xR-xc+at_rad)*kappaX) + i_dp * Gx *	dsin((xR-xc+at_rad)*kappaX)	)
+				denom	= at_rad * kappaY * ( Gx**2 - kappaX**2 )
+			!----------------------------------------------------------------------------------------------------------------------------------------------
 			!
+			!
+			!CASE 3 (Gx==0	&& Gy!=0)
 			else if( abs(Gx) < machineP) then
-				num1	= 	myExp(-Gy*(yL+yR))	*	(			dcos((xL-xc)*kappa) -				dcos((xR-xc)*kappa)	)
-				num2	=		-	myExp(Gy*yR)*	( kappa *	dcos((yL-yc)*kappa) + i_dp * Gy *	dsin((yL-yc)*kappa)	)
-				num2	= num2  +	myExp(Gy*yL)*	( kappa *	dcos((yR-yc)*kappa) + i_dp * Gy *	dsin((yR-yc)*kappa)	)
-				denom	= kappa * ( Gy**2 - kappa**2 )
+				num1	= 	myExp(-Gy*(yL+yR))	*	(				dcos((xL-xc+at_rad)*kappaX) -				dcos((xR-xc+at_rad)*kappaX)	)
+				num2	=		-	myExp(Gy*yR)*	( 	kappaY *	dcos((yL-yc+at_rad)*kappaY) + i_dp * Gy *	dsin((yL-yc+at_rad)*kappaY)	)
+				num2	= num2  +	myExp(Gy*yL)*	( 	kappaY *	dcos((yR-yc+at_rad)*kappaY) + i_dp * Gy *	dsin((yR-yc+at_rad)*kappaY)	)
+				denom	= at_rad * kappaX * ( Gy**2 - kappaY**2 )
+			!----------------------------------------------------------------------------------------------------------------------------------------------
 			!
+			!
+			!CASE 4 (Gx!=0	&& Gy!=0)
 			else
-				num1 	=    	- myExp(-Gx*xL)	* 	( kappa *	dcos((xL-xc)*kappa)	+ 	i_dp * Gx * dsin((xL-xc)*Kappa) )
-				num1 	= num1  + myExp(-Gx*xR) * 	( kappa * 	dcos((xR-xc)*kappa)	+	i_dp * Gx * dsin((xR-xc)*Kappa)	)
-				num2 	= 		  myExp(Gy*yL) 	* 	( kappa *	dcos((yR-yc)*kappa)	+	i_dp * Gy * dsin((yR-yc)*kappa)	) 
-				num2 	= num2  - myExp(Gy*yR) 	* 	( kappa *	dcos((yL-yc)*kappa)	+	i_dp * Gy * dsin((yL-yc)*kappa)	)
-				denom	= myExp(Gy*(yL+yR)) * (Gy**2-kappa**2) * (Gx**2-kappa**2)
+				num1 	=    	- myExp(-Gx*xL)	* 	( kappaX *	dcos((xL-xc+at_rad)*kappaX)	+ 	i_dp * Gx * dsin((xL-xc+at_rad)*KappaX) )
+				num1 	= num1  + myExp(-Gx*xR) * 	( kappaX * 	dcos((xR-xc+at_rad)*kappaX)	+	i_dp * Gx * dsin((xR-xc+at_rad)*KappaX)	)
+				num2 	= 		  myExp(Gy*yL) 	* 	( kappaY *	dcos((yR-yc+at_rad)*kappaY)	+	i_dp * Gy * dsin((yR-yc+at_rad)*kappaY)	) 
+				num2 	= num2  - myExp(Gy*yR) 	* 	( kappaY *	dcos((yL-yc+at_rad)*kappaY)	+	i_dp * Gy * dsin((yL-yc+at_rad)*kappaY)	)
+				denom	= at_rad * myExp(Gy*(yL+yR)) * (Gy**2-kappaY**2) * (Gx**2-kappaX**2)
 			!
 			end if
+			!----------------------------------------------------------------------------------------------------------------------------------------------
 			!
-			!
+			!DEBUG
 			if( abs(denom) < machineP) then
-				write(*,'(a,i4,a,f8.4,a,f8.4a,f8.4)') "[g1Int]: WARNING zero denom at qi=",qi," Gx=",Gx,"Gy=",Gy,"denom=",denom
-				denom 	= 1e-5_dp
+				write(*,'(a,i4,a,f8.4,a,f8.4a,f8.4)') "[infiniteWell]: WARNING zero denom at qi=",qi," Gx=",Gx,"Gy=",Gy,"denom=",denom
+				denom 	= 1e-8_dp
 			end if
 			!
 			!
-			g1Int = g1Int + dconjg(ckH(gi,m)) * num1 * num2 / (dsqrt(vol) * denom)
+			!SUM OVER gi
+			infiniteWell = infiniteWell + dconjg(ckH(gi,m)) * num1 * num2 / (dsqrt(vol) * denom)
 		end do
 		!
-		!
-		return
-	end function
-
-
-	complex(dp) function g2Int(qi,m, at,ckH)
-		integer,		intent(in)	:: qi, m, at
-		complex(dp),	intent(in)	:: ckH(:,:)
-		complex(dp)					:: num1, num2, denom
-		real(dp)					:: kappa, xL, xR, yL, yR, Gx, Gy, xc, yc
-		integer						:: gi
-		!
-		!TRIAL ORBITAL:
-		kappa	= PI_dp / (2.0_dp*atR(1,at))
-		if( atR(1,at) /= atR(2,at) ) 	stop "[g2Int]: WARNING analytic projection can not handle non cubic wells"
-		xc		= atPos(1,at) - atR(1,at)
-		yc		= atPos(2,at) - atR(2,at)
-		xL 		= atPos(1,at) - atR(1,at) 
-		xR		= atPos(1,at) + atR(1,at)
-		yL		= atPos(2,at) - 2.0_dp * atR(2,at)
-		yR		= atPos(2,at) + 2.0_dp * atR(2,at)
-		!
-		!SUMMATION OVER G:
-		g2Int 	= dcmplx(0.0_dp)
-		do gi = 1, nGq(qi)
-			!
-			Gx 		= Gvec(1,gi,qi)
-			Gy		= Gvec(2,gi,qi)
-			!
-			!
-			if( abs(Gx) < machineP .and. abs(Gy) < machineP ) then
-				num1	= -  ( 	dcos((xL-xc)*kappa) - dcos((xR-xc)*kappa) )
-				num2	= 	   	dsin((yL-yc)*kappa) - dsin((yR-yc)*kappa)
-				denom	= 	kappa**2
-			!
-			else if( abs(Gy) < machineP ) then
-				num1	=		  myExp(-Gx*(xL+xR))*	(			dsin((yL-yc)*kappa) - 				dsin((yR-yc)*kappa)	)
-				num2	= 		- myExp(-Gx*xR)		*  	( kappa *	dcos((xL-xc)*kappa) +	i_dp * Gx * dsin((xL-xc)*kappa)	)
-				num2	= num2 	+ myExp(Gx*xL)		*	( kappa *	dcos((xR-xc)*kappa) +	i_dp * Gx * dsin((xR-xc)*kappa)	)
-				denom	= kappa * ( kappa**2 - Gx**2 )
-			!
-			else if( abs(Gx) < machineP ) then
-				num1	= 		  myExp(-Gy*(yL+yR))*	(			dcos((xL-xc)*kappa) -				dcos((xR-xc)*kappa)	)
-				num2	=		  myExp(Gy*yR)		*	( kappa *	dsin((yL-yc)*kappa) -	i_dp * Gy * dcos((yL-yc)*kappa)	)
-				num2	= num2 	+ myExp(Gy*yL)		*	(-kappa *	dsin((yR-yc)*kappa) +	i_dp * Gy * dcos((yR-yc)*kappa)	)
-				denom	= kappa * ( Gy**2 - kappa**2 )
-			!
-			else  
-				num1 	=		- myExp(-Gx*xL)		* 	( kappa*	dcos((xL-xc)*kappa) + 	i_dp * Gx * dsin((xL-xc)*Kappa)	)
-				num1 	= num1	+ myExp(-Gx*xR)		* 	( kappa*	dcos((xR-xc)*kappa) +	i_dp * Gx * dsin((xR-xc)*Kappa)	)
-				num2 	=		+ myExp(Gy*yR) 		* 	( kappa*	dsin((yL-yc)*kappa) -	i_dp * Gy * dcos((yL-yc)*kappa)	)
-				num2 	= num2	+ myExp(Gy*yL) 		* 	(-kappa* 	dsin((yR-yc)*kappa) +	i_dp * Gy *	dcos((yR-yc)*kappa)	) 
-				denom	=		+ myExp(Gy*(yL+yR)) * (Gy**2-kappa**2) * (Gx**2-kappa**2)  
-			end if
-			!
-			!
-			if( abs(denom) < machineP) then
-				write(*,'(a,i4,a,f8.4,a,f8.4a,f8.4)') "[g2Int]: WARNING zero denom at qi=",qi," Gx=",Gx,"Gy=",Gy,"denom=",denom
-				denom 	= 1e-5_dp
-			end if
-			!
-			!
-			g2Int = g2Int + dconjg(ckH(gi,m)) * num1 * num2 / (dsqrt(vol) * denom)
-		end do
-		!
-		!
-		return
-	end function
-
-	complex(dp) function g3Int(qi,m, at,ckH)
-		integer,		intent(in)	:: qi, m, at
-		complex(dp),	intent(in)	:: ckH(:,:)
-		complex(dp)					:: num1, num2, denom
-		real(dp)					:: kappa, xL, xR, yL, yR, Gx, Gy, xc, yc
-		integer						:: gi
-		!
-		kappa	= PI_dp / (2.0_dp*atR(1,at))
-		if( atR(1,at) /= atR(2,at) ) stop	"[g3Int]: WARNING analytic projection can not handle non cubic wells"
-		xc		= atPos(1,at) - atR(1,at)
-		yc		= atPos(2,at) - atR(2,at)
-		xL 		= atPos(1,at) - 2.0_dp * atR(1,at) 
-		xR		= atPos(1,at) + 2.0_dp * atR(1,at)
-		yL		= atPos(2,at) - atR(2,at)
-		yR		= atPos(2,at) + atR(2,at)
-		g3Int 	= dcmplx(0.0_dp)
-		do gi = 1, nGq(qi)
-			!
-			Gx 		= Gvec(1,gi,qi)
-			Gy		= Gvec(2,gi,qi)
-			!
-			!
-			if( abs(Gx) < machineP .and. abs(Gy) < machineP ) then
-				num1	= - ( 	dcos((yL-yc)*kappa) - dcos((yR-yc)*kappa) 	)
-				num2	= 		dsin((xL-xc)*kappa) - dsin((xR-xc)*kappa)
-				denom	= kappa**2
-			!
-			else if( abs(Gy) < machineP ) then
-				num1	= 		  myExp(-Gx*(xL+xR))*	( 			dcos((yL-yc)*kappa) - 				dcos((yR-yc)*kappa) )
-				num2	= 		  myExp(Gx*xR)		*	(-kappa* 	dsin((xL-xc)*kappa) + 	i_dp * Gx * dcos((xL-xc)*kappa)	)
-				num2	= num2	+ myExp(Gx*xL)		*	( kappa*	dsin((xR-xc)*kappa) - 	i_dp * Gx * dcos((xR-xc)*kappa)	)
-				denom	= kappa * ( kappa**2 - Gx**2)
-			!
-			else if( abs(Gx) < machineP ) then
-				num1	= 		  myExp(-Gy*(yL+yR))*	(			dsin((xR-xc)*kappa) -				dsin((xL-xc)*kappa)	)
-				num2	=		- myExp(Gy*yR)		*	( kappa*	dcos((yL-yc)*kappa) +	i_dp * Gy * dsin((yL-yc)*kappa)	)
-				num2	= num2	+ myExp(Gy*yL)		*	( kappa*	dcos((yR-yc)*kappa) +	i_dp * Gy * dsin((yR-yc)*kappa)	)
-				denom	= kappa * ( Gy**2 - kappa**2 )
-			!		 		
-			else
-				!ToDo: revisit
-				num1	=  		- i_dp * myExp(Gx*xR) * Gx 		* dcos((xL-xc)*kappa)
-				num1	= num1 	+ i_dp * myExp(Gx*xL) * Gx 		* dcos((xR-xc)*kappa)
-				num1	= num1 	+ 	    myExp(Gx*xR) * kappa 	* dsin((xL-xc)*kappa)
-				num1	= num1 	- 		myExp(Gx*xL) * kappa	* dsin((xR-xc)*kappa)
-				!
-				num2	=  		- 		myExp(Gy*yR) *  ( kappa	* dcos((yL-yc)*kappa) + i_dp * Gy * dsin((yL-yc)*kappa) )
-				num2	= num2 +		myExp(Gy*yL) * 	( kappa * dcos((yR-yc)*kappa) + i_dp * Gy * dsin((yR-yc)*kappa) )
-				!
-				denom	=  + myExp( Gx*(xL+xR) + Gy*(yL+yR) )	* (Gy**2-kappa**2) * (kappa**2-Gx**2)
-				!  
-			end if
-			!
-			!
-			if( abs(denom) < machineP) then
-				write(*,'(a,i4,a,f8.4,a,f8.4a,f8.4)') "[g3Int]: WARNING zero denom at qi=",qi," Gx=",Gx,"Gy=",Gy,"denom=",denom
-				denom 	= 1e-5_dp
-			end if
-			!
-			!
-			g3Int = g3Int + dconjg(ckH(gi,m)) * num1 * num2 / (dsqrt(vol) * denom)
-		end do
-		!
-		!
-		return
-	end function
-
-
-	complex(dp) function gDefaultInt(m, nWf)
-		integer,		intent(in)	:: m, nWf
-		!
-		gDefaultInt =  dcmplx(0.0_dp)
-		if( m == nWf ) 	gDefaultInt = dcmplx(1.0_dp)
 		!
 		return
 	end function
@@ -399,208 +310,3 @@ module ham_PWbasis
 
 
 end module ham_PWbasis
-
-
-
-
-
-
-
-
-
-
-!subroutine calcMmatOLD(qi,knb,gShift, nGq, Gvec, ck, Mmat)
-!	integer,		intent(in)		:: qi, knb, nGq(:)
-!	real(dp),		intent(in)		:: gShift(2),  Gvec(:,:,:)
-!	complex(dp),	intent(in)		:: ck(:,:,:)
-!	complex(dp),	intent(out)		:: Mmat(:,:)
-!	integer							:: gi, gj, n, m, cnt
-!	real(dp)						:: delta(2)
-!	logical							:: found
-!	!
-!	Mmat	= dcmplx(0.0_dp)
-!	cnt		= 0
-!	do gi = 1, nGq(qi)
-!		found 	= .false.
-!		gj			= 1
-!		!
-!		do while( gj<= nGq(knb) .and. (.not. found) ) 
-!			!find gj, which fullfills the delta condition
-!			delta(1:2)	=  ( Gvec(1:2,gi,qi)-qpts(1:2,qi) ) 	-  		( Gvec(1:2,gj,knb)-qpts(1:2,knb)-gShift(1:2) )
-!			!
-!			if( norm2(delta) < 1e-8_dp )	then
-!				do n = 1, size(Mmat,2)
-!					do m = 1, size(Mmat,1)
-!						Mmat(m,n)	= Mmat(m,n)	+ dconjg(	ck(gi,m,qi)	) * ck(gj,n,knb)
-!					end do
-!				end do
-!				cnt = cnt + 1
-!				found = .true.
-!			end if
-!			!
-!			gj = gj + 1
-!		end do
-!		!if( .not. found  ) write(*,'(a,i5,a,i5,a,f6.2,a,f6.2,a)')	"[calcMmat]: WARNING no matching Gvec found for qi=",qi," q_nn=",knb,&
-!		!															" gshift=(",gShift(1),",",gShift(2),")."
-!		!
-!		!
-!	end do
-!	!
-!	if( cnt /= nGq(qi)	)		write(*,'(a,i8,a,i8)')	"[calcMmat]: WARNING, found ",cnt," neighbouring Gvec, where nGmax(qi)=",nGq(qi)
-!	!
-!	!
-!	return
-!end subroutine!
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-!	subroutine calcConnOnCoarseQUADRATIC(ck, A)
-!		!	deprecated, use calcConnOnCoarse
-!		!finite difference on lattice periodic unk to calculate the Berry connection A
-!		!	A_n(k) 	= <u_n(k)|i \nabla_k|u_n(k)>
-!		!		 	= i  <u_n(k)| \sum_b{ w_b * b * [u_n(k+b)-u_n(k)]}
-!		!			= i \sum_b{		w_b	 * [  <u_n(k)|u_n(k+b)> -  <u_n(k)|u_n(k)>]		}
-!		!
-!		! see Mazari, Vanderbilt PRB.56.12847 (1997), Appendix B
-!		!
-!		complex(dp),	intent(in)		:: ck(:,:,:) 	! ckW(nG, nWfs, nQ)		
-!		complex(dp),	intent(out)		:: A(:,:,:,:)			
-!		complex(dp),	allocatable		:: Mtmp(:,:)
-!		integer							:: n, m, Z, qi, qx, qy, qxl, qxr, qyl, qyr, al, be
-!		real(dp)						:: wbx,wby, bxl(2), bxr(2), byl(2), byr(2), delta, &
-!											Gxl(2), Gyl(2), Gxr(2), Gyr(2)
-!		!
-!		if( size(nGq) 		/= nQ ) write(*,*)"[#",myID,";calcConnOnCoarse]: critical WARNING: basis array nGq has wrong size"
-!		if(	size(Gvec,3)	/= nQ ) write(*,*)"[#",myID,";calcConnOnCoarse]: critical WARNING: basis array Gvec has wrong size"
-!
-!		A 		= dcmplx(0.0_dp)
-!		Z 		= 4	!amount of nearest neighbours( 2 for 2D cubic unit cell)
-!		wbx 	= 2.0_dp / 		( real(Z,dp) * dqx**2 )
-!		wby		= wbx
-!		write(*,*)	"[calcConnOnCoarse]	weight wb=", wbx
-!		!wby 	= 1.0_dp /		( real(Z,dp) * dqy**2 )
-!		!b vector two nearest X neighbours:
-!		bxl(1) 	= -dqx				
-!		bxl(2)	= 0.0_dp
-!		bxr(1) 	= +dqx
-!		bxr(2)	= 0.0_dp
-!		!b vector two nearest Y neighbours:
-!		byl(1) 	= 0.0_dp
-!		byl(2)	= -dqy
-!		byr(1) 	= 0.0_dp
-!		byr(2)	= +dqy
-!		!
-!		!DEBUG WEIGHTS
-!		do al = 1, 2
-!			do be = 1, 2
-!				delta 	= 0.0_dp
-!				delta = delta + wbx * bxl(al) * bxl(be)
-!				delta = delta + wbx * bxr(al) * bxr(be)
-!				delta = delta + wby * byl(al) * byl(be)
-!				delta = delta + wby * byr(al) * byr(be)
-!				if( al==be .and. abs(delta-1.0_dp) > acc ) then
-!					write(*,'(a,i1,a,i1,a,f6.3)') &
-!							"[calcConnCoarse]: weights dont fullfill condition for a=",al," b=",be," delta=",delta
-!				else if ( al/=be .and. abs(delta) > acc ) then
-!					write(*,'(a,i1,a,i1,a,f6.3)') & 
-!							"[calcConnCoarse]: weights dont fullfill condition for a=",al," b=",be,"delta=",delta
-!				end if
-!			end do
-!		end do
-!		!
-!		write(*,'(a,f6.3,a,f6.3)')	"[calcConnOnCoarse]: dqx=",dqx," dqy=",dqy
-!		!
-!		!$OMP PARALLEL DEFAULT(SHARED) PRIVATE(m,n,qx,qy, qxl, qxr, qyl, qyr, qi, Gxl, Gxr, Gyl, Gyr, Mtmp)
-!		allocate(	Mtmp( size(A,2), size(A,3) )		)
-!		!$OMP DO COLLAPSE(2)  SCHEDULE(STATIC)
-!		do qx = 1, nQx
-!			do qy = 1, nQy
-!				!GET NEIGHBOURS
-!				qxl	= getLeft( qx,nQx)
-!				qxr	= getRight(qx,nQx)
-!				qyl	= getLeft(  qy,nQy)
-!				qyr = getRight( qy,nQy)
-!				!
-!				!GET GRID POSITION OF NEIGHBOURS
-!				qi	= getKindex(qx,qy)
-!				qxl	= getKindex(qxl,qy)
-!				qxr	= getKindex(qxr,qy)
-!				qyl	= getKindex(qx,qyl)
-!				qyr	= getKindex(qx,qyr)
-!				!introduce test for neighbours
-!				!
-!				!SHIFT NEIGHBOURS BACK TO FIRST BZ
-!				Gxl(:)	= 0.0_dp
-!				Gxr(:)	= 0.0_dp
-!				Gyl(:)	= 0.0_dp
-!				Gyr(:)	= 0.0_dp
-!				if( qx == 1 ) 	Gxl(1)	= - 2.0_dp * PI_dp / aX
-!				if( qx == nQx)	Gxr(1)	= + 2.0_dp * PI_dp / aX
-!				if( qy == 1 ) 	Gyl(2)	= - 2.0_dp * PI_dp / aY
-!				if( qy == nQy)	Gyr(2)	= + 2.0_dp * PI_dp / aY
-!				!
-!				!UNCOMMENT FOR DEBUGGING
-!				!write(*,*)"*"
-!				!write(*,*)"*"
-!				!write(*,*)"*"
-!				!write(*,'(a,f6.3,a,f6.3,a)')	"[calcConnOnCoarse]: q_i=(",qpts(1,qi) ,", ",qpts(2,qi) ,")"
-!				!write(*,'(a,f6.3,a,f6.3,a)')	"[calcConnOnCoarse]: qxl=(",qpts(1,qxl),", ",qpts(2,qxl),")"
-!				!write(*,'(a,f6.3,a,f6.3,a)')	"[calcConnOnCoarse]: qxr=(",qpts(1,qxr),", ",qpts(2,qxr),")"
-!				!write(*,'(a,f6.3,a,f6.3,a)')	"[calcConnOnCoarse]: qyl=(",qpts(1,qyl),", ",qpts(2,qyl),")"
-!				!write(*,'(a,f6.3,a,f6.3,a)')	"[calcConnOnCoarse]: qyr=(",qpts(1,qyr),", ",qpts(2,qyr),")"
-!				!write(*,*)"*"
-!				!write(*,'(a,f6.3,a,f6.3,a)')"[calcConnOnCoarse]:  Gxl=",Gxl(1),", ",Gxl(2),")."
-!				!write(*,'(a,f6.3,a,f6.3,a)')"[calcConnOnCoarse]:  Gxr=",Gxr(1),", ",Gxr(2),")."
-!				!write(*,'(a,f6.3,a,f6.3,a)')"[calcConnOnCoarse]:  Gyl=",Gyl(1),", ",Gyl(2),")."
-!				!write(*,'(a,f6.3,a,f6.3,a)')"[calcConnOnCoarse]:  Gyr=",Gyr(1),", ",Gyr(2),")."
-!				!
-!				!OVLERAPS:
-!				!XL
-!				!call calcMmat(qi, nnlist(qi,nn), gShift, nGq_glob, Gvec_glob, ck_glob, M_loc(:,:,nn,qi))
-!				call calcMmat(qi, qxl, Gxl, nGq, Gvec, ck, Mtmp)
-!				do n = 1, size(A,3)
-!					do m = 1, size(A,2)
-!						A(1:2,m,n,qi)	= A(1:2,m,n,qi) - wbx * bxl(1:2) * dimag( 	log(	Mtmp(m,n) )	 )
-!					end do
-!				end do
-!				!XR
-!				call calcMmat(qi, qxr, Gxr, nGq, Gvec, ck, Mtmp)
-!				do n = 1, size(A,3)
-!					do m = 1, size(A,2)
-!						A(1:2,m,n,qi)	= A(1:2,m,n,qi) - wbx * bxr(1:2) * dimag( 	log(	Mtmp(m,n) )	 )
-!					end do
-!				end do
-!				!YL
-!				call calcMmat(qi, qyl, Gyl, nGq, Gvec, ck, Mtmp)
-!				do n = 1, size(A,3)
-!					do m = 1, size(A,2)
-!						A(1:2,m,n,qi)	= A(1:2,m,n,qi) - wby * byl(1:2) * dimag( 	log(	Mtmp(m,n) )	 )
-!					end do
-!				end do
-!				!YR
-!				call calcMmat(qi, qyr, Gyr, nGq, Gvec, ck, Mtmp)
-!				do n = 1, size(A,3)
-!					do m = 1, size(A,2)
-!						A(1:2,m,n,qi)	= A(1:2,m,n,qi) - wby * byr(1:2) * dimag( 	log(	Mtmp(m,n) )	 )
-!					end do
-!				end do
-!				!
-!			end do
-!		end do
-!		!$OMP END DO
-!		!$OMP END PARALLEL
-!		!
-!		!
-!		return
-!	end subroutine
