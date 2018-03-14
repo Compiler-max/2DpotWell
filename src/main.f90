@@ -99,8 +99,6 @@ program main
 		outT = T1 - T0
 	end if
 
-	
-	
 	!HAM SOLVER
 	call MPI_BARRIER( MPI_COMM_WORLD, ierr )	
 	if( doSolveHam ) then
