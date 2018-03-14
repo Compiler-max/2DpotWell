@@ -63,8 +63,8 @@ module pol_Niu
 		write(200,*)	"# f2 positional shift for each wf n, at each kpt"
 		write(300,*)	"# f3 positional shift for each wf n, at each kpt"
 
-		write(200,*)	"# nStat | kpt(1:3) |	a_f2 (1:3,kpt)"		
-		write(300,*)	"# nStat | kpt(1:3) |	a_f3 (1:3,kpt)"
+		write(200,*)	"# nStat | kpt(1:3) |	a_f2 (1:3,kpt)	(ang)"		
+		write(300,*)	"# nStat | kpt(1:3) |	a_f3 (1:3,kpt)	(ang)"
 		
 		write(200,*)	size(centers_F2,2)," ",kSize 
 		write(200,*)	Bext(3)*auToTesla
@@ -101,8 +101,8 @@ module pol_Niu
 				F3 = F3 + F3k
 				!
 				!search for extrema
-				p2Test = matmul(F2k,Bext)
-				p3Test = matmul(F3k,Bext)
+				p2Test = matmul(F2k,Bext)* aUtoAngstrm
+				p3Test = matmul(F3k,Bext)* aUtoAngstrm
 
 				kpt = 0.0_dp
 				if( kSize == size(qpts,2)	)	kpt(1:2) 	= qpts(1:2,ki)
@@ -127,10 +127,10 @@ module pol_Niu
 				end if
 			end do
 			!
-			write(*,'(a,i2,a,i5,a,e13.4)')	"[calcFirstOrdP]: n=",n," largest F2 shift (at #kpt=",k2max,"): ",p2max * aUtoAngstrm, "(ang)"
-			write(*,'(a,i2,a,i5,a,e13.4)')	"[calcFirstOrdP]: n=",n," smalles F2 shift (at #kpt=",k2min,"): ",p2min * aUtoAngstrm, "(ang)"
-			write(*,'(a,i2,a,i5,a,e13.4)')	"[calcFirstOrdP]: n=",n," largest F3 shift (at #kpt=",k3max,"): ",p3max * aUtoAngstrm, "(ang)"
-			write(*,'(a,i2,a,i5,a,e13.4)')	"[calcFirstOrdP]: n=",n," smalles F3 shift (at #kpt=",k3min,"): ",p3min * aUtoAngstrm, "(ang)"
+			write(*,'(a,i2,a,i5,a,e13.4)')	"[calcFirstOrdP]: n=",n," largest F2 shift (at #kpt=",k2max,"): ",p2max, "(ang)"
+			write(*,'(a,i2,a,i5,a,e13.4)')	"[calcFirstOrdP]: n=",n," smalles F2 shift (at #kpt=",k2min,"): ",p2min, "(ang)"
+			write(*,'(a,i2,a,i5,a,e13.4)')	"[calcFirstOrdP]: n=",n," largest F3 shift (at #kpt=",k3max,"): ",p3max, "(ang)"
+			write(*,'(a,i2,a,i5,a,e13.4)')	"[calcFirstOrdP]: n=",n," smalles F3 shift (at #kpt=",k3min,"): ",p3min, "(ang)"
 			!NORMALIZE
 			F2 = F2 / real(kSize,dp)
 			F3 = F3  / real(kSize,dp)
