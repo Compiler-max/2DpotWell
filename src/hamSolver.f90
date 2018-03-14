@@ -10,6 +10,7 @@ module ham_Solver
 	use	ham_PotWell,	only:	add_potWell
 	use	ham_Zeeman,		only:	add_Zeeman
 	use ham_Magnetic,	only:	add_magHam
+	use ham_Rashba,		only:	add_rashba
 	use ham_PWbasis,	only:	writeUNKs
 
 
@@ -268,24 +269,28 @@ module ham_Solver
 		!and checks if the resulting matrix is hermitian( for debugging)
 		integer,		intent(in)	:: 	qLoc
 		complex(dp), intent(inout) 	:: 	Hmat(:,:)
-		integer						::	i
+		integer						::	gi
 		!init to zero
 		Hmat = dcmplx(0.0_dp) 
 		!
 		!
 		!KINETIC ENERGY
-		do i = 1, size(Hmat,1)
-			Hmat(i,i) = 0.5_dp * dot_product(	Gvec(:,i,qLoc),	Gvec(:,i,qLoc)	)
+		do gi = 1, size(Hmat,1)
+			Hmat(gi,gi) = 0.5_dp * dot_product(	Gvec(:,gi,qLoc),	Gvec(:,gi,qLoc)	)
 		end do
 		!
 		!POTENTIAL WELLS
 		call add_potWell(qLoc, Hmat)
 		!
-		!ZEEMAN LIKE
+		!ZEEMAN
 		if(	doZeeman )		call add_Zeeman(qLoc, Hmat)
+		!
+		!PEIERLS
+		if( doMagHam )	 	call add_magHam(qLoc, Hmat)
+		!
+		!RASHBA	
+		if( doRashba )		call add_rashba(qLoc, Hmat)
 
-		!ADD PEIERLS
-		if( doMagHam )	 	call add_magHam( qLoc, Hmat)
 		!
 		!DEBUG
 		if(debugHam) then
