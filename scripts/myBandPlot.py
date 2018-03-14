@@ -398,9 +398,9 @@ def plotBands(w90_dir,out_dir, minEn, maxEn):
     ax.text(0.8, 0.9, 'B_z='+str(B_ext[2])+' T', horizontalalignment='center', verticalalignment='center',transform = ax.transAxes, fontsize=16, 
             bbox={'facecolor':'white', 'alpha':0.8, 'pad':10})
 
-
+    
+    plt.savefig('enB'+str(B_ext[2])+'bands.pdf')
     return ax
 
-    plt.savefig('enB'+str(B_ext[2])+'bands.pdf')
     #plt.show()
 
