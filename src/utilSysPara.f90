@@ -1,7 +1,7 @@
 module util_sysPara
 	!this modules reads the input file and generates the meshes accordingly
 	use mpi
-	use util_math, only: dp, PI_dp, setAcc, acc, machineP, aUtoTesla
+	use util_math, only: dp, PI_dp, setAcc, acc, machineP, aUtoTesla,  aUtoAngstrm, aUtoEv
 	use m_config
 	implicit none
 	!#include "mpif.h"
@@ -17,9 +17,9 @@ module util_sysPara
 				nShells, nw90it, shells, &
 				nBands, nWfs, proj_at, proj_nX, proj_nY,  &
 				atPos, atR, qpts, rpts, kpts, Zion, recpLatt, &
-				Bext, prefactF3, &
+				aRashba, Bext, prefactF3, &
 				seedName, w90_dir, info_dir, mkdir, raw_dir,&
-				debugProj, debugHam, debugWann, doSolveHam, doMagHam, doZeeman, useBloch, doPw90, pw90GaugeB, doVdesc,  &
+				debugProj, debugHam, debugWann, doSolveHam, doMagHam, doRashba, doZeeman, useBloch, doPw90, pw90GaugeB, doVdesc,  &
 				doBerry, doNiu, doGaugBack, writeBin, &
 				myID, nProcs, root, ierr, qChunk, fastConnConv
 
@@ -33,7 +33,8 @@ module util_sysPara
 														myID, nProcs, ierr, qChunk
 	integer,	parameter							::	root=0
 	real(dp) 										::	aX=0.0_dp, aY=0.0_dp,vol=0.0_dp, Gcut=2*PI_dp, thres,& 
-														dx, dy, dz, dqx, dqy, dkx, dky, B0, Bext(3)	, prefactF3, recpLatt(2,2)
+														dx, dy, dz, dqx, dqy, dkx, dky, & 
+														aRashba=0.0_dp, B0, Bext(3)	, prefactF3, recpLatt(2,2)
 	character(len=3)								::	seedName										
 	character(len=9)								::	w90_dir	="w90files/"
 	character(len=7)								::	info_dir="output/"
@@ -44,7 +45,7 @@ module util_sysPara
 
 	real(dp),	allocatable,	dimension(:,:,:)	::	Gvec
 	logical											::	debugHam, debugWann, debugProj, &
-														doSolveHam, doVdesc, doZeeman, doMagHam, &
+														doSolveHam, doVdesc,  doRashba, doZeeman, doMagHam, &
 														useBloch, doPw90, pw90GaugeB, & 
 														doBerry, doNiu, doGaugBack, fastConnConv, &
 														writeBin 
@@ -121,6 +122,8 @@ module util_sysPara
 		![field]	
 		call CFG_add_get(my_cfg,	"field%B0"			,	B0			,	"scaling fact. of ext. magnetic field"	)
 		call CFG_add_get(my_cfg,	"field%Bext"		,	Bext		,	"vector of ext. magnetic field"			)
+		![rashba]
+		call CFG_add_get(my_cfg,	"rashba%aRashba"	,	aRashba		,	"rashba coeff in eV Ang"				)
 		![numerics]
 		call CFG_add_get(my_cfg,	"numerics%Gcut"		,	Gcut	    ,	"k space cut of parameter"				)
 		call CFG_add_get(my_cfg,	"numerics%nSolve"	,	nSolve	    ,	"number of eigenstates to find"			)
@@ -131,6 +134,7 @@ module util_sysPara
 		call CFG_add_get(my_cfg,	"ham%doVdesc"		,	doVdesc		,	"switch on lin. desc. pot inside wells"	)
 		call CFG_add_get(my_cfg,	"ham%doZeeman"		,	doZeeman	,	"include B-field via Zeeman in wells"	)
 		call CFG_add_get(my_cfg,	"ham%doMagHam"		,	doMagHam	,	"include osc. B-field via peierls sub"	)
+		call CFG_add_get(my_cfg,	"ham%doRashba"		,	doRashba	,	"switch for rashba term"				)
 		![methods]
 		call CFG_add_get(my_cfg,	"methods%doSolveHam",	doSolveHam	,	"solve electronic structure or read in"	)
 		call CFG_add_get(my_cfg,	"methods%doPw90"	,	doPw90		,	"read in the matrices in wann base	"	)	
@@ -179,6 +183,9 @@ module util_sysPara
 		!convert to a.u.
 		Bext			=	Bext	/ aUtoTesla
 
+		!convert rashba coeff to a.u.
+		aRashba	= aRashba /	( aUtoEv * aUtoAngstrm	)		!from (eV Ang) to (Eh a0)
+
 		!
 		recpLatt		= 0.0_dp
 		recpLatt(1,1)	= 2.0_dp * PI_dp * aY / vol
@@ -224,6 +231,8 @@ module util_sysPara
 		![field]
 		call MPI_Bcast(	B0 			,		1	,	MPI_DOUBLE_PRECISION	,	root,	MPI_COMM_WORLD, ierr)		
 		call MPI_Bcast(	Bext 		,		3	,	MPI_DOUBLE_PRECISION	,	root,	MPI_COMM_WORLD, ierr)
+		![rashba]
+		call MPI_Bcast( aRashba		,		1	,	MPI_DOUBLE_PRECISION	,	root,	MPI_COMM_WORLD, ierr)
 		![numerics]
 		call MPI_Bcast(	nGdim		, 		1	, 		MPI_INTEGER			,	root, 	MPI_COMM_WORLD, ierr)
 		call MPI_Bcast(	nG			,		1	,	MPI_DOUBLE_PRECISION	,	root,	MPI_COMM_WORLD, ierr)
@@ -246,7 +255,7 @@ module util_sysPara
 		![ham]
 		call MPI_Bcast(	doZeeman	,		1	,	MPI_LOGICAL				,	root,	MPI_COMM_WORLD, ierr)
 		call MPI_Bcast(	doMagHam	,		1	,	MPI_LOGICAL				,	root,	MPI_COMM_WORLD, ierr)
-
+		call MPI_Bcast( doRashba	,		1	,	MPI_LOGICAL				,	root,	MPI_COMM_WORLD, ierr)
 		![methods]
 		call MPI_Bcast( doSolveHam	,		1	,	MPI_LOGICAL				,	root,	MPI_COMM_WORLD, ierr)
 		call MPI_Bcast( doPw90		,		1	,	MPI_LOGICAL				,	root,	MPI_COMM_WORLD, ierr)
