@@ -29,7 +29,7 @@ module ham_Rashba
 		complex(dp),	intent(inout)	::	Hmat(:,:)
 		integer							::	gi
 		!
-		write(*,'(a,i3,a,e14.4,a)')	"[#",myID,";add_rashba]: hello there, aRashba=",aRashba," a.u."
+		!write(*,'(a,i3,a,e14.4,a)')	"[#",myID,";add_rashba]: hello there, aRashba=",aRashba," a.u."
 		!
 		do gi = 1, nGq(qLoc)
 			Hmat(gi,gi)	= Hmat(gi,gi) + dcmplx(	aRashba * Gvec(2,gi,qLoc) )
