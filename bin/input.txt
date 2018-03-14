@@ -25,6 +25,10 @@
     B0  =       1.0               # changed by probeB.sh
     Bext = 0.0 0.0 1.0             # changed by probeB.sh
 
+
+[rashba]
+    aRashba    = 2.4   #in eV Ang
+
 [numerics]
    Gcut        = 12.0 # changed by probeB.sh
    nSolve      = 96 # changed by probeB.sh
@@ -35,12 +39,14 @@
 [ham]
     doVdesc     =   f
     doZeeman    =   t
-    doMagHam    =   f
+    doMagHam    =   t
+    doRashba    =   t
+
 
 [methods]
     doSolveHam  =   f
     doPw90      =   f
-    doBerry     =   t
+    doBerry     =   f
     writeBin    =   f
 
 [w90]
