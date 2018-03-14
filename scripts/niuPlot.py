@@ -4,6 +4,9 @@ from scipy.interpolate import griddata
 
 
 
+subTitleSize = 16
+
+
 
 def plotNiuColor(searchDir,filename,plotState):
 	fpath	= searchDir+'/'+filename
@@ -29,9 +32,9 @@ def plotNiuColor(searchDir,filename,plotState):
 	kptsX	= np.array([])
 	kptsY	= np.array([])
 	kptsZ	= np.array([])
-	pf2_x 	= np.array([])
-	pf2_y 	= np.array([])
-	pf2_z 	= np.array([])  
+	aNiu_x 	= np.array([])
+	aNiu_y 	= np.array([])
+	aNiu_z 	= np.array([])  
 	
 	for counter, line in enumerate(data):
 		stat = line[0]
@@ -42,9 +45,9 @@ def plotNiuColor(searchDir,filename,plotState):
 			kptsY	= np.append(kptsY,line[3])
 			kptsZ	= np.append(kptsZ,line[4])
 	
-			pf2_x	= np.append(pf2_x,line[5])
-			pf2_y	= np.append(pf2_y,line[6])
-			pf2_z	= np.append(pf2_z,line[7])
+			aNiu_x	= np.append(aNiu_x,line[5])
+			aNiu_y	= np.append(aNiu_y,line[6])
+			aNiu_z	= np.append(aNiu_z,line[7])
 	
 		
 	# create x-y points to be used in heatmap
@@ -52,33 +55,60 @@ def plotNiuColor(searchDir,filename,plotState):
 	yi = np.linspace(kptsY.min(),kptsY.max(),len(kptsY))
 	
 	# Z is a matrix of x-y values
-	pf2x_zi = griddata((kptsX,kptsY), pf2_x, (xi[None,:], yi[:,None]), method='cubic')
+	aNiuX_plot = griddata((kptsX,kptsY), aNiu_x, (xi[None,:], yi[:,None]), method='cubic')
+	aNiuY_plot = griddata((kptsX,kptsY), aNiu_y, (xi[None,:], yi[:,None]), method='cubic')
+
 	
 	# I control the range of my colorbar by removing data 
 	# outside of my range of interest
 	#zmin = 3
 	#zmax = 12
-	#pf2x_zi[(pf2x_zi<zmin) | (pf2x_zi>zmax)] = None
+	#aNiu2x_zi[(aNiu2x_zi<zmin) | (aNiu2x_zi>zmax)] = None
 	
+
+
 	# Create the contour plot
-	CS = plt.contourf(xi, yi, pf2x_zi, 15, cmap=plt.cm.rainbow)#,
-	 #                 vmax=zmax, vmin=zmin)
-	
-	descriptor = filename[:-12]
-	
-	plt.title(descriptor+': n='+str(plotState)+' Bz='+str(bz)+'T')
+	zmin 	= min(aNiu_x)
+	tmp 	= min(aNiu_y)
+	zmin	= min(zmin,tmp) 
+	zmax 	= max(aNiu_x)
+	tmp		= max(aNiu_y)
+	zmax	= max(zmax,tmp)
+
+
+	# Plot each slice as an independent subplot
+	fig, axes = plt.subplots(nrows=1, ncols=2)
+	# Make an axis for the colorbar on the right side
+	cax = fig.add_axes([.95, 0.1, 0.03, 0.8])	# [left, bottom, width, height] 
+
+	plt.subplot(121)
+	CSx 	= plt.contourf(xi, yi, aNiuX_plot, 15, cmap=plt.cm.rainbow,vmax=zmax, vmin=zmin)
+	plt.title('x response',fontsize=subTitleSize)
 	plt.ylabel('ky (a.u.)')
 	plt.xlabel('kx (a.u.)')
+	#cbarX	= plt.colorbar(CSx)
+
+	plt.subplot(122)
+	CSy 	= plt.contourf(xi,yi, aNiuY_plot, 15, cmap=plt.cm.rainbow,vmax=zmax, vmin=zmin)
+	plt.title('y response',fontsize=subTitleSize)
+	plt.xlabel('kx (a.u.)')
+	#plt.colorbar(CSx) 
 	
-	plt.colorbar()  
+
+	
+	cbar = fig.colorbar(CSx, cax=cax)
+	cbar.set_label('a (ang)')
+
+
+	descriptor = filename[:-12]
+	plt.suptitle(descriptor+': n='+str(plotState)+' Bz='+str(bz)+'T')
 	plt.savefig(descriptor+'N'+str(plotState)+'Bz'+str(bz)+'.pdf')
 	plt.show()
-	
-	
+
 
 
 #test
-#searchDir 	= '../bin/output'
-#fileName 	= 'f2response.txt'
-#plotState	= 3
-#plotNiuColor(searchDir, fileName, plotState)
+searchDir 	= '.'
+fileName 	= 'f2response.txt'
+plotState	= 3
+plotNiuColor(searchDir, fileName, plotState)
