@@ -1,7 +1,7 @@
 program main
 	!TWO dimensional potential well code
 	use mpi
-	use util_math, 	only: 		dp, PI_dp, aUtoTesla
+	use util_math, 	only: 		dp, PI_dp, aUtoTesla, aUtoEv, aUtoAngstrm
 
 	use util_sysPara
 	use ham_Solver, 	only: 		solveHam
@@ -56,7 +56,7 @@ program main
 	if( mod(nQ,nProcs)/=0)  stop 				'[main]: ERROR mpi threads have to be integer fraction of nQ'
 	!
 	!print info
-	if( myID == root .and. doSolveHam ) then
+	if( myID == root  ) then
 		write(*,*)								"*"
 		write(*,*)								"*"
 		write(*,*)								"[main]:**************************Infos about this run*************************"
@@ -74,6 +74,11 @@ program main
 		write(*,*)								"[main]: w90 seed_name= ", seedName	
 		
 		write(*,*)								"*"
+		write(*,*)								"[main]:**************************Hamiltonian info*************************"
+		write(*,'(a,i3,a,f8.3,a)')				"[main]:	featuring ",nAt," well potentials, deepest well ",minval(atPot(:))*aUtoEv,					" eV"
+		if( doZeeman)	write(*,'(a,e12.4,a)')	"[main]:	featuring a Zeeman term with prefact ",0.5_dp*Bext(3)*aUtoEv,								" eV"
+		if( doRashba)	write(*,'(a,f8.3,a)')	"[main]:	featuring a Rashba term with prefact ",aRashba*aUtoEv*aUtoAngstrm,							" eV Ang"
+		if( doMagHam)	write(*,'(a,e12.4,a)')	"[main]:	featuring a osc. mag. field  prefact ",0.5_dp*Bext(3)*aX/(2.0_dp*PI_dp)*aUtoEv*aUtoAngstrm,	" eV Ang"
 		write(*,*)								"*"
 		write(*,*)								"*"
 		write(*,*)								"*"
