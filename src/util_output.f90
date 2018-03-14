@@ -437,8 +437,11 @@ module util_output
 		write(600,*)"begin magnetic_field"
 		write(600,'(a,e13.6,a,e13.6,a,e13.6)')	"  ", 	Btesla(1),	" ",	Btesla(2)," ", Btesla(3)
 		write(600,*)"end magnetic_field"
-		!
-		!
+		write(600,*)"*"
+		write(600,*)"begin alpha_rashba"
+		write(600,*)	aRashba*aUtoEv*aUtoAngstrm
+		write(600,*)"end alpha_rashba"
+		write(600,*)"*"
 		write(600,*) "states considered for perturbation:" 
 		write(600,*) "begin nSolve"
 		write(600,*)	nSolve
