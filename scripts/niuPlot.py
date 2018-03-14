@@ -71,7 +71,7 @@ def plotNiuColor(searchDir,filename,plotState):
 	plt.xlabel('kx (a.u.)')
 	
 	plt.colorbar()  
-	plt.savefig(descriptor+'Bz'+str(bz)+'.pdf')
+	plt.savefig(descriptor+'N'+str(plotState)+'Bz'+str(bz)+'.pdf')
 	plt.show()
 	
 	
