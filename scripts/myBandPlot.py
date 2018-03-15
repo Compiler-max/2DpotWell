@@ -113,9 +113,10 @@ def plotBands(w90_dir=".",out_dir=".", minEn=0, maxEn=0, show_Bfield_box=False, 
                 transform = ax.transAxes, 
                 fontsize=16, bbox={'facecolor':'white', 'alpha':0.8, 'pad':10})
 
-    saveFile = 'en_B'+str(B_ext[2])+'_aRashb'+str(alpha_rashba)+'bands.pdf'
-    plt.savefig(saveFile,bbox_inches='tight')
-    print('saved plot to file',saveFile)
+    file_name = 'en_B'+str(B_ext[2])+'_aRashb'+str(alpha_rashba)+'bands.pdf'
+    file_path = out_dir+'/'+file_name
+    plt.savefig(file_path,bbox_inches='tight')
+    print('saved plot to file',file_path)
     return ax
 
   
