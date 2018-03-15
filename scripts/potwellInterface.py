@@ -72,35 +72,17 @@ def read_AbIn_energies(fpath="./enABiN.txt"):
    	#
 	#
 	exists = False
-	B_ext = []
 	try:
-		open(fpath,'r')
+		out_file     = open(fpath,'r')
 	except IOError:
 		print("IOError: ",fpath," could not be found")
 		return 0, 0, np.empty([]), np.empty([]), np.array([0,0,0])
-
+	#read data
+	data        = np.genfromtxt(out_file, dtype=[('int'),('float64'),('float64'),('float64'),('float64')])
+	out_file.close()
 	exists = True
-
-	with open(fpath,'r') as f:
-   		#read header for external field
-		parser = False
-		for count,line in enumerate(f.readlines()):
-			if 'B_ext' in line:
-				#strip text around values
-				sub = line.partition('=')
-				sub = sub[2].partition('T')[0]   
-				#find all floats in the string "sub"
-				B_ext   = re.findall(r"[-+]?\d*\.\d+|\d+",sub)
-				#convert to float point
-				B_ext   = np.array(B_ext).astype(np.float)   
-
-	if( len(B_ext) != 3):
-		print('WARNING: problems reading the external magnetic field (should be 3d vector)')
-	print('detected B_ext=',B_ext)
-
-	outFile     = open(fpath,'r')
-	data        = np.genfromtxt(outFile, dtype=[('int'),('float64'),('float64'),('float64'),('float64')])
-	#read body
+	#
+	#read data lines
 	qpts = []
 	en_abi= []
 	for counter, line in enumerate(data):
@@ -108,16 +90,13 @@ def read_AbIn_energies(fpath="./enABiN.txt"):
 	    if line[0] > len(qpts):
 	        qpts.append(    ([line[1],line[2],line[3]])   )   
 	#
-	#get target array
+	#convert to numpy arrays
 	qpts    = np.array(qpts)
 	nQ      = len(qpts)
 	nSolve  = int(  len(en_abi)/ nQ )
 	en_abi= np.reshape(en_abi,(nQ,nSolve))
 	#
-	print('detected nQ  =',nQ   )
-	print('detected nSolve=',nSolve)
-
-	return exists, nQ, nSolve, qpts, en_abi , B_ext
+	return exists, nQ, nSolve, qpts, en_abi
 
 
 
@@ -133,15 +112,15 @@ def read_w90_energies(fpath="./wf1_geninterp.dat"):
 	en_w90	= []
 	velo	= []
 	try:
-		w90interp   = open(fpath,'r')
+		w90_file  = open(fpath,'r')
 	except IOError:
 		print("IOError: ",fpath," could not be found")
 		return exists, nK, nWfs, np.array(kpts), np.reshape(en_w90,(nK,nWfs)), velo
-
-
-	data        = np.genfromtxt(w90interp, dtype=[('int'),('float64'),('float64'),('float64'),('float64'),('float64'),('float64'),('float64')])
+	#
+	data        = np.genfromtxt(w90_file, dtype=[('int'),('float64'),('float64'),('float64'),('float64'),('float64'),('float64'),('float64')])
+	w90_file.close()
 	exits 		= True
-
+	#read lines
 	for counter, line in enumerate(data):
 	    en_w90.append( line[4] )
 	    velo.append( [line[5],line[6],line[7]])
@@ -152,10 +131,6 @@ def read_w90_energies(fpath="./wf1_geninterp.dat"):
 	nK      = len(kpts)
 	nWfs    = int(  len(en_w90)/ nK )
 	en_w90   = np.reshape(en_w90,(nK,nWfs))
-	print('w90 velos:',velos)
-	#
-	print('detected nK  =',nK   )
-	print('detected nWfs=',nWfs )
 	#
 	return exists, nK, nWfs, kpts, en_w90, velo
 
@@ -193,9 +168,6 @@ def read_Niu_shift(nWf, fpath):
 	nWfs, nKpts = np.fromstring(paraString,dtype=int,count=2,sep=" ")
 	bz			= np.fromstring(fieldString,dtype=float,count=1,sep=" ")[0]
 	
-	print(fpath+'/:	detected nWfs =',nWfs)
-	print(fpath+'/:	detected nKpts=',nKpts)
-	print('B_z =',bz," (T)")
 	
 	#read body
 	outFile     = open(fpath,'r')

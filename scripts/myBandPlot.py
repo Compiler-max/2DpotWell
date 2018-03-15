@@ -28,7 +28,7 @@ def plotBands(w90_dir=".",out_dir=".", minEn=0, maxEn=0, show_Bfield_box=False, 
     print('*')
     print('*')
     print('********read abinitio energies:********************************')
-    do_ABiN, nQ, nSolve, qpts, en_abi , B_ext = read_AbIn_energies(out_dir+'/enABiN.txt')
+    do_ABiN, nQ, nSolve, qpts, en_abi = read_AbIn_energies(out_dir+'/enABiN.txt')
   
 
     #GET INTERPOLATED ENERGIES
@@ -98,7 +98,8 @@ def plotBands(w90_dir=".",out_dir=".", minEn=0, maxEn=0, show_Bfield_box=False, 
     #
     plt.ylabel('E [eV]',fontsize=16)
 
-    alpha_rashba = getData('alpha_rashba',out_dir+'/polOutput.txt')
+    alpha_rashba    = getData('alpha_rashba'    ,out_dir+'/polOutput.txt')
+    B_ext           = getData('magnetic_field'  ,out_dir+'/polOutput.txt')
 
     if show_Bfield_box:
         ax.text(0.8, 0.9, 'B_z='+str(B_ext[2])+' T', 

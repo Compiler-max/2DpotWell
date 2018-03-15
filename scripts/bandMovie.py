@@ -18,14 +18,17 @@ show_plots		= True
 
 #NIU RESPONSE PLOT
 nWfs 	= 6
+
+plot_titles		= False
+plot_k_labels	= True
+plot_descriptor	= False
+
+#sequenital colormaps
 cmap 			= mpl.cm.viridis
 #cmap 			= mpl.cm.plasma
 #cmap 			= mpl.cm.inferno
 #cmap 			= mpl.cm.magma
 
-plot_titles		= False
-plot_k_labels	= True
-plot_descriptor	= False
 #diverging colormaps
 #cmap			= mpl.cm.coolwarm
 
@@ -34,7 +37,7 @@ plot_descriptor	= False
 
 
 
-def make_Plots(dirpath,show_Plots=False):
+def make_Plots(dirpath=".",show_Plots=False):
 	print('**********system info:********************')
 	print_Info(dirpath+'/polOutput.txt')
 
@@ -72,17 +75,4 @@ for dirpath, dirnames, filenames in os.walk("."):
 		
 
 		
-		
-		
 
-		#for n in range(1,nWfs+1):
-
-	#look for them
-#for dirpat, dirnames, filenames in os.walk("."):
-#	for filename in [f for f in filenames if f.endswith(".pdf")]:
-#		print('found file in '+dirpath)
-		#plotBands()
-
-
-
-	
