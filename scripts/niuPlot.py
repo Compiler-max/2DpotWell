@@ -1,114 +1,116 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib as mpl
 from scipy.interpolate import griddata
+from potwellInterface import read_Niu_shift
+from potwellInterface import getData
+
+
+#Perceptually Uniform Sequential colormaps
 
 
 
-subTitleSize = 16
 
 
 
-def plotNiuColor(searchDir,filename,plotState):
-	fpath	= searchDir+'/'+filename
-	
-	#read header
-	with open(fpath) as f:
-		dummy		= f.readline()
-		dummy		= f.readline()
-		paraString	= f.readline()
-		fieldString	= f.readline()
-	
-	nWfs, nKpts = np.fromstring(paraString,dtype=int,count=2,sep=" ")
-	bz			= np.fromstring(fieldString,dtype=float,count=1,sep=" ")[0]
-	
-	print('detected f2 nWfs =',nWfs)
-	print('detected f2 nKpts=',nKpts)
-	print('B_z =',bz," (T)")
-	
-	#read body
-	outFile     = open(fpath,'r')
-	data        = np.genfromtxt(outFile, dtype=[('int'),('int'),('float64'),('float64'),('float64'),('float64'),('float64'),('float64')],skip_header=4)
-	
-	kptsX	= np.array([])
-	kptsY	= np.array([])
-	kptsZ	= np.array([])
-	aNiu_x 	= np.array([])
-	aNiu_y 	= np.array([])
-	aNiu_z 	= np.array([])  
-	
-	for counter, line in enumerate(data):
-		stat = line[0]
-		kpt = line[1]
-	
-		if stat == plotState:
-			kptsX	= np.append(kptsX,line[2])
-			kptsY	= np.append(kptsY,line[3])
-			kptsZ	= np.append(kptsZ,line[4])
-	
-			aNiu_x	= np.append(aNiu_x,line[5])
-			aNiu_y	= np.append(aNiu_y,line[6])
-			aNiu_z	= np.append(aNiu_z,line[7])
-	
-		
-	# create x-y points to be used in heatmap
-	xi = np.linspace(kptsX.min(),kptsX.max(),len(kptsX))
-	yi = np.linspace(kptsY.min(),kptsY.max(),len(kptsY))
-	
-	# Z is a matrix of x-y values
-	aNiuX_plot = griddata((kptsX,kptsY), aNiu_x, (xi[None,:], yi[:,None]), method='cubic')
-	aNiuY_plot = griddata((kptsX,kptsY), aNiu_y, (xi[None,:], yi[:,None]), method='cubic')
+def plotNiuColor(searchDir, plotState, cmap=mpl.cm.viridis,
+						plot_titles=False, title_size=12, 
+						plot_k_labels=True, k_label_size=10,
+						plot_descriptor=False, descriptor_size=14):
+	f2_path	= searchDir+'/f2response.txt'
+	f3_path = searchDir+'/f3response.txt'
 
+	do_f2, f2_xi, f2_yi, f2_plot_x, f2_plot_y, f2_min, f2_max,f2_bz= read_Niu_shift(plotState, f2_path)
+	do_f3, f3_xi, f3_yi, f3_plot_x, f3_plot_y, f3_min, f3_max,f3_bz= read_Niu_shift(plotState, f3_path)
 	
-	# I control the range of my colorbar by removing data 
-	# outside of my range of interest
-	#zmin = 3
-	#zmax = 12
-	#aNiu2x_zi[(aNiu2x_zi<zmin) | (aNiu2x_zi>zmax)] = None
-	
+	if abs(f2_bz-f3_bz) > 1e-8:
+		print(searchDir+'/: WARNING different fields detected f2='+str(f2_bz)+' f3='+str(f3_bz))
+	bz = f2_bz
 
-
-	# Create the contour plot
-	zmin 	= min(aNiu_x)
-	tmp 	= min(aNiu_y)
-	zmin	= min(zmin,tmp) 
-	zmax 	= max(aNiu_x)
-	tmp		= max(aNiu_y)
-	zmax	= max(zmax,tmp)
-
+	#get total max min of data
+	zmin = min(f2_min,f3_min)
+	zmax = max(f2_max,f3_max)
 
 	# Plot each slice as an independent subplot
-	fig, axes = plt.subplots(nrows=1, ncols=2)
+	fig, axes = plt.subplots(nrows=2, ncols=2, sharey='row')
 	# Make an axis for the colorbar on the right side
-	cax = fig.add_axes([.95, 0.1, 0.03, 0.8])	# [left, bottom, width, height] 
-
-	plt.subplot(121)
-	CSx 	= plt.contourf(xi, yi, aNiuX_plot, 15, cmap=plt.cm.rainbow,vmax=zmax, vmin=zmin)
-	plt.title('x response',fontsize=subTitleSize)
-	plt.ylabel('ky (a.u.)')
-	plt.xlabel('kx (a.u.)')
-	#cbarX	= plt.colorbar(CSx)
-
-	plt.subplot(122)
-	CSy 	= plt.contourf(xi,yi, aNiuY_plot, 15, cmap=plt.cm.rainbow,vmax=zmax, vmin=zmin)
-	plt.title('y response',fontsize=subTitleSize)
-	plt.xlabel('kx (a.u.)')
-	#plt.colorbar(CSx) 
-	
 
 	
-	cbar = fig.colorbar(CSx, cax=cax)
-	cbar.set_label('a (ang)')
+	if do_f2:
+		#
+		# X SHIFT
+		plt.subplot(221)
+		CSx_f2 	= plt.contourf(f2_xi, f2_yi, f2_plot_x, 15, cmap=cmap,vmax=zmax, vmin=zmin)
+		if plot_titles:
+			plt.title('a_x (Ang)',fontsize=title_size)
+		if plot_k_labels:
+			plt.ylabel('ky (a.u.)',fontsize=k_label_size)
+		#
+		#
+		# Y SHIFT
+		plt.subplot(222)
+		CSy_f2 	= plt.contourf(f2_xi,f2_yi, f2_plot_y, 15, cmap=cmap,vmax=zmax, vmin=zmin)
+		if plot_titles:
+			plt.title('a_y (Ang)',fontsize=title_size)
+		
+		plt.tick_params(axis='y',  which='both',direction='in',   left='off', right='off',     labelleft='off', labelright='off') 
+
+	
+	if do_f3:
+		#
+		# X SHIFT
+		plt.subplot(223)
+		CSx_f3 	= plt.contourf(f3_xi, f3_yi, f3_plot_x, 15, cmap=cmap, vmin=zmin,vmax=zmax)
+		if plot_k_labels:
+			plt.ylabel('ky (a.u.)',fontsize=k_label_size)
+			plt.xlabel('kx (a.u.)',fontsize=k_label_size)
+		#
+		#
+		# Y SHIFT
+		plt.subplot(224)
+		CSy_f3 	= plt.contourf(f3_xi,f3_yi, f3_plot_y, 15, cmap=cmap, vmin=zmin,vmax=zmax)
+		if plot_k_labels:
+			plt.xlabel('kx (a.u.)',fontsize=k_label_size)
 
 
-	descriptor = filename[:-12]
-	plt.suptitle(descriptor+': n='+str(plotState)+' Bz='+str(bz)+'T')
-	plt.savefig(descriptor+'N'+str(plotState)+'Bz'+str(bz)+'.pdf')
-	plt.show()
+
+	#set uniform colorbar
+	print('colormap min_val=',zmin)
+	print('colormap max_val=',zmax)
+	
+	
+	
+	#cb1.set_clim(zmin,zmax)
+	a_Rashba = getData('alpha_rashba',searchDir+'/polOutput.txt')
+
+	if plot_descriptor:
+		plt.figtext(.25,.001,' n='+str(plotState)+' Bz='+str(bz)+'T'+' a_Rashba='+str(a_Rashba),fontsize=descriptor_size)
+
+	#rescale the whole figure to add colorbar
+	scale = .8
+	plt.tight_layout(pad=1.25,rect=(0,0,scale,scale))
+
+	cax = fig.add_axes([.81, 0.1, .03, scale*0.8])	# [left, bottom, width, height] 
+	#cb1 = fig.colorbar(CSy_f2, cax=cax, cmap=cmap, norm=norm, label="1. order shift (ang)")
+	norm = mpl.colors.Normalize(vmin=zmin, vmax=zmax)
+	cb1 = mpl.colorbar.ColorbarBase(cax, cmap=cmap,
+                                norm=norm,
+                                orientation='vertical')
+	
+
+
+
+	plt.savefig('a1_n'+str(plotState)+'_Bz'+str(bz)+'aRash'+str(a_Rashba)+'niuShift.pdf',bbox_inches='tight')
+	#plt.show()
+
+	return axes
 
 
 
 #test
-searchDir 	= '.'
-fileName 	= 'f2response.txt'
-plotState	= 3
-plotNiuColor(searchDir, fileName, plotState)
+#searchDir 	= '.'
+#fileName 	= 'f2response.txt'
+#plotState	= 5
+#
+#ax = plotNiuColor(searchDir,  plotState)
+#plt.show()

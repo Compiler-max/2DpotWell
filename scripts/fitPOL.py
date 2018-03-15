@@ -3,7 +3,7 @@ import os
 import os.path
 import matplotlib.pyplot as plt
 from scipy import optimize
-from readPOL import getData
+from potwellInterface import getData
 
 
 filename	= 'polOutput.txt'

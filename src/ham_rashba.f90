@@ -31,8 +31,12 @@ module ham_Rashba
 		!
 		!write(*,'(a,i3,a,e14.4,a)')	"[#",myID,";add_rashba]: hello there, aRashba=",aRashba," a.u."
 		!
-		do gi = 1, nGq(qLoc)
+		do gi = 1, nGq(qLoc)	
+			! +=   G_y
 			Hmat(gi,gi)	= Hmat(gi,gi) + dcmplx(	aRashba * Gvec(2,gi,qLoc) )
+
+			! += i G_x
+			!Hmat(gi,gi)	= Hmat(gi,gi) + dcmplx( 0.0_dp, aRashba * Gvec(1,gi,qLoc))
 		end do
 		!
 		!
