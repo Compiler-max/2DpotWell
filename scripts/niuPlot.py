@@ -100,7 +100,7 @@ def plotNiuColor(searchDir, plotState, cmap=mpl.cm.viridis,
 
 
 
-	plt.savefig('a1_n'+str(plotState)+'_Bz'+str(bz)+'aRash'+str(a_Rashba)+'niuShift.pdf',bbox_inches='tight')
+	plt.savefig(searchDir+'/a1_n'+str(plotState)+'_Bz'+str(bz)+'aRash'+str(a_Rashba)+'niuShift.pdf',bbox_inches='tight')
 	#plt.show()
 
 	return axes
