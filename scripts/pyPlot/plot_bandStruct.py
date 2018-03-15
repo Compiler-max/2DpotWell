@@ -1,9 +1,9 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import re
-from potwellInterface import read_AbIn_energies
-from potwellInterface import read_w90_energies
-from potwellInterface import getData
+from util_2dPW_Interf import read_AbIn_energies
+from util_2dPW_Interf import read_w90_energies
+from util_2dPW_Interf import getData
 
 
 #adjust colors etc.
@@ -22,20 +22,10 @@ show_rashba_box = True
 
 
 def plotBands(w90_dir=".",out_dir=".", minEn=0, maxEn=0, show_Bfield_box=False, show_rashba_box=False):
-    print('Hello from the plot function')
     #GET ABINITIO ENERGIES
-    print('*')
-    print('*')
-    print('*')
-    print('********read abinitio energies:********************************')
     do_ABiN, nQ, nSolve, qpts, en_abi = read_AbIn_energies(out_dir+'/enABiN.txt')
   
-
     #GET INTERPOLATED ENERGIES
-    print('*')
-    print('*')
-    print('*')
-    print('********read w90 energies:********************************')
     do_w90, nK, nWfs, kpts, en_W90, velo_w90 = read_w90_energies(w90_dir+'/wf1_geninterp.dat')
 
     #PLOT
@@ -43,10 +33,7 @@ def plotBands(w90_dir=".",out_dir=".", minEn=0, maxEn=0, show_Bfield_box=False, 
 
     #PLOT ABINITIO
     if do_ABiN:
-        print('*')
-        print('********abinitio plot********************************')
         qpath, qplot, qticks = get_BZ_path(qpts)
-        print('got the qpath, start plotting...')
         #
         #
         for n in range(0,nSolve):
@@ -64,10 +51,7 @@ def plotBands(w90_dir=".",out_dir=".", minEn=0, maxEn=0, show_Bfield_box=False, 
 
     #PLOT W90 INTERPOLATION
     if do_w90:
-        print('*')
-        print('********w90 interpolation plot*************************')
         kpath, kplot, kticks = get_BZ_path(kpts)   
-        print('got the kpath, start plotting...')
         #
         for n in range(0,nWfs):
             for path in range(0,len(kpath)):
@@ -83,24 +67,34 @@ def plotBands(w90_dir=".",out_dir=".", minEn=0, maxEn=0, show_Bfield_box=False, 
        
 
 
-    #LABELS
+    #X TICK-LABELS
     xtickLabel = np.array(['M','X',r'$\Gamma$','M','Y',r'$\Gamma$'])
-    if len(qticks) != len(xtickLabel)   :
-        print('ERROR: xtickLabel has wrong size')
+    if do_ABiN:
+        if len(qticks) != len(xtickLabel)   :
+            print('ERROR: xtickLabel has wrong size')
+        ax.set_xticks(qticks)
+        ax.set_xticklabels(xtickLabel,fontsize=14)
+        ax.set_xlim(qticks[0],qticks[-1])
+    #if no abinit found try to use the w90 labels
+    elif do_w90:
+        if len(kticks) != len(xtickLabel)   :
+            print('ERROR: xtickLabel has wrong size')
+        ax.set_xticks(kticks)
+        ax.set_xticklabels(xtickLabel,fontsize=14)
+        ax.set_xlim(kticks[0],kticks[-1])
 
-
-    ax.set_xticks(qticks)
-
-    ax.set_xticklabels(xtickLabel,fontsize=14)
-    ax.set_xlim(qticks[0],qticks[-1])
+    #Y-LABELS 
     if maxEn-minEn > 0: 
         ax.set_ylim(minEn,maxEn)
     #
     plt.ylabel('E [eV]',fontsize=16)
 
+    #GET PARAMETERS
     alpha_rashba    = getData('alpha_rashba'    ,out_dir+'/polOutput.txt')
     B_ext           = getData('magnetic_field'  ,out_dir+'/polOutput.txt')
 
+
+    #PLOT PARAMETER BOX
     if show_Bfield_box:
         ax.text(0.8, 0.9, 'B_z='+str(B_ext[2])+' T', 
                 horizontalalignment='center', 
@@ -113,11 +107,14 @@ def plotBands(w90_dir=".",out_dir=".", minEn=0, maxEn=0, show_Bfield_box=False, 
                 verticalalignment='center',
                 transform = ax.transAxes, 
                 fontsize=16, bbox={'facecolor':'white', 'alpha':0.8, 'pad':10})
-
+    #
+    #SAVE FILE
     file_name = 'en_B'+str(B_ext[2])+'_aRashb'+str(alpha_rashba)+'bands.pdf'
     file_path = out_dir+'/'+file_name
     plt.savefig(file_path,bbox_inches='tight')
     print('saved plot to file',file_path)
+    #    
+    #
     return ax
 
   
