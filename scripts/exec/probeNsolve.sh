@@ -37,6 +37,10 @@ sed -i 	"/nKx/c\   nKx         = $nKx 	$infoString" 			./input.txt
 sed -i 	"/nKy/c\   nKy         = $nKy 	$infoString" 			./input.txt
 sed -i 	"/shells/c\   shells       = $nShell 	$infoString" 	./input.txt
 
+#set parameters
+sed -i 	"/aRashba/c\   aRashba       = $aRashba 	$infoString" 	./input.txt
+sed -i	"/B0/c\		B0		= $bfield	$infoString"	./input.txt 
+
 #set Hamiltionian
 sed -i 	"/doVdesc/c\	doVdesc		= f 	$infoString"		./input.txt
 sed -i 	"/doZeeman/c\	doZeeman	= f 	$infoString"		./input.txt
