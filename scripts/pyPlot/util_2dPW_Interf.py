@@ -1,4 +1,6 @@
 import numpy as np
+import os
+import os.path
 from scipy.interpolate import griddata
 import re
 
@@ -45,10 +47,74 @@ def getData(descriptor, fpath="./polOutput.txt"):
 				parser = True
 
 	if not found:
-		print('WARNING: could not file descriptor: "'+descriptor+'" in file '+fpath)
+		print('WARNING: could not find descriptor: "'+descriptor+'" in file '+fpath)
 	if(len(data) == 1):
 		return data[0]
 	return data
+
+
+
+def get_All_subDirs(descriptor,path="."):
+	data = []
+	#results
+	p0			= []
+	pf2			= []
+	pf3			= []
+				
+	#interpolation
+	p0_interp	= []
+	pf2_interp	= []
+	pf3_interp 	= []
+
+	#search for pol files
+	for dirpath, dirnames, filenames in os.walk("."):
+		print('search in dirpath: ',dirpath)
+		#GET BERRY
+		for filename in [f for f in filenames if f.endswith("polOutput.txt")]:
+			filepath = dirpath+'/'+filename
+			print('found new file:'+filepath)
+			#
+			data.append(	getData( descriptor, filepath)		)
+			p0.append(			getData('zero_order'		,filepath)			)
+			pf2.append(			getData('niu_f2'			,filepath)			)
+			pf3.append(			getData('niu_f3'			,filepath)			)
+		#GET INTERPOLATION
+		for filename in [f for f in filenames if f.endswith("polInterp.txt")]:
+			filepath = dirpath+'/'+filename
+			print('found new interp file:'+filepath)
+			#
+			p0_interp.append(	getData('zero_order_sum',filepath)	)
+			pf2_interp.append(	getData('f2_sum',filepath)			)
+			pf3_interp.append(	getData('f3_sum',filepath)			)
+			
+	#sort only works for scalars
+	if 'magnetic_field' in descriptor:
+		print('magnetic field will be stripped to z-component')
+		bz = []
+		for bVec in data:
+			bz.append(bVec[2])
+		print('Bz=',bz)
+		data = bz
+
+
+	#sort the lists in ascending order of data list
+	s	= sorted(zip(data,p0,pf2,pf3,p0_interp, pf2_interp, pf3_interp))
+	data, p0, pf2, pf3, p0_interp, pf2_interp, pf3_interp = map(list,zip(*s))
+
+	
+
+
+	#convert to numpy
+	data 		= np.array( data		 	)
+	p0			= np.array(	p0				)
+	pf2			= np.array(	pf2				)
+	pf3			= np.array(	pf3				)
+	p0_interp	= np.array(	p0_interp		)
+	pf2_interp	= np.array(	pf2_interp		)
+	pf3_interp	= np.array(	pf3_interp		)
+
+
+	return data, p0, pf2, pf3, p0_interp, pf2_interp, pf3_interp
 
 
 

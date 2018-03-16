@@ -60,17 +60,22 @@ interpCol	= 'orange'
 #	return data
 	
 
-
+#numerics
 gCut 		= []
 mpGrid		= []
+nSolve		= []
 
+#features
 atPot 		= []
 Bfield 		= []
+aRashba		= []
+
+#results
 p0			= []
 pf2			= []
 pf3			= []
 			
-
+#interpolation
 p0_interp	= []
 pf2_interp	= []
 pf3_interp 	= []
@@ -81,23 +86,25 @@ for dirpath, dirnames, filenames in os.walk("."):
 		filepath = dirpath+'/'+filename
 		print('found new file:'+filepath)
 		
-		gCut.append(		getData(filepath,'gCut')			)
-		mpGrid.append(		getData(filepath,'mp_grid'))
+		gCut.append(		getData('gCut'				,filepath)			)
+		mpGrid.append(		getData('mp_grid'			,filepath)			)
+		nSolve.append(		getData('nSolve'			,filepath)			)
 
-		atPot.append(		getData(filepath,'atPot')			)
-		Bfield.append(		getData(filepath,'magnetic_field')	)
-		p0.append(			getData(filepath,'zero_order')		)
-		pf2.append(			getData(filepath,'niu_f2')			)
-		pf3.append(			getData(filepath,'niu_f3')			)
+		atPot.append(		getData('atPot'				,filepath)			)
+		Bfield.append(		getData('magnetic_field'	,filepath)			)
+		p0.append(			getData('zero_order'		,filepath)			)
+		pf2.append(			getData('niu_f2'			,filepath)			)
+		pf3.append(			getData('niu_f3'			,filepath)			)
+		aRashba.append(		getData('alpha_rashba'		,filepath)			)
 		#
 	#GET INTERPOLATION
 	for filename in [f for f in filenames if f.endswith("polInterp.txt")]:
 		filepath = dirpath+'/'+filename
 		print('found new interp file:'+filepath)
 		
-		p0_interp.append(	getData(filepath,'zero_order_sum')	)
-		pf2_interp.append(	getData(filepath,'f2_sum')			)
-		pf3_interp.append(	getData(filepath,'f3_sum')			)
+		p0_interp.append(	getData('zero_order_sum',filepath)	)
+		pf2_interp.append(	getData('f2_sum',filepath)			)
+		pf3_interp.append(	getData('f3_sum',filepath)			)
 		
 
 
@@ -129,7 +136,9 @@ if len(p0_interp) > 0:
 
 
 #convert list of np.arrays into 2D np array
+gCut		= np.array( gCut			)
 Bfield 		= np.array(	Bfield			)
+aRashba		= np.array(	aRashba			)
 p0			= np.array(	p0				)
 pf2			= np.array(	pf2				)
 pf3			= np.array(	pf3				)
@@ -137,14 +146,6 @@ pf3			= np.array(	pf3				)
 p0_interp 	= np.array(	p0_interp		)
 pf2_interp	= np.array( pf2_interp		)
 pf3_interp	= np.array( pf3_interp)
-
-
-
-
-#fit function
-fitfunc = lambda p, x: p[0]*x**2 + p[1]*x + p[2] # Target function
-errfunc = lambda p, x, y: fitfunc(p, x) - y # Distance to the target function
-fitderiv= lambda p, x: 2.0*p[0]*x + p[1]
 
 
 
@@ -163,7 +164,17 @@ if foundInterp:
 
 
 
+#fit function
+fitfunc = lambda p, x: p[0]*x**2 + p[1]*x + p[2] # Target function
+errfunc = lambda p, x, y: fitfunc(p, x) - y # Distance to the target function
+fitderiv= lambda p, x: 2.0*p[0]*x + p[1]
+
+
+
+
+
 print('*****data **************************')
+print('x   aRashba: ',aRashba)
 print('x-axis  B_z: ',B_z)
 print('y-axis p0_x: ',p0_x)
 print('slope niuf2:',pf2_x)

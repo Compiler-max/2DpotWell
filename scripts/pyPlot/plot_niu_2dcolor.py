@@ -2,8 +2,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 from scipy.interpolate import griddata
-from potwellInterface import read_Niu_shift
-from potwellInterface import getData
+from util_2dPW_Interf import read_Niu_shift
+from util_2dPW_Interf import getData
 
 
 #Perceptually Uniform Sequential colormaps
