@@ -17,9 +17,9 @@
 [wann]
     nBands      =   18
     nWfs        =   18
-    projAt      =   1 2 3 4 5 6 1 2 3 4 5 6 1 2 3 4 5 6 
-    projnX      =   1 1 1 1 1 1 1 1 1 1 1 1 2 2 2 2 2 2 
-    projnY      =   1 1 1 1 1 1 2 2 2 2 2 2 1 1 1 1 1 1 
+    projAt      =   1 2 3 4 5 6     1 2 3 4 5 6     1 2 3 4 5 6 
+    projnX      =   1 1 1 1 1 1     1 1 1 1 1 1     2 2 2 2 2 2 
+    projnY      =   1 1 1 1 1 1     2 2 2 2 2 2     1 1 1 1 1 1 
 
 [field]
     B0  =       1.0               # changed by probeB.sh
