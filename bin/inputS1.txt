@@ -2,61 +2,75 @@
 
 [unitCell]
     aX          =   10
-    aY          =   10
+    aY          =   5
 
 [atoms]
-    doVdesc     =   f
     nAt         =   2
-    relXpos     =   0.250 0.750
+    relXpos     =   0.300 0.700
     relYpos     =   0.500 0.500
-    atRx        =   1.010 1.010
-    atRy        =   1.010 1.010
-    atPot       =   -3.20 -3.00
+    atRx        =   1.700 1.700
+    atRy        =   1.700 1.700
+    atPot       =   -1.40 -1.30
     dVpot       =   0.000 0.000
     Zion        =   1.000 1.000
 
 [wann]
     nBands      =   6
     nWfs        =   6
+    projAt      =   1 2 1 2 1 2
+    projnX      =   1 1 1 1 2 2
+    projnY      =   1 1 2 2 1 1
 
-[perturbation]
-    B0          =   1.0               #hbar/(e*a0**2) = 2.35 * 10**5  T
-    Bext        =   0.0 0.0 1.0
+[field]
+    B0  =       1.0               # changed by probeB.sh
+    Bext = 0.0 0.0 1.0             # changed by probeB.sh
+
+
+[rashba]
+    aRashba    = 2.4   #in eV Ang
 
 [numerics]
-    Gcut        =   8.0 # edited by statFlow
-    nSolve      =   96 # edited by statFlow
-    nQx         =   2 # edited by statFlow
-    nQy         =   2 # edited by statFlow
-    nSCx        =   3 # edited by statFlow
-    nSCy        =   3 # edited by statFlow
-    nKx         =   3 # edited by statFlow
-    nKy         =   3 # edited by statFlow
-    nRx         =   10
-    nRy         =   10
+   Gcut        = 8.0 # changed by probeB.sh
+   nSolve      = 96 # changed by probeB.sh
+   nQx         = 8 # changed by probeB.sh
+   nQy         = 16 # changed by probeB.sh
     thres       =   0.1
+
+[ham]
+    doVdesc     =   f
+    doZeeman    =   f
+    doMagHam    =   f
+    doRashba    =   f
+
 
 [methods]
     doSolveHam  =   f
-    doMagHam    =   t
-    doPrepW90   =   t
     doPw90      =   f
-    doBerry     =   f
+    doBerry     =   t
     writeBin    =   f
 
 [w90]
     seedName    =   'wf1'
     useBloch    =   f
-    nShells     =   3
-    shells      =   3 4 5 # edited by statFlow
+    nShells     =   1
+   shells       = 1 # changed by probeB.sh
     nw90it      =   1000
     pw90GaugeB  =   f
 
+[w90plot]
+    nSCx        = 9 # changed by probeB.sh
+    nSCy        = 17 # changed by probeB.sh
+    nRx         =   10
+    nRy         =   10
+    nRz         =   2
+
+[w90interp]
+    nKx         = 33 # changed by probeB.sh
+    nKy         = 65 # changed by probeB.sh
+
 [berry]
-    doVeloNUM   =   f
-    doNiu       =   f
-    doPei       =   f
-    doWanni     =   f
+    fastConnConv=   t
+    doNiu       =   t
     doGaugBack  =   f
 
 [semiclassics]

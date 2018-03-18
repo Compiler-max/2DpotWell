@@ -1,67 +1,81 @@
-#Input for 2D pot well code (magnetic Hamiltonian) - super cell along x direction
+#Input for 2D pot well code
 
 [unitCell]
-    aX          =   90  
-    aY          =   10
+    aX          =   90
+    aY          =   5
 
 [atoms]
-    doVdesc     =   f
-    nAt         =   6      
-    relXpos     =   0.139 0.194     0.250 0.306     0.361 0.417    
-    relYpos     =   0.500 0.500     0.500 0.500     0.500 0.500
-    atRx        =   1.010 1.010     1.010 1.010     1.010 1.010 
-    atRy        =   1.010 1.010     1.010 1.010     1.010 1.010
-    atPot       =   -3.20 -3.00     -3.20 -3.00     -3.20 -3.00
-    dVpot       =   0.000 0.000     0.000 0.000     0.000 0.000
-    Zion        =   1.000 1.000     1.000 1.000     1.000 1.000
+    nAt         =   18
+    relXpos     =   0.03333333 0.07777778 0.14444444 0.18888889 0.25555556 0.3 0.36666667 0.41111111 0.47777778 0.52222222 0.58888889 0.63333333 0.7 0.74444444 0.81111111 0.85555556 0.92222222 0.96666667
+    relYpos     =   0.500 0.500     0.500 0.500     0.500 0.500     0.500 0.500     0.500 0.500     0.500 0.500     0.500 0.500     0.500 0.500          0.500 0.500
+    atRx        =   1.700 1.700     1.700 1.700     1.700 1.700     1.700 1.700     1.700 1.700     1.700 1.700     1.700 1.700     1.700 1.700          1.700 1.700
+    atRy        =   1.700 1.700     1.700 1.700     1.700 1.700     1.700 1.700     1.700 1.700     1.700 1.700     1.700 1.700     1.700 1.700          1.700 1.700
+    atPot       =   -1.40 -1.30     -1.40 -1.30     -1.40 -1.30     -1.40 -1.30     -1.40 -1.30     -1.40 -1.30     -1.40 -1.30     -1.40 -1.30          -1.40 -1.30
+    dVpot       =   0.000 0.000     0.000 0.000     0.000 0.000     0.000 0.000     0.000 0.000     0.000 0.000     0.000 0.000     0.000 0.000          0.000 0.000
+    Zion        =   1.000 1.000     1.000 1.000     1.000 1.000     1.000 1.000     1.000 1.000     1.000 1.000     1.000 1.000     1.000 1.000          1.000 1.000
 
 [wann]
-    nBands      =   18
-    nWfs        =   18
+    nBands      =   54
+    nWfs        =   54
+    projAt      =   1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18                              
+    projnX      =   1 1 1 1 1 1 1 1 1  1  1  1  1  1  1  1  1  1 1 1 1 1 1 1 1 1 1  1  1  1  1  1  1  1  1  1 2 2 2 2 2 2 2 2 2  2  2  2  2  2  2  2  2  2                         
+    projnY      =   1 1 1 1 1 1 1 1 1  1  1  1  1  1  1  1  1  1 2 2 2 2 2 2 2 2 2  2  2  2  2  2  2  2  2  2 1 1 1 1 1 1 1 1 1  1  1  1  1  1  1  1  1  1                           
 
-[perturbation]
-    B0          =   1.0               #hbar/(e*a0**2) = 2.35 * 10**5  T
-    Bext        =   0.0 0.0 1.0  
+[field]
+    B0  =       1.0               # changed by probeB.sh
+    Bext = 0.0 0.0 1.0             # changed by probeB.sh
+
+
+[rashba]
+    aRashba    = 3.0   #in eV Ang
 
 [numerics]
-    Gcut        =   8.0 # edited by statFlow
-    nSolve      =   96 # edited by statFlow
-    nQx         =   4 # edited by statFlow
-    nQy         =   12 # edited by statFlow
-    nSCx        =   5 # edited by statFlow
-    nSCy        =   9 # edited by statFlow
-    nKx         =   5 # edited by statFlow
-    nKy         =   9 # edited by statFlow
-    nRx         =   10   
-    nRy         =   10
+   Gcut        = 25.0 # changed by probeB.sh
+   nSolve      = 96 # changed by probeB.sh
+   nQx         = 8 # changed by probeB.sh
+   nQy         = 144 # changed by probeB.sh
     thres       =   0.1
+
+[ham]
+    doVdesc     =   f
+    doZeeman    =   f
+    doMagHam    =   t
+    doRashba    =   t
+
 
 [methods]
     doSolveHam  =   f
-    doMagHam    =   t
-    doPrepW90   =   t
     doPw90      =   f
-    doBerry     =   f
+    doBerry     =   t
     writeBin    =   f
 
 [w90]
     seedName    =   'wf1'
     useBloch    =   f
     nShells     =   1
-    shells      =   1 # edited by statFlow
+   shells       = 1 # changed by probeB.sh
     nw90it      =   1000
     pw90GaugeB  =   f
 
+[w90plot]
+    nSCx        = 9 # changed by probeB.sh
+    nSCy        = 145 # changed by probeB.sh
+    nRx         =   90
+    nRy         =   5
+    nRz         =   2
+
+[w90interp]
+    nKx         = 9 # changed by probeB.sh
+    nKy         = 145 # changed by probeB.sh
+
 [berry]
-    doVeloNUM   =   f
+    fastConnConv=   t
     doNiu       =   t
-    doPei       =   f
-    doWanni     =   f
     doGaugBack  =   f
 
 [semiclassics]
     prefactF3   =   1.0
-  
+
 
 [debug]
     debugHam    =   t
