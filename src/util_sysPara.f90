@@ -291,6 +291,7 @@ module util_sysPara
 		call MPI_Bcast(	proj_at		,	nWfs	,		MPI_INTEGER			,	root,	MPI_COMM_WORLD,	ierr)
 		call MPI_Bcast( proj_nX		,	nWfs	,		MPI_INTEGER			,	root,	MPI_COMM_WORLD,	ierr)
 		call MPI_Bcast( proj_nY		,	nWfs	,		MPI_INTEGER			,	root,	MPI_COMM_WORLD,	ierr)
+		call MPI_BARRIER(MPI_COMM_WORLD, ierr)	!not necessary, helps against paranoia though
 		!
 		return
 	end subroutine
