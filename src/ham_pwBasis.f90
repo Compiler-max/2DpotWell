@@ -155,6 +155,7 @@ module ham_PWbasis
 		open(unit=205, file=w90_dir//wfnname,	form='formatted', access='stream', action='write', status='replace')
 		!write to file
 		write(205,*)	nRx, nRy, nRz, qi, nbnd
+		!LOOP BANDS
 		do loop_b = 1, nbnd
 			!LOOP R GRID
 			do rIz = 1, nRz
@@ -175,9 +176,7 @@ module ham_PWbasis
 					end do
 				end do
 			end do
-
-
-			end do
+			!
 		end do
 		close(205)
 		!
