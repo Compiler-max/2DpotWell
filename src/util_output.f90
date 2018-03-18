@@ -51,11 +51,11 @@ module util_output
 		integer		:: i
 		open(unit=100,file=info_dir//'meshInfo.txt',action='write')
 		!
-		!R MESH
-		write(100,*)"*******************R POINT MESH******************************"
-		do i = 1, nR
-			write(100,'(a,i6,a,f15.7,a,f15.7,a,f15.7,a)')				"r(",i,") = (", rpts(1,i) ,", ",rpts(2,i),",",rpts(3,i)," )"
-		end do		
+		!!R MESH
+		!write(100,*)"*******************R POINT MESH******************************"
+		!do i = 1, nR
+		!	write(100,'(a,i6,a,f15.7,a,f15.7,a,f15.7,a)')				"r(",i,") = (", rpts(1,i) ,", ",rpts(2,i),",",rpts(3,i)," )"
+		!end do		
 		!
 		!G VECTOR
 		write(100,*)"*******************G VECTOR  test MESH******************************"
