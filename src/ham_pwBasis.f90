@@ -24,14 +24,11 @@ module ham_PWbasis
 		!calculates the velocity operator matrix
 		!	Psi_n v Psi_m	= i/hbar Psi_n grad_r Psi_m
 		!					= - 1 / hbar sum_G ckn^dag ckm G
-		complex(dp),	intent(in)		:: 	ck(:,:)
+		complex(dp),	intent(in)		:: 	qi, ck(:,:)
 		complex(dp),	intent(out)		::	v_mat(:,:,:)
-		integer							::	qi, m, n, gi
-		real(dp)						::	hbar, me
+		integer							::	m, n, gi
 		!
 		v_mat 	= dcmplx(0.0_dp)
-		hbar	= 1.0_dp
-		me 		= 1.0_dp
 		!
 		!get momentum
 		do m = 1, nSolve
@@ -39,14 +36,11 @@ module ham_PWbasis
 				!
 				!SUM OVER BASIS FUNCTIONS
 				do gi = 1 , nGq(qi)
-					v_mat(1:2,n,m) = v_mat(1:2,n,m) -  dconjg(ck(gi,n)) *  ( ck(gi,m) / hbar ) *  Gvec(1:2,gi,qi)
+					v_mat(1:2,n,m) = v_mat(1:2,n,m) -  dconjg(ck(gi,n)) *  ck(gi,m)  *  Gvec(1:2,gi,qi)
 				end do
 			end do
 		end do
 		!
-		!convert momentum into velocity
-		v_mat	= v_mat / me
-
 		!
 		return
 	end subroutine
@@ -152,6 +146,8 @@ module ham_PWbasis
 		write(205,*)	nRx, nRy, nRz, qi, nbnd
 		do loop_b = 1, nbnd
 			do ix = 1, nR
+
+
 				!SUM G-VEC
 				tmp = dcmplx(0.0_dp)
 				do ig = 1, nG_qi
