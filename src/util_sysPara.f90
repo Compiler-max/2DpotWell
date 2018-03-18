@@ -13,7 +13,7 @@ module util_sysPara
 				dim, aX, aY, vol, nAt, relXpos, relYpos, atRx, atRy, atPot, dVpot, &
 				nG, nGq, nG0, Gmax, GmaxGLOBAL, GminGLOBAL, Gcut, Gvec, Gtest, R0, nSolve, &
 				nQ, nQx, nQy, nKx, nKy, nK, nSC, nSCx, nSCy, dqx, dqy, dkx, dky, &
-				nR, nRx, nRy, nRz,  dx, dy, dz, &
+				nR, nRx, nRy, nRz,   &			!dx, dy, dz,
 				nShells, nw90it, shells, &
 				nBands, nWfs, proj_at, proj_nX, proj_nY,  &
 				atPos, atR, qpts, rpts, kpts, Zion, recpLatt, &
