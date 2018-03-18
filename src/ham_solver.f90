@@ -16,7 +16,7 @@ module ham_Solver
 
 
 	use ham_PWbasis,	only:	calcVeloGrad, calcAmatANA, calcMmat
-	use util_basisIO,	only:	writeABiN_basVect, writeABiN_energy, writeABiN_basCoeff, writeABiN_velo, writeABiN_Amn, writeABiN_Mmn, &
+	use util_basisIO,	only:	writeABiN_basVect, writeABiN_energy, writeABiN_basCoeff, writeABiN_Mmn, &
 								read_coeff, read_gVec, read_energies
 	use util_w90Interf,	only:	setup_w90, write_w90_matrices, printNNinfo
 	use util_output,	only:	writeEnTXT
@@ -39,10 +39,9 @@ module ham_Solver
 		!solves Hamiltonian at each k point
 		!also generates the Wannier functions on the fly (sum over all k)
 		!																
-
 		integer							::	nntotMax, nntot
 		integer,		allocatable		::	nnlist(:,:), nncell(:,:,:)
-		real(dp),		allocatable		::	EnQ(:,:)
+
 		!	
 		!
 		nntotMax = 12
@@ -69,24 +68,13 @@ module ham_Solver
 		!calc Mmat
 		call calc_Mmat(nntot, nnlist, nncell)
 		call MPI_BARRIER(MPI_COMM_WORLD, ierr)	!without root may try to read Mmat files which are not written
-
-
+		!
+		!
 		!call w90 interface to write input files & .mmn etc. files
-
 		if( myID == root ) then
-			write(*,*)	"*"
-			write(*,*)	"*"
-			write(*,*)	"*"
-			write(*,'(a,i3,a)')		"[#",myID,";solveHam]: wrote Mmn files, now collect files to write wannier90 input files"
-			call write_w90_matrices()
-			write(*,'(a,i3,a)')		"[#",myID,";solveHam]: wrote w90 matrix input files (.amn, .mmn, .eig)"
-			allocate(	EnQ(nSolve,nQ)	)
-			call read_energies(EnQ)
-			call writeEnTXT(EnQ)
-			write(*,'(a,i3,a)')		"[#",myID,";solveHam]: wrote energies to txt file"
+			call prepare_w90_run()
 		end if
-
-
+		!
 		!
 		return
 	end subroutine
@@ -97,25 +85,23 @@ module ham_Solver
 !private:
 	subroutine worker()
 		!			solve Ham, write results and derived quantites														
-		complex(dp),	allocatable		::	Hmat(:,:) , ck_temp(:,:), Amn_temp(:,:), velo_temp(:,:,:)
+		complex(dp),	allocatable		::	Hmat(:,:) , ck_temp(:,:)
 		real(dp),		allocatable		::	En_temp(:)
-		integer							:: 	qi, qLoc, found, Gsize, boundStates, loc_minBound, loc_maxBound, glob_minBound, glob_maxBound
+		integer							:: 	qi, qLoc, found, Gsize, boundStates, loc_minBound, loc_maxBound
 		!	
 		!
 		allocate(	Hmat(				Gmax,	Gmax				)	)
 		allocate(	ck_temp(		GmaxGLOBAL, nSolve				)	)
 		allocate(	En_temp(				Gmax					)	)
-		
-		allocate(	velo_temp(	3, 	nSolve,		nSolve				)	)	
-		allocate(	Amn_temp(		nBands,		nWfs				)	)
 		!
 		qLoc 	= 1
 		loc_minBound = nSolve
 		loc_maxBound = -1
 		call MPI_BARRIER( MPI_COMM_WORLD, ierr)
+		!LOOP KPTS
 		do qi = myID*qChunk +1, myID*qChunk + qChunk
 			!
-			!!SETUP HAM
+			!SETUP HAM
 			call populateH(qLoc, Hmat) 
 			!
 			!SOLVE HAM
@@ -124,73 +110,31 @@ module ham_Solver
 			Gsize 	= nGq(qLoc)
 			call eigSolverPART(Hmat(1:Gsize,1:Gsize),En_temp(1:Gsize), ck_temp(1:Gsize,:), found)
 			!
-			!get derived quantities
-			call calcAmatANA(qLoc, ck_temp, Amn_temp)
-			call calcVeloGrad(qLoc, ck_temp, velo_temp)
-
-			!
-			!DEBUG TESTS
-			if( found /= nSolve )	write(*,'(a,i3,a,i5,a,i5)'	)	"[#",myID,";solveHam]:WARNING only found ",found," bands of required ",nSolve
-			if( nBands > found	)	stop	"[solveHam]: ERROR did not find required amount of bands"
-			if( Gsize < nSolve	) 	stop	"[solveHam]: cutoff to small to get bands! only get basis functions"
-			if( Gsize > Gmax	)	stop	"[solveHam]: critical error in solveHam please contact developer. (nobody but dev will ever read this^^)"
-			!
-			!WRITE COEFF TO FILE
+			!WRITE FILEs
 			call writeABiN_basVect(qi, Gvec(:,:,qLoc))
 			call writeABiN_basCoeff(qi, ck_temp)
 			call writeABiN_energy(qi, En_temp(1:nSolve))
-			call writeABiN_Amn(qi, Amn_temp)
-			call writeABiN_velo(qi, velo_temp)
-			!
+			!get derived quantities & write to file
+			call calcAmatANA(	qLoc, qi, ck_temp)
+			call calcVeloGrad(	qLoc, qi, ck_temp)
 			!w90 plot preparation
 			call writeUNKs(qi, nGq(qLoc), ck_temp(:,1:nBands), Gvec(:,:,qLoc))
-
-
-			!count insulating states
-			boundStates = 0
-			do while (	En_temp(boundStates+1) < 0.0_dp )
-				boundStates = boundStates + 1
-			end do
-			loc_minBound = min(loc_minBound,boundStates)
-			loc_maxBound = max(loc_maxBound,boundStates)
-			
+			!
+			!
 			!FINALIZE
-			write(*,'(a,i3,a,i5,a,f6.2,a,f6.2,a,a,i3,a,i5,a,i5,a)')"[#",myID,", solveHam]: qi=",qi," wann energy window= [",En_temp(1)*aUtoEv," : ",&
-														En_temp(nWfs)*aUtoEv,"] (eV).",&
-														" insulating states: #",boundStates,". done tasks=(",qLoc,"/",qChunk,")"
-			!if( boundStates < nWfs) write(*,'(a,i3,a,f8.3,a,f8.3,a)') "[#",myID,", solveHam]: WARNING not enough bound states at qpt=(",qpts(1,qi),",",qpts(2,qi),")."
-			
+			boundStates = count_negative_eigenvalues(loc_minBound, loc_maxBound, En_temp)
+			call debug_message_printer(found, Gsize, boundStates, En_temp)
 			!goto next qpt
 			qLoc = qLoc + 1		
 		end do
 		!
 		!ANALYZE BANDS
-		call MPI_REDUCE(loc_minBound, 	glob_minBound, 	1, MPI_INTEGER, 	MPI_MIN,	root, MPI_COMM_WORLD, ierr)
-		call MPI_REDUCE(loc_maxBound, 	glob_maxBound, 	1, MPI_INTEGER, 	MPI_MAX,	root, MPI_COMM_WORLD, ierr)
-		!
-		if( myID == root ) then
-			write(*,*)	"*"
-			write(*,*)	"*"
-			write(*,*)	"*"
-			write(*,'(a,i3,a)')	"[#",myID,", solveHam]:********band structure analysis:****************************************"
-			!
-			!TEST FOR METALLIC BANDS
-			if( glob_minBound == glob_maxBound	) then
-				write(*,'(a,i3,a,i3,a)')	"[#",myID,", solveHam]: found system with #",glob_minBound," insulating states"
-			else
-				write(*,'(a,i3,a,i3,a)')	"[#",myID,", solveHam]: WARNING: ",glob_maxBound-glob_minBound," insulating states get metallic at points of BZ"
-			end if
-			!
-			!TEST IF ENOUGH BANDS FOR W90
-			if( glob_minBound < nWfs	) then
-				write(*,'(a,i3,a)')	"[#",myID,", solveHam]: WARNING: not enough localized states for w90"
-			end if
-			write(*,*)	"*"
-		end if
+		call band_analyzer(loc_minBound, loc_maxBound)
 		!
 		!
 		return
 	end subroutine
+
 
 
 	subroutine calc_Mmat(nntot, nnlist, nncell)
@@ -247,7 +191,24 @@ module ham_Solver
 	end subroutine
 
 
-
+	subroutine prepare_w90_run()
+		real(dp),		allocatable		::	EnQ(:,:)
+		!
+		allocate(	EnQ(nSolve,nQ)	)
+		!
+		write(*,*)	"*"
+		write(*,*)	"*"
+		write(*,*)	"*"
+		write(*,'(a,i3,a)')		"[#",myID,";prepare_w90_run]: wrote Mmn files, now collect files to write wannier90 input files"
+		call write_w90_matrices()
+		write(*,'(a,i3,a)')		"[#",myID,";prepare_w90_run]: wrote w90 matrix input files (.amn, .mmn, .eig)"
+		call read_energies(EnQ)
+		call writeEnTXT(EnQ)
+		write(*,'(a,i3,a)')		"[#",myID,";prepare_w90_run]: wrote energies to txt file"
+		!
+		!
+		return
+	end subroutine
 
 
 
@@ -303,8 +264,79 @@ module ham_Solver
 
 
 
+!BAND STRUCTURE TESTS
+	integer function count_negative_eigenvalues(loc_minBound, loc_maxBound, enegies)
+		integer,		intent(inout)		::	loc_minBound, loc_maxBound
+		real(dp),		intent(in)			::	energies(:)
+		integer								::	boundStates
+		!
+		!count boundStates
+		boundStates = 0
+		do while (	energies(boundStates+1) < 0.0_dp .and. boundStates < size(enegies)	)
+			boundStates = boundStates + 1
+		end do
+		loc_minBound = min(loc_minBound,boundStates)
+		loc_maxBound = max(loc_maxBound,boundStates)
+		!
+		!return
+		count_negative_eigenvalues = boundStates
+		return
+	end function
 
 
+	subroutine band_analyzer(loc_minBound, loc_maxBound)
+		!
+		!	test if all kpts have same amount of negative energy eigenvalues (i.e. no states become metallic in parts of BZ)
+		!
+		integer,		intent(in)		::	loc_minBound	, 	loc_maxBound
+		integer							::	glob_minBound	,	glob_maxBound 
+		!
+		call MPI_REDUCE(loc_minBound, 	glob_minBound, 	1, MPI_INTEGER, 	MPI_MIN,	root, MPI_COMM_WORLD, ierr)
+		call MPI_REDUCE(loc_maxBound, 	glob_maxBound, 	1, MPI_INTEGER, 	MPI_MAX,	root, MPI_COMM_WORLD, ierr)
+		!
+		if( myID == root ) then
+			write(*,*)	"*"
+			write(*,*)	"*"
+			write(*,*)	"*"
+			write(*,'(a,i3,a)')	"[#",myID,", solveHam]:********band structure analysis:****************************************"
+			!
+			!TEST FOR METALLIC BANDS
+			if( glob_minBound == glob_maxBound	) then
+				write(*,'(a,i3,a,i3,a)')	"[#",myID,", solveHam]: found system with #",glob_minBound," insulating states"
+			else
+				write(*,'(a,i3,a,i3,a)')	"[#",myID,", solveHam]: WARNING: ",glob_maxBound-glob_minBound," insulating states get metallic at points of BZ"
+			end if
+			!
+			!TEST IF ENOUGH BANDS FOR W90
+			if( glob_minBound < nWfs	) then
+				write(*,'(a,i3,a)')	"[#",myID,", solveHam]: WARNING: not enough localized states for w90"
+			end if
+			write(*,*)	"*"
+		end if
+		!
+		!
+		return
+	end subroutine
+
+
+
+	subroutine debug_message_printer(found, Gsize, boundStates, En_temp)
+		integer,		intent(in)		::	found, Gsize, boundStates
+		real(dp),		intent(in)		::	En_temp(:)
+		!
+		if( found /= nSolve )	write(*,'(a,i3,a,i5,a,i5)'	)	"[#",myID,";solveHam]:WARNING only found ",found," bands of required ",nSolve
+		if( nBands > found	)	stop	"[solveHam]: ERROR did not find required amount of bands"
+		if( Gsize < nSolve	) 	stop	"[solveHam]: cutoff to small to get bands! only get basis functions"
+		if( Gsize > Gmax	)	stop	"[solveHam]: critical error in solveHam please contact developer. (nobody but dev will ever read this^^)"
+		!
+		!
+		write(*,'(a,i3,a,i5,a,f6.2,a,f6.2,a,a,i3,a,i5,a,i5,a)')"[#",myID,", solveHam]: qi=",qi," wann energy window= [",En_temp(1)*aUtoEv," : ",&
+														En_temp(nWfs)*aUtoEv,"] (eV).",&
+														" insulating states: #",boundStates,". done tasks=(",qLoc,"/",qChunk,")"
+		!if( boundStates < nWfs) write(*,'(a,i3,a,f8.3,a,f8.3,a)') "[#",myID,", solveHam]: WARNING not enough bound states at qpt=(",qpts(1,qi),",",qpts(2,qi),")."
+		!
+		return
+	end subroutine
 
 
 

@@ -122,20 +122,20 @@ module util_basisIO
 
 
 
-	subroutine writeABiN_velo(qi, velo)
-		integer,		intent(in)		::	qi
+	subroutine writeABiN_velo(qi_glob, velo)
+		integer,		intent(in)		::	qi_glob, 
 		complex(dp),	intent(in)		::	velo(:,:,:)
 		character(len=20)				::	filename		
 		!
 		!
 		!REAL
-		write(filename, format) raw_dir//'velR.',qi
+		write(filename, format) raw_dir//'velR.',qi_glob
 		open(unit=210, file=filename		, form='unformatted', access='stream', action='write',status='replace') 
 		write(210)	dreal(velo)
 		close(210)
 		!
 		!IMAG
-		write(filename, format) raw_dir//'velI.',qi
+		write(filename, format) raw_dir//'velI.',qi_glob
 		open(unit=215, file=filename		, form='unformatted', access='stream', action='write',status='replace') 
 		write(215)	dimag(velo)
 		close(215)

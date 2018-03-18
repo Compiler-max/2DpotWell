@@ -4,7 +4,7 @@ module ham_PWbasis
 	use util_math,		only:	dp, PI_dp,i_dp, acc, machineP,& 
 									myExp
 	use util_sysPara
-	use util_basisIO, only:		writeABiN_velo
+	use util_basisIO, only:		writeABiN_velo, writeABiN_Amn
 
 	implicit none
 
@@ -21,15 +21,17 @@ module ham_PWbasis
 
 
 !public
-	subroutine calcVeloGrad(qi_loc, qi_glob, ck, v_mat )
+	subroutine calcVeloGrad(qi_loc, qi_glob, ck)
 		!calculates the velocity operator matrix
 		!	Psi_n v Psi_m	= i/hbar Psi_n grad_r Psi_m
 		!					= - 1 / hbar sum_G ckn^dag ckm G
 		integer,		intent(in)		::	qi_loc
 		complex(dp),	intent(in)		:: 	ck(:,:)
-		complex(dp),	intent(out)		::	v_mat(:,:,:)
+		complex(dp),	allocatable		::	v_mat(:,:,:)
 		integer							::	m, n, gi
 		!
+		!Init Matrix
+		allocate(	v_mat(	3, 	nSolve,		nSolve				)	)
 		v_mat 	= dcmplx(0.0_dp)
 		!
 		!get momentum
@@ -44,7 +46,7 @@ module ham_PWbasis
 		end do
 		!
 		!write to file
-		 writeABiN_velo(qi_glob, velo)
+		call writeABiN_velo(qi_glob, velo)
 		!
 		!
 		return
@@ -95,18 +97,21 @@ module ham_PWbasis
 	end subroutine
 
 
-	subroutine calcAmatANA(qi,ckH, A_matrix)
+	subroutine calcAmatANA(qi_loc, qi_glob,ckH)
 		!analytic projection with hard coded integrals
 		!	projection onto sin**2, sin cos, cos sin
 		!
 		!	Amn = <Psi_m|g_n>
-		integer,		intent(in)	:: 	qi
+		integer,		intent(in)	:: 	qi_loc
 		complex(dp),	intent(in)	:: 	ckH(:,:)
-		complex(dp),	intent(out)	:: 	A_matrix(:,:) !A(nBands,nWfs)
+		complex(dp),	allocatable	:: 	A_matrix(:,:) !A(nBands,nWfs)
 		integer						:: 	nWf, m
 		!
+		!Init Matrix
+		allocate(	A_matrix(		nBands,		nWfs				)	)
 		A_matrix	= dcmplx(0.0_dp)
 		!
+		!GET PROJECTION MATRIX (U-mat initial guess)
 		do nWf = 1, nWfs
 			if( proj_at(nWf) > nAt ) then
 				write(*,'(a,i3,a,i2,a,i4,a)')	"[#",myID,"calcAmatANA]: can not project onto state atom",proj_at(nWf)," (unit cell contains: ",nAt," atoms)"
@@ -114,17 +119,13 @@ module ham_PWbasis
 				A_matrix(nWf,nWf)	= dcmplx(1.0_dp)
 			else
 				do m = 1, nBands
-					A_matrix(m,nWf)	= infiniteWell(qi, m, ckH, proj_at(nWf), proj_nX(nWf), proj_nY(nWf))
-					!if(	proj_stat(nWf) == 1)	A_matrix(m,nWf)	= g1Int(qi,m, proj_at(nWf), ckH)
-					!if( proj_stat(nWf) == 2)	A_matrix(m,nWf) = g2Int(qi,m, proj_at(nWf), cKH)
-					!if( proj_stat(nWf) == 3)	A_matrix(m,nWf) = g3Int(qi,m, proj_at(nWf), cKH)					
-					!if( proj_stat(nWf) > 3 )	then
-					!	write(*,'(a,i3,a,i2,a)')	"[#",myID,"calcAmatANA]: can not project onto state #",proj_stat(nWf)," (maximum supported: 3)"
-					!	A_matrix(m,nWf) = gDefaultInt(m, nWf)
-					!end if
+					A_matrix(m,nWf)	= infiniteWell(qi_loc, m, ckH, proj_at(nWf), proj_nX(nWf), proj_nY(nWf))
 				end do
 			end if
 		end do
+		!
+		!write to file
+		call writeABiN_Amn(qi_glob, Amn)
 		!
 		!
 		return
