@@ -11,9 +11,9 @@ module util_sysPara
 	public :: 	readInp, & 
 				!public para:
 				dim, aX, aY, vol, nAt, relXpos, relYpos, atRx, atRy, atPot, dVpot, &
-				nG, nGq, nG0, Gmax, GmaxGLOBAL, GminGLOBAL, Gcut, Gvec, Gtest, R0, nSolve, &
+				nG, nGq, nG0, Gmax, GmaxGLOBAL, GminGLOBAL, Gcut, Gvec, R0, nSolve, &
 				nQ, nQx, nQy, nKx, nKy, nK, nSC, nSCx, nSCy, dqx, dqy, dkx, dky, &
-				nR, nRx, nRy, nRz,   &			!dx, dy, dz,
+				nR, nRx, nRy, nRz,   &	
 				nShells, nw90it, shells, &
 				nBands, nWfs, proj_at, proj_nX, proj_nY,  &
 				atPos, atR, qpts,  kpts, recpLatt, &		
@@ -41,7 +41,7 @@ module util_sysPara
 	character(len=8)								::	raw_dir	="rawData/", mkdir="mkdir ./"	!to use with system(mkdir//$dir_path) 
 	integer,	allocatable,	dimension(:)		::	nGq, shells, proj_at, proj_nX, proj_nY
 	real(dp),	allocatable,	dimension(:)		::	relXpos, relYpos, atRx, atRy, atPot, dVpot
-	real(dp),	allocatable,	dimension(:,:)		::	Gtest , atPos, atR, qpts, kpts 
+	real(dp),	allocatable,	dimension(:,:)		::	atPos, atR, qpts, kpts 
 
 	real(dp),	allocatable,	dimension(:,:,:)	::	Gvec
 	logical											::	debugHam, debugWann, debugProj, &
@@ -60,9 +60,6 @@ module util_sysPara
 		!the first array index is always the x,y value of the vector
 		logical				:: dir_exists
 		!
-		dim = 	2
-		!
-		!
 		!read inputs and allocates arrays
 		if( myID == root ) then
 			write(*,*)	"hello from root, will read the input file now"
@@ -78,7 +75,6 @@ module util_sysPara
 		call setAcc(thres)
 		call qmeshGen()
 		!call rmeshGen()
-		call popGtest()
 		call popGvec()
 		call popAtPos()
 		call popAtR()
@@ -282,6 +278,7 @@ module util_sysPara
 		!derived scalars
 		call MPI_Bcast( nGdim		,		1	,	MPI_INTEGER				,	root,	MPI_COMM_WORLD, ierr)
 		call MPI_Bcast( vol			,		1	,	MPI_DOUBLE_PRECISION	,	root,	MPI_COMM_WORLD,	ierr)
+		call MPI_Bcast(	recpLatt	, 	dim**2	, 	MPI_DOUBLE_PRECISION	,	root, 	MPI_COMM_WORLD, ierr)
 		!
 		!
 		if( myID /= root ) call allocateArrays()
@@ -304,8 +301,6 @@ module util_sysPara
 	subroutine allocateArrays()
 		!allocates all needed arrays
 		!
-		!basis
-		allocate(	Gtest(	dim,	nG				)		)
 		!atoms
 		allocate(	relXpos(nAt)		)
 		allocate(	relYpos(nAt)		)
@@ -479,49 +474,12 @@ module util_sysPara
 
 
 
-	subroutine popGtest()
-	!populates the G vector (basis vector)
-		integer		:: i, ix, iy
-		real(dp)	:: thres, b1(2), b2(2), a1(2), a2(2)
-		!
-		thres	= 1e-15_dp
-		
-		
-		a1(1)	= aX
-		a1(2)	= 0.0_dp
-		a2(1)	= 0.0_dp
-		a2(2)	= aY
-
-
-		b1(1)	= 2.0_dp * PI_dp * aY / vol
-		b1(2)	= 0.0_dp
-		b2(1)	= 0.0_dp
-		b2(2)	= 2.0_dp * PI_dp * aX / vol
-
-		
-		call MPI_Bcast(recpLatt, dim**2, MPI_DOUBLE_PRECISION, root, MPI_COMM_WORLD, ierr )
-
-
-		!if( myID == root ) then
-			call testG( a1, a2, b1, b2)
-			do ix = 1, nGdim
-				do iy = 1, nGdim
-					i	= (iy-1) * nGdim + ix
-					Gtest(:,i)	= (ix-1-nGdim/2) * recpLatt(:,1) + (iy-1-nGdim/2) * recpLatt(:,2)
-				end do
-			end do
-		!end if
-		!call MPI_Bcast(Gtest, size(Gtest,1)*size(Gtest,2), MPI_DOUBLE_PRECISION, root, MPI_COMM_WORLD, ierr)
-		call MPI_BARRIER( MPI_COMM_WORLD, ierr)
-		!
-		return
-	end subroutine
 
 
 !
 	subroutine popGvec()
-		integer						:: qi, gi, inside,tot, qLoc, Gmin
-		real(dp)					:: kg(2)
+		integer						:: qi, ix, iy, inside,tot, qLoc, Gmin
+		real(dp)					:: kg(2), Gtest(2)
 		!
 		allocate(	nGq(					qChunk		)		)
 		allocate(	Gvec(	dim,	nG ,	qChunk		)		)
@@ -531,15 +489,21 @@ module util_sysPara
 			nGq(qLoc)	= 0
 			inside 		= 0
 			tot 		= 0
-			do gi = 1, nG
-				kg(:)	= qpts(:,qi) + Gtest(:,gi)
-				tot		= tot + 1
-				if( norm2(kg) < Gcut ) then
-					nGq(qLoc) = nGq(qLoc) + 1
-					Gvec(:,nGq(qLoc),qLoc) = kg(:)
-					inside = inside + 1
-					if( gi == 1)	stop	"[popGvec]: WARNING hit boundary of Gtest grid"
-				end if
+			!LOOP TEST GRID
+			do ix = 1, nGdim
+				do iy = 1, nGdim
+					!GET CURRENT GRID POINT
+					Gtest(:)	= (ix-1-nGdim/2) * recpLatt(:,1) + (iy-1-nGdim/2) * recpLatt(:,2)
+					kg(:)	= qpts(:,qi) + Gtest(:)
+					tot		= tot + 1
+					!
+					!IF IN SPHERE APPEND TO GVEC
+					if( norm2(kg) < Gcut ) then
+						nGq(qLoc) = nGq(qLoc) + 1
+						Gvec(:,nGq(qLoc),qLoc) = kg(:)
+						inside = inside + 1
+					end if
+				end do
 			end do
 			!DEBUG INFO
 			if(nGq(qLoc) > nG) write(*,'(a,i3,a,i4,a,i6)')	"[#",myID,&
