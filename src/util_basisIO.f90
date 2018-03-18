@@ -123,7 +123,7 @@ module util_basisIO
 
 
 	subroutine writeABiN_velo(qi_glob, velo)
-		integer,		intent(in)		::	qi_glob, 
+		integer,		intent(in)		::	qi_glob
 		complex(dp),	intent(in)		::	velo(:,:,:)
 		character(len=20)				::	filename		
 		!
