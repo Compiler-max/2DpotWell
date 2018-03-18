@@ -87,45 +87,46 @@ module ham_Solver
 		!			solve Ham, write results and derived quantites														
 		complex(dp),	allocatable		::	Hmat(:,:) , ck_temp(:,:)
 		real(dp),		allocatable		::	En_temp(:)
-		integer							:: 	qi, qLoc, found, Gsize, boundStates, loc_minBound, loc_maxBound
+		integer							:: 	qi_glob, qi_loc, found, Gsize, boundStates, loc_minBound, loc_maxBound
 		!	
 		!
 		allocate(	Hmat(				Gmax,	Gmax				)	)
 		allocate(	ck_temp(		GmaxGLOBAL, nSolve				)	)
 		allocate(	En_temp(				Gmax					)	)
 		!
-		qLoc 	= 1
+		qi_loc 	= 1
 		loc_minBound = nSolve
 		loc_maxBound = -1
 		call MPI_BARRIER( MPI_COMM_WORLD, ierr)
 		!LOOP KPTS
-		do qi = myID*qChunk +1, myID*qChunk + qChunk
+		do qi_glob = myID*qChunk +1, myID*qChunk + qChunk
 			!
 			!SETUP HAM
-			call populateH(qLoc, Hmat) 
+			call populateH(qi_loc, Hmat) 
 			!
 			!SOLVE HAM
 			ck_temp	= dcmplx(0.0_dp)
 			En_temp	= 0.0_dp
-			Gsize 	= nGq(qLoc)
+			Gsize 	= nGq(qi_loc)
 			call eigSolverPART(Hmat(1:Gsize,1:Gsize),En_temp(1:Gsize), ck_temp(1:Gsize,:), found)
 			!
 			!WRITE FILEs
-			call writeABiN_basVect(qi, Gvec(:,:,qLoc))
-			call writeABiN_basCoeff(qi, ck_temp)
-			call writeABiN_energy(qi, En_temp(1:nSolve))
+			call writeABiN_basVect(qi_glob, Gvec(:,:,qi_loc))
+			call writeABiN_basCoeff(qi_glob, ck_temp)
+			call writeABiN_energy(qi_glob, En_temp(1:nSolve))
 			!get derived quantities & write to file
-			call calcAmatANA(	qLoc, qi, ck_temp)
-			call calcVeloGrad(	qLoc, qi, ck_temp)
+			call calcAmatANA(	qi_loc, qi_glob, ck_temp)
+			call calcVeloGrad(	qi_loc, qi_glob, ck_temp)
 			!w90 plot preparation
-			call writeUNKs(qi, nGq(qLoc), ck_temp(:,1:nBands), Gvec(:,:,qLoc))
+			call writeUNKs(qi_glob, nGq(qi_loc), ck_temp(:,1:nBands), Gvec(:,:,qi_loc))
 			!
 			!
-			!FINALIZE
+			!count insulating states
 			boundStates = count_negative_eigenvalues(loc_minBound, loc_maxBound, En_temp)
-			call debug_message_printer(found, Gsize, boundStates, En_temp)
+			!FINALIZE
+			call debug_message_printer(qi_loc, qi_glob, found, Gsize, boundStates, En_temp)
 			!goto next qpt
-			qLoc = qLoc + 1		
+			qi_loc = qi_loc + 1		
 		end do
 		!
 		!ANALYZE BANDS
@@ -143,7 +144,7 @@ module ham_Solver
 		complex(dp),	allocatable		::	ck_qi(:,:), cK_nn(:,:), Mmn(:,:,:)
 		real(dp),		allocatable		::	Gvec_qi(:,:), Gvec_nn(:,:)
 		real(dp)						::	gShift(2)
-		integer							::	qi, nn, q_nn, nG_qi, nG_nn, qLoc
+		integer							::	qi, nn, q_nn, nG_qi, nG_nn, qi_loc
 		!
 		allocate(	nGq_glob(nQ)					)
 		allocate(	Gvec_qi(dim, nG)				)
@@ -155,7 +156,7 @@ module ham_Solver
 		call MPI_ALLGATHER( nGq	, qChunk, MPI_INTEGER, nGq_glob		, qChunk, MPI_INTEGER, MPI_COMM_WORLD, ierr)
 		!
 		!
-		qLoc = 1
+		qi_loc = 1
 		do qi = myID*qChunk +1, myID*qChunk + qChunk
 			!
 			do nn = 1, nntot
@@ -182,8 +183,8 @@ module ham_Solver
 			!
 			!write result to file, alternative: gather on root and write .mmn directly
 			call writeABiN_Mmn(qi, Mmn)
-			write(*,'(a,i3,a,i5,a,i5,a,i5,a)')		"[#",myID,",calc_Mmat]: wrote M_matrix for qi=",qi,"; task (",qLoc,"/",qChunk,") done"
-			qLoc = qLoc + 1
+			write(*,'(a,i3,a,i5,a,i5,a,i5,a)')		"[#",myID,",calc_Mmat]: wrote M_matrix for qi=",qi,"; task (",qi_loc,"/",qChunk,") done"
+			qi_loc = qi_loc + 1
 		end do
 		!		
 		!
@@ -223,12 +224,12 @@ module ham_Solver
 
 
 !POPULATION OF H MATRIX
-	subroutine populateH(qLoc, Hmat)
+	subroutine populateH(qi_loc, Hmat)
 		!populates the Hamiltonian matrix by adding 
 		!	1. kinetic energy terms (onSite)
 		!	2. potential terms V(qi,i,j)
 		!and checks if the resulting matrix is hermitian( for debugging)
-		integer,		intent(in)	:: 	qLoc
+		integer,		intent(in)	:: 	qi_loc
 		complex(dp), intent(inout) 	:: 	Hmat(:,:)
 		integer						::	gi
 		!init to zero
@@ -237,25 +238,25 @@ module ham_Solver
 		!
 		!KINETIC ENERGY
 		do gi = 1, size(Hmat,1)
-			Hmat(gi,gi) = 0.5_dp * dot_product(	Gvec(:,gi,qLoc),	Gvec(:,gi,qLoc)	)
+			Hmat(gi,gi) = 0.5_dp * dot_product(	Gvec(:,gi,qi_loc),	Gvec(:,gi,qi_loc)	)
 		end do
 		!
 		!POTENTIAL WELLS
-		call add_potWell(qLoc, Hmat)
+		call add_potWell(qi_loc, Hmat)
 		!
 		!ZEEMAN
-		if(	doZeeman )		call add_Zeeman(qLoc, Hmat)
+		if(	doZeeman )		call add_Zeeman(qi_loc, Hmat)
 		!
 		!PEIERLS
-		if( doMagHam )	 	call add_magHam(qLoc, Hmat)
+		if( doMagHam )	 	call add_magHam(qi_loc, Hmat)
 		!
 		!RASHBA	
-		if( doRashba )		call add_rashba(qLoc, Hmat)
+		if( doRashba )		call add_rashba(qi_loc, Hmat)
 
 		!
 		!DEBUG
 		if(debugHam) then
-			if ( .not.	isHermitian(Hmat)	) 	write(*,'(a,i3,a,i3)')	"[#",myID,";populateH]: WARNING Hamiltonian matrix is not Hermitian at qLoc=",qLoc
+			if ( .not.	isHermitian(Hmat)	) 	write(*,'(a,i3,a,i3)')	"[#",myID,";populateH]: WARNING Hamiltonian matrix is not Hermitian at qi_loc=",qi_loc
 		end if
 		!
 		!		
@@ -265,14 +266,14 @@ module ham_Solver
 
 
 !BAND STRUCTURE TESTS
-	integer function count_negative_eigenvalues(loc_minBound, loc_maxBound, enegies)
+	integer function count_negative_eigenvalues(loc_minBound, loc_maxBound, energies)
 		integer,		intent(inout)		::	loc_minBound, loc_maxBound
 		real(dp),		intent(in)			::	energies(:)
 		integer								::	boundStates
 		!
 		!count boundStates
 		boundStates = 0
-		do while (	energies(boundStates+1) < 0.0_dp .and. boundStates < size(enegies)	)
+		do while (	energies(boundStates+1) < 0.0_dp .and. boundStates < size(energies)	)
 			boundStates = boundStates + 1
 		end do
 		loc_minBound = min(loc_minBound,boundStates)
@@ -320,8 +321,8 @@ module ham_Solver
 
 
 
-	subroutine debug_message_printer(found, Gsize, boundStates, En_temp)
-		integer,		intent(in)		::	found, Gsize, boundStates
+	subroutine debug_message_printer(qi_loc, qi_glob , found, Gsize, boundStates, En_temp)
+		integer,		intent(in)		::	qi_loc, qi_glob, found, Gsize, boundStates
 		real(dp),		intent(in)		::	En_temp(:)
 		!
 		if( found /= nSolve )	write(*,'(a,i3,a,i5,a,i5)'	)	"[#",myID,";solveHam]:WARNING only found ",found," bands of required ",nSolve
@@ -330,9 +331,9 @@ module ham_Solver
 		if( Gsize > Gmax	)	stop	"[solveHam]: critical error in solveHam please contact developer. (nobody but dev will ever read this^^)"
 		!
 		!
-		write(*,'(a,i3,a,i5,a,f6.2,a,f6.2,a,a,i3,a,i5,a,i5,a)')"[#",myID,", solveHam]: qi=",qi," wann energy window= [",En_temp(1)*aUtoEv," : ",&
+		write(*,'(a,i3,a,i5,a,f6.2,a,f6.2,a,a,i3,a,i5,a,i5,a)')"[#",myID,", solveHam]: qi=",qi_loc," wann energy window= [",En_temp(1)*aUtoEv," : ",&
 														En_temp(nWfs)*aUtoEv,"] (eV).",&
-														" insulating states: #",boundStates,". done tasks=(",qLoc,"/",qChunk,")"
+														" insulating states: #",boundStates,". done tasks=(",qi_glob,"/",qChunk,")"
 		!if( boundStates < nWfs) write(*,'(a,i3,a,f8.3,a,f8.3,a)') "[#",myID,", solveHam]: WARNING not enough bound states at qpt=(",qpts(1,qi),",",qpts(2,qi),")."
 		!
 		return
