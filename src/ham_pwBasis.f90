@@ -1,9 +1,10 @@
 module ham_PWbasis
 	!generates bloch and lattice periodidc functions given a basCoeff matrix
 	use omp_lib
-	use util_math,	only:	dp, PI_dp,i_dp, acc, machineP,& 
+	use util_math,		only:	dp, PI_dp,i_dp, acc, machineP,& 
 									myExp
 	use util_sysPara
+	use util_basisIO, only:		writeABiN_velo
 
 	implicit none
 
@@ -20,11 +21,11 @@ module ham_PWbasis
 
 
 !public
-	subroutine calcVeloGrad(qi, ck, v_mat )
+	subroutine calcVeloGrad(qi_loc, qi_glob, ck, v_mat )
 		!calculates the velocity operator matrix
 		!	Psi_n v Psi_m	= i/hbar Psi_n grad_r Psi_m
 		!					= - 1 / hbar sum_G ckn^dag ckm G
-		integer,		intent(in)		::	qi
+		integer,		intent(in)		::	qi_loc
 		complex(dp),	intent(in)		:: 	ck(:,:)
 		complex(dp),	intent(out)		::	v_mat(:,:,:)
 		integer							::	m, n, gi
@@ -36,11 +37,14 @@ module ham_PWbasis
 			do n = 1, nSolve
 				!
 				!SUM OVER BASIS FUNCTIONS
-				do gi = 1 , nGq(qi)
-					v_mat(1:2,n,m) = v_mat(1:2,n,m) -  dconjg(ck(gi,n)) *  ck(gi,m)  *  Gvec(1:2,gi,qi)
+				do gi = 1 , nGq(qi_loc)
+					v_mat(1:2,n,m) = v_mat(1:2,n,m) -  dconjg(ck(gi,n)) *  ck(gi,m)  *  Gvec(1:2,gi,qi_loc)
 				end do
 			end do
 		end do
+		!
+		!write to file
+		 writeABiN_velo(qi_glob, velo)
 		!
 		!
 		return
