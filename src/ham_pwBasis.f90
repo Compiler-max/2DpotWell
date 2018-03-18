@@ -24,7 +24,8 @@ module ham_PWbasis
 		!calculates the velocity operator matrix
 		!	Psi_n v Psi_m	= i/hbar Psi_n grad_r Psi_m
 		!					= - 1 / hbar sum_G ckn^dag ckm G
-		complex(dp),	intent(in)		:: 	qi, ck(:,:)
+		integer,		intent(in)		::	qi
+		complex(dp),	intent(in)		:: 	ck(:,:)
 		complex(dp),	intent(out)		::	v_mat(:,:,:)
 		integer							::	m, n, gi
 		!
