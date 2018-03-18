@@ -8,7 +8,7 @@ module ham_PWbasis
 	implicit none
 
 	private
-	public	::	calcVeloGrad, calcMmat, calcAmatANA, calcBasis, writeUNKs
+	public	::	calcVeloGrad, calcMmat, calcAmatANA,  writeUNKs
 
 
 	contains
