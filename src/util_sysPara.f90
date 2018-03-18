@@ -16,7 +16,7 @@ module util_sysPara
 				nR, nRx, nRy, nRz,   &			!dx, dy, dz,
 				nShells, nw90it, shells, &
 				nBands, nWfs, proj_at, proj_nX, proj_nY,  &
-				atPos, atR, qpts,  kpts, Zion, recpLatt, &		
+				atPos, atR, qpts,  kpts, recpLatt, &		
 				aRashba, Bext, prefactF3, &
 				seedName, w90_dir, info_dir, mkdir, raw_dir,&
 				debugProj, debugHam, debugWann, doSolveHam, doMagHam, doRashba, doZeeman, useBloch, doPw90, pw90GaugeB, doVdesc,  &
@@ -323,10 +323,11 @@ module util_sysPara
 		allocate(	proj_nY(nWfs)		)
 		!meshes
 		allocate(	qpts(dim,nQ)		)
-		!allocate(	rpts(3,nR)			)
 		allocate(	kpts(dim,nK)		)
 		!w90
 		allocate(	shells(nShells)		)
+		!
+		!allocate(	rpts(3,nR)			)
 		!
 		!
 		return
