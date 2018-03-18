@@ -58,11 +58,11 @@ module util_output
 		!end do		
 		!
 		!G VECTOR
-		write(100,*)"*******************G VECTOR  test MESH******************************"
-		write(100,*)"nG0=",nG0
-		do i = 1, nG
-			write(100,'(a,i6,a,f12.4,a,f12.4,a)')				"G(",i,") = (", Gtest(1,i) , ", ", Gtest(2,i) , ")"
-		end do
+		!write(100,*)"*******************G VECTOR  test MESH******************************"
+		!write(100,*)"nG0=",nG0
+		!do i = 1, nG
+		!	write(100,'(a,i6,a,f12.4,a,f12.4,a)')				"G(",i,") = (", Gtest(1,i) , ", ", Gtest(2,i) , ")"
+		!end do
 		!!
 		!K MESH
 		write(100,*)"*******************K POINT MESH******************************"
