@@ -16,7 +16,7 @@ module util_sysPara
 				nR, nRx, nRy, nRz,   &			!dx, dy, dz,
 				nShells, nw90it, shells, &
 				nBands, nWfs, proj_at, proj_nX, proj_nY,  &
-				atPos, atR, qpts, rpts, kpts, Zion, recpLatt, &
+				atPos, atR, qpts,  kpts, Zion, recpLatt, &		
 				aRashba, Bext, prefactF3, &
 				seedName, w90_dir, info_dir, mkdir, raw_dir,&
 				debugProj, debugHam, debugWann, doSolveHam, doMagHam, doRashba, doZeeman, useBloch, doPw90, pw90GaugeB, doVdesc,  &
@@ -41,7 +41,7 @@ module util_sysPara
 	character(len=8)								::	raw_dir	="rawData/", mkdir="mkdir ./"	!to use with system(mkdir//$dir_path) 
 	integer,	allocatable,	dimension(:)		::	nGq, shells, proj_at, proj_nX, proj_nY
 	real(dp),	allocatable,	dimension(:)		::	relXpos, relYpos, atRx, atRy, atPot, dVpot, Zion
-	real(dp),	allocatable,	dimension(:,:)		::	Gtest , atPos, atR, qpts, rpts, kpts 
+	real(dp),	allocatable,	dimension(:,:)		::	Gtest , atPos, atR, qpts, kpts 
 
 	real(dp),	allocatable,	dimension(:,:,:)	::	Gvec
 	logical											::	debugHam, debugWann, debugProj, &
@@ -323,7 +323,7 @@ module util_sysPara
 		allocate(	proj_nY(nWfs)		)
 		!meshes
 		allocate(	qpts(dim,nQ)		)
-		allocate(	rpts(3,nR)			)
+		!allocate(	rpts(3,nR)			)
 		allocate(	kpts(dim,nK)		)
 		!w90
 		allocate(	shells(nShells)		)
@@ -429,36 +429,36 @@ module util_sysPara
 	end subroutine
 
 
-	subroutine rmeshGen()
-		!generates the real space mash
-		!meshes from (0,0) to (aX*nSC,0) (0,aY*nSC) (aX*nSC,aY*nSC)
-		integer		:: rIx, rIy, rIz, rI
-		real(dp)	:: rxMin, ryMin, rzMin
-		!
-		if( myID == root ) then
-			rxMin	= 0.0_dp
-			dx		= aX / real(nRx-1,dp)
-			ryMin	= 0.0_dp
-			dy		= aY / real(nRy-1,dp)
-			rzMin	= 0.0_dp
-			dz		= 0.0_dp
-			if( nRz > 1 )	dz		= min(aX,aY) * 0.99_dp / real(nRz-1,dp)
-			!
-			do rIz = 1, nRz
-				do rIy = 1, nRy
-					do rIx = 1, nRx
-						rI	=	 (	(rIz-1) * nRy +(rIy-1) ) * nRx + rIx
-						rpts(1,rI)	= rxMin + (rIx-1) * dx		!x component
-						rpts(2,rI)	= ryMin + (rIy-1) * dy		!y component
-						rpts(3,rI)	= rzMin + (riZ-1) * dz
-					end do
-				end do
-			end do
-		end if
-		call MPI_Bcast(rpts, size(rpts,1)*nR, MPI_DOUBLE_PRECISION, root, MPI_COMM_WORLD, ierr)
-		!
-		return
-	end subroutine
+	!subroutine rmeshGen()
+	!	!generates the real space mash
+	!	!meshes from (0,0) to (aX*nSC,0) (0,aY*nSC) (aX*nSC,aY*nSC)
+	!	integer		:: rIx, rIy, rIz, rI
+	!	real(dp)	:: rxMin, ryMin, rzMin
+	!	!
+	!	if( myID == root ) then
+	!		rxMin	= 0.0_dp
+	!		dx		= aX / real(nRx-1,dp)
+	!		ryMin	= 0.0_dp
+	!		dy		= aY / real(nRy-1,dp)
+	!		rzMin	= 0.0_dp
+	!		dz		= 0.0_dp
+	!		if( nRz > 1 )	dz		= min(aX,aY) * 0.99_dp / real(nRz-1,dp)
+	!		!
+	!		do rIz = 1, nRz
+	!			do rIy = 1, nRy
+	!				do rIx = 1, nRx
+	!					rI	=	 (	(rIz-1) * nRy +(rIy-1) ) * nRx + rIx
+	!					rpts(1,rI)	= rxMin + (rIx-1) * dx		!x component
+	!					rpts(2,rI)	= ryMin + (rIy-1) * dy		!y component
+	!					rpts(3,rI)	= rzMin + (riZ-1) * dz
+	!				end do
+	!			end do
+	!		end do
+	!	end if
+	!	call MPI_Bcast(rpts, size(rpts,1)*nR, MPI_DOUBLE_PRECISION, root, MPI_COMM_WORLD, ierr)
+	!	!
+	!	return
+	!end subroutine
 
 !G SET
 	integer function getTestGridSize()
