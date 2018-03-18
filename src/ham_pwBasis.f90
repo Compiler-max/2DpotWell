@@ -133,6 +133,7 @@ module ham_PWbasis
 		complex(dp),					intent(in)		::	ck(:,:)
 		real(dp),						intent(in)		::	Gvec(:,:)
 		complex(dp)										::	tmp
+		real(dp)										::	rpt(3), dx, dy, dz, rxMin, ryMin, rzMin
 		integer											::	ix, loop_b, nbnd, ig, spin
 		character(len=1024)								::	unkFORM='(a,i5.5,a,i1)'
 		character(len=15)								::	wfnname
@@ -142,21 +143,42 @@ module ham_PWbasis
 		nbnd	= size(ck,2)
 		write(wfnname, unkFORM) 'UNK',qi,'.', spin
 
+		!SET UP REAL SPACE GRID
+		rxMin	= 0.0_dp
+		dx		= aX / real(nRx-1,dp)
+		ryMin	= 0.0_dp
+		dy		= aY / real(nRy-1,dp)
+		rzMin	= 0.0_dp
+		dz		= 0.0_dp
+		if( nRz > 1 )	dz		= min(aX,aY) * 0.99_dp / real(nRz-1,dp)
+
 		open(unit=205, file=w90_dir//wfnname,	form='formatted', access='stream', action='write', status='replace')
 		!write to file
 		write(205,*)	nRx, nRy, nRz, qi, nbnd
 		do loop_b = 1, nbnd
-			do ix = 1, nR
-
-
-				!SUM G-VEC
-				tmp = dcmplx(0.0_dp)
-				do ig = 1, nG_qi
-					tmp	= tmp & 
-						+ ck(ig, loop_b) 	* 	myExp( 		dot_product( Gvec(1:2,ig)-qpts(1:2,qi),	rpts(1:2,ix) )		)  / dcmplx(sqrt(vol))
+			!LOOP R GRID
+			do rIz = 1, nRz
+				do rIy = 1, nRy
+					do rIx = 1, nRx
+						!GET R-VECTOR
+						rI	=	 (	(rIz-1) * nRy +(rIy-1) ) * nRx + rIx
+						rpt(1)	= rxMin + (rIx-1) * dx		!x component
+						rpt(2)	= ryMin + (rIy-1) * dy		!y component
+						rpt(3)	= rzMin + (riZ-1) * dz
+						!
+						!SUM G-VEC
+						tmp = dcmplx(0.0_dp)
+						do ig = 1, nG_qi
+							tmp	= tmp & 
+								+ ck(ig, loop_b) 	* 	myExp( 		dot_product( Gvec(1:2,ig)-qpts(1:2,qi),	rpt(1:2) )		)  / dcmplx(sqrt(vol))
+						end do
+						!write result
+						write(205,*) dreal(tmp)," ",dimag(tmp)
+					end do
 				end do
-				!write result
-				write(205,*) dreal(tmp)," ",dimag(tmp)
+			end do
+
+
 			end do
 		end do
 		close(205)
@@ -165,21 +187,21 @@ module ham_PWbasis
 	end subroutine
 
 
-	subroutine calcBasis(qi, ri, basVec)
-		!calculates the basis vectors e^i(k+G).r
-		!	if |k+G| is larger then the cutoff the basis vector is set to zero
-		!	the cutoff enforces a symmetric base at each k point
-		integer,	 intent(in)		:: qi, ri
-		complex(dp), intent(out)	:: basVec(:)
-		integer 				 	:: i 
-		!
-		basVec	= 0.0_dp
-		do i =1, nGq(qi)
-			basVec(i) 		= myExp( dot_product( Gvec(1:2,i,qi), rpts(1:2,ri) )		)  !/ dsqrt(vol)
-		end do
-		!
-		return
-	end subroutine
+	!subroutine calcBasis(qi, ri, basVec)
+	!	!calculates the basis vectors e^i(k+G).r
+	!	!	if |k+G| is larger then the cutoff the basis vector is set to zero
+	!	!	the cutoff enforces a symmetric base at each k point
+	!	integer,	 intent(in)		:: qi, ri
+	!	complex(dp), intent(out)	:: basVec(:)
+	!	integer 				 	:: i 
+	!	!
+	!	basVec	= 0.0_dp
+	!	do i =1, nGq(qi)
+	!		basVec(i) 		= myExp( dot_product( Gvec(1:2,i,qi), rpts(1:2,ri) )		)  !/ dsqrt(vol)
+	!	end do
+	!	!
+	!	return
+	!end subroutine
 
 
 
