@@ -25,7 +25,7 @@ module ham_PWbasis
 		!calculates the velocity operator matrix
 		!	Psi_n v Psi_m	= i/hbar Psi_n grad_r Psi_m
 		!					= - 1 / hbar sum_G ckn^dag ckm G
-		integer,		intent(in)		::	qi_loc
+		integer,		intent(in)		::	qi_loc, qi_glob
 		complex(dp),	intent(in)		:: 	ck(:,:)
 		complex(dp),	allocatable		::	v_mat(:,:,:)
 		integer							::	m, n, gi
@@ -46,7 +46,7 @@ module ham_PWbasis
 		end do
 		!
 		!write to file
-		call writeABiN_velo(qi_glob, velo)
+		call writeABiN_velo(qi_glob, v_mat)
 		!
 		!
 		return
@@ -102,7 +102,7 @@ module ham_PWbasis
 		!	projection onto sin**2, sin cos, cos sin
 		!
 		!	Amn = <Psi_m|g_n>
-		integer,		intent(in)	:: 	qi_loc
+		integer,		intent(in)	:: 	qi_loc, qi_glob
 		complex(dp),	intent(in)	:: 	ckH(:,:)
 		complex(dp),	allocatable	:: 	A_matrix(:,:) !A(nBands,nWfs)
 		integer						:: 	nWf, m
@@ -125,7 +125,7 @@ module ham_PWbasis
 		end do
 		!
 		!write to file
-		call writeABiN_Amn(qi_glob, Amn)
+		call writeABiN_Amn(qi_glob, A_matrix)
 		!
 		!
 		return
