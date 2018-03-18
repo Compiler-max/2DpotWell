@@ -134,7 +134,7 @@ module ham_PWbasis
 		real(dp),						intent(in)		::	Gvec(:,:)
 		complex(dp)										::	tmp
 		real(dp)										::	rpt(3), dx, dy, dz, rxMin, ryMin, rzMin
-		integer											::	ix, loop_b, nbnd, ig, spin
+		integer											::	rIx, rIy, rIz, loop_b, nbnd, ig, spin
 		character(len=1024)								::	unkFORM='(a,i5.5,a,i1)'
 		character(len=15)								::	wfnname
 		!
@@ -160,8 +160,6 @@ module ham_PWbasis
 			do rIz = 1, nRz
 				do rIy = 1, nRy
 					do rIx = 1, nRx
-						!GET R-VECTOR
-						rI	=	 (	(rIz-1) * nRy +(rIy-1) ) * nRx + rIx
 						rpt(1)	= rxMin + (rIx-1) * dx		!x component
 						rpt(2)	= ryMin + (rIy-1) * dy		!y component
 						rpt(3)	= rzMin + (riZ-1) * dz
