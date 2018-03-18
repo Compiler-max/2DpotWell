@@ -40,7 +40,7 @@ module util_sysPara
 	character(len=7)								::	info_dir="output/"
 	character(len=8)								::	raw_dir	="rawData/", mkdir="mkdir ./"	!to use with system(mkdir//$dir_path) 
 	integer,	allocatable,	dimension(:)		::	nGq, shells, proj_at, proj_nX, proj_nY
-	real(dp),	allocatable,	dimension(:)		::	relXpos, relYpos, atRx, atRy, atPot, dVpot, Zion
+	real(dp),	allocatable,	dimension(:)		::	relXpos, relYpos, atRx, atRy, atPot, dVpot
 	real(dp),	allocatable,	dimension(:,:)		::	Gtest , atPos, atR, qpts, kpts 
 
 	real(dp),	allocatable,	dimension(:,:,:)	::	Gvec
@@ -201,7 +201,6 @@ module util_sysPara
 		call CFG_add_get(my_cfg,	"atoms%atRy"		,	atRy		,	"radius of each atom in angstroem"		)
 		call CFG_add_get(my_cfg,	"atoms%atPot"		,	atPot		,	"potential depth in hartree"			)
 		call CFG_add_get(my_cfg,	"atoms%dVpot"		,	dVpot		,	"potential gradient"					)
-		call CFG_add_get(my_cfg,	"atoms%Zion"		,	Zion		,	"effective charge of the ions"			)
 		![wann]
 		call CFG_add_get(my_cfg,	"wann%projAt"		,	proj_at		,	"list of atoms to project to (init U)"	)
 		call CFG_add_get(my_cfg,	"wann%projnX"		,	proj_nX		,	"on which state to project x-dir"		)
@@ -316,7 +315,6 @@ module util_sysPara
 		allocate(	dVpot(nAt)			)
 		allocate(	atPos(dim,nAt)		)
 		allocate(	atR(dim,nAt) 		)
-		allocate(	Zion(nAt)			)
 		!wann
 		allocate(	proj_at(nWfs)		)
 		allocate(	proj_nX(nWfs)		)
