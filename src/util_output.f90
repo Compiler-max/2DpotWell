@@ -6,7 +6,6 @@ module util_output
 	use util_sysPara 
 	use util_math,		only:	dp, PI_dp, machineP, aUtoEv, aUtoAngstrm, aUtoTesla
 
-	use ham_PWbasis,	only:	calcBasis
 
 
 
