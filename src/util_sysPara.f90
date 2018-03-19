@@ -506,8 +506,8 @@ module util_sysPara
 						nGq(qLoc) = nGq(qLoc) + 1
 						Gvec(:,nGq(qLoc),qLoc) = kg(:)
 						inside = inside + 1
-						if( ix==1 .or. ix==nGx ) 	write(*,'(a,i3,a)')	"[#",myID,";popGvec]: WARNING, hit Gx boundary!!!!"
-						if( iy==1 .or. iy==nGy )	write(*,'(a,i3,a)')	"[#",myID,";popGvec]: WARNING, hit Gx boundary!!!!"
+						if( ix==1 .or. ix==nGx ) 	stop	"[;popGvec]: ERROR, hit Gx boundary! Gcut-sphere hits boundary of test Grid. Developer should increase test grid size"
+						if( iy==1 .or. iy==nGy )	stop	"[;popGvec]: ERROR, hit Gy boundary! Gcut-sphere hits boundary of test Grid. Developer should increase test grid size"
 					end if
 				end do
 			end do
