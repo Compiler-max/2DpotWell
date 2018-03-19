@@ -39,7 +39,7 @@ module util_sysPara
 
 	!
 	integer  										:: 	dim=2, nAt=0,													& 
-														nG, nGdim, Gmax, GmaxGLOBAL, GminGLOBAL,nSolve=20,				&  
+														nG, nGx,nGy, Gmax, GmaxGLOBAL, GminGLOBAL,nSolve=20,		&  
 														nQx=1, nQy=1,nQ , 												&
 														nSCx=1, nSCy=1, nSC, 											& 
 														nKx=1, nKy=1, nK,  												&
@@ -173,8 +173,8 @@ module util_sysPara
 		call CFG_add_get(my_cfg,	"semiclassics%prefactF3"	,	prefactF3,	"real prefactor for F3 "			)
 		
 		!get derived quantities
-		nGdim 			= getTestGridSize()	
-		nG				= nGdim**2
+		call getTestGridSize(nGx, nGy)	
+		nG				= 	nGx*nGy
 		vol				=	aX 		* 	aY
 		nR 				= 	nRx 	*	nRy   * nRz
 		nQ 				= 	nQx 	*	nQy
@@ -237,7 +237,8 @@ module util_sysPara
 		![rashba]
 		call MPI_Bcast( aRashba		,		1	,	MPI_DOUBLE_PRECISION	,	root,	MPI_COMM_WORLD, ierr)
 		![numerics]
-		call MPI_Bcast(	nGdim		, 		1	, 		MPI_INTEGER			,	root, 	MPI_COMM_WORLD, ierr)
+		call MPI_Bcast(	nGx			,		1	,		MPI_INTEGER			,	root,	MPI_COMM_WORLD, ierr)
+		call MPI_Bcast(	nGy			,		1	,		MPI_INTEGER			,	root,	MPI_COMM_WORLD, ierr)		
 		call MPI_Bcast(	nG			,		1	,	MPI_DOUBLE_PRECISION	,	root,	MPI_COMM_WORLD, ierr)
 		call MPI_Bcast(	Gcut		,		1	,	MPI_DOUBLE_PRECISION	,	root,	MPI_COMM_WORLD, ierr)
 		call MPI_Bcast(	nSolve		,		1	,		MPI_INTEGER			,	root,	MPI_COMM_WORLD, ierr)
@@ -280,7 +281,6 @@ module util_sysPara
 		call MPI_Bcast( prefactF3	,		1	,	MPI_DOUBLE_PRECISION	,	root,	MPI_COMM_WORLD,	ierr)
 		!
 		!derived scalars
-		call MPI_Bcast( nGdim		,		1	,		MPI_INTEGER			,	root,	MPI_COMM_WORLD, ierr)
 		call MPI_Bcast( vol			,		1	,	MPI_DOUBLE_PRECISION	,	root,	MPI_COMM_WORLD,	ierr)
 		call MPI_Bcast(	recpLatt	, 	dim**2	, 	MPI_DOUBLE_PRECISION	,	root, 	MPI_COMM_WORLD, ierr)
 		!
@@ -458,22 +458,23 @@ module util_sysPara
 	!end subroutine
 
 !G SET
-	integer function getTestGridSize()
-		integer				:: nGrid
+	subroutine getTestGridSize(nGx, nGy)
+		integer,	intent(out)			:: nGx, nGy
 		!
 		!nGrid = ceiling( 	dmax1(aX,aY)*Gcut/PI_dp 	+	dsqrt(2.0_dp)		)
 
 		!the addition of 1 makes shure that k point shifts are handled
-		nGrid = ceiling(	dmax1(aX,aY) *	( Gcut + 1.0_dp	)	 / PI_dp		)
+		nGx	= ceiling(	aX		 *	( Gcut + 1.0_dp	)	/ PI_dp		)
+		nGy = ceiling(	aY		 *	( Gcut + 1.0_dp	)	/ PI_dp		)
 		!
 		!make sure Grid is symmetric (needs to be odd number)
-		if(mod(nGrid,2)==0) nGrid = nGrid + 1 
+		if(mod(nGx,2)==0) nGx = nGx + 1 
+		if(mod(nGy,2)==0) nGy = nGy + 1
 		!
-		getTestGridSize = nGrid
-		write(*,*)	"[getTestGridSize]: test grid should contain",getTestGridSize**2," basis functions"
+		write(*,*)	"[getTestGridSize]: test grid should contain",nGx*nGy," basis functions"
 		!
 		return
-	end function
+	end subroutine
 
 
 
@@ -493,10 +494,10 @@ module util_sysPara
 			inside 		= 0
 			tot 		= 0
 			!LOOP TEST GRID
-			do ix = 1, nGdim
-				do iy = 1, nGdim
+			do ix = 1, nGx
+				do iy = 1, nGy
 					!GET CURRENT GRID POINT
-					Gtest(:)	= (ix-1-nGdim/2) * recpLatt(:,1) + (iy-1-nGdim/2) * recpLatt(:,2)
+					Gtest(:)	= (ix-1-nGx/2) * recpLatt(:,1) + (iy-1-nGy/2) * recpLatt(:,2)
 					kg(:)	= qpts(:,qi) + Gtest(:)
 					tot		= tot + 1
 					!
@@ -505,6 +506,8 @@ module util_sysPara
 						nGq(qLoc) = nGq(qLoc) + 1
 						Gvec(:,nGq(qLoc),qLoc) = kg(:)
 						inside = inside + 1
+						if( ix==1 .or. ix==nGx ) 	write(*,'(a,i3,a)')	"[#",myID,";popGvec]: WARNING, hit Gx boundary!!!!"
+						if( iy==1 .or. iy==nGy )	write(*,'(a,i3,a)')	"[#",myID,";popGvec]: WARNING, hit Gx boundary!!!!"
 					end if
 				end do
 			end do
