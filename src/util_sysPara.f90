@@ -142,6 +142,7 @@ module util_sysPara
 		call CFG_add_get(my_cfg,	"numerics%nQy"     	,	nQy      	,	"amount of k points used"				)
 		call CFG_add_get(my_cfg,	"numerics%thres"    ,	thres      	,	"threshold for overlap WARNINGs"		)
 		![ham]
+		call CFG_add_get(my_cfg,	"ham%debugHam"		, 	debugHam	,	"switch for debuging tests in solveHam"	)	
 		call CFG_add_get(my_cfg,	"ham%doVdesc"		,	doVdesc		,	"switch on lin. desc. pot inside wells"	)
 		call CFG_add_get(my_cfg,	"ham%doZeeman"		,	doZeeman	,	"include B-field via Zeeman in wells"	)
 		call CFG_add_get(my_cfg,	"ham%doMagHam"		,	doMagHam	,	"include osc. B-field via peierls sub"	)
@@ -170,12 +171,10 @@ module util_sysPara
 		call CFG_add_get(my_cfg,	"berry%fastConnConv",fastConnConv	,	"try faster converging fd formula"		)
 		call CFG_add_get(my_cfg,	"berry%doNiu"		,	doNiu		,	"switch for nius first order pol"		)
 		call CFG_add_get(my_cfg,	"berry%doGaugBack"	,	doGaugBack	,	"switch for trafo: Wann to Ham gauge"	)
-		
 		![semiclassics]
 		call CFG_add_get(my_cfg,	"semiclassics%prefactF3"	,	prefactF3,	"real prefactor for F3 "			)
-		![debug]
-		call CFG_add_get(my_cfg,	"debug%debugHam"	, 	debugHam	,	"switch for debuging tests in solveHam"	)	
-		!SET
+		
+		!get derived quantities
 		nGdim 			= getTestGridSize()	
 		nG				= nGdim**2
 		vol				=	aX 		* 	aY
@@ -187,17 +186,16 @@ module util_sysPara
 		!
 
 		!scale the field
-		Bext=	B0 		* 	Bext
-		!convert to a.u.
-		Bext			=	Bext	/ aUtoTesla
-
+		Bext=	B0 		* 	Bext	/ aUtoTesla
+		!
 		!convert rashba coeff to a.u.
 		aRashba	= aRashba /	( aUtoEv * aUtoAngstrm	)		!from (eV Ang) to (Eh a0)
-
 		!
+		!setup reciprocal lattice
 		recpLatt		= 0.0_dp
 		recpLatt(1,1)	= 2.0_dp * PI_dp * aY / vol
 		recpLatt(2,2)	= 2.0_dp * PI_dp * aX / vol
+		!
 		!
 		call allocateArrays()
 		!
@@ -260,32 +258,32 @@ module util_sysPara
 		call MPI_Bcast( nR			,		1	,		MPI_INTEGER			,	root,	MPI_COMM_WORLD,	ierr)
 		call MPI_Bcast(	thres		,		1	,	MPI_DOUBLE_PRECISION	,	root,	MPI_COMM_WORLD, ierr)
 		![ham]
-		call MPI_Bcast( debugHam	,		1	,	MPI_LOGICAL				,	root,	MPI_COMM_WORLD, ierr)		
-		call MPI_Bcast(	doVdesc		,		1	,	MPI_LOGICAL				,	root,	MPI_COMM_WORLD, ierr)
-		call MPI_Bcast(	doZeeman	,		1	,	MPI_LOGICAL				,	root,	MPI_COMM_WORLD, ierr)
-		call MPI_Bcast(	doMagHam	,		1	,	MPI_LOGICAL				,	root,	MPI_COMM_WORLD, ierr)
-		call MPI_Bcast( doRashba	,		1	,	MPI_LOGICAL				,	root,	MPI_COMM_WORLD, ierr)
+		call MPI_Bcast( debugHam	,		1	,		MPI_LOGICAL			,	root,	MPI_COMM_WORLD, ierr)		
+		call MPI_Bcast(	doVdesc		,		1	,		MPI_LOGICAL			,	root,	MPI_COMM_WORLD, ierr)
+		call MPI_Bcast(	doZeeman	,		1	,		MPI_LOGICAL			,	root,	MPI_COMM_WORLD, ierr)
+		call MPI_Bcast(	doMagHam	,		1	,		MPI_LOGICAL			,	root,	MPI_COMM_WORLD, ierr)
+		call MPI_Bcast( doRashba	,		1	,		MPI_LOGICAL			,	root,	MPI_COMM_WORLD, ierr)
 		![methods]
-		call MPI_Bcast( doSolveHam	,		1	,	MPI_LOGICAL				,	root,	MPI_COMM_WORLD, ierr)
-		call MPI_Bcast( doPw90		,		1	,	MPI_LOGICAL				,	root,	MPI_COMM_WORLD, ierr)
-		call MPI_Bcast( doBerry		,		1	,	MPI_LOGICAL				,	root,	MPI_COMM_WORLD, ierr)
-		call MPI_Bcast( writeBin	,		1	,	MPI_LOGICAL				,	root,	MPI_COMM_WORLD, ierr)
+		call MPI_Bcast( doSolveHam	,		1	,		MPI_LOGICAL			,	root,	MPI_COMM_WORLD, ierr)
+		call MPI_Bcast( doPw90		,		1	,		MPI_LOGICAL			,	root,	MPI_COMM_WORLD, ierr)
+		call MPI_Bcast( doBerry		,		1	,		MPI_LOGICAL			,	root,	MPI_COMM_WORLD, ierr)
+		call MPI_Bcast( writeBin	,		1	,		MPI_LOGICAL			,	root,	MPI_COMM_WORLD, ierr)
 		![w90]
-		call MPI_Bcast( seedName	,		3	, 	MPI_CHARACTER			,	root,	MPI_COMM_WORLD, ierr)
-		call MPI_Bcast( useBloch	,		1	,	MPI_LOGICAL				,	root,	MPI_COMM_WORLD, ierr)
-		call MPI_Bcast( nShells		,		1	,	MPI_INTEGER				,	root,	MPI_COMM_WORLD, ierr)
-		call MPI_Bcast( nw90it		,		1	,	MPI_INTEGER				,	root,	MPI_COMM_WORLD, ierr)		
-		call MPI_Bcast( pw90GaugeB	,		1	,	MPI_LOGICAL				,	root,	MPI_COMM_WORLD, ierr)
+		call MPI_Bcast( seedName	,		3	, 		MPI_CHARACTER		,	root,	MPI_COMM_WORLD, ierr)
+		call MPI_Bcast( useBloch	,		1	,		MPI_LOGICAL			,	root,	MPI_COMM_WORLD, ierr)
+		call MPI_Bcast( nShells		,		1	,		MPI_INTEGER			,	root,	MPI_COMM_WORLD, ierr)
+		call MPI_Bcast( nw90it		,		1	,		MPI_INTEGER			,	root,	MPI_COMM_WORLD, ierr)		
+		call MPI_Bcast( pw90GaugeB	,		1	,		MPI_LOGICAL			,	root,	MPI_COMM_WORLD, ierr)
 
 		![berry]
-		call MPI_Bcast(fastConnConv	,		1	,	MPI_LOGICAL				,	root,	MPI_COMM_WORLD,	ierr)
-		call MPI_Bcast( doNiu		,		1	,	MPI_LOGICAL				,	root,	MPI_COMM_WORLD,	ierr)
-		call MPI_Bcast( doGaugBack	,		1	,	MPI_LOGICAL				,	root,	MPI_COMM_WORLD,	ierr)
+		call MPI_Bcast(fastConnConv	,		1	,		MPI_LOGICAL			,	root,	MPI_COMM_WORLD,	ierr)
+		call MPI_Bcast( doNiu		,		1	,		MPI_LOGICAL			,	root,	MPI_COMM_WORLD,	ierr)
+		call MPI_Bcast( doGaugBack	,		1	,		MPI_LOGICAL			,	root,	MPI_COMM_WORLD,	ierr)
 		![semiclassics]
 		call MPI_Bcast( prefactF3	,		1	,	MPI_DOUBLE_PRECISION	,	root,	MPI_COMM_WORLD,	ierr)
 		!
 		!derived scalars
-		call MPI_Bcast( nGdim		,		1	,	MPI_INTEGER				,	root,	MPI_COMM_WORLD, ierr)
+		call MPI_Bcast( nGdim		,		1	,		MPI_INTEGER			,	root,	MPI_COMM_WORLD, ierr)
 		call MPI_Bcast( vol			,		1	,	MPI_DOUBLE_PRECISION	,	root,	MPI_COMM_WORLD,	ierr)
 		call MPI_Bcast(	recpLatt	, 	dim**2	, 	MPI_DOUBLE_PRECISION	,	root, 	MPI_COMM_WORLD, ierr)
 		!
@@ -294,7 +292,7 @@ module util_sysPara
 		!
 		!
 		call MPI_BARRIER(MPI_COMM_WORLD, ierr)
-		call MPI_Bcast(	shells	,		nShells,	MPI_INTEGER				,	root,	MPI_COMM_WORLD, ierr)
+		call MPI_Bcast(	shells	,		nShells	,		MPI_INTEGER			,	root,	MPI_COMM_WORLD, ierr)
 		call MPI_Bcast(	atPot	,		nAt		,	MPI_DOUBLE_PRECISION	,	root,	MPI_COMM_WORLD, ierr)
 
 		call MPI_Bcast(	proj_at		,	nWfs	,		MPI_INTEGER			,	root,	MPI_COMM_WORLD,	ierr)
@@ -329,8 +327,6 @@ module util_sysPara
 		allocate(	kpts(dim,nK)		)
 		!w90
 		allocate(	shells(nShells)		)
-		!
-		!allocate(	rpts(3,nR)			)
 		!
 		!
 		return
