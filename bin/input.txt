@@ -26,6 +26,7 @@
 
 
 [rashba]
+    use_px_rashba  = t
     aRashba    = 2.4   #in eV Ang
 
 [numerics]

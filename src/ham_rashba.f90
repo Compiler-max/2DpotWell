@@ -27,16 +27,21 @@ module ham_Rashba
 		!
 		integer,		intent(in)		::	qLoc
 		complex(dp),	intent(inout)	::	Hmat(:,:)
+		complex(dp)						::	rashHam
 		integer							::	gi
 		!
 		!write(*,'(a,i3,a,e14.4,a)')	"[#",myID,";add_rashba]: hello there, aRashba=",aRashba," a.u."
+		if( qLoc == 1 ) write(*,*)	"[#",myID,";add_rashba]: use_px_rashba = ",use_px_rashba
 		!
 		do gi = 1, nGq(qLoc)	
-			! +=   G_y
-			Hmat(gi,gi)	= Hmat(gi,gi) + dcmplx(	aRashba * Gvec(2,gi,qLoc) )
-
-			! += i G_x
-			!Hmat(gi,gi)	= Hmat(gi,gi) + dcmplx( 0.0_dp, aRashba * Gvec(1,gi,qLoc))
+			!
+			if(	use_px_rashba )	then
+				rashHam	=  	dcmplx(	aRashba * Gvec(1,gi,qLoc) 	)
+			else
+				rashHam =	dcmplx( aRashba * Gvec(2,gi,qLoc)	)
+			end if
+			!
+			Hmat(gi,gi) = Hmat(gi,gi) + rashHam
 		end do
 		!
 		!

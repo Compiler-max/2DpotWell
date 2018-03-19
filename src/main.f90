@@ -75,6 +75,10 @@ program main
 		write(*,*)								"[main]:**************************Hamiltonian info*************************"
 		write(*,'(a,i3,a,e12.4,a)')				"[main]:	featuring ",nAt," well potentials, deepest well	",minval(atPot(:)),			" Hartree"
 		if( doRashba)	write(*,'(a,e12.4,a)')	"[main]:	featuring a Rashba term with prefact 		",aRashba,							" Hartree a0"
+		if (doRashba) then
+			if( use_px_rashba)	write(*,*)			"[main]:	rashba will enter via aRashba 	* p_x	(x-component of Gvec)"
+			if( .not. use_px_rashba)	write(*,*)	"[main]:	rashba will enter via aRashba 	* p_y	(y-component of Gvec)"
+		end if
 		if( doZeeman)	write(*,'(a,e12.4,a)')	"[main]:	featuring a Zeeman term with prefact 		",0.5_dp*Bext(3),					" Hartree"
 		if( doMagHam)	write(*,'(a,e12.4,a)')	"[main]:	featuring a osc. mag. field  prefact 		",0.5_dp*Bext(3)*aX/(2.0_dp*PI_dp),	" Hartree a0"
 		write(*,*)								"*"

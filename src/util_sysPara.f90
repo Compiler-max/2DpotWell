@@ -28,7 +28,7 @@ module util_sysPara
 				nBands, nWfs, proj_at, proj_nX, proj_nY,  								&
 				seedName, w90_dir, info_dir, mkdir, raw_dir,							&
 				!perturbations:	
-				aRashba, Bext, prefactF3, 												&
+				aRashba, use_px_rashba, Bext, prefactF3, 												&
 				!switches:
 				debugHam, doSolveHam, doMagHam, doRashba, doZeeman, doVdesc, 			&
 				useBloch, doPw90, pw90GaugeB, 				 							&
@@ -61,6 +61,7 @@ module util_sysPara
 	real(dp),	allocatable,	dimension(:,:,:)	::	Gvec
 	logical											::	debugHam,  														&
 														doSolveHam, doVdesc,  doRashba, doZeeman, doMagHam, 			&
+														use_px_rashba, 													&
 														useBloch, doPw90, pw90GaugeB, 									& 
 														doBerry, doNiu, doGaugBack, fastConnConv
 
@@ -133,6 +134,7 @@ module util_sysPara
 		call CFG_add_get(my_cfg,	"field%B0"			,	B0			,	"scaling fact. of ext. magnetic field"	)
 		call CFG_add_get(my_cfg,	"field%Bext"		,	Bext		,	"vector of ext. magnetic field"			)
 		![rashba]
+		call CFG_add_get(my_cfg,	"rashba%use_px_rashba",	use_px_rashba,	"add px term to Ham. else add py "		)
 		call CFG_add_get(my_cfg,	"rashba%aRashba"	,	aRashba		,	"rashba coeff in eV Ang"				)
 		![numerics]
 		call CFG_add_get(my_cfg,	"numerics%Gcut"		,	Gcut	    ,	"k space cut of parameter"				)
@@ -235,6 +237,7 @@ module util_sysPara
 		call MPI_Bcast(	B0 			,		1	,	MPI_DOUBLE_PRECISION	,	root,	MPI_COMM_WORLD, ierr)		
 		call MPI_Bcast(	Bext 		,		3	,	MPI_DOUBLE_PRECISION	,	root,	MPI_COMM_WORLD, ierr)
 		![rashba]
+		call MPI_Bcast( use_px_rashba,		1	,		MPI_LOGICAL			,	root,	MPI_COMM_WORLD,	ierr)
 		call MPI_Bcast( aRashba		,		1	,	MPI_DOUBLE_PRECISION	,	root,	MPI_COMM_WORLD, ierr)
 		![numerics]
 		call MPI_Bcast(	nGx			,		1	,		MPI_INTEGER			,	root,	MPI_COMM_WORLD, ierr)
