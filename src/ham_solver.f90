@@ -331,9 +331,9 @@ module ham_Solver
 		if( Gsize > Gmax	)	stop	"[solveHam]: critical error in solveHam please contact developer. (nobody but dev will ever read this^^)"
 		!
 		!
-		write(*,'(a,i3,a,i5,a,f6.2,a,f6.2,a,a,i3,a,i5,a,i5,a)')"[#",myID,", solveHam]: qi=",qi_loc," wann energy window= [",En_temp(1)*aUtoEv," : ",&
+		write(*,'(a,i3,a,i5,a,f6.2,a,f6.2,a,a,i3,a,i5,a,i5,a)')"[#",myID,", solveHam]: qi=",qi_glob," wann energy window= [",En_temp(1)*aUtoEv," : ",&
 														En_temp(nWfs)*aUtoEv,"] (eV).",&
-														" insulating states: #",boundStates,". done tasks=(",qi_glob,"/",qChunk,")"
+														" insulating states: #",boundStates,". done tasks=(",qi_loc,"/",qChunk,")"
 		!if( boundStates < nWfs) write(*,'(a,i3,a,f8.3,a,f8.3,a)') "[#",myID,", solveHam]: WARNING not enough bound states at qpt=(",qpts(1,qi),",",qpts(2,qi),")."
 		!
 		return
