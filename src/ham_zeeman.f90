@@ -139,7 +139,7 @@ module ham_Zeeman
 			end do
 		end do
 
-		write(*,'(a,i3,a,e16.8,a,e16.8,a)')	"[#",myID,";add_Zeeman]: min/max contribution: [", minI," : ",maxI,"]."
+		!write(*,'(a,i3,a,e16.8,a,e16.8,a)')	"[#",myID,";add_Zeeman]: min/max contribution: [", minI," : ",maxI,"]."
 
 		return
 	end subroutine
