@@ -97,10 +97,10 @@ def plot_Dir(dirpath=".",show_Plots=False, save_bands_dir=".",save_niuColor_dir=
 			plt.show()
 		#
 		###FIRST ORDER
-		#for n in range(1,nWfs+1):
-		#	axNiu = plotNiuColor(dirpath,n,cmap,plot_titles=plot_titles, plot_k_labels=plot_k_labels, plot_descriptor=plot_descriptor,save_dir=save_niuColor_dir)
-		#if show_Plots:
-		#	plt.show()
+		for n in range(1,nWfs+1):
+			axNiu = plotNiuColor(dirpath,n,cmap,plot_titles=plot_titles, plot_k_labels=plot_k_labels, plot_descriptor=plot_descriptor,save_dir=save_niuColor_dir)
+		if show_Plots:
+			plt.show()
 		print('successfully ploted ',dirpath)
 	finally:
 		print('done with',dirpath)
