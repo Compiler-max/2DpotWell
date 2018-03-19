@@ -133,8 +133,8 @@ module ham_PWbasis
 
 
 
-	subroutine writeUNKs(qi, nG_qi, ck, Gvec)
-		integer,						intent(in)		::	qi, nG_qi
+	subroutine writeUNKs(qi_glob, nG_qi, ck, Gvec)
+		integer,						intent(in)		::	qi_glob, nG_qi
 		complex(dp),					intent(in)		::	ck(:,:)
 		real(dp),						intent(in)		::	Gvec(:,:)
 		complex(dp)										::	tmp
@@ -146,7 +146,7 @@ module ham_PWbasis
 		!filename
 		spin	= 1
 		nbnd	= size(ck,2)
-		write(wfnname, unkFORM) 'UNK',qi,'.', spin
+		write(wfnname, unkFORM) 'UNK',qi_glob,'.', spin
 
 		!SET UP REAL SPACE GRID
 		rxMin	= 0.0_dp
@@ -159,7 +159,7 @@ module ham_PWbasis
 
 		open(unit=205, file=w90_dir//wfnname,	form='formatted', access='stream', action='write', status='replace')
 		!write to file
-		write(205,*)	nRx, nRy, nRz, qi, nbnd
+		write(205,*)	nRx, nRy, nRz, qi_glob, nbnd
 		!LOOP BANDS
 		do loop_b = 1, nbnd
 			!LOOP R GRID
@@ -174,7 +174,7 @@ module ham_PWbasis
 						tmp = dcmplx(0.0_dp)
 						do ig = 1, nG_qi
 							tmp	= tmp & 
-								+ ck(ig, loop_b) 	* 	myExp( 		dot_product( Gvec(1:2,ig)-qpts(1:2,qi),	rpt(1:2) )		)  / dcmplx(sqrt(vol))
+								+ ck(ig, loop_b) 	* 	myExp( 		dot_product( Gvec(1:2,ig)-qpts(1:2,qi_glob),	rpt(1:2) )		)  / dcmplx(sqrt(vol))
 						end do
 						!write result
 						write(205,*) dreal(tmp)," ",dimag(tmp)
@@ -240,14 +240,14 @@ module ham_PWbasis
 
 
 !prviat:
-		complex(dp) function infiniteWell(qi,m, ckH, at, nx, ny)
+		complex(dp) function infiniteWell(qi_loc,m, ckH, at, nx, ny)
 		!	calculates the integral
 		!
 		!		sin(nx*k*x ) * sin( ny*k*y) 	
 		!
 		!
 		!
-		integer,		intent(in)	:: qi, m, at, nx, ny
+		integer,		intent(in)	:: qi_loc, m, at, nx, ny
 		complex(dp),	intent(in)	:: ckH(:,:)
 		complex(dp)					:: num1, num2, denom
 		real(dp)					:: kappaX, kappaY, xL, xR, yL, yR, Gx, Gy, xc, yc, at_rad
@@ -267,9 +267,9 @@ module ham_PWbasis
 		!
 		!SUMMATION OVER G:
 		infiniteWell 	= dcmplx(0.0_dp)
-		do gi = 1, nGq(qi)
-			Gx 		= Gvec(1,gi,qi)
-			Gy		= Gvec(2,gi,qi)
+		do gi = 1, nGq(qi_loc)
+			Gx 		= Gvec(1,gi,qi_loc)
+			Gy		= Gvec(2,gi,qi_loc)
 			!
 			!
 			!
@@ -313,7 +313,7 @@ module ham_PWbasis
 			!
 			!DEBUG
 			if( abs(denom) < machineP) then
-				write(*,'(a,i4,a,f8.4,a,f8.4a,f8.4)') "[infiniteWell]: WARNING zero denom at qi=",qi," Gx=",Gx,"Gy=",Gy,"denom=",denom
+				write(*,'(a,i4,a,f8.4,a,f8.4a,f8.4)') "[infiniteWell]: WARNING zero denom at qi=",qi_loc," Gx=",Gx,"Gy=",Gy,"denom=",denom
 				denom 	= 1e-8_dp
 			end if
 			!
