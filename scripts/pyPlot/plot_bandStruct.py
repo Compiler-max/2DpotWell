@@ -6,6 +6,30 @@ from util_2dPW_Interf import read_w90_energies
 from util_2dPW_Interf import getData
 
 
+#plots bandstructure of orthorombic unit cell
+#
+#   
+#-first BZ:
+#
+#  (1,0) X  *-----------*   Gamma (0,0)   
+#           |           |                          
+#           |           |               
+#           |           |               
+#           |           |               
+#           |           |               
+#           |           |               
+#           |           |               
+#  (1,1) S  *-----------*   Y   (0,1)
+#
+#-path in BZ:
+#   path   I:   S       ->       X
+#   path  II:   X       ->       Gamma      
+#   path III:   Gamma   ->       S
+#   path  IV:   S       ->       Y
+#   path   V:   Y       ->       Gamma
+
+
+
 #adjust colors etc.
 marker_abi  = '+-'
 markerS_abi = 1.2
@@ -68,7 +92,7 @@ def plotBands(w90_dir=".",out_dir=".", minEn=0, maxEn=0, show_Bfield_box=False, 
 
 
     #X TICK-LABELS
-    xtickLabel = np.array(['M','X',r'$\Gamma$','M','Y',r'$\Gamma$'])
+    xtickLabel = np.array(['S','X',r'$\Gamma$','S','Y',r'$\Gamma$'])
     if do_ABiN:
         if len(qticks) != len(xtickLabel)   :
             print('ERROR: xtickLabel has wrong size')
