@@ -12,7 +12,7 @@ module util_output
 	implicit none
 	private
 
-	public ::	writeMeshInfo, writeMeshBin, write_K_lattices, & 
+	public ::	writeMeshInfo, write_K_lattices, & 
 				writePolFile, &
 				writeEnTXT,readEnTXT, & 
 				writeVeloHtxt, writeConnTxt, writeVeloEffTB, &
@@ -66,19 +66,19 @@ module util_output
 		!!
 		!K MESH
 		write(100,*)"*******************K POINT MESH******************************"
-		do i = 1, nQ
+		do i = 1, size(qpts,2)
 			write(100,'(a,i6,a,f15.7,a,f15.7,a)')				"q(",i,") = (", qpts(1,i) , "," , qpts(2,i), " )"
 		end do
 		!!
 		!K 	INTERPOLATION
 		write(100,*)"*******************K INTERPOLATION MESH******************************"
-		do i = 1, nK
+		do i = 1, size(kpts,2)
 			write(100,'(a,i6,a,f15.7,a,f15.7,a)')				"k(",i,") = (", kpts(1,i) , "," , kpts(2,i), " )"
 		end do
 		!!
 		!ATOM POSITION AND RADII
 		write(100,*)"*******************ATOMS******************************"
-		do i = 1, nAt
+		do i = 1, size(atPos,2)
 			write(100,'(a,i3,a,f8.3,a,f8.3,a,a,f8.3,a,f8.3,a)')	"atom(",i,") at (",atPos(1,i),", ",atPos(2,i),") ",&
 																"w. rad = (", atR(1,i), ", ", atR(2,i), " )"	
 		end do
@@ -111,62 +111,6 @@ module util_output
 	end subroutine
 
 
-	subroutine writeMeshBin()
-		!SYS PARA
-		integer				:: stat
-		open(unit=300, iostat=stat, file=raw_dir//'sysPara.dat', status='old')
-		if (stat == 0) close(300, status='delete')
-		open(unit=300,file='rawData/sysPara.dat',form='unformatted',access='stream',action='write')
-		write(300) nAt
-		write(300) nG
-		write(300) nQ
-		write(300) nQx
-		write(300) nQy
-		write(300) nR
-		write(300) nRx
-		write(300) nRy
-		write(300) nWfs
-		write(300) nSC
-		write(300) nSCx
-		write(300) nSCy
-		write(300) nK
-		write(300) nKx
-		write(300) nKy
-		write(300) nSolve
-		close(300)
-		!
-		!CELL INFO
-		open(unit=305, iostat=stat, file=raw_dir//'cellInfo.dat', status='old')
-		if (stat == 0) close(305, status='delete')
-		open(unit=305,file='rawData/cellInfo.dat',form='unformatted',access='stream',action='write')
-		write(305) aX
-		write(305) aY
-		close(305)
-		!
-		!
-		!ATOM INFORMATION
-		open(unit=306, iostat=stat, file=raw_dir//'atPos.dat', status='old')
-		if (stat == 0) close(306, status='delete')
-		open(unit=306,file='rawData/atPos.dat',form='unformatted',access='stream',action='write')
-		write(306) atPos
-		close(306)
-		!
-		open(unit=307, iostat=stat, file=raw_dir//'atR.dat', status='old')
-		if (stat == 0) close(307, status='delete')
-		open(unit=307,file='rawData/atR.dat',form='unformatted',access='stream',action='write')
-		write(307) atR
-		close(307)
-		!
-		!
-		!!R MESH
-		!open(unit=310, iostat=stat, file=raw_dir//'rpts.dat', status='old')
-		!if (stat == 0) close(310, status='delete')
-		!open(unit=310,file='rawData/rpts.dat',form='unformatted',access='stream',action='write')
-		!write(310) rpts
-		!close(310)
-		!
-		return
-	end subroutine
 
 
 
@@ -570,23 +514,20 @@ module util_output
 
 
 
-	subroutine printTiming(aT,kT,wT,pwT,bT,oT,mastT) !call printTiming(alloT,hamT,wannT,postWT,berryT,outT,mastT)
-		real,	intent(in)	:: aT,kT,wT,pwT,bT,oT,mastT
+	subroutine printTiming(alloT,hamT,berryT,pwT,mastT) 	!call printTiming(alloT,hamT,berryT, postWT,mastT)
+		real,	intent(in)	:: alloT, hamT, pwT, berryT, mastT
 		!
 		print '    ("r&alloc  time spend     = ",f16.4," seconds = ",f16.4,"% of overall time")',& 
-									aT 				, 100.0_dp*aT		   	/mastT
-		print '    ("k-solver time spend     = ",f16.4," seconds = ",f16.4,"% of overall time")',& 
-									kT 				, 100.0_dp*kT		   	/mastT
-		print '    ("prep w90 time spend     = ",f16.4," seconds = ",f16.4,"% of overall time")',& 
-									wT				, 100.0_dp*wT		   	/mastT
+									alloT 				, 100.0_dp*alloT		   	/mastT
+		print '    ("ham-solver time spend   = ",f16.4," seconds = ",f16.4,"% of overall time")',& 
+									hamT 				, 100.0_dp*hamT		   	/mastT
+		print '    ("berry method            = ",f16.4," seconds = ",f16.4,"% of overall time")',& 
+									berryT				, 100.0_dp*berryT		   	/mastT			
 		print '    ("post w90 - eff TB       = ",f16.4," seconds = ",f16.4,"% of overall time")',& 
 									pwT				, 100.0_dp*pwT		   	/mastT
-		print '    ("berry method            = ",f16.4," seconds = ",f16.4,"% of overall time")',& 
-									bT				, 100.0_dp*bT		   	/mastT														
-		print '    ("writing  time spend     = ",f16.4," seconds = ",f16.4,"% of overall time")',& 
-									oT 				, 100.0_dp*oT		   	/mastT
 		print '    ("other    time spend     = ",f16.4," seconds = ",f16.4,"% of overall time")',& 
-									(mastT-aT-kT-wT-bT-oT) 	, 100.0_dp*(mastT-aT-kT-wT-bT-oT)/mastT
+									(mastT-alloT-hamT-berryT) 	, 100.0_dp*(mastT-alloT-hamT-berryT)/mastT
+		
 		print '    ("overall  time spend     = ",f16.4," seconds.")', mastT
 		!
 		return
@@ -645,5 +586,6 @@ module util_output
 
 
 
-
 end module util_output
+
+

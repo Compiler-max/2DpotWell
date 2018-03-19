@@ -48,7 +48,6 @@
     doSolveHam  =   t
     doPw90      =   f
     doBerry     =   f
-    writeBin    =   f
 
 [w90]
     seedName    =   'wf1'

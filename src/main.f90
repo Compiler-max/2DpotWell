@@ -10,7 +10,7 @@ program main
 
 	use util_basisIO,	only:
 
-	use util_output,	only:		writeMeshInfo, writeMeshBin, writePolFile, write_K_lattices, & 
+	use util_output,	only:		writeMeshInfo, writePolFile, write_K_lattices, & 
 									printTiming, printBasisInfo	!printMat, printInp, printWannInfo,writeSysInfo  
 
 
@@ -21,7 +21,7 @@ program main
 	
 														
     real	:: 	mastT0, mastT1, mastT, T0, T1, &
-    		    	alloT,hamT,wannT,postWT, outT, berryT	
+    		    	alloT,hamT,postWT, berryT	
 
     !MPI INIT
 	call MPI_INIT( ierr )
@@ -32,10 +32,8 @@ program main
     if( myID == root ) then
     	alloT	= 0.0
     	hamT	= 0.0
-    	wannT	= 0.0
     	postWT	= 0.0
     	berryT	= 0.0
-    	outT 	= 0.0
     	mastT	= 0.0
     	!
    		write(*,*)								"[main]:**************************setup Grids*************************"
@@ -96,8 +94,6 @@ program main
 		write(*,*)								"*"
 		write(*,*)								"*"
 		write(*,*)								"*"
-		call cpu_time(T1)
-		outT = T1 - T0
 	end if
 
 	!HAM SOLVER
@@ -167,27 +163,12 @@ program main
 		call cpu_time(T1)
 		postWT	= T1-T0
 	
-
-		!OUTPUT
-		write(*,*)								"[main]:**************************WRITE OUTPUT*************************"
-		call cpu_time(T0)
-		!
-		if( writeBin )	then
-			call writeMeshBin()
-			write(*,*)							"[main]: ...wrote mesh bin"
-			write(*,*)							"[main]: ...wrote binary files for meshes and unks"
-		end if
-		!
-		write(*,*)								"*"
-		write(*,*)								"*"
-		write(*,*)								"*"
-		write(*,*)								"*"
 		!
 		!TIMING INFO SECTION
 		call cpu_time(mastT1)
 		mastT= mastT1-mastT0
 		write(*,*) 								"[main]:**************TIMING INFORMATION************************"
-		call printTiming(alloT,hamT,wannT,postWT,berryT,outT,mastT)
+		call printTiming(alloT,hamT,berryT, postWT,mastT)
 		write(*,*)								"*"
 		write(*,*)								"*"
 		write(*,*)								"*"

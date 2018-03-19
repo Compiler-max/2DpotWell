@@ -32,7 +32,7 @@ module util_sysPara
 				!switches:
 				debugHam, doSolveHam, doMagHam, doRashba, doZeeman, doVdesc, 			&
 				useBloch, doPw90, pw90GaugeB, 				 							&
-				doBerry, doNiu, doGaugBack, writeBin, fastConnConv,	 					&
+				doBerry, doNiu, doGaugBack, fastConnConv,	 					&
 				!mpi:
 				myID, nProcs, root, ierr, qChunk
 
@@ -62,8 +62,7 @@ module util_sysPara
 	logical											::	debugHam,  														&
 														doSolveHam, doVdesc,  doRashba, doZeeman, doMagHam, 			&
 														useBloch, doPw90, pw90GaugeB, 									& 
-														doBerry, doNiu, doGaugBack, fastConnConv, 						&
-														writeBin 
+														doBerry, doNiu, doGaugBack, fastConnConv
 
 
 	contains
@@ -151,7 +150,6 @@ module util_sysPara
 		call CFG_add_get(my_cfg,	"methods%doSolveHam",	doSolveHam	,	"solve electronic structure or read in"	)
 		call CFG_add_get(my_cfg,	"methods%doPw90"	,	doPw90		,	"read in the matrices in wann base	"	)	
 		call CFG_add_get(my_cfg,	"methods%doBerry"	,	doBerry		,	"switch on/off 	berry( unk) method "	)
-		call CFG_add_get(my_cfg,	"methods%writeBin"	,	writeBin	,	"switch for writing binary files"		)
 		![w90]
 		call CFG_add_get(my_cfg,	"w90%seedName"		, 	seedName	,	"seedName for wannier files(char len=3)")
 		call CFG_add_get(my_cfg,	"w90%useBloch"		,	useBloch	,	"use bloch phase for projections	"	)
@@ -267,7 +265,6 @@ module util_sysPara
 		call MPI_Bcast( doSolveHam	,		1	,		MPI_LOGICAL			,	root,	MPI_COMM_WORLD, ierr)
 		call MPI_Bcast( doPw90		,		1	,		MPI_LOGICAL			,	root,	MPI_COMM_WORLD, ierr)
 		call MPI_Bcast( doBerry		,		1	,		MPI_LOGICAL			,	root,	MPI_COMM_WORLD, ierr)
-		call MPI_Bcast( writeBin	,		1	,		MPI_LOGICAL			,	root,	MPI_COMM_WORLD, ierr)
 		![w90]
 		call MPI_Bcast( seedName	,		3	, 		MPI_CHARACTER		,	root,	MPI_COMM_WORLD, ierr)
 		call MPI_Bcast( useBloch	,		1	,		MPI_LOGICAL			,	root,	MPI_COMM_WORLD, ierr)

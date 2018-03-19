@@ -37,7 +37,7 @@ module ham_Solver
 !public:
 	subroutine solveHam()   !call solveHam(wnF, unk, EnW, VeloBwf)
 		!solves Hamiltonian at each k point
-		!also generates the Wannier functions on the fly (sum over all k)
+		!	and prepares the wannier90 input files (.mmn, .amn, .eig, .win, ...)
 		!																
 		integer							::	nntotMax, nntot
 		integer,		allocatable		::	nnlist(:,:), nncell(:,:,:)
