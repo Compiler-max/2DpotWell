@@ -91,6 +91,8 @@ module ham_PWbasis
 		!
 		dG = GmaxGLOBAL-GminGLOBAL
 		if( cnt < GminGLOBAL-2*dG	)		write(*,'(a,i3,a,i8,a,i8)')	"[#",myID,"calcMmat]: WARNING, found ",cnt," neighbouring Gvec, where nGmax(qi)=",nG_qi
+		if( cnt > Gmax				)		write(*,'(a,i3,a,i8,a,i8)')	"[#",myID,"calcMmat]: WARNING, found ",cnt," neighbouring Gvec, where local Gmax=",Gmax
+		if( cnt > GmaxGLOBAL		)		write(*,'(a,i3,a,i8,a,i8)')	"[#",myID,"calcMmat]: WARNING, found ",cnt," neighbouring Gvec, where global Gmax=",GmaxGLOBAL
 		!
 		!		
 		return
