@@ -189,55 +189,6 @@ module ham_PWbasis
 	end subroutine
 
 
-	!subroutine calcBasis(qi, ri, basVec)
-	!	!calculates the basis vectors e^i(k+G).r
-	!	!	if |k+G| is larger then the cutoff the basis vector is set to zero
-	!	!	the cutoff enforces a symmetric base at each k point
-	!	integer,	 intent(in)		:: qi, ri
-	!	complex(dp), intent(out)	:: basVec(:)
-	!	integer 				 	:: i 
-	!	!
-	!	basVec	= 0.0_dp
-	!	do i =1, nGq(qi)
-	!		basVec(i) 		= myExp( dot_product( Gvec(1:2,i,qi), rpts(1:2,ri) )		)  !/ dsqrt(vol)
-	!	end do
-	!	!
-	!	return
-	!end subroutine
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 !prviat:
 		complex(dp) function infiniteWell(qi_loc,m, ckH, at, nx, ny)
