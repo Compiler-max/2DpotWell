@@ -185,7 +185,7 @@ def get_BZ_path(qpts):
     qpathV  = sorted(qpathV,    key= lambda elem: elem[2]               )
 
 
-    print('start point:',qpathI[0][:])
+    #print('start point:',qpathI[0][:])
 
        #check if q indices of start and end points match
     if qpathI[-1][0] is not qpathII[0][0]:
