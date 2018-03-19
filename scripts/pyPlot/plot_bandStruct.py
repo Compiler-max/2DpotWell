@@ -21,7 +21,7 @@ show_Bfield_box = True
 show_rashba_box = True
 
 
-def plotBands(w90_dir=".",out_dir=".", minEn=0, maxEn=0, show_Bfield_box=False, show_rashba_box=False):
+def plotBands(w90_dir=".",out_dir=".", minEn=0, maxEn=0, show_Bfield_box=False, show_rashba_box=False, saveToDir="."):
     #GET ABINITIO ENERGIES
     do_ABiN, nQ, nSolve, qpts, en_abi = read_AbIn_energies(out_dir+'/enABiN.txt')
   
@@ -110,9 +110,10 @@ def plotBands(w90_dir=".",out_dir=".", minEn=0, maxEn=0, show_Bfield_box=False, 
     #
     #SAVE FILE
     file_name = 'en_B'+str(B_ext[2])+'_aRashb'+str(alpha_rashba)+'bands.pdf'
-    file_path = out_dir+'/'+file_name
+    file_path = saveToDir+'/'+file_name
     plt.savefig(file_path,bbox_inches='tight')
     print('saved plot to file',file_path)
+    plt.close()
     #    
     #
     return ax

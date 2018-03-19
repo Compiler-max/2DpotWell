@@ -29,7 +29,7 @@
     aRashba    = 2.4   #in eV Ang
 
 [numerics]
-   Gcut        = 8.0 # changed by probeB.sh
+   Gcut        = 10.0 # changed by probeB.sh
    nSolve      = 96 # changed by probeB.sh
    nQx         = 8 # changed by probeB.sh
    nQy         = 16 # changed by probeB.sh

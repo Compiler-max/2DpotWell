@@ -16,7 +16,8 @@ from util_2dPW_Interf import getData
 def plotNiuColor(searchDir, plotState, cmap=mpl.cm.viridis,
 						plot_titles=False, title_size=12, 
 						plot_k_labels=True, k_label_size=10,
-						plot_descriptor=False, descriptor_size=14):
+						plot_descriptor=False, descriptor_size=14,
+						save_dir="."):
 	f2_path	= searchDir+'/f2response.txt'
 	f3_path = searchDir+'/f3response.txt'
 
@@ -100,8 +101,9 @@ def plotNiuColor(searchDir, plotState, cmap=mpl.cm.viridis,
 
 
 
-	plt.savefig(searchDir+'/a1_n'+str(plotState)+'_Bz'+str(bz)+'aRash'+str(a_Rashba)+'niuShift.pdf',bbox_inches='tight')
+	plt.savefig(save_dir+'/a1_n'+str(plotState)+'_Bz'+str(bz)+'aRash'+str(a_Rashba)+'niuShift.pdf',bbox_inches='tight')
 	#plt.show()
+	plt.close()
 
 	return axes
 
