@@ -36,14 +36,16 @@
     thres       =   0.1
 
 [ham]
+    debugHam    =   t
     doVdesc     =   f
-    doZeeman    =   f
+    doZeeman    =   t
     doMagHam    =   f
     doRashba    =   f
 
 
+
 [methods]
-    doSolveHam  =   t
+    doSolveHam  =   f
     doPw90      =   f
     doBerry     =   f
     writeBin    =   f
@@ -74,13 +76,6 @@
 
 [semiclassics]
     prefactF3   =   1.0
-
-
-[debug]
-    debugHam    =   t
-    debugProj   =   f
-    debugWann   =   f
-
 
 
 

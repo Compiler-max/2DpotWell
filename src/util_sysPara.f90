@@ -8,32 +8,47 @@ module util_sysPara
 
 	private
 				!public routines:
-	public :: 	readInp, & 
+	public :: 	readInp, 																& 
 				!public para:
-				dim, aX, aY, vol, nAt, relXpos, relYpos, atRx, atRy, atPot, dVpot, &
-				nG, nGq, nG0, Gmax, GmaxGLOBAL, GminGLOBAL, Gcut, Gvec, R0, nSolve, &
-				nQ, nQx, nQy, nKx, nKy, nK, nSC, nSCx, nSCy, dqx, dqy, dkx, dky, &
-				nR, nRx, nRy, nRz,   &	
-				nShells, nw90it, shells, &
-				nBands, nWfs, proj_at, proj_nX, proj_nY,  &
-				atPos, atR, qpts,  kpts, recpLatt, &		
-				aRashba, Bext, prefactF3, &
-				seedName, w90_dir, info_dir, mkdir, raw_dir,&
-				debugProj, debugHam, debugWann, doSolveHam, doMagHam, doRashba, doZeeman, useBloch, doPw90, pw90GaugeB, doVdesc,  &
-				doBerry, doNiu, doGaugBack, writeBin, &
-				myID, nProcs, root, ierr, qChunk, fastConnConv
+				!unit cell:
+				dim, aX, aY, vol, recpLatt, 											& 
+				!atoms:
+				nAt, relXpos, relYpos, atRx, atRy, atPot, dVpot,atPos, atR,  			&
+				!cutoff:
+				nG, nGq, Gmax, GmaxGLOBAL, GminGLOBAL, Gcut, Gvec, nSolve, 				&
+				!grids:
+				qpts,  kpts, 															&
+				nQ, nQx, nQy, 															&
+				nKx, nKy, nK,  															&
+				nSC, nSCx, nSCy, 														&
+				dqx, dqy, dkx, dky,														&
+				nR, nRx, nRy, nRz,   													&	
+				!w90:
+				nShells, nw90it, shells, 												&
+				nBands, nWfs, proj_at, proj_nX, proj_nY,  								&
+				seedName, w90_dir, info_dir, mkdir, raw_dir,							&
+				!perturbations:	
+				aRashba, Bext, prefactF3, 												&
+				!switches:
+				debugHam, doSolveHam, doMagHam, doRashba, doZeeman, doVdesc, 			&
+				useBloch, doPw90, pw90GaugeB, 				 							&
+				doBerry, doNiu, doGaugBack, writeBin, fastConnConv,	 					&
+				!mpi:
+				myID, nProcs, root, ierr, qChunk
 
 
 	!
-	integer  										:: 	dim=2, nAt=0, nG, nGdim, Gmax, GmaxGLOBAL, GminGLOBAL,nSolve=20, nG0,&  
-														nQx=1, nQy=1,nQ , nSCx=1, nSCy=1,& 
-														nKx=1, nKy=1, nK, R0,  &
-														nShells, nw90it,  &
-														nRx=10, nRy=10, nRz=2, nR, nBands=1,nWfs=1, nSC, &
+	integer  										:: 	dim=2, nAt=0,													& 
+														nG, nGdim, Gmax, GmaxGLOBAL, GminGLOBAL,nSolve=20,				&  
+														nQx=1, nQy=1,nQ , 												&
+														nSCx=1, nSCy=1, nSC, 											& 
+														nKx=1, nKy=1, nK,  												&
+														nShells, nw90it, 												&
+														nRx=10, nRy=10, nRz=2, nR, nBands=1,nWfs=1, 					&
 														myID, nProcs, ierr, qChunk
 	integer,	parameter							::	root=0
-	real(dp) 										::	aX=0.0_dp, aY=0.0_dp,vol=0.0_dp, Gcut=2*PI_dp, thres,& 
-														dx, dy, dz, dqx, dqy, dkx, dky, & 
+	real(dp) 										::	aX=0.0_dp, aY=0.0_dp, vol=0.0_dp, Gcut=2*PI_dp, thres,			& 
+														dqx, dqy, dkx, dky,												& 
 														aRashba=0.0_dp, B0, Bext(3)	, prefactF3, recpLatt(2,2)
 	character(len=3)								::	seedName										
 	character(len=9)								::	w90_dir	="w90files/"
@@ -44,10 +59,10 @@ module util_sysPara
 	real(dp),	allocatable,	dimension(:,:)		::	atPos, atR, qpts, kpts 
 
 	real(dp),	allocatable,	dimension(:,:,:)	::	Gvec
-	logical											::	debugHam, debugWann, debugProj, &
-														doSolveHam, doVdesc,  doRashba, doZeeman, doMagHam, &
-														useBloch, doPw90, pw90GaugeB, & 
-														doBerry, doNiu, doGaugBack, fastConnConv, &
+	logical											::	debugHam,  														&
+														doSolveHam, doVdesc,  doRashba, doZeeman, doMagHam, 			&
+														useBloch, doPw90, pw90GaugeB, 									& 
+														doBerry, doNiu, doGaugBack, fastConnConv, 						&
 														writeBin 
 
 
@@ -159,10 +174,7 @@ module util_sysPara
 		![semiclassics]
 		call CFG_add_get(my_cfg,	"semiclassics%prefactF3"	,	prefactF3,	"real prefactor for F3 "			)
 		![debug]
-		call CFG_add_get(my_cfg,	"debug%debugProj"	, 	debugProj	,	"switch for debuging tests in solveHam"	)
-		call CFG_add_get(my_cfg,	"debug%debugHam"	, 	debugHam	,	"switch for debuging tests in solveHam"	)
-		call CFG_add_get(my_cfg,	"debug%debugWann"	, 	debugWann	,	"switch for debuging in wannier"		)
-	
+		call CFG_add_get(my_cfg,	"debug%debugHam"	, 	debugHam	,	"switch for debuging tests in solveHam"	)	
 		!SET
 		nGdim 			= getTestGridSize()	
 		nG				= nGdim**2
@@ -248,6 +260,8 @@ module util_sysPara
 		call MPI_Bcast( nR			,		1	,		MPI_INTEGER			,	root,	MPI_COMM_WORLD,	ierr)
 		call MPI_Bcast(	thres		,		1	,	MPI_DOUBLE_PRECISION	,	root,	MPI_COMM_WORLD, ierr)
 		![ham]
+		call MPI_Bcast( debugHam	,		1	,	MPI_LOGICAL				,	root,	MPI_COMM_WORLD, ierr)		
+		call MPI_Bcast(	doVdesc		,		1	,	MPI_LOGICAL				,	root,	MPI_COMM_WORLD, ierr)
 		call MPI_Bcast(	doZeeman	,		1	,	MPI_LOGICAL				,	root,	MPI_COMM_WORLD, ierr)
 		call MPI_Bcast(	doMagHam	,		1	,	MPI_LOGICAL				,	root,	MPI_COMM_WORLD, ierr)
 		call MPI_Bcast( doRashba	,		1	,	MPI_LOGICAL				,	root,	MPI_COMM_WORLD, ierr)
@@ -269,11 +283,6 @@ module util_sysPara
 		call MPI_Bcast( doGaugBack	,		1	,	MPI_LOGICAL				,	root,	MPI_COMM_WORLD,	ierr)
 		![semiclassics]
 		call MPI_Bcast( prefactF3	,		1	,	MPI_DOUBLE_PRECISION	,	root,	MPI_COMM_WORLD,	ierr)
-		![debug]		
-		call MPI_Bcast( debugProj	,		1	,	MPI_LOGICAL				,	root,	MPI_COMM_WORLD, ierr)		
-		call MPI_Bcast( debugHam	,		1	,	MPI_LOGICAL				,	root,	MPI_COMM_WORLD, ierr)
-		call MPI_Bcast( debugWann	,		1	,	MPI_LOGICAL				,	root,	MPI_COMM_WORLD, ierr)		
-		!
 		!
 		!derived scalars
 		call MPI_Bcast( nGdim		,		1	,	MPI_INTEGER				,	root,	MPI_COMM_WORLD, ierr)
@@ -428,7 +437,7 @@ module util_sysPara
 	!	!generates the real space mash
 	!	!meshes from (0,0) to (aX*nSC,0) (0,aY*nSC) (aX*nSC,aY*nSC)
 	!	integer		:: rIx, rIy, rIz, rI
-	!	real(dp)	:: rxMin, ryMin, rzMin
+	!	real(dp)	:: rxMin, ryMin, rzMin, dx, dy, dz
 	!	!
 	!	if( myID == root ) then
 	!		rxMin	= 0.0_dp
