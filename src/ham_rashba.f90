@@ -31,7 +31,7 @@ module ham_Rashba
 		integer							::	gi
 		!
 		!write(*,'(a,i3,a,e14.4,a)')	"[#",myID,";add_rashba]: hello there, aRashba=",aRashba," a.u."
-		if( qLoc == 1 ) write(*,*)	"[#",myID,";add_rashba]: use_px_rashba = ",use_px_rashba
+		!if( qLoc == 1 ) write(*,*)	"[#",myID,";add_rashba]: use_px_rashba = ",use_px_rashba
 		!
 		do gi = 1, nGq(qLoc)	
 			!
