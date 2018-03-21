@@ -1,5 +1,4 @@
 import sys
-import numpy as np 
 import matplotlib.pyplot as plt
 
 from util_2dPW_Interf import get_All_subDirs
@@ -32,11 +31,11 @@ for ind, string in enumerate(direction):
 	fig, ax  = plt.subplots(1,1) 
 	ax.set_xlim(min(data),max(data))
 
-	plt.plot(data,  p0[:,ind],	marker='+',		color='black',	label='p0'		)
+	#plt.plot(data,  p0[:,ind],	marker='+',		color='black',	label='p0'		)
 	#plt.plot(data, pf2[:,ind],	marker='+',		color='red',	label='p_f2'	)
 	#plt.plot(data, pf3[:,ind],	marker='+',		color='green',	label='p_f3'	)
 	plt.plot(data,pf2[:,ind]+pf3[:,ind], marker='+', color='blue', label='f2+f3')
-	plt.plot(data,pf2[:,ind]-pf3[:,ind], marker='+', color='orange', label='f2-f3')
+	#plt.plot(data,pf2[:,ind]-pf3[:,ind], marker='+', color='orange', label='f2-f3')
 
 	#plt.plot(data, pf2_interp[:,ind],	 marker='+',	color='orange',	label='p_f2(I)')
 	#plt.plot(data, pf3_interp[:,ind],	 marker='+',	color='lightgreen',	label='p_f2(I)')
