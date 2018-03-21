@@ -116,29 +116,28 @@ def find_between_r( s, first, last ):
     except ValueError:
         return ""
 
+def sort_files(dir, begin_identifier, end_identifier, file_end_identifier):
+	#sorts with respect to parameter between begin/end identifier in filename
+	parameter	= []
+	fileList	= []
 
+	for dirpath, dirnames, filenames in os.walk(dir):
+		for filename in [f for f in filenames if f.endswith(file_end_identifier)]:
+			filepath	 = dirpath+'/'+filename
+			raw_para	 = float(		find_between_r(str(filename),begin_identifier,end_identifier)	)
 
-def convert_bands_to_png(band_dir,png_quality=500):
-	#FIRST SORT THE PDFs
-	aRashba		= [] 
-	bandNames 	= []
-	for dirpath, dirnames, filenames in os.walk(band_dir):
-		for filename in [f for f in filenames if f.endswith("bands.pdf")]:
-			filepath = dirpath+'/'+filename
-			raw_a	 = float(		find_between_r(str(filename),'aRashb','bands.pdf')	)
-
-			bandNames.append(filename)
-			aRashba.append(raw_a)	
-	s	= sorted(zip(aRashba,bandNames))	
-	aRashba, bandNames = map(list,zip(*s))
+			fileList.append(filename)
+			parameter.append(raw_para)	
+	s	= sorted(zip(parameter,fileList))	
+	parameter, fileList = map(list,zip(*s))
 	
-	print('detected aRashba:',aRashba)
-	print('found the files: ',bandNames)
+	return parameter, fileList
 
-	#converted to png
-	for idx, filename in enumerate(bandNames):
-		inPath	= band_dir+'/'+filename
-		outPath = band_dir+'/enPlot'+"%04d" % idx+'.png'
+
+def pdf_to_png(dir, fileList, out_file_name, png_quality=500):
+	for idx, filename in enumerate(fileList):
+		inPath	= dir+'/'+filename
+		outPath = dir+'/'+out_file_name+"%04d" % idx+'.png'
 
 		if os.path.exists(outPath):
 			try:
@@ -156,9 +155,41 @@ def convert_bands_to_png(band_dir,png_quality=500):
 			print('created ',outPath)
 
 
+def convert_bands_to_png(band_dir, identifier, png_quality=500):
+	#FIRST SORT THE PDFs
+	aRashba, bandNames = sort_files(band_dir, 'aRashb','bands','bands.pdf')
+	print('detected aRashba:',aRashba)
+	print('found the files: ',bandNames)
+
+	#converted to png
+	pdf_to_png(band_dir, bandNames, identifier)
+	
 
 
-def animate_pngs(png_folder, movie_path, movie_fps=1):
+
+def convert_niuShift_color_to_png(niu_dir, png_quality=500):
+		#FIRST SORT THE PDFs
+
+		#convert to png
+		#pdf_to_png(niu_dir,niuNames,'niuPlot')
+
+		for n in range(1,nWfs+1):
+			curr_dir	= niu_dir+'/n'+str(n)
+			save_makedir(curr_dir)
+
+			aRashba, niuNames = sort_files(niu_dir, 'a1_n'+str(n)+'_Bz1.0aRash','niuShift','niuShift.pdf')
+			print('niu n='+str(n))
+			print('detected aRashba:',aRashba)
+			print('found the files: ',niuNames)
+
+
+
+
+
+
+
+
+def animate_pngs(png_folder, identifier, movie_path, movie_fps=1):
 	if os.path.exists(movie_path):
 		try:
 			os.remove(movie_path)
@@ -166,7 +197,7 @@ def animate_pngs(png_folder, movie_path, movie_fps=1):
 		except IOError:
 			print(' could not delete ',movie_path)
 
-	command =  "ffmpeg -framerate "+str(movie_fps)+" -i "+str(band_dir)+"/enPlot%04d.png -c:v libx264 -r 30 "+str(movie_path)
+	command =  "ffmpeg -framerate "+str(movie_fps)+" -i "+str(band_dir)+"/"+identifier+"%04d.png -c:v libx264 -r 30 "+str(movie_path)
 	try:
 		os.system(command)
 	except OSError:
@@ -185,30 +216,43 @@ def search_dirs():
 			plot_Dir(dirpath,show_plots, save_bands_dir=band_dir, save_niuColor_dir=niu_dir)	
 
 
+
+
+def main():	
+	#create target directories
+	save_makedir(band_dir)
+	save_makedir(niu_dir)
 	
-save_makedir(band_dir)
-save_makedir(niu_dir)
+	#search for new data
+	do_search = input("do you want to search for new data? (y/n)")
+	if do_search is 'y':
+		print('start search dirs')
+		search_dirs()
 
-do_search = input("do you want to search for new data? (y/n)")
-if do_search is 'y':
-	print('start search dirs')
-	search_dirs()
+	#png filenames
+	png_ident_bands	= 'enPlot'
+	png_ident_niu	= 'niuShift'
+
+	#make the animiations
+	print('*')
+	print('*')
+	print('*')
+	print('*')
+	print('*')
+	print('*')
+	print('now try to convert to pdfs to png')
+	convert_bands_to_png(				band_dir,png_ident_bands)
+	convert_niuShift_color_to_png(		niu_dir, png_ident_niu)
+	print('*')
+	print('*')
+	print('*')
+	print('*')
+	print('*')
+	print('*')
+	print('now try to animate pngs')
+	animate_pngs(band_dir,png_ident_bands,band_dir+'/band_anim.mp4')
+	#animate_pngs(niu_dir,png_ident_niu,movie_path+'/niuShift_anim.mp4')
 
 
-print('*')
-print('*')
-print('*')
-print('*')
-print('*')
-print('*')
-print('now try to convert to pdfs to png')
-convert_bands_to_png(band_dir)
-print('*')
-print('*')
-print('*')
-print('*')
-print('*')
-print('*')
-print('now try to animate pngs')
-animate_pngs(band_dir, movie_path)
 
+main()
