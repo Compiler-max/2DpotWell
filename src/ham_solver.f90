@@ -183,7 +183,7 @@ module ham_Solver
 			!
 			!write result to file, alternative: gather on root and write .mmn directly
 			call writeABiN_Mmn(qi, Mmn)
-			write(*,'(a,i3,a,i5,a,i5,a,i5,a)')		"[#",myID,",calc_Mmat]: wrote M_matrix for qi=",qi,"; task (",qi_loc,"/",qChunk,") done"
+			!write(*,'(a,i3,a,i5,a,i5,a,i5,a)')		"[#",myID,",calc_Mmat]: wrote M_matrix for qi=",qi,"; task (",qi_loc,"/",qChunk,") done"
 			qi_loc = qi_loc + 1
 		end do
 		!		
