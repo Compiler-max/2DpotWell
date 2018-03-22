@@ -72,10 +72,7 @@ module util_w90Interf
 		!debug
 		if(	abs(dqx-dqy) > 1e-7_dp ) 	stop	"[w90setup]: ERROR - q mesh has non uniform grid spacing (required by w90)"
 
-		!WRITE INPUT FILE (wann setup)
-		call write_W90setup_input()
-		write(*,*)	"[w90Interf]: wrote w90 setup input file (.win)"
-		!
+		
 		!W90 
 		call run_w90setup(nntot_out, nnlist_out, nncell_out)
 		write(*,*)	"[w90Interf]: done with w90 setup"
@@ -613,8 +610,8 @@ module util_w90Interf
 !PREPARE & RUN W90
 	subroutine write_W90setup_input()
 		!write input file for wannier_setup call
-		integer	:: i, hStates, heStates
-		character(len=30)	:: 	H_char, He_char
+		integer	:: at, n_per_at, nWf, i
+		character(len=30)	:: 	orbitals
 		!
 		open(unit=100,file=seed_name//'.win',action='write', form='formatted', status='replace')
 		!
@@ -637,17 +634,20 @@ module util_w90Interf
 		write(100,*)
 		!
 		!PROJECTIONS
-		hStates 	= nWfs/nAt
-		heStates	= hStates
-		if( hStates + heStates < nWfs) 	hStates = hstates + (nWfs-hStates-heStates)
-
-		call randomProjString(hStates, 	H_char	)
-		call randomProjString(heStates, He_char	)
-
 		write(100,*)	'Begin Projections'
-		write(100,*)	'H: '//H_char
-		if(nAt > 1 )	write(100,*)	'He: '//He_char
-		!if(nWfs / nAt == 1) write(100,*)	'H: l=0'
+		do at = 1, size(atom_symbols)
+			!get states living at current atom
+			n_per_at	= 0
+			do nWf = 1, nWfs
+				if( proj_at(nWf) == at ) n_per_at = n_per_at + 1
+			end do
+
+			!generate generic projection strintg
+			call randomProjString(n_per_at, orbitals)
+
+			!write to input
+			write(100,*)	atom_symbols(at),' : '//orbitals
+		end do
 		write(100,*)	'End Projections'
 		
 		!
@@ -712,15 +712,32 @@ module util_w90Interf
 		!
 		!fill atom related arrays
 		do	at = 1, num_atoms
-			if( mod(at,2) == 0)	atom_symbols(at)	= 'H'
-			if(	mod(at,2) == 1)	atom_symbols(at)	= 'He'
-			atoms_cart(1:2,at)	= atPos(1:2,at)*aUtoAngstrm
+			!if( mod(at,2) == 0)	atom_symbols(at)	= 'H '
+			!if(	mod(at,2) == 1)	atom_symbols(at)	= 'He'
+			!
+			!atom_symbols(at)	= 'H'
+ 	
+ 			if(at<10)	then
+ 				write (atom_symbols(at), "(A1,I1)") "H", at
+ 	 		else if( at<100) then
+ 	 			write (atom_symbols(at), "(A1,I2)") "H", at
+ 	 		else
+ 	 			write(atom_symbols(at),"(A1,I19)") "H",at
+ 	 		end if
+
+ 	 		write(*,*)	'atom_symbols(',at,')=',atom_symbols(at)
+ 			atoms_cart(1:2,at)	= atPos(1:2,at)*aUtoAngstrm
 			atoms_cart(3,at)	= 0.0_dp
 		end do
 		!kpt lattice (fractional co-ordinates relative to the reciprocal lattice vectors)
 		kpt_latt(1,:)			= qpts(1,:) / ( recip_lattice(1,1) * aUtoAngstrm ) 
 		kpt_latt(2,:)			= qpts(2,:)	/ ( recip_lattice(2,2) * aUtoAngstrm ) 
 		kpt_latt(3,:)			= 0.0_dp
+		!
+		
+		!WRITE INPUT FILE (wann setup)
+		call write_W90setup_input()
+		write(*,*)	"[w90Interf]: wrote w90 setup input file (.win)"
 		!
 		write(*,*)	"[run_w90setup]: try to call the wannier90 library mode (wannier_setup)"
 		!	
