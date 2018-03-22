@@ -682,7 +682,7 @@ module util_w90Interf
 				string = 'l=0; l=1; l=2'					!random
 			case default
 				string = ''
-				write(*,*)	"[randomProjString]: only defined up to 9 states per atom at the moment"
+				write(*,*)	"[randomProjString]: only defined up to 9 states per atom at the moment, was called with n=",nStates
 		end select 
 		!
 		return
