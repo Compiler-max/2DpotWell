@@ -672,14 +672,14 @@ module util_w90Interf
 				string = 'l=0; l=1, mr=2,3; l=2, mr=4'		! s	; px py ; dx**2-y**2
 			case (5)
 				string = 'l=0; l=1, mr=2,3; l=2, mr=4,5'	! s ; px py ; dx**2-y**2 dxy
-			!case (6)
-			!	string = 'l=0; l=1; l=2, mr=4,5'			!random
-			!case (7)
-			!	string = 'l=0; l=1; l=2, mr=3,4,5'			!random
-			!case (8)
-			!	string = 'l=0; l=1; l=2, mr=2,3,4,5'		!random
-			!case (9)
-			!	string = 'l=0; l=1; l=2'					!random
+			case (6)
+				string = 'l=0; l=1; l=2, mr=4,5'			!random
+			case (7)
+				string = 'l=0; l=1; l=2, mr=3,4,5'			!random
+			case (8)
+				string = 'l=0; l=1; l=2, mr=2,3,4,5'		!random
+			case (9)
+				string = 'l=0; l=1; l=2'					!random
 			case default
 				string = ''
 				write(*,*)	"[randomProjString]: only defined up to 9 states per atom at the moment"
