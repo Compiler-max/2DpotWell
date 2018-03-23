@@ -185,7 +185,8 @@ def read_w90_energies(fpath="./wf1_geninterp.dat"):
 	#
 	data        = np.genfromtxt(w90_file, dtype=[('int'),('float64'),('float64'),('float64'),('float64'),('float64'),('float64'),('float64')])
 	w90_file.close()
-	exits 		= True
+	exists 		= True
+	print('found w90')
 	#read lines
 	for counter, line in enumerate(data):
 	    en_w90.append( line[4] )
