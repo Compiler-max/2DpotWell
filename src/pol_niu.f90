@@ -155,8 +155,8 @@ module pol_Niu
 		!
 
 		do ind = 1, 3
-			sumF2(ind) 	= sum( 	centers_F2(ind,:) * polQuantum *centiMet		)
-			sumF3(ind)	= sum(	centers_F3(ind,:) * polQuantum *centiMet		)
+			sumF2(ind) 	= sum( 	centers_F2(ind,:)		)  	* polQuantum *centiMet
+			sumF3(ind)	= sum(	centers_F3(ind,:) 		)	* polQuantum *centiMet		
 		end do
 		!
 		!PRINT F2
@@ -244,6 +244,22 @@ module pol_Niu
 				do m = 1, nSize
 					if(  m/=nZero) then
 						!
+						!
+						!ENERGIES
+						eDiff1		= 	( 	En(nZero,ki) - En(n,ki)		)**2 
+						eDiff2		=  	( 	En(nZero,ki) - En(m,ki)		)
+						eDiff		= 	eDiff1 * eDiff2
+						!degenerate energy warning
+						if( abs(eDiff) < machineP )  then
+							write(*,*)	"[addF2]: WARNING for k point = ",ki
+							write(*,'(a,i3,a,i3,a,i3,a,e14.6)') "[addF2]: WARNING degenerate bands n0=",nZero,"n=",n," m=",m," eDiff=",eDiff
+							write(*,'(a,i3,a,i3,a,e14.6)')	"[addF2]: ( E(",nZero,")-E(",n,") )**2=", eDiff1
+							write(*,'(a,i3,a,i3,a,e14.6)')	"[addF2]: ( E(",nZero,")-E(",m,") )   =", eDiff2
+							write(*,*)	"[addF2]: E(nZero=",nZero,")=",En(nZero,ki)
+							write(*,*)	"[addF2]: E(n=",n,")=",En(n,ki)
+							write(*,*)	"[addF2]: E(m=",m,")=",En(m,ki)
+						end if		
+						!
 						!loop matrix indices
 						do j = 1, 3
 							do i = 1, 3
@@ -253,25 +269,10 @@ module pol_Niu
 									do l = 1, 3				
 										!VELOCITIES
 										Vtmp		= Velo(k,n,m,ki) * Velo(l,m,nZero,ki) * Velo(i,nZero,n,ki) 
-										!ENERGIES
-										eDiff1		= 	( 	En(nZero,ki) - En(n,ki)		)**2 
-										eDiff2		=  	( 	En(nZero,ki) - En(m,ki)		)
-										eDiff		= 	eDiff1 * eDiff2	
+										!if( dimag(Vtmp) > 1e-10_dp ) write(*,*)	"[addF2]: none zero imag velo product: ",dimag(Vtmp),"; real part: ",dreal(Vtmp)
 										!MATRIX
 										F2(i,j) 	= F2(i,j) +   real(myLeviCivita(j,k,l),dp) *  dreal( Vtmp )  / eDiff	
 										!F2(i,j) 	= F2(i,j) +   myLeviCivita(j,k,l) *  dreal( Vtmp )  / eDiff	
-										!DEGENERATE WARNING
-										!if( dimag(Vtmp) > 1e-10_dp ) write(*,*)	"[addF2]: none zero imag velo product: ",dimag(Vtmp),"; real part: ",dreal(Vtmp)
-										!
-										if( abs(eDiff) < machineP )  then
-											write(*,*)	"[addF2]: WARNING for k point = ",ki
-											write(*,'(a,i3,a,i3,a,i3,a,e14.6)') "[addF2]: WARNING degenerate bands n0=",nZero,"n=",n," m=",m," eDiff=",eDiff
-											write(*,'(a,i3,a,i3,a,e14.6)')	"[addF2]: ( E(",nZero,")-E(",n,") )**2=", eDiff1
-											write(*,'(a,i3,a,i3,a,e14.6)')	"[addF2]: ( E(",nZero,")-E(",m,") )   =", eDiff2
-											write(*,*)	"[addF2]: E(nZero=",nZero,")=",En(nZero,ki)
-											write(*,*)	"[addF2]: E(n=",n,")=",En(n,ki)
-											write(*,*)	"[addF2]: E(m=",m,")=",En(m,ki)
-										end if	
 									end do
 								end do
 								!
@@ -307,6 +308,10 @@ module pol_Niu
 		!loop bands
 		do n = 1, nSize
 			if( n/=nZero ) then
+				!ENERGIES
+				eDiff		= ( 	En(nZero,ki) - En(n,ki)	 )**3 
+				!degenerate energy warning
+				if( abs(eDiff) < machineP ) write(*,*) "[addF3]: WARNING degenerate bands n0=",nZero,"n=",n," eDiff=",eDiff
 				!
 				!loop matrix indices
 				do j = 1, 3
@@ -317,14 +322,11 @@ module pol_Niu
 							do l = 1,3				
 								!VELOCITIES
 								Vtmp		= Velo(k,nZero,nZero,ki) * Velo(l,n,nZero,ki) * Velo(i,nZero,n,ki) 
-								!ENERGIES
-								eDiff		= ( 	En(nZero,ki) - En(n,ki)	 )**3 	
+								!if( dimag(Vtmp) > 1e-10_dp ) write(*,*)	"[addF3]: none zero imag velo product: ",dimag(Vtmp),"; real part: ",dreal(Vtmp)
+								!
 								!MATRIX
 								F3(i,j) 	= F3(i,j) + real(prefactF3,dp) * real(myLeviCivita(j,k,l),dp) *	 dreal( Vtmp ) / eDiff
 								!F3(i,j) 	= F3(i,j) + prefactF3 * myLeviCivita(j,k,l) *	 dreal( Vtmp ) / eDiff
-								!DEGENERATE WARNING
-								!if( dimag(Vtmp) > 1e-10_dp ) write(*,*)	"[addF3]: none zero imag velo product: ",dimag(Vtmp),"; real part: ",dreal(Vtmp)
-								if( abs(eDiff) < machineP ) write(*,*) "[addF3]: WARNING degenerate bands n0=",nZero,"n=",n," eDiff=",eDiff
 							end do								!
 						end do
 						!
