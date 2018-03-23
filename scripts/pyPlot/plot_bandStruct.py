@@ -37,8 +37,8 @@ line_abi    = 0.6
 color_abi   = 'black'
 
 marker_w90  = '*-'
-markerS_w90 = 1.0
-line_w90    = 0.5
+markerS_w90 = 0.3
+line_w90    = 0.2
 color_w90   = 'red'
 
 show_Bfield_box = True
@@ -71,10 +71,13 @@ def plotBands(w90_dir=".",out_dir=".", minEn=0, maxEn=0, show_Bfield_box=False, 
                 yPlot = enPlot[0:len(enPlot)]
                 ax.plot(xPlot, yPlot,  marker_abi, markersize=markerS_abi,linewidth=line_abi, color=color_abi)
         print('...finished abinitio plot')
+    else:
+        print('no abinitio energy file found')
 
 
     #PLOT W90 INTERPOLATION
     if do_w90:
+        print('will plot w90 interpolation')
         kpath, kplot, kticks = get_BZ_path(kpts)   
         #
         for n in range(0,nWfs):
@@ -88,7 +91,8 @@ def plotBands(w90_dir=".",out_dir=".", minEn=0, maxEn=0, show_Bfield_box=False, 
                 yPlot = enPlot[0:len(enPlot)]
                 ax.plot(xPlot, yPlot,  marker_w90, markersize=markerS_w90,linewidth=line_w90, color=color_w90)
         print('...finished w90 interpolation plot')
-       
+    else:
+        print('did not find any w90 interpolation data, skip')  
 
 
     #X TICK-LABELS
@@ -261,6 +265,6 @@ def get_BZ_path(qpts):
 
 
 #TEST
-#axTest = plotBands()
-#plt.show()
+axTest = plotBands()
+plt.show()
 
