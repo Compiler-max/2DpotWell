@@ -312,7 +312,7 @@ module ham_Solver
 			!TEST FOR METALLIC BANDS
 			if( glob_minBound == glob_maxBound	) then
 				write(*,'(a,i3,a,i3,a)')	"[#",myID,", solveHam]: found system with #",glob_minBound," insulating states"
-				write(*,'(a,i3,a,f12.4,a)')	"[#",myID,", solveHam]: minimum band gap =",glob_min_gap*aUtoEv," (eV)	"
+				write(*,'(a,i3,a,f12.4,a)')	"[#",myID,", solveHam]: minimum (direct) band gap =",glob_min_gap*aUtoEv," (eV)	"
 			else
 				write(*,'(a,i3,a,i3,a)')	"[#",myID,", solveHam]: WARNING: ",glob_maxBound-glob_minBound," insulating states get metallic at points of BZ"
 			end if
