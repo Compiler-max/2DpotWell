@@ -3,7 +3,7 @@ import os
 import os.path
 import matplotlib.pyplot as plt
 from scipy import optimize
-from potwellInterface import getData
+from util_2dPW_Interf import getData
 
 
 filename	= 'polOutput.txt'
@@ -156,6 +156,9 @@ p0_x 		= p0[:,0]
 pf2_x		= pf2[:,0]
 pf3_x		= pf3[:,0]
 
+
+
+
 if foundInterp:
 	p0_interp_x	= p0_interp[:,0]
 	pf2_interp_x= pf2_interp[:,0]
@@ -199,14 +202,15 @@ print(str(p0fit[0])+'	B**2 + '+str(p0fit[1])+'	B +'+str(p0fit[2]))
 fig, ax = plt.subplots(1,1)
 
 #plot zero order
-ax.plot(B_z, p0_x, '.', color=dataCol	)
+ax.plot(B_z, p0_x, '.', color=dataCol, label='p0 x'	)
+ax.plot(B_z, p0[:,1],'.',color='green', label='p0 y')
 if foundInterp:
 	ax.plot(B_z, p0_interp_x, '+',	color=fitCol	)
 
 #plot parabula interpolation
 print('interpolate in range B_z=['+str(B_z.min())+':'+str(B_z.max())+'] (T)')
 Blin = np.linspace(B_z.min(),B_z.max(),100)
-ax.plot(Blin, fitfunc(p0fit,Blin))
+ax.plot(Blin, fitfunc(p0fit,Blin),label='fit')
 
 #plot slops (niu)
 dB = .25
@@ -224,6 +228,7 @@ xlabel = 'B (T)'
 
 plt.ylabel('pol')
 plt.xlabel(xlabel)
+plt.legend()
 
 plt.show()
 
@@ -233,6 +238,7 @@ plt.show()
 
 #slop plot:
 pf_x 		= pf2_x + pf3_x
+pf_y		= pf2[:,1]+pf3[:,1]
 if foundInterp:
 	pf_interp_x	= pf2_interp_x + pf3_interp_x
 
@@ -240,18 +246,19 @@ if foundInterp:
 fig, ax 	= plt.subplots(1,1)
 
 #plot fit slope
-ax.plot(Blin, fitderiv(p0fit,Blin), color=fitCol	)
+#ax.plot(Blin, fitderiv(p0fit,Blin), color=fitCol, label='p0'	)
 
 #plot niu slopes
-ax.plot(B_z, pf_x ,'*',color=dataCol)
+ax.plot(B_z, pf_x ,'*',color=dataCol,label='p1_x')
+ax.plot(B_z, pf_y,'*',color='green',label='p1_y')
 
-if foundInterp:
-	ax.plot(B_z, pf_interp_x,'*',color=interpCol)
+#if foundInterp:
+#	ax.plot(B_z, pf_interp_x,'*',color=interpCol,label='p1 interp')
 
 #plot limits
 ax.set_xlim(B_z.min(),B_z.max())
 
-
+plt.legend()
 #labels
 plt.title('slopes')
 plt.xlabel(xlabel)

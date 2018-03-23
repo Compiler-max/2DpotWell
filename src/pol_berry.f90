@@ -28,7 +28,7 @@ module pol_Berry
 	complex(dp),	parameter 	::	i_dp 			= dcmplx(0.0_dp, 1.0_dp)
 	real(dp),		parameter 	::	aUtoEv	 		= 27.211385_dp
 	real(dp),		parameter	::	aUtoAngstrm 	= 0.52917721092_dp
-	real(dp),		parameter 	::	elemCharge	 	= 1.6021766208 * 1e-19_dp  *1e+6_dp! mu Coulomb
+	real(dp),		parameter 	::	elemCharge	 	= 1.6021766208 * 1e-13_dp  ! mu Coulomb
 
 	!read in parameters:
 	integer						::	num_wann, num_bands, num_kpts, num_stat, &
@@ -53,7 +53,7 @@ module pol_Berry
 											veloQ(:,:,:,:) 		
 		real(dp),		allocatable		::	A_conn(:,:,:,:), FcurvQ(:,:,:,:),&
 											EnQ(:,:), &
-											w_centers(:,:), berry_W_gauge(:,:),berry_H_gauge(:,:), niu_polF2(:,:), niu_polF3(:,:)
+											w_centers(:,:), berry_W_gauge(:,:),berry_H_gauge(:,:), niu_centF2(:,:), niu_centF3(:,:)
 		real(dp)						::	polQuantum, centiMet
 		integer							::	n
 		!
@@ -62,7 +62,7 @@ module pol_Berry
 		num_stat = nSolve
 
 
-		polQuantum 	= elemCharge / ( vol*aUtoAngstrm**2 ) 
+		polQuantum 	= elemCharge / ( vol*aUtoAngstrm**2 ) 		! mu C / Ang**2
 		centiMet	= 1e+8_dp
 		
 		!READ W90 Files
@@ -90,8 +90,8 @@ module pol_Berry
 		allocate(			w_centers(		3,					num_wann					)			)
 		allocate(			berry_W_gauge(	3,					num_wann					)			)
 		allocate(			berry_H_gauge(	3,					num_wann					)			)
-		allocate(			niu_polF2(		3,					num_wann					)			)
-		allocate(			niu_polF3(		3,					num_wann					)			)
+		allocate(			niu_centF2(		3,					num_wann					)			)
+		allocate(			niu_centF3(		3,					num_wann					)			)
 		!
 		!
 		!print unit cell info
@@ -159,12 +159,12 @@ module pol_Berry
 			!get curvature (toDo) 
 			call calcCurv(FcurvQ)
 			!semiclassics
-			call calcFirstOrdP(polQuantum, centiMet, Bext, prefactF3, FcurvQ, A_conn, veloQ, EnQ, niu_polF2, niu_polF3)
+			call calcFirstOrdP(polQuantum, centiMet, Bext, prefactF3, FcurvQ, A_conn, veloQ, EnQ, niu_centF2, niu_centF3)
 			write(*,*)	"[berryMethod]: done with semiclassics"
 		
 		else
-			niu_polF2 = 0.0_dp
-			niu_polF3 = 0.0_dp
+			niu_centF2 = 0.0_dp
+			niu_centF3 = 0.0_dp
 			write(*,*)	"[berryMethod]: semiclassics disabled, first order pol. set to zero"
 		end if
 		write(*,*)		"*"
@@ -172,7 +172,7 @@ module pol_Berry
 	
 		!
 		!OUTPUT
-		call writePolFile(polQuantum, centiMet, w_centers, berry_H_gauge, berry_W_gauge, niu_polF2, niu_polF3)
+		call writePolFile(polQuantum, centiMet, w_centers, berry_H_gauge, berry_W_gauge, niu_centF2, niu_centF3)
 		write(*,*)		"[berryMethod]: wrote pol file"
 		
 	

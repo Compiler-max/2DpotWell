@@ -194,11 +194,12 @@ def animate_bands(band_dir, identifier, png_quality=500):
 	animate_pngs(band_dir,identifier,band_dir+'/band_anim.mp4')
 
 	#remove pngs
-	for fname in bandNames:
-		try:
-			os.remove(filename)
-		except OSError:
-			print('OSError: could not remove file ',filename)
+	for dirpath, dirnames, filenames in os.walk(band_dir):
+		for filename in [f for f in filenames if f.endswith('.png')]:
+			try:
+				os.remove(dirpath+'/'+filename)
+			except OSError:
+				print('OSError: could not remove file ',filename)
 
 def animate_niu(niu_dir,identifier, png_quality=500):
 		#FIRST SORT THE PDFs
@@ -231,7 +232,7 @@ def animate_niu(niu_dir,identifier, png_quality=500):
 			for dirpath, dirnames, filenames in os.walk(curr_dir):
 				for filename in [f for f in filenames if f.endswith('.png')]:
 					try:
-						os.remove(filename)
+						os.remove(dirpath+'/'+filename)
 					except OSError:
 						print('OSError: could not remove file ',filename)
 

@@ -30,6 +30,10 @@ module pol_Niu
 	subroutine	calcFirstOrdP(polQuantum, centiMet, Bext, prefactF3, Fcurv, Aconn, Velo, En, centers_F2, centers_F3)
 		!calculates the first order polarization p1 according to
 		!	P'= -int_dk [0.5 (Curv.Velo)*B_ext + a']
+		!
+		!	returns centers in Angstroem
+		!
+		!
 		real(dp),		intent(in)		::	polQuantum, centiMet, Bext(3), prefactF3, Fcurv(:,:,:,:), Aconn(:,:,:,:), En(:,:)		
 		complex(dp),	intent(in)		::	Velo(:,:,:,:)			
 		real(dp),		intent(out)		::  centers_F2(:,:), centers_F3(:,:)
