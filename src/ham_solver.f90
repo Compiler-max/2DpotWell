@@ -324,15 +324,17 @@ module ham_Solver
 	subroutine debug_message_printer(qi_loc, qi_glob , found, Gsize, boundStates, En_temp)
 		integer,		intent(in)		::	qi_loc, qi_glob, found, Gsize, boundStates
 		real(dp),		intent(in)		::	En_temp(:)
+		real(dp)						::	bandGap
 		!
 		if( found /= nSolve )	write(*,'(a,i3,a,i5,a,i5)'	)	"[#",myID,";solveHam]:WARNING only found ",found," bands of required ",nSolve
 		if( nBands > found	)	stop	"[solveHam]: ERROR did not find required amount of bands"
 		if( Gsize < nSolve	) 	stop	"[solveHam]: cutoff to small to get bands! only get basis functions"
 		if( Gsize > Gmax	)	stop	"[solveHam]: critical error in solveHam please contact developer. (nobody but dev will ever read this^^)"
 		!
+		bandGap =	( En_temp(boundStates+1)-En_temp(boundStates)  ) * aUtoEv
 		!
-		write(*,'(a,i3,a,i5,a,f6.2,a,f6.2,a,a,i3,a,i5,a,i5,a)')"[#",myID,", solveHam]: qi=",qi_glob," wann energy window= [",En_temp(1)*aUtoEv," : ",&
-														En_temp(nWfs)*aUtoEv,"] (eV).",&
+		write(*,'(a,i3,a,i5,a,f6.2,a,f6.2,a,f6.2,a,a,i3,a,i5,a,i5,a)')"[#",myID,", solveHam]: qi=",qi_glob," wann energy window= [",En_temp(1)*aUtoEv," : ",&
+														En_temp(nWfs)*aUtoEv,"](eV), band gap=",bandGap," (eV).",&
 														" insulating states: #",boundStates,". done tasks=(",qi_loc,"/",qChunk,")"
 		!if( boundStates < nWfs) write(*,'(a,i3,a,f8.3,a,f8.3,a)') "[#",myID,", solveHam]: WARNING not enough bound states at qpt=(",qpts(1,qi),",",qpts(2,qi),")."
 		!
