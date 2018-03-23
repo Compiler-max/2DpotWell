@@ -240,45 +240,47 @@ module pol_Niu
 		F2		=	0.0_dp
 		!loop bands
 		do n = 1, nSize
-			do m = 1, nSize
-				if( n/=nZero .and. m/=nZero) then
-					!
-					!loop matrix indices
-					do j = 1, 3
-						do i = 1, 3
-							!
-							!loop levi civita
-							do k = 1, 3
-								do l = 1, 3				
-									!VELOCITIES
-									Vtmp		= Velo(k,n,m,ki) * Velo(l,m,nZero,ki) * Velo(i,nZero,n,ki) 
-									!ENERGIES
-									eDiff1		= 	( 	En(nZero,ki) - En(n,ki)		)**2 
-									eDiff2		=  	( 	En(nZero,ki) - En(m,ki)		)
-									eDiff		= 	eDiff1 * eDiff2	
-									!MATRIX
-									F2(i,j) 	= F2(i,j) +   real(myLeviCivita(j,k,l),dp) *  dreal( Vtmp )  / eDiff	
-									!F2(i,j) 	= F2(i,j) +   myLeviCivita(j,k,l) *  dreal( Vtmp )  / eDiff	
-									!DEGENERATE WARNING
-									!if( dimag(Vtmp) > 1e-10_dp ) write(*,*)	"[addF2]: none zero imag velo product: ",dimag(Vtmp),"; real part: ",dreal(Vtmp)
-
-									if( abs(eDiff) < machineP )  then
-										write(*,*)	"[addF2]: WARNING for k point = ",ki
-										write(*,'(a,i3,a,i3,a,i3,a,e14.6)') "[addF2]: WARNING degenerate bands n0=",nZero,"n=",n," m=",m," eDiff=",eDiff
-										write(*,'(a,i3,a,i3,a,e14.6)')	"[addF2]: ( E(",nZero,")-E(",n,") )**2=", eDiff1
-										write(*,'(a,i3,a,i3,a,e14.6)')	"[addF2]: ( E(",nZero,")-E(",m,") )   =", eDiff2
-										write(*,*)	"[addF2]: E(nZero=",nZero,")=",En(nZero,ki)
-										write(*,*)	"[addF2]: E(n=",n,")=",En(n,ki)
-										write(*,*)	"[addF2]: E(m=",m,")=",En(m,ki)
-									end if	
+			if( n/=nZero ) then
+				do m = 1, nSize
+					if(  m/=nZero) then
+						!
+						!loop matrix indices
+						do j = 1, 3
+							do i = 1, 3
+								!
+								!loop levi civita
+								do k = 1, 3
+									do l = 1, 3				
+										!VELOCITIES
+										Vtmp		= Velo(k,n,m,ki) * Velo(l,m,nZero,ki) * Velo(i,nZero,n,ki) 
+										!ENERGIES
+										eDiff1		= 	( 	En(nZero,ki) - En(n,ki)		)**2 
+										eDiff2		=  	( 	En(nZero,ki) - En(m,ki)		)
+										eDiff		= 	eDiff1 * eDiff2	
+										!MATRIX
+										F2(i,j) 	= F2(i,j) +   real(myLeviCivita(j,k,l),dp) *  dreal( Vtmp )  / eDiff	
+										!F2(i,j) 	= F2(i,j) +   myLeviCivita(j,k,l) *  dreal( Vtmp )  / eDiff	
+										!DEGENERATE WARNING
+										!if( dimag(Vtmp) > 1e-10_dp ) write(*,*)	"[addF2]: none zero imag velo product: ",dimag(Vtmp),"; real part: ",dreal(Vtmp)
+										!
+										if( abs(eDiff) < machineP )  then
+											write(*,*)	"[addF2]: WARNING for k point = ",ki
+											write(*,'(a,i3,a,i3,a,i3,a,e14.6)') "[addF2]: WARNING degenerate bands n0=",nZero,"n=",n," m=",m," eDiff=",eDiff
+											write(*,'(a,i3,a,i3,a,e14.6)')	"[addF2]: ( E(",nZero,")-E(",n,") )**2=", eDiff1
+											write(*,'(a,i3,a,i3,a,e14.6)')	"[addF2]: ( E(",nZero,")-E(",m,") )   =", eDiff2
+											write(*,*)	"[addF2]: E(nZero=",nZero,")=",En(nZero,ki)
+											write(*,*)	"[addF2]: E(n=",n,")=",En(n,ki)
+											write(*,*)	"[addF2]: E(m=",m,")=",En(m,ki)
+										end if	
+									end do
 								end do
+								!
 							end do
-							!
 						end do
-					end do
-					!
-				end if
-			end do
+						!
+					end if
+				end do
+			end if
 		end do
 		!
 		!
