@@ -88,6 +88,7 @@ module ham_Solver
 		complex(dp),	allocatable		::	Hmat(:,:) , ck_temp(:,:)
 		real(dp),		allocatable		::	En_temp(:)
 		integer							:: 	qi_glob, qi_loc, found, Gsize, boundStates, loc_minBound, loc_maxBound
+		real(dp)						::	loc_min_gap, tmp_Gap
 		!	
 		!
 		allocate(	Hmat(				Gmax,	Gmax				)	)
@@ -123,14 +124,18 @@ module ham_Solver
 			!
 			!count insulating states
 			boundStates = count_negative_eigenvalues(loc_minBound, loc_maxBound, En_temp)
-			!FINALIZE
-			call debug_message_printer(qi_loc, qi_glob, found, Gsize, boundStates, En_temp)
+			!
+			!GET BANDGAP
+			tmp_Gap = get_band_gap(qi_loc, qi_glob, found, Gsize, boundStates, En_temp)
+			if( qi_loc==1 ) loc_min_gap = En_temp(Gmax)-En_temp(1)
+			loc_min_Gap = min(tmp_Gap, loc_min_Gap)
+			!
 			!goto next qpt
 			qi_loc = qi_loc + 1		
 		end do
 		!
 		!ANALYZE BANDS
-		call band_analyzer(loc_minBound, loc_maxBound)
+		call band_analyzer(loc_minBound, loc_maxBound, loc_min_Gap)
 		!
 		!
 		return
@@ -285,15 +290,18 @@ module ham_Solver
 	end function
 
 
-	subroutine band_analyzer(loc_minBound, loc_maxBound)
+	subroutine band_analyzer(loc_minBound, loc_maxBound, loc_min_gap)
 		!
 		!	test if all kpts have same amount of negative energy eigenvalues (i.e. no states become metallic in parts of BZ)
 		!
 		integer,		intent(in)		::	loc_minBound	, 	loc_maxBound
+		real(dp),		intent(in)		::	loc_min_gap
 		integer							::	glob_minBound	,	glob_maxBound 
+		real(dp)						::	glob_min_gap
 		!
-		call MPI_REDUCE(loc_minBound, 	glob_minBound, 	1, MPI_INTEGER, 	MPI_MIN,	root, MPI_COMM_WORLD, ierr)
-		call MPI_REDUCE(loc_maxBound, 	glob_maxBound, 	1, MPI_INTEGER, 	MPI_MAX,	root, MPI_COMM_WORLD, ierr)
+		call MPI_REDUCE(loc_minBound, 	glob_minBound, 	1, 	MPI_INTEGER, 			MPI_MIN,	root, MPI_COMM_WORLD, ierr)
+		call MPI_REDUCE(loc_maxBound, 	glob_maxBound, 	1, 	MPI_INTEGER, 			MPI_MAX,	root, MPI_COMM_WORLD, ierr)
+		call MPI_REDUCE(loc_min_gap,	glob_min_gap,	1,	MPI_DOUBLE_PRECISION, 	MPI_MIN,	root, MPI_COMM_WORLD, ierr)
 		!
 		if( myID == root ) then
 			write(*,*)	"*"
@@ -304,6 +312,7 @@ module ham_Solver
 			!TEST FOR METALLIC BANDS
 			if( glob_minBound == glob_maxBound	) then
 				write(*,'(a,i3,a,i3,a)')	"[#",myID,", solveHam]: found system with #",glob_minBound," insulating states"
+				write(*,'(a,i3,a,f12.4,a)')	"[#",myID,", solveHam]: minimum band gap =",glob_min_gap*aUtoEv," (eV)	"
 			else
 				write(*,'(a,i3,a,i3,a)')	"[#",myID,", solveHam]: WARNING: ",glob_maxBound-glob_minBound," insulating states get metallic at points of BZ"
 			end if
@@ -321,7 +330,7 @@ module ham_Solver
 
 
 
-	subroutine debug_message_printer(qi_loc, qi_glob , found, Gsize, boundStates, En_temp)
+	real(dp) function get_band_gap(qi_loc, qi_glob , found, Gsize, boundStates, En_temp)
 		integer,		intent(in)		::	qi_loc, qi_glob, found, Gsize, boundStates
 		real(dp),		intent(in)		::	En_temp(:)
 		real(dp)						::	bandGap
@@ -331,15 +340,17 @@ module ham_Solver
 		if( Gsize < nSolve	) 	stop	"[solveHam]: cutoff to small to get bands! only get basis functions"
 		if( Gsize > Gmax	)	stop	"[solveHam]: critical error in solveHam please contact developer. (nobody but dev will ever read this^^)"
 		!
-		bandGap =	( En_temp(boundStates+1)-En_temp(boundStates)  ) * aUtoEv
+		bandGap =	( En_temp(boundStates+1)-En_temp(boundStates)  ) 
 		!
 		write(*,'(a,i3,a,i5,a,f6.2,a,f6.2,a,f6.2,a,a,i3,a,i5,a,i5,a)')"[#",myID,", solveHam]: qi=",qi_glob," wann energies= [",En_temp(1)*aUtoEv," : ",&
-														En_temp(nWfs)*aUtoEv,"](eV); band gap=",bandGap," (eV).",&
+														En_temp(nWfs)*aUtoEv,"](eV); band gap=",bandGap* aUtoEv," (eV).",&
 														" insulating states: #",boundStates,". done tasks=(",qi_loc,"/",qChunk,")"
 		!if( boundStates < nWfs) write(*,'(a,i3,a,f8.3,a,f8.3,a)') "[#",myID,", solveHam]: WARNING not enough bound states at qpt=(",qpts(1,qi),",",qpts(2,qi),")."
 		!
+		get_band_gap = bandGap
+		!
 		return
-	end subroutine
+	end function
 
 
 
