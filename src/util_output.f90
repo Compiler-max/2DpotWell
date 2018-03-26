@@ -295,7 +295,7 @@ module util_output
 		real(dp)						:: 	pWann(3), pBerryH(3),pBerryW(3), &
 											pNiuF2(3), pNiuF3(3), pNiu(3), pFirst(3), Btesla(3)
 		real(dp),		allocatable		::	w_final(:,:), b_H_final(:,:), b_W_final(:,:)
-		integer							::	n, at, x
+		integer							::	n, x
 		
 
 
@@ -312,11 +312,9 @@ module util_output
 
 		!substract atom centers
 		do n = 1, size(w_centers,2)
-			at = mod(n,nAt)
-			if( at== 0) at = nAt
-			w_final(1:2,n)		= w_centers(1:2,n) - atPos(1:2,at)*aUtoAngstrm
-			b_H_final(1:2,n)	= b_H_gauge(1:2,n) - atPos(1:2,at)*aUtoAngstrm
-			b_W_final(1:2,n)	= b_W_gauge(1:2,n) - atPos(1:2,at)*aUtoAngstrm
+			w_final(1:2,n)		= w_centers(1:2,n) - atPos(1:2,proj_at(n))*aUtoAngstrm
+			b_H_final(1:2,n)	= b_H_gauge(1:2,n) - atPos(1:2,proj_at(n))*aUtoAngstrm
+			b_W_final(1:2,n)	= b_W_gauge(1:2,n) - atPos(1:2,proj_at(n))*aUtoAngstrm
 			!
 			!ToDo: need niu cent as well ?
 		end do
