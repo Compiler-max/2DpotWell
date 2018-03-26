@@ -356,6 +356,15 @@ module util_output
 		write(600,'(i3,a,i3,a,i3)')	nQx," ",nQy," ",1
 		write(600,*)"end mp_grid"
 		!
+		write(600,*)"*"
+		write(600,*)"*"
+		write(600,*)"**************UNIT CELL (Angstroem): "
+		write(600,*)"begin unit_cell"
+		write(600,*)" ",aX*aUtoAngstrm," ",aY*aUtoAngstrm
+		write(600,*)"end unit_cell"
+		!
+		write(600,*)"*"
+		write(600,*)"*"
 		write(600,*)"**************ATOMS:"
 		write(600,*)		"	at | centers [Å] | V [eV]"
 		do n = 1, size(atPos,2)
