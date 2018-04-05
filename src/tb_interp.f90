@@ -26,7 +26,7 @@ module tb_interp
 	subroutine tb_method()
 
 		real(dp),		allocatable		::	A_interp(:,:,:,:), curv_interp(:,:,:,:), En_interp(:,:), &
-											pol0(:,:), centF2(:,:), centF3(:,:)
+											pol0(:,:), centF2(:,:), centF3(:,:), centF3_essin(:,:)
 		complex(dp),	allocatable		::	v_interp(:,:,:,:)
 		integer							::	dim, n
 		real(dp)						::	polQuantum
@@ -38,6 +38,7 @@ module tb_interp
 		allocate(	pol0(	3,	num_wann)	)
 		allocate(	centF2(	3,	num_wann)	)
 		allocate(	centF3(	3,	num_wann)	)
+		allocate(	centF3_essin(	3,	num_wann)	)
 		!
 		!get zero order
 		do n = 1, num_wann
@@ -55,7 +56,7 @@ module tb_interp
 
 		!get first order
 		!calcFirstOrdP(polQuantum, centiMet, Bext, prefactF3, Fcurv, Aconn, Velo, En, centers_F2, centers_F3)
-		call calcFirstOrdP(polQuantum, centiMet, Bext, prefactF3, curv_interp, A_interp, v_interp, En_interp, centF2, centF3 )
+		call calcFirstOrdP(polQuantum, centiMet, Bext, prefactF3, curv_interp, A_interp, v_interp, En_interp, centF2, centF3, centF3_essin )
 
 
 		!convert centers to angstroem
