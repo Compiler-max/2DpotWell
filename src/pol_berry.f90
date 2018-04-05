@@ -53,7 +53,7 @@ module pol_Berry
 											veloQ(:,:,:,:) 		
 		real(dp),		allocatable		::	A_conn(:,:,:,:), FcurvQ(:,:,:,:),&
 											EnQ(:,:), &
-											w_centers(:,:), berry_W_gauge(:,:),berry_H_gauge(:,:), niu_centF2(:,:), niu_centF3(:,:)
+											w_centers(:,:), berry_W_gauge(:,:),berry_H_gauge(:,:), niu_centF2(:,:), niu_centF3(:,:), essin_centF3(:,:)
 		real(dp)						::	polQuantum, centiMet
 		integer							::	n
 		!
@@ -92,6 +92,7 @@ module pol_Berry
 		allocate(			berry_H_gauge(	3,					num_wann					)			)
 		allocate(			niu_centF2(		3,					num_wann					)			)
 		allocate(			niu_centF3(		3,					num_wann					)			)
+		allocate(			essin_centF3(	3,					num_wann					)			)
 		!
 		!
 		!print unit cell info
@@ -159,12 +160,13 @@ module pol_Berry
 			!get curvature (toDo) 
 			call calcCurv(FcurvQ)
 			!semiclassics
-			call calcFirstOrdP(polQuantum, centiMet, Bext, prefactF3, FcurvQ, A_conn, veloQ, EnQ, niu_centF2, niu_centF3)
+			call calcFirstOrdP(polQuantum, centiMet, Bext, prefactF3, FcurvQ, A_conn, veloQ, EnQ, niu_centF2, niu_centF3, essin_centF3)
 			write(*,*)	"[berryMethod]: done with semiclassics"
 		
 		else
 			niu_centF2 = 0.0_dp
 			niu_centF3 = 0.0_dp
+			essin_centF3 = 0.0_dp
 			write(*,*)	"[berryMethod]: semiclassics disabled, first order pol. set to zero"
 		end if
 		write(*,*)		"*"
@@ -172,7 +174,7 @@ module pol_Berry
 	
 		!
 		!OUTPUT
-		call writePolFile(polQuantum, centiMet, w_centers, berry_H_gauge, berry_W_gauge, niu_centF2, niu_centF3)
+		call writePolFile(polQuantum, centiMet, w_centers, berry_H_gauge, berry_W_gauge, niu_centF2, niu_centF3, essin_centF3)
 		write(*,*)		"[berryMethod]: wrote pol file"
 		
 	
@@ -280,7 +282,7 @@ module pol_Berry
 				end if
 				my_wb(nn)		= 3.0_dp / 	(real(nntot+2,dp)*norm2(my_bk(:,nn))**2)
 
-				if( abs(my_wb(nn) - wb_test) > FDtol)	write(*,*)	"[calcConnOnCoarse]: warning, issue with weights detected" 
+				if( abs(my_wb(nn) - wb_test) > FDtol)	write(*,*)	"[calcConnOnCoarse]: WARNING, issue with weights detected" 
 				!
 				!(Fast Convergence)
 				if( fastConnConv ) then

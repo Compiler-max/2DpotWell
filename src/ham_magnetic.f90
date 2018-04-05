@@ -33,7 +33,7 @@ module ham_Magnetic
 		!			= p^2 /2m_e -  (pA  + Ap ) / 2m_e + e^2 A^2 / 2m_e
 		!			= p^2 /2m_e -  (pA  + Ap ) / 2m_e 					(neglects terms which are second order in the external field)
 		!
-		!	->H_mag = p	A / m_e
+		!	->H_mag = (p A + A p) / m_e
 		!
 		!		B	= 	B_ext*cos(q*r)
 		!		B	=  d A / dr 	-> 	  A = 1/q	* B_ext *	sin(q*r)

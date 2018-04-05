@@ -39,16 +39,16 @@
 [ham]
     debugHam    =   t
     doVdesc     =   f
-    doZeeman    =   t
+    doZeeman    =   f
     doMagHam    =   f
     doRashba    =   f
 
 
 
 [methods]
-    doSolveHam  =   f
+    doSolveHam  =   t
     doPw90      =   f
-    doBerry     =   t
+    doBerry     =   f
 
 [w90]
     seedName    =   'wf1'

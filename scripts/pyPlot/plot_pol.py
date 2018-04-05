@@ -35,6 +35,11 @@ Bz = 1.0
 pf2 	= Bz * pf2
 pf3 	= Bz * pf3
 
+p0_x 	= p0[:,0]
+p0_table =  np.concatenate(data,p0_x)
+print(p0_table)
+
+
 #PLOT
 direction = ['x-pol', 'y-pol']
 for ind, string in enumerate(direction):
@@ -43,7 +48,7 @@ for ind, string in enumerate(direction):
 	ax.set_xlim(-3.0,3.0)
 
 	#plt.plot(data,  p0[:,ind],	marker='+',		color='black',	label='p0'		)
-	plt.plot(data,	p0_max[:],		color='black',	label='p0_abs')
+	#plt.plot(data,	p0_max[:],		color='black',	label='p0_abs')
 	#plt.plot(data,	-1.0*p0_max[:],		color='black',	label='p0_abs')
 	plt.plot(data, pf2[:,ind],	marker='+',		color='red',	label='p_f2'	)
 	plt.plot(data, pf3[:,ind],	marker='+',		color='green',	label='p_f3'	)

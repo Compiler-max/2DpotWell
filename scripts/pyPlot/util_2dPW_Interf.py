@@ -280,3 +280,59 @@ def read_Niu_shift(nWf, fpath):
 	return exists, xi,yi, aNiuX_plot, aNiuY_plot, zmin, zmax, bz
 
 
+
+
+
+def read_UNKs(directory=".",spin=1):
+
+	kpt_idx = []
+	wvfct	= []
+
+	#search for pol files
+	for dirpath, dirnames, filenames in os.walk(directory):
+		if not ('pycache' in dirpath):
+			print('search in dirpath: ',dirpath)
+			for filename in [f for f in filenames if f.endswith("."+str(spin))]:
+				#
+				if 'UNK' in filename:
+					print('found file', filename)
+					fpath		= dirpath+'/'+filename
+					#
+					#read the header
+					with open(fpath) as fp: 
+						firstLine	= fp.readline()
+					header	= np.fromstring(firstLine,dtype=int, count=5,sep=" ")
+					nx	= header[0]
+					ny 	= header[1]
+					nz	= header[2]
+					ik	= header[3]
+					nbnd= header[4]
+					#print('nx=',nx)
+					#print('ny=',ny)
+					#print('nz=',nz)
+					#print('ik=',ik)
+					#print('nbnd=',nbnd)
+					#
+					#
+					#read the body
+					try:
+						outFile     = open(fpath,'r')
+					except IOError:
+						print('IOError: could not open ',fpath)
+					else: 
+						raw_data        = np.genfromtxt(outFile, dtype=[('float64'),('float64')],skip_header=1)
+						outFile.close()
+					data	= raw_data.reshape((nbnd,nx,ny,nz))
+
+
+
+				kpt_idx.append(ik)
+				wvfct.append(data)
+
+	#sort ky k-pt index
+	s	= sorted(zip(kpt_idx, wvfct))
+	kpt_idx, wvfct = map(list,zip(*s))
+
+
+
+	return nx, ny, nz, nbnd, kpt_idx, wvfct

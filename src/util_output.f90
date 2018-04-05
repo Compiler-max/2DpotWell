@@ -289,9 +289,9 @@ module util_output
 
 
 
-	subroutine writePolFile(polQuantum, centiMet, w_centers, b_H_gauge, b_W_gauge, niu_centF2, niu_centF3)	!writePolFile(pWann, pBerry, pNiu, pPei )
+	subroutine writePolFile(polQuantum, centiMet, w_centers, b_H_gauge, b_W_gauge, niu_centF2, niu_centF3, essin_centF3)	!writePolFile(pWann, pBerry, pNiu, pPei )
 		!
-		real(dp),		intent(in)		::	polQuantum, centiMet, w_centers(:,:),  b_H_gauge(:,:), b_W_gauge(:,:), niu_centF2(:,:), niu_centF3(:,:) !CENTERS IN ANGSTROEM
+		real(dp),		intent(in)		::	polQuantum, centiMet, w_centers(:,:),  b_H_gauge(:,:), b_W_gauge(:,:), niu_centF2(:,:), niu_centF3(:,:), essin_centF3(:,:) !CENTERS IN ANGSTROEM
 		real(dp)						:: 	pWann(3), pBerryH(3),pBerryW(3), &
 											pNiuF2(3), pNiuF3(3), pNiu(3), pFirst(3), Btesla(3)
 		real(dp),		allocatable		::	w_final(:,:), b_H_final(:,:), b_W_final(:,:)
@@ -498,7 +498,24 @@ module util_output
 																sum(niu_centF3(3,:))*polQuantum*centiMet," #muC/cm"
 		write(600,*)	"end niu_f3"
 
-
+			!
+		write(600,*)	"*"
+		write(600,*)	"*"
+		write(600,*)	"*"
+		write(600,*)	"********essin F3 (first order contribution)***********************"
+		write(600,*)		" #state | 	<r>[Å]			| 	p[	\{mu}C/cm	]"
+		do n = 1, size(essin_centF3,2)
+			write(600,'(i3,a,f14.6,a,f14.6,a,f14.6,a,a,e13.4,a,e13.4,a)') n,"  | ",essin_centF3(1,n),", ", essin_centF3(2,n),",",essin_centF3(3,n), "  | ",&
+																"(",essin_centF3(1,n)*polQuantum*centiMet,", ", essin_centF3(2,n)*polQuantum*centiMet, ")."
+		end do
+		write(600,'(a,f14.6,a,f14.6,a,f14.6,a)')	"	sum	",sum(essin_centF3(1,:))," ",&
+																sum(essin_centF3(2,:))," ",&
+																sum(essin_centF3(3,:))," | "
+		write(600,*)	"begin niu_f3"
+		write(600,'(a,e16.9,a,e16.9,a,e16.9,a)')	"				",sum(essin_centF3(1,:))*polQuantum*centiMet," ",&
+																sum(essin_centF3(2,:))*polQuantum*centiMet," ",&
+																sum(essin_centF3(3,:))*polQuantum*centiMet," #muC/cm"
+		write(600,*)	"end niu_f3"
 
 		close(600)
 		!

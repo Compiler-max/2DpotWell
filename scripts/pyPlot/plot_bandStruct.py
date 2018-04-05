@@ -137,7 +137,10 @@ def plotBands(w90_dir=".",out_dir=".", minEn=0, maxEn=0, show_Bfield_box=False, 
                 fontsize=16, bbox={'facecolor':'white', 'alpha':0.8, 'pad':10})
     #
     #SAVE FILE
-    file_name = 'en_B'+str(B_ext[2])+'_aRashb'+str(alpha_rashba)+'bands.pdf'
+    file_name = 'en_B_aRashb'+str(alpha_rashba)+'bands.pdf'
+    if len(B_ext) == 3:
+        file_name = 'en_B'+str(B_ext[2])+'_aRashb'+str(alpha_rashba)+'bands.pdf'
+
     file_path = saveToDir+'/'+file_name
     plt.savefig(file_path,bbox_inches='tight')
     print('saved plot to file',file_path)
@@ -265,6 +268,6 @@ def get_BZ_path(qpts):
 
 
 #TEST
-axTest = plotBands()
-plt.show()
+#axTest = plotBands()
+#plt.show()
 

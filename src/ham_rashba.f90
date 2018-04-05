@@ -41,7 +41,7 @@ module ham_Rashba
 				rashHam =	dcmplx( aRashba * Gvec(2,gi,qLoc)	)
 			end if
 			!
-			Hmat(gi,gi) = Hmat(gi,gi) + rashHam
+			Hmat(gi,gi) = Hmat(gi,gi) + rashHam 
 		end do
 		!
 		!

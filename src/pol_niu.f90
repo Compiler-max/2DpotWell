@@ -27,7 +27,7 @@ module pol_Niu
 
 
 !public
-	subroutine	calcFirstOrdP(polQuantum, centiMet, Bext, prefactF3, Fcurv, Aconn, Velo, En, centers_F2, centers_F3)
+	subroutine	calcFirstOrdP(polQuantum, centiMet, Bext, prefactF3, Fcurv, Aconn, Velo, En, centers_F2, centers_F3, centers_F3_essin)
 		!calculates the first order polarization p1 according to
 		!	P'= -int_dk [0.5 (Curv.Velo)*B_ext + a']
 		!
@@ -36,10 +36,10 @@ module pol_Niu
 		!
 		real(dp),		intent(in)		::	polQuantum, centiMet, Bext(3), prefactF3, Fcurv(:,:,:,:), Aconn(:,:,:,:), En(:,:)		
 		complex(dp),	intent(in)		::	Velo(:,:,:,:)			
-		real(dp),		intent(out)		::  centers_F2(:,:), centers_F3(:,:)
+		real(dp),		intent(out)		::  centers_F2(:,:), centers_F3(:,:), centers_F3_essin(:,:)
 		!real(dp)						::	pnF2(3), pnF3(3)
-		real(dp)						:: 	F2(3,3), F3(3,3), F2k(3,3), F3k(3,3), sumF2(3), sumF3(3), &
-											p2Test(3), p3Test(3), p2max, p3max, p2min, p3min, kpt(3)
+		real(dp)						:: 	F2(3,3), F3(3,3), F2k(3,3), F3k(3,3), F3essin(3,3), F3essinK(3,3), sumF2(3), sumF3(3), &
+											p2Test(3), p3Test(3),p3_essin_test(3), p2max, p3max, p2min, p3min, kpt(3)
 		real(dp)						:: 	densCorr(3)
 		integer							:: 	n, ki, kSize, ind, k2max, k3max, k2min, k3min
 		character(len=12)				::	fname
@@ -53,8 +53,9 @@ module pol_Niu
 		write(*,'(a,f8.3,a,f8.3,a,f8.3,a)')"[calcFirstOrdP]: Bext=(",Bext(1)*auToTesla,", ",Bext(2)*auToTesla,", ",Bext(3)*auToTesla,") T"
 		write(*,*)"[calcFirstOrdP]: will use ",size(Velo,3)," states"
 
-		centers_F2 = 0.0_dp
-		centers_F3 = 0.0_dp
+		centers_F2 			= 0.0_dp
+		centers_F3 			= 0.0_dp
+		centers_F3_essin 	= 0.0_dp
 		
 		!!!!$OMP PARALLEL DEFAULT(SHARED)  &
 		!!!!$OMP PRIVATE(n, ki, densCorr, F2, F2k, F3, F3k, p2max, p2min, p3max, p3min, p2Test, p3Test)
@@ -63,22 +64,28 @@ module pol_Niu
 
 		open(unit=200,file=info_dir//'f2'//fname,action='write',status='replace')
 		open(unit=300,file=info_dir//'f3'//fname,action='write',status='replace')
+		open(unit=400,file=info_dir//'f3essin_'//fname,action='write',status='replace')
 
 		write(200,*)	"# f2 positional shift for each wf n, at each kpt"
 		write(300,*)	"# f3 positional shift for each wf n, at each kpt"
+		write(400,*)	"# f3 with the essin formalsism, flipped sign ?!"
 
 		write(200,*)	"# nStat | kpt(1:3) |	a_f2 (1:3,kpt)	(ang)"		
 		write(300,*)	"# nStat | kpt(1:3) |	a_f3 (1:3,kpt)	(ang)"
+		write(400,*)	"# nStat | kpt(1:3) |	a_f3 (1:3,kpt)	(ang)"
 		
 		write(200,*)	size(centers_F2,2)," ",kSize 
 		write(200,*)	Bext(3)*auToTesla
 		write(300,*)	size(centers_F3,2)," ",kSize
 		write(300,*)	Bext(3)*auToTesla
+		write(400,*)	size(centers_F3_essin,2)," ",kSize
+		write(400,*)	Bext(3)*auToTesla
 
 
 		do n = 1, size(centers_F2,2)
 			F2 = 0.0_dp
 			F3 = 0.0_dp
+			F3essin	= 0.0_dp
 			!
 			k2max = -1
 			k3max = -1
@@ -100,13 +107,16 @@ module pol_Niu
 				!POSITIONAL SHIFT
 				call getF2(n,ki,Velo,En, F2k)
 				call getF3(prefactF3, n,ki,Velo,En, F3k)
+				call getF3essin(prefactF3, n, ki, Velo, En, F3essinK)
 				!sum over K
 				F2 = F2 + F2k
 				F3 = F3 + F3k
+				F3essin = F3essin + F3essinK
 				!
 				!search for extrema
 				p2Test = matmul(F2k,Bext)* aUtoAngstrm
 				p3Test = matmul(F3k,Bext)* aUtoAngstrm
+				p3_essin_test = matmul(F3essinK,Bext) * aUtoAngstrm
 
 				kpt = 0.0_dp
 				if( kSize == size(qpts,2)	)	kpt(1:2) 	= qpts(1:2,ki)
@@ -114,6 +124,7 @@ module pol_Niu
 				
 				write(200,'(i3,a,i5,a,e16.9,a,e16.9,a,e16.9,a,e16.9,a,e16.9,a,e16.9)')	n," ",ki," ",kpt(1)," ",kpt(2)," ",kpt(3)," ",p2Test(1)," ",p2Test(2)," ",p2Test(3)
 				write(300,'(i3,a,i5,a,e16.9,a,e16.9,a,e16.9,a,e16.9,a,e16.9,a,e16.9)')	n," ",ki," ",kpt(1)," ",kpt(2)," ",kpt(3)," ",p3Test(1)," ",p3Test(2)," ",p3Test(3)
+				write(400,'(i3,a,i5,a,e16.9,a,e16.9,a,e16.9,a,e16.9,a,e16.9,a,e16.9)')	n," ",ki," ",kpt(1)," ",kpt(2)," ",kpt(3)," ",p3Test(1)," ",p3Test(2)," ",p3_essin_test(3)
 
 				if( norm2(p2Test) > p2max) then
 					p2max = norm2(p2Test)
@@ -138,16 +149,19 @@ module pol_Niu
 			!NORMALIZE
 			F2 = F2 / real(kSize,dp)
 			F3 = F3  / real(kSize,dp)
+			F3essin = F3essin / real(ksize,dp) 
 		
 			!APPLY MATRIX 
 			centers_F2(:,n) = matmul(F2,Bext) * aUtoAngstrm
 			centers_F3(:,n) = matmul(F3,Bext) * aUtoAngstrm
+			centers_F3_essin(:,n) = matmul(F3essin,Bext) * aUtoAngstrm
 			!
 		end do
 
 
 		close(200)
 		close(300)
+		close(400)
 
 
 		!!!!$OMP END DO
@@ -322,6 +336,57 @@ module pol_Niu
 							do l = 1,3				
 								!VELOCITIES
 								Vtmp		= Velo(k,nZero,nZero,ki) * Velo(l,n,nZero,ki) * Velo(i,nZero,n,ki) 
+								!if( dimag(Vtmp) > 1e-10_dp ) write(*,*)	"[addF3]: none zero imag velo product: ",dimag(Vtmp),"; real part: ",dreal(Vtmp)
+								!
+								!MATRIX
+								F3(i,j) 	= F3(i,j) + real(prefactF3,dp) * real(myLeviCivita(j,k,l),dp) *	 dreal( Vtmp ) / eDiff
+								!F3(i,j) 	= F3(i,j) + prefactF3 * myLeviCivita(j,k,l) *	 dreal( Vtmp ) / eDiff
+							end do								!
+						end do
+						!
+					end do
+				end do
+				!
+			end if
+		end do
+		!
+		!
+		return
+	end subroutine
+
+
+
+	subroutine	getF3essin(prefactF3, nZero,ki, Velo ,En, F3)	
+		!
+		!	F^(2)_ij = +- Re \sum_{n/=0} \eps_{j,k,l}  * (v^k_0 V^l_nZero V^i_0n) / ( (E0-En)**3  )
+		!
+		integer,		intent(in)		:: nZero, ki
+		complex(dp),	intent(in)		:: Velo(:,:,:,:)  
+		real(dp),		intent(in)		:: prefactF3, En(:,:)			
+		real(dp),		intent(out)		:: F3(3,3)
+		complex(dp)						:: Vtmp
+		real(dp)						:: eDiff
+		integer							:: i, j, k, l, n, nSize
+		!
+		nSize 	=	size(Velo,3)
+		F3		=	0.0_dp
+		!loop bands
+		do n = 1, nSize
+			if( n/=nZero ) then
+				!ENERGIES
+				eDiff		= ( 	En(nZero,ki) - En(n,ki)	 )**3 
+				!degenerate energy warning
+				if( abs(eDiff) < machineP ) write(*,*) "[addF3]: WARNING degenerate bands n0=",nZero,"n=",n," eDiff=",eDiff
+				!
+				!loop matrix indices
+				do j = 1, 3
+					do i = 1, 3
+						!
+						!loop levi civita
+						do k = 1, 3
+							do l = 1,3				
+								!VELOCITIES
+								Vtmp		= Velo(i,nZero,n,ki)  * Velo(k,n,nZero,ki) * Velo(l,nZero,nZero,ki)
 								!if( dimag(Vtmp) > 1e-10_dp ) write(*,*)	"[addF3]: none zero imag velo product: ",dimag(Vtmp),"; real part: ",dreal(Vtmp)
 								!
 								!MATRIX
