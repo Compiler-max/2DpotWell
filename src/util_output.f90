@@ -511,11 +511,11 @@ module util_output
 		write(600,'(a,f14.6,a,f14.6,a,f14.6,a)')	"	sum	",sum(essin_centF3(1,:))," ",&
 																sum(essin_centF3(2,:))," ",&
 																sum(essin_centF3(3,:))," | "
-		write(600,*)	"begin niu_f3"
+		write(600,*)	"begin essin_f3"
 		write(600,'(a,e16.9,a,e16.9,a,e16.9,a)')	"				",sum(essin_centF3(1,:))*polQuantum*centiMet," ",&
 																sum(essin_centF3(2,:))*polQuantum*centiMet," ",&
 																sum(essin_centF3(3,:))*polQuantum*centiMet," #muC/cm"
-		write(600,*)	"end niu_f3"
+		write(600,*)	"end essin_f3"
 
 		close(600)
 		!
