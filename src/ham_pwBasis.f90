@@ -24,7 +24,7 @@ module ham_PWbasis
 	subroutine calcVeloGrad(qi_loc, qi_glob, ck)
 		!calculates the velocity operator matrix
 		!	Psi_n v Psi_m	= i/hbar Psi_n grad_r Psi_m
-		!					= - 1 / hbar sum_G ckn^dag ckm G
+		!					= + 1 / hbar sum_G ckn^dag ckm G
 		integer,		intent(in)		::	qi_loc, qi_glob
 		complex(dp),	intent(in)		:: 	ck(:,:)
 		complex(dp),	allocatable		::	v_mat(:,:,:)
@@ -40,7 +40,7 @@ module ham_PWbasis
 				!
 				!SUM OVER BASIS FUNCTIONS
 				do gi = 1 , nGq(qi_loc)
-					v_mat(1:2,n,m) = v_mat(1:2,n,m) -  dconjg(ck(gi,n)) *  ck(gi,m)  *  Gvec(1:2,gi,qi_loc)
+					v_mat(1:2,n,m) = v_mat(1:2,n,m) +  dconjg(ck(gi,n)) *  ck(gi,m)  *  Gvec(1:2,gi,qi_loc)
 				end do
 			end do
 		end do
