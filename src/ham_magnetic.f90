@@ -28,16 +28,16 @@ module ham_Magnetic
 		!adds oscillating magnetic field to hamiltonian via peierls sub
 		!
 		!
+		!	H 	= 	B_z / (2 V q) i  2pi aX 	dGy	(1-exp[i aX dGx])(1-exp[i aY dGy])		/		(dGy*(4pi^2-aX^2*dGx^2))
 		!
-		!		H 	= (	p - e A )^2 / 2m
-		!			= p^2 /2m_e -  (pA  + Ap ) / 2m_e + e^2 A^2 / 2m_e
-		!			= p^2 /2m_e -  (pA  + Ap ) / 2m_e 					(neglects terms which are second order in the external field)
+		!		=: H_prefact * integral
 		!
-		!	->H_mag = (p A + A p) / m_e
+		!	with
+		!		->		H_prefact = B_z / (2 V q) i  2pi aX		= 		 i pi B_z aX / ( V q)
+		!	
+		!		->		integral = dGy	(1-exp[i aX dGx])(1-exp[i aY dGy])		/		(dGy*(4pi^2-aX^2*dGx^2))
 		!
-		!		B	= 	B_ext*cos(q*r)
-		!		B	=  d A / dr 	-> 	  A = 1/q	* B_ext *	sin(q*r)
-		!
+		!							= (1-exp[i aX dGx])(1-exp[i aY dGy])	/	(4pi^2-aX^2*dGx^2)
 		!	units:
 		!		[p]	= hbar / a0
 		!		[B] = hbar / (e a0^2)
@@ -50,43 +50,32 @@ module ham_Magnetic
 		complex(dp),	intent(inout)	::	Hmat(:,:)
 		integer							::	i, j
 		real(dp)						::	qX_Period, dGx, dGy
-		complex(dp)						::	H_prefact
+		complex(dp)						::	H_prefact, denom, numer
 		!
 		!period of oscillating B field
 		qX_period	=	2.0_dp * PI_dp / aX 
-		H_prefact 	= 	dcmplx( 0.5_dp *	Bext(3) / qX_period	)		!
+		H_prefact 	= 	dcmplx( 0.0_dp, 		PI_dp *	Bext(3) * aX / (qX_period*vol)	)		!purely imaginary due to i in formula
 		!
-		!Add to Hamiltonian
+		!Loop elements
 		do j = 1, nGq(qLoc)
 			do i = 1, nGq(qLoc)
 				!
 				!
-				!CASE 1: gives 0 
+				!only off diagonal elements can contribute
 				if( i/=j ) then
 					dGx		= Gvec(1,j,qLoc) - Gvec(1,i,qLoc) 
 					dGy		= Gvec(2,j,qLoc) - Gvec(2,i,qLoc) 
 					!
 					!
-					!
-					!CASE 2: dGx == 0 gives zero
-					if( abs(dGx) > machineP  ) then
+					if( abs(dGx) > machineP  .and. abs(dGy) > machineP ) then
+						!
+						numer		= (	myExp(aX*dGx) - 1.0_dp) * (	myExp(aY*dgY) - 1.0_dp)
 						!
 						!
-						!
-						!CASE 3: dGy == 0
-						if( abs(dGy) < machineP ) then
-							Hmat(i,j)	= Hmat(i,j) + H_prefact * h1_gyZero( dGx, qX_period)
-						
-						!-------------------------------------------------------------------------------------------------------------
+						denom		= dcmplx( 4.0_dp*PI_dp - aX**2 * dGx**2	)
 						!
 						!
-						!
-						!CASE 4: dGy /= 0
-						else if( abs(dGy) >= machineP ) then
-							Hmat(i,j)	= Hmat(i,j) + H_prefact * h1_gyFull( dGx, dGy, qX_period)	
-						end if					
-
-						!-------------------------------------------------------------------------------------------------------------								!						!DEFAULT						else							stop "[add_magHam]: reached forbidden region in dGx, dGy discussion"						end if 						!-------------------------------------------------------------------------------------------------------------
+						Hmat(i,j)	= Hmat(i,j) + H_prefact * numer / denom
 					end if
 					!
 					!-----------------------------------------------------------------------------------------------------------------
