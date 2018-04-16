@@ -5,7 +5,9 @@ module util_math
 	private
 
 
-	public :: 	dp, PI_dp, i_dp, acc, aUtoAngstrm, aUtoEv, aUtoTesla, setAcc, machineP, & 
+	public :: 	dp, PI_dp, i_dp, acc, &
+				aUtoAngstrm, aUtoEv, aUtoTesla, speedOfLight, &
+				setAcc, machineP, & 
 				myExp, Cangle, myLeviCivita,  crossP,& 
 				isUnit, isIdentity, isHermitian, mySVD,&
 				eigSolverFULL, eigSolverPART, myMatInvSqrt, rotMat, myCommutat
