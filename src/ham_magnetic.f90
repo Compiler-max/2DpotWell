@@ -2,7 +2,7 @@ module ham_Magnetic
 	!add Zeeman like term to hamitlonian
 	use mpi
 	use omp_lib
-	use util_math,		only:	dp, PI_dp, machineP, myExp, speedOfLight
+	use util_math,		only:	dp, PI_dp, machineP, myExp
 	use util_sysPara				
 	implicit none	
 	!#include "mpif.h"
@@ -54,7 +54,7 @@ module ham_Magnetic
 		!
 		!period of oscillating B field
 		qX_period	=	2.0_dp * PI_dp / aX 
-		H_prefact 	= 	dcmplx( 0.0_dp, 		PI_dp *	Bext(3) * aX / (qX_period*vol*speedOfLight)	)		!purely imaginary due to i in formula
+		H_prefact 	= 	dcmplx( 0.0_dp, 		PI_dp *	Bext(3) * aX / (qX_period*vol)	)		!purely imaginary due to i in formula
 		!
 		!Loop elements
 		do j = 1, nGq(qLoc)
