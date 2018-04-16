@@ -37,6 +37,7 @@ module util_math
 	real(dp),		parameter 	::	aUtoAngstrm 	= 0.52917721092_dp
 	real(dp),		parameter 	::	aUtoEv	 		= 27.211385_dp
 	real(dp),		parameter	::	aUtoTesla		= 235051.76_dp
+	real(dp),		parameter	::	speedOfLight	= 137.035999_dp !in atomic units
 
 	contains
 
