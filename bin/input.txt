@@ -3,7 +3,7 @@
 [unitCell]
     aX          =   10
     aY          =   5
-    supCx       =   9
+    supCx       =   1
 
 [atoms]
     nAt         =   2
@@ -34,7 +34,6 @@
    Gcut        = 10.0 # changed by probeB.sh
    nSolve      = 96 # changed by probeB.sh
    nQx         = 4 # changed by probeB.sh
-#   nQy         = 8 # changed by probeB.sh
     thres       =   0.1
 
 [ham]
@@ -60,16 +59,12 @@
     pw90GaugeB  =   f
 
 [w90plot]
-#    nSCx        = 5 # changed by probeB.sh
-#    nSCy        = 5 # changed by probeB.sh
     nRx         =   10
     nRy         =   10
     nRz         =   2
 
 [w90interp]
     k_mesh_multiplier = 4
-#    nKx         = 129 # changed by probeB.sh
-#    nKy         = 129 # changed by probeB.sh
 
 [berry]
     fastConnConv=   t

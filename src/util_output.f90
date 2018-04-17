@@ -45,10 +45,10 @@ module util_output
 		write(*,*)								"*"
 		write(*,*)								"*"
 		write(*,*)								"[main]:**************************numerics info*************************"
-		write(*,'(a,i3,a,i3,a)')				"[main]: q mesh nQx=",nQx," nQy=",nQy
-		write(*,'(a,f8.3,a,f8.3)')				"[main]: dqx=",dqx, " dqy=",dqy
-		write(*,*)								"[main]: interpolation mesh        nK=",nK
-		write(*,*)								"[main]: basis cutoff parameter  Gcut=",Gcut
+		write(*,'(a,i3,a,i3,a)')				"[main]: q mesh nQx (input)=",nQx," nQy(derived)=",nQy
+		write(*,'(a,f8.3,a,f8.3,a)')			"[main]: dqx=",dqx, " dqy=",dqy," [1/a0]"
+		write(*,'(a,i3,a,i6)')					"[main]: interpolation mesh( multiplicator=",k_mesh_multiplier,")        nK=",nK
+		write(*,*)								"[main]: basis cutoff parameter  Gcut=",Gcut," [1/a0]"
 		write(*,'(a,i7,a,i7,a)')				"[main]: basis function   maximum  nG=",GmaxGLOBAL," of ",nG," trial basis functions"
 		write(*,*)								"[main]: only solve for the first nSolve=",nSolve," bands (solution subspace)"
 

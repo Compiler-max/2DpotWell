@@ -19,7 +19,7 @@ module util_sysPara
 				!grids:
 				qpts,  kpts, 															&
 				nQ, nQx, nQy, 															&
-				nKx, nKy, nK,  															&
+				k_mesh_multiplier, nKx, nKy, nK,  										&
 				nSC, nSCx, nSCy, 														&
 				dqx, dqy, dkx, dky,														&
 				nR, nRx, nRy, nRz,   													&	
@@ -194,6 +194,8 @@ module util_sysPara
 
 
 		!
+		if( mod(aX/aY,1.0_dp) > 1e-7_dp)	stop	"wARNING unit length (aX/aY) should be integer multiples from each other "
+
 		write(*,*)	"[rootRead]: scale nQy with int(aX/aY)=",int(aX/aY)
 		nQy				= nQx * int(aX/aY) 
 		nSCx			= nQx + 1
