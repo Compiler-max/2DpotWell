@@ -1,7 +1,7 @@
 #Input for 2D pot well code
 
 [unitCell]
-    aX          =   5
+    aX          =   10
     aY          =   5
     supCx       =   9
 

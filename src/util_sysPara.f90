@@ -194,7 +194,8 @@ module util_sysPara
 
 
 		!
-		nQy				= nQx * supCx
+		write(*,*)	"[rootRead]: scale nQy with int(aX/aY)=",int(aX/aY)
+		nQy				= nQx * int(aX/aY) 
 		nSCx			= nQx + 1
 		nSCy			= nQy + 1
 		nKx				= nQx * k_mesh_multiplier + 1
@@ -499,7 +500,11 @@ module util_sysPara
 			qyMin	= -1.0_dp * PI_dp * aX	/		vol
 			dqy		=  2.0_dp * PI_dp * aX	/	(vol * nQy)
 			!
-			if( abs(dqx - dqy) > 1e-7_dp)	stop '[qmeshGen]: non uniform mesh, change nQx and/or nQy'
+			if( abs(dqx - dqy) > 1e-7_dp) then
+				write(*,*)	'[qmeshGen]: non uniform mesh; nQx=',nQx,', nQy=',nQy
+				stop 	'q mesh setup failed'
+			end if
+
 
 			do qIy = 1, nQy
 				do qIx = 1, nQx
