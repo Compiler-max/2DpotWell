@@ -3,7 +3,7 @@
 [unitCell]
     aX          =   10
     aY          =   5
-    supCx       =   1
+    supCx       =   2
 
 [atoms]
     nAt         =   2

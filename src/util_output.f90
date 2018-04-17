@@ -39,7 +39,7 @@ module util_output
 
 !public:
 	subroutine	input_info_printer()
-		integer						:: wf, at, at_per_cell, count, cell
+		integer						:: wf, at, at_per_cell, count, cell, wf_per_cell
 		!
 		!
 		write(*,*)								"*"
@@ -87,18 +87,25 @@ module util_output
 		write(*,*)								"*"
 		write(*,*)								"*"
 		write(*,*)								"[main]:**************************Trial orbital info*************************"
+		wf_per_cell	= nWfs / supCx
 		!
 		write(*,*)								"[main]: nBands=", nBands
 		write(*,*)								"[main]: nWfs  =", nWfs
 		write(*,'(a,i3,a)')						"[main]: project ",nWfs/nAt," states onto each atom"
 		write(*,*)								"[main]: w90 seed_name= ", seedName
-		write(*,*)								"	#wf | assoc. atom | 	nX| 	nY "
+		write(*,*)								"	#cell | #wf | assoc. atom | 	nX| 	nY "
 		write(*,*)								"-------------------------------------------------"
+		count 	= 0
+		cell	= 0
 		do wf = 1, nWfs
-			if( wf > 1) then 
-				if( 	proj_at(wf) > proj_at(wf-1)	) 	write(*,*)"-------------------------------------------------"
+			write(*,'(a,i3,a,i3,a,i3,a,i3,a,i3)')		"	",cell+1," | ",wf,"	 | ",proj_at(wf),"	 | ",proj_nX(wf)," | ",proj_nY(wf)
+
+			count = count + 1
+			if( count == wf_per_cell) then
+				write(*,*)"---------------------------------------------------------------------------"
+				cell 	= cell + 1 
+				count 	= 0 
 			end if
-			write(*,'(a,i3,a,i3,a,i3,a,i3)')		"	",wf,"	 | ",proj_at(wf),"	 | ",proj_nX(wf)," | ",proj_nY(wf)
 		end do
 		!
 		!
