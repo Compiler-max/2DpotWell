@@ -79,6 +79,9 @@ program main
 		write(*,*)								"*"
 		write(*,*)								"[main]:**************************Hamiltonian info*************************"
 		write(*,'(a,i3,a,e12.4,a)')				"[main]:	featuring ",nAt," well potentials, deepest well	",minval(atPot(:)),			" Hartree"
+		write(*,*)								"[main]: list of well potentials:"
+		write(*,*)									atPot(:)
+
 		if( doRashba)	write(*,'(a,e12.4,a)')	"[main]:	featuring a Rashba term with prefact 		",aRashba,							" Hartree a0"
 		if (doRashba) then
 			if( use_px_rashba)	write(*,*)			"[main]:	rashba will enter via aRashba 	* p_x	(x-component of Gvec)"
