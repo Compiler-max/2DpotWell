@@ -11,7 +11,7 @@ program main
 	use util_basisIO,	only:
 
 	use util_output,	only:		writeMeshInfo, writePolFile, write_K_lattices, & 
-									printTiming, printBasisInfo	!printMat, printInp, printWannInfo,writeSysInfo  
+									input_info_printer, printTiming, printBasisInfo	!printMat, printInp, printWannInfo,writeSysInfo  
 
 
 							
@@ -55,61 +55,9 @@ program main
 	!
 	!print info
 	if( myID == root  ) then
-		write(*,*)								"*"
-		write(*,*)								"*"
-		write(*,*)								"[main]:**************************Infos about this run*************************"
-		write(*,'(a,i3,a,i3,a)')				"[main]: q mesh nQx=",nQx," nQy=",nQy
-		write(*,'(a,f8.3,a,f8.3)')				"[main]: dqx=",dqx, " dqy=",dqy
-		write(*,*)								"[main]: interpolation mesh        nK=",nK
-		write(*,*)								"[main]: basis cutoff parameter  Gcut=",Gcut
-		write(*,'(a,i7,a,i7,a)')				"[main]: basis function   maximum  nG=",GmaxGLOBAL," of ",nG," trial basis functions"
-		write(*,*)								"[main]: only solve for        nSolve=",nSolve
-    	write(*,*)								"[main]: nBands=", nBands
-		write(*,*)								"[main]: nWfs  =", nWfs
-		write(*,*)								"[main]: nAt   =", nAt
-		write(*,'(a,i3,a)')						"[main]: project ",nWfs/nAt," states onto each atom"
-		write(*,'(a,f6.3,a,f6.3,a,f6.3,a)')		"[main]: Bext = (",Bext(1)*aUtoTesla,", ",Bext(2)*aUtoTesla, ", ",Bext(3)*aUtoTesla,") (T)"
-		write(*,*)								"[main]: w90 seed_name= ", seedName	
-		
-		write(*,*)								"[main]:**************************Trial orbital info*************************"
-		write(*,*)								"[main]: proj_at ="
-		write(*,*)								proj_at(:)
-		write(*,*)								"[main]: projnX  ="
-		write(*,*)								projnX(:)
-		write(*,*)								"[main]: projnY  ="
-		write(*,*)								projnY(:)
-
-
-		write(*,*)								"*"
-		write(*,*)								"[main]:**************************Hamiltonian info*************************"
-		write(*,'(a,i3,a,e12.4,a)')				"[main]:	featuring ",nAt," well potentials, deepest well	",minval(atPot(:)),			" Hartree"
-		write(*,*)								"[main]: list of all well potentials [in Hartree]:"
-		write(*,*)									atPot(:)
-
-		if( doRashba)	write(*,'(a,e12.4,a)')	"[main]:	featuring a Rashba term with prefact 		",aRashba,							" Hartree a0"
-		if (doRashba) then
-			if( use_px_rashba)	write(*,*)			"[main]:	rashba will enter via aRashba 	* p_x	(x-component of Gvec)"
-			if( .not. use_px_rashba)	write(*,*)	"[main]:	rashba will enter via aRashba 	* p_y	(y-component of Gvec)"
-		end if
-		if( doZeeman)	write(*,'(a,e12.4,a)')	"[main]:	featuring a Zeeman term with prefact 		",0.5_dp*Bext(3),					" Hartree"
-		if( doMagHam)	write(*,'(a,e12.4,a)')	"[main]:	featuring a osc. mag. field  prefact 		",0.5_dp*Bext(3)*aX/(2.0_dp*PI_dp),	" Hartree a0"
-		write(*,*)								"*"
-		if( debugHam)	write(*,*)				"[main]:	debug on: will test Ham for hermiticity"
-		write(*,*)								"*"
-		write(*,*)								"*"
-		!
+		call input_info_printer()
 		call cpu_time(T1)
 		alloT = T1 - T0
-
-
-		!try to print some WARNINGs for to small Gcut
-		write(*,*)								"[main]:**************************BASIS SET DEBUG*************************"
-		call printBasisInfo()
-		write(*,*)								"[main]: ...wrote basis set debug info"
-		write(*,*)								"*"
-		write(*,*)								"*"
-		write(*,*)								"*"
-		write(*,*)								"*"
 	end if
 
 	!HAM SOLVER

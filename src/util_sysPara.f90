@@ -11,7 +11,7 @@ module util_sysPara
 	public :: 	readInp, 																& 
 				!public para:
 				!unit cell:
-				dim, aX, aY, vol, recpLatt, 											& 
+				dim, aX, aY, vol, recpLatt, supCx,										& 
 				!atoms:
 				nAt, relXpos, relYpos, atRx, atRy, atPot, dVpot,atPos, atR,  			&
 				!cutoff:
@@ -38,31 +38,38 @@ module util_sysPara
 
 
 	!
-	integer  										:: 	dim=2, nAt=0,													& 
-														nG, nGx,nGy, Gmax, GmaxGLOBAL, GminGLOBAL,nSolve=20,		&  
-														nQx=1, nQy=1,nQ , 												&
-														nSCx=1, nSCy=1, nSC, 											& 
-														nKx=1, nKy=1, nK,  												&
-														nShells, nw90it, 												&
-														nRx=10, nRy=10, nRz=2, nR, nBands=1,nWfs=1, 					&
+	integer  										:: 	dim=2, nAt=0, nAt_inp=0, supCx=1,												& 
+														nG, nGx,nGy, Gmax, GmaxGLOBAL, GminGLOBAL,nSolve=20,							&  
+														nQx=1, nQy=1,nQ , 																&
+														nSCx=1, nSCy=1, nSC, 															& 
+														nKx=1, nKy=1, nK,k_mesh_multiplier=1,   										&
+														nShells, nw90it, 																&
+														nRx=10, nRy=10, nRz=2, nR, nBands=1,nBands_inp=1,nWfs=1,nWfs_inp=1, 			&
 														myID, nProcs, ierr, qChunk
 	integer,	parameter							::	root=0
-	real(dp) 										::	aX=0.0_dp, aY=0.0_dp, vol=0.0_dp, Gcut=2*PI_dp, thres,			& 
-														dqx, dqy, dkx, dky,												& 
+	real(dp) 										::	aX=0.0_dp,aX_inp=0.0_dp, aY=0.0_dp, vol=0.0_dp, Gcut=2*PI_dp, thres,			& 
+														dqx, dqy, dkx, dky,																& 
 														aRashba=0.0_dp, B0, Bext(3)	, prefactF3, recpLatt(2,2)
 	character(len=3)								::	seedName										
 	character(len=9)								::	w90_dir	="w90files/"
 	character(len=7)								::	info_dir="output/"
 	character(len=8)								::	raw_dir	="rawData/", mkdir="mkdir ./"	!to use with system(mkdir//$dir_path) 
-	integer,	allocatable,	dimension(:)		::	nGq, shells, proj_at, proj_nX, proj_nY
-	real(dp),	allocatable,	dimension(:)		::	relXpos, relYpos, atRx, atRy, atPot, dVpot
-	real(dp),	allocatable,	dimension(:,:)		::	atPos, atR, qpts, kpts 
+	integer,	allocatable,	dimension(:)		::	nGq, shells, &
+														proj_at, proj_nX, proj_nY, 														&
+														proj_at_inp, proj_nX_inp, proj_nY_inp		
+	!
+	real(dp),	allocatable,	dimension(:)		::	relXpos_inp, relYpos_inp, atRx_inp, atRy_inp, atPot_inp, dVpot_inp, 			&
+														relXpos, relYpos, atRx, atRy, atPot, dVpot
+	!
+	real(dp),	allocatable,	dimension(:,:)		::	atPos_inp, atR_inp, 															&
+														atPos, atR, 																	&
+														qpts, kpts 
 
 	real(dp),	allocatable,	dimension(:,:,:)	::	Gvec
-	logical											::	debugHam,  														&
-														doSolveHam, doVdesc,  doRashba, doZeeman, doMagHam, 			&
-														use_px_rashba, 													&
-														useBloch, doPw90, pw90GaugeB, 									& 
+	logical											::	debugHam,  																		&
+														doSolveHam, doVdesc,  doRashba, doZeeman, doMagHam, 							&
+														use_px_rashba, 																	&
+														useBloch, doPw90, pw90GaugeB, 													& 
 														doBerry, doNiu, doGaugBack, fastConnConv
 
 
@@ -123,13 +130,14 @@ module util_sysPara
 		
 		!READ SCALARS
 		![unitCell]
-		call CFG_add_get(my_cfg,	"unitCell%aX"      	,	aX  	   	,	"length of unit cell in agnstroem"		)
+		call CFG_add_get(my_cfg,	"unitCell%aX"      	,	aX_inp  	  ,	"length of unit cell in agnstroem"		)
 		call CFG_add_get(my_cfg,	"unitCell%aY"      	,	aY  	   	,	"length of unit cell in agnstroem"		)
+		call CFG_add_get(my_cfg,	"unitCell%supCx"    ,	supCx  	   	,	"length of unit cell in agnstroem"		)
 		![atoms]
-		call CFG_add_get(my_cfg,	"atoms%nAt"			,	nAt			,	"number of atoms per unit cell"			)
+		call CFG_add_get(my_cfg,	"atoms%nAt"			,	nAt_inp		,	"number of atoms per unit cell"			)
 		![wann]
-		call CFG_add_get(my_cfg,	"wann%nBands"		,	nBands	 	,	"# of bands to project onto trial orbs"	)
-		call CFG_add_get(my_cfg,	"wann%nWfs"			,	nWfs	 	,	"# wannier functions to generate"		)
+		call CFG_add_get(my_cfg,	"wann%nBands"		,	nBands_inp	 ,	"# of bands to project onto trial orbs"	)
+		call CFG_add_get(my_cfg,	"wann%nWfs"			,	nWfs_inp	 ,	"# wannier functions to generate"		)
 		![field]	
 		call CFG_add_get(my_cfg,	"field%B0"			,	B0			,	"scaling fact. of ext. magnetic field"	)
 		call CFG_add_get(my_cfg,	"field%Bext"		,	Bext		,	"vector of ext. magnetic field"			)
@@ -140,7 +148,7 @@ module util_sysPara
 		call CFG_add_get(my_cfg,	"numerics%Gcut"		,	Gcut	    ,	"k space cut of parameter"				)
 		call CFG_add_get(my_cfg,	"numerics%nSolve"	,	nSolve	    ,	"number of eigenstates to find"			)
 		call CFG_add_get(my_cfg,	"numerics%nQx"     	,	nQx      	,	"amount of k points used"				)
-		call CFG_add_get(my_cfg,	"numerics%nQy"     	,	nQy      	,	"amount of k points used"				)
+		!call CFG_add_get(my_cfg,	"numerics%nQy"     	,	nQy      	,	"amount of k points used"				)
 		call CFG_add_get(my_cfg,	"numerics%thres"    ,	thres      	,	"threshold for overlap WARNINGs"		)
 		![ham]
 		call CFG_add_get(my_cfg,	"ham%debugHam"		, 	debugHam	,	"switch for debuging tests in solveHam"	)	
@@ -159,14 +167,15 @@ module util_sysPara
 		call CFG_add_get(my_cfg,	"w90%nw90it"		, 	 nw90it		,	"number of iterations for wannnierisat,")
 		call CFG_add_get(my_cfg,	"w90%pw90GaugeB"	,	pw90GaugeB	,	"logical for switching gauge trafo	   ")
 		![w90plot]
-		call CFG_add_get(my_cfg,	"w90plot%nSCx"	     ,	nSCx   		,	"#			supercells "				)
-		call CFG_add_get(my_cfg,	"w90plot%nSCy"	     ,	nSCy   		,	"#			supercells "				)
+		!call CFG_add_get(my_cfg,	"w90plot%nSCx"	     ,	nSCx   		,	"#			supercells "				)
+		!call CFG_add_get(my_cfg,	"w90plot%nSCy"	     ,	nSCy   		,	"#			supercells "				)
 		call CFG_add_get(my_cfg,	"w90plot%nRx"    	,	nRx      	,	"spacing of real space plot grid"		)
 		call CFG_add_get(my_cfg,	"w90plot%nRy"    	,	nRy      	,	"spacing of real space plot grid"		)
 		call CFG_add_get(my_cfg,	"w90plot%nRz"		,	nRz			,	"spacing of real space plot grid"		)
 		![w90interp]
-		call CFG_add_get(my_cfg,	"w90interp%nKx"		,	nKx			,	"# k x points of interpolation mesh"	)
-		call CFG_add_get(my_cfg,	"w90interp%nKy"		,	nKy			,	"# k x points of interpolation mesh"	)
+		call CFG_add_get(my_cfg,	"w90interp%k_mesh_multiplier"		,	k_mesh_multiplier		,	"# k x points of interpolation mesh"	)		
+		!call CFG_add_get(my_cfg,	"w90interp%nKx"		,	nKx			,	"# k x points of interpolation mesh"	)
+		!call CFG_add_get(my_cfg,	"w90interp%nKy"		,	nKy			,	"# k x points of interpolation mesh"	)
 		![berry]
 		call CFG_add_get(my_cfg,	"berry%fastConnConv",fastConnConv	,	"try faster converging fd formula"		)
 		call CFG_add_get(my_cfg,	"berry%doNiu"		,	doNiu		,	"switch for nius first order pol"		)
@@ -174,6 +183,25 @@ module util_sysPara
 		![semiclassics]
 		call CFG_add_get(my_cfg,	"semiclassics%prefactF3"	,	prefactF3,	"real prefactor for F3 "			)
 		
+
+
+
+		!reformulate super cell
+		aX				= real(supCx,dp) * aX_inp
+		nAt				= supCx * nAt_inp
+		nBands			= supCx * nBands_inp
+		nWfs			= supCx * nWfs_inp
+
+
+		!
+		nQy				= nQx * supCx
+		nSCx			= nQx + 1
+		nSCy			= nQy + 1
+		nKx				= nQx * k_mesh_multiplier + 1
+		nKy				= nQy * k_mesh_multiplier + 1
+		write(*,*)		"[rootRead]:	WARNING nQy, nSCx, nSCy, nKx, nKy overwritten (handles uniform q/k mesh automatically)"
+
+
 		!get derived quantities
 		call getTestGridSize(nGx, nGy)	
 		nG				= 	nGx*nGy
@@ -197,27 +225,95 @@ module util_sysPara
 		recpLatt(2,2)	= 2.0_dp * PI_dp * aX / vol
 		!
 		!
+		!atoms (input)
+		allocate(	relXpos_inp(nAt_inp)		)
+		allocate(	relYpos_inp(nAt_inp)		)
+		allocate(	atRx_inp(nAt_inp)			)
+		allocate(	atRy_inp(nAt_inp)			)
+		allocate(	atPot_inp(nAt_inp)			)
+		allocate(	dVpot_inp(nAt_inp)			)
+		!
+		!wann (input)
+		allocate(	proj_at_inp(nWfs_inp)		)
+		allocate(	proj_nX_inp(nWfs_inp)		)
+		allocate(	proj_nY_inp(nWfs_inp)		)
+		!
 		call allocateArrays()
 		!
 		!read the arrays:
 		![atoms]
-		call CFG_add_get(my_cfg,	"atoms%relXpos"		,	relXpos		,	"relative positions in unit cell"		)
-		call CFG_add_get(my_cfg,	"atoms%relYpos"		,	relYpos		,	"relative positions in unit cell"		)
-		call CFG_add_get(my_cfg,	"atoms%atRx"		,	atRx		,	"radius of each atom in angstroem"		)
-		call CFG_add_get(my_cfg,	"atoms%atRy"		,	atRy		,	"radius of each atom in angstroem"		)
-		call CFG_add_get(my_cfg,	"atoms%atPot"		,	atPot		,	"potential depth in hartree"			)
-		call CFG_add_get(my_cfg,	"atoms%dVpot"		,	dVpot		,	"potential gradient"					)
+		call CFG_add_get(my_cfg,	"atoms%relXpos"		,	relXpos_inp		,	"relative positions in unit cell"		)
+		call CFG_add_get(my_cfg,	"atoms%relYpos"		,	relYpos_inp		,	"relative positions in unit cell"		)
+		call CFG_add_get(my_cfg,	"atoms%atRx"		,	atRx_inp		,	"radius of each atom in angstroem"		)
+		call CFG_add_get(my_cfg,	"atoms%atRy"		,	atRy_inp		,	"radius of each atom in angstroem"		)
+		call CFG_add_get(my_cfg,	"atoms%atPot"		,	atPot_inp		,	"potential depth in hartree"			)
+		call CFG_add_get(my_cfg,	"atoms%dVpot"		,	dVpot_inp		,	"potential gradient"					)
 		![wann]
-		call CFG_add_get(my_cfg,	"wann%projAt"		,	proj_at		,	"list of atoms to project to (init U)"	)
-		call CFG_add_get(my_cfg,	"wann%projnX"		,	proj_nX		,	"on which state to project x-dir"		)
-		call CFG_add_get(my_cfg,	"wann%projnY"		,	proj_nY		,	"on which state to project y_dir"		)
+		call CFG_add_get(my_cfg,	"wann%projAt"		,	proj_at_inp		,	"list of atoms to project to (init U)"	)
+		call CFG_add_get(my_cfg,	"wann%projnX"		,	proj_nX_inp		,	"on which state to project x-dir"		)
+		call CFG_add_get(my_cfg,	"wann%projnY"		,	proj_nY_inp		,	"on which state to project y_dir"		)
 		![w90]
 		call CFG_add_get(my_cfg,	"w90%shells"		, 	shells		,	"list of shells used for FD connection"	)
 	
+		!project to super cell
+		call superCell_projector()
 		!
 		!
 		return
 	end subroutine
+
+
+
+	subroutine superCell_projector()
+		!projects onto a superCell in x direction
+		integer							::	cell, at, wf, index
+
+
+		!!atoms (input)
+		!allocate(	relXpos_inp(nAt_inp)		)
+		!allocate(	relYpos_inp(nAt_inp)		)
+		!allocate(	atRx_inp(nAt_inp)			)
+		!allocate(	atRy_inp(nAt_inp)			)
+		!allocate(	atPot_inp(nAt_inp)			)
+		!allocate(	dVpot_inp(nAt_inp)			)
+		
+		!!wann (super Cell)
+		!allocate(	proj_at_inp(nWfs_inp)		)
+		!allocate(	proj_nX_inp(nWfs_inp)		)
+		!allocate(	proj_nY_inp(nWfs_inp)		)
+		!!allocate(	atPos_inp(dim,nAt_inp)		
+
+		do cell = 0, supCx-1
+			!project atom arrays
+			do at = 1, nAt_inp
+				index				= cell*nAt_inp + at
+				!
+				relXpos(index)		= ( real(cell,dp) + relXpos_inp( at ) )	*	aX_inp 	/ aX 	! = 	(cell offset + local position) / superCellSize 
+				!
+				relYpos(index)		= relYpos_inp(at)
+				atRx(index)			= atRx_inp(at)
+				atRy(index)			= atRy_inp(at)
+				atPot(index)		= atPot_inp(at)
+				dVpot(index)		= dVpot_inp(at)
+			end do
+			!
+			!
+			!project Wannier functions
+			do wf = 1, nWfs_inp
+				proj_at(	cell*nWfs_inp + wf)	=	cell*nAt_inp + proj_at_inp(wf)
+				!
+				proj_nX(	cell*nWfs_inp + wf)	=	proj_nX_inp(wf)
+				proj_nY(	cell*nWfs_inp + wf)	=	proj_nY_inp(wf)
+			end do
+		end do
+		write(*,*)	"[superCell_projector]: finished projection"
+		!
+		return
+	end subroutine
+
+
+
+
 
 
 	subroutine bcastPARAM()
@@ -225,14 +321,19 @@ module util_sysPara
 		!
 		!
 		![unitCell]
+		call MPI_Bcast( aX_inp		,		1	,	MPI_DOUBLE_PRECISION	, 	root,	MPI_COMM_WORLD, ierr)
 		call MPI_Bcast( aX			,		1	,	MPI_DOUBLE_PRECISION	, 	root,	MPI_COMM_WORLD, ierr)
 		call MPI_Bcast( aY			,		1	,	MPI_DOUBLE_PRECISION	, 	root,	MPI_COMM_WORLD, ierr)
+		call MPI_Bcast( supCx		,		1	,		MPI_INTEGER			,	root,	MPI_COMM_WORLD, ierr)
 		![atoms]
 		call MPI_Bcast( doVdesc		, 		1	,		MPI_LOGICAL			,	root,	MPI_COMM_WORLD, ierr)	
+		call MPI_Bcast( nAt_inp		, 		1	,		MPI_INTEGER			,	root,	MPI_COMM_WORLD, ierr)	
 		call MPI_Bcast( nAt			, 		1	,		MPI_INTEGER			,	root,	MPI_COMM_WORLD, ierr)		
 		![wann]
+		call MPI_Bcast( nBands_inp	,		1	,		MPI_INTEGER			,	root,	MPI_COMM_WORLD, ierr)		
 		call MPI_Bcast( nBands		,		1	,		MPI_INTEGER			,	root,	MPI_COMM_WORLD, ierr)		
-		call MPI_Bcast( nWfs		,		1	,		MPI_INTEGER			,	root,	MPI_COMM_WORLD, ierr)
+		call MPI_Bcast( nWfs_inp	,		1	,		MPI_INTEGER			,	root,	MPI_COMM_WORLD, ierr)
+		call MPI_Bcast( nWfs		,		1	,		MPI_INTEGER			,	root,	MPI_COMM_WORLD, ierr)		
 		![field]
 		call MPI_Bcast(	B0 			,		1	,	MPI_DOUBLE_PRECISION	,	root,	MPI_COMM_WORLD, ierr)		
 		call MPI_Bcast(	Bext 		,		3	,	MPI_DOUBLE_PRECISION	,	root,	MPI_COMM_WORLD, ierr)
@@ -292,12 +393,21 @@ module util_sysPara
 		!
 		!
 		call MPI_BARRIER(MPI_COMM_WORLD, ierr)
-		call MPI_Bcast(	shells	,		nShells	,		MPI_INTEGER			,	root,	MPI_COMM_WORLD, ierr)
-		call MPI_Bcast(	atPot	,		nAt		,	MPI_DOUBLE_PRECISION	,	root,	MPI_COMM_WORLD, ierr)
+		call MPI_Bcast(	shells		,	nShells	,		MPI_INTEGER			,	root,	MPI_COMM_WORLD, ierr)
+
+		!call MPI_Bcast(	atPot_inp	,	nAt_inp	,	MPI_DOUBLE_PRECISION	,	root,	MPI_COMM_WORLD, ierr)
+		call MPI_Bcast(	atPot		,	nAt		,	MPI_DOUBLE_PRECISION	,	root,	MPI_COMM_WORLD, ierr)
+
+
+		!call MPI_Bcast(	proj_at_inp	,	nWfs_inp	,		MPI_INTEGER			,	root,	MPI_COMM_WORLD,	ierr)
+		!call MPI_Bcast( proj_nX_inp	,	nWfs_inp	,		MPI_INTEGER			,	root,	MPI_COMM_WORLD,	ierr)
+		!call MPI_Bcast( proj_nY_inp	,	nWfs_inp	,		MPI_INTEGER			,	root,	MPI_COMM_WORLD,	ierr)
 
 		call MPI_Bcast(	proj_at		,	nWfs	,		MPI_INTEGER			,	root,	MPI_COMM_WORLD,	ierr)
 		call MPI_Bcast( proj_nX		,	nWfs	,		MPI_INTEGER			,	root,	MPI_COMM_WORLD,	ierr)
 		call MPI_Bcast( proj_nY		,	nWfs	,		MPI_INTEGER			,	root,	MPI_COMM_WORLD,	ierr)
+
+
 		call MPI_BARRIER(MPI_COMM_WORLD, ierr)	!not necessary, helps against paranoia though
 		!
 		return
@@ -309,7 +419,7 @@ module util_sysPara
 	subroutine allocateArrays()
 		!allocates all needed arrays
 		!
-		!atoms
+		!atoms (super Cell)
 		allocate(	relXpos(nAt)		)
 		allocate(	relYpos(nAt)		)
 		allocate(	atRx(nAt)			)
@@ -318,10 +428,12 @@ module util_sysPara
 		allocate(	dVpot(nAt)			)
 		allocate(	atPos(dim,nAt)		)
 		allocate(	atR(dim,nAt) 		)
-		!wann
+		!wann (super Cell)
 		allocate(	proj_at(nWfs)		)
 		allocate(	proj_nX(nWfs)		)
 		allocate(	proj_nY(nWfs)		)
+		!
+		!
 		!meshes
 		allocate(	qpts(dim,nQ)		)
 		allocate(	kpts(dim,nK)		)

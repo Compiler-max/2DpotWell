@@ -16,7 +16,7 @@ module util_output
 				writePolFile, 										&
 				writeEnTXT, readEnTXT, 								& 
 				writeVeloHtxt, writeConnTxt, writeVeloEffTB, 		&
-				printTiming,  printBasisInfo
+				input_info_printer, printTiming,  printBasisInfo
 			
 
 
@@ -38,6 +38,116 @@ module util_output
 
 
 !public:
+	subroutine	input_info_printer()
+		integer						:: wf, at, at_per_cell, count, cell
+		!
+		!
+		write(*,*)								"*"
+		write(*,*)								"*"
+		write(*,*)								"[main]:**************************numerics info*************************"
+		write(*,'(a,i3,a,i3,a)')				"[main]: q mesh nQx=",nQx," nQy=",nQy
+		write(*,'(a,f8.3,a,f8.3)')				"[main]: dqx=",dqx, " dqy=",dqy
+		write(*,*)								"[main]: interpolation mesh        nK=",nK
+		write(*,*)								"[main]: basis cutoff parameter  Gcut=",Gcut
+		write(*,'(a,i7,a,i7,a)')				"[main]: basis function   maximum  nG=",GmaxGLOBAL," of ",nG," trial basis functions"
+		write(*,*)								"[main]: only solve for the first nSolve=",nSolve," bands (solution subspace)"
+
+		
+	
+		
+		!
+		!
+		write(*,*)								"*"
+		write(*,*)								"*"
+		write(*,*)								"[main]:**************************atom info*************************"
+		!
+		at_per_cell	= nAt / supCx
+		write(*,*)								"[main]: total nAt   =", nAt
+		write(*,*)								"[main]: nAt per cell=", at_per_cell
+		
+		write(*,*)								"	#cell |  #atom | x_rel |  y_rel	  |	 radius_x[a0] | radius_y[a0] | 	pot[Hartr]"
+		write(*,*)"---------------------------------------------------------------------------"
+		count 	= 0
+		cell 	= 0
+		do at = 1, nAt
+			write(*,'(a,i3,a,i3,a,f8.3,a,f8.3,a,f8.3,a,f8.3,a,f8.3)')		"	",cell+1," | ",at,"	 | ", relXpos(at)," | ", relYpos(at)," |   ",&
+																											 atRx(at), " | ",atRy(at)," | 	",atPot(at)
+																													
+			!
+			count = count + 1
+			if( count == at_per_cell) then
+				write(*,*)"---------------------------------------------------------------------------"
+				cell 	= cell + 1 
+				count 	= 0 
+			end if
+		end do
+
+		!
+		!
+		write(*,*)								"*"
+		write(*,*)								"*"
+		write(*,*)								"[main]:**************************Trial orbital info*************************"
+		!
+		write(*,*)								"[main]: nBands=", nBands
+		write(*,*)								"[main]: nWfs  =", nWfs
+		write(*,'(a,i3,a)')						"[main]: project ",nWfs/nAt," states onto each atom"
+		write(*,*)								"[main]: w90 seed_name= ", seedName
+		write(*,*)								"	#wf | assoc. atom | 	nX| 	nY "
+		write(*,*)								"-------------------------------------------------"
+		do wf = 1, nWfs
+			if( wf > 1) then 
+				if( 	proj_at(wf) > proj_at(wf-1)	) 	write(*,*)"-------------------------------------------------"
+			end if
+			write(*,'(a,i3,a,i3,a,i3,a,i3)')		"	",wf,"	 | ",proj_at(wf),"	 | ",proj_nX(wf)," | ",proj_nY(wf)
+		end do
+		!
+		!
+		write(*,*)								"*"
+		write(*,*)								"*"
+		write(*,*)								"[main]:**************************Hamiltonian info*************************"
+		!
+		write(*,'(a,i3,a,e12.4,a)')				"[main]:	featuring ",nAt," well potentials, deepest well	",minval(atPot(:)),			" Hartree"
+
+
+		if( doRashba)	write(*,'(a,e12.4,a)')	"[main]:	featuring a Rashba term with prefact 		",aRashba,							" Hartree a0"
+		if (doRashba) then
+			if( use_px_rashba)	write(*,*)			"[main]:	rashba will enter via aRashba 	* p_x	(x-component of Gvec)"
+			if( .not. use_px_rashba)	write(*,*)	"[main]:	rashba will enter via aRashba 	* p_y	(y-component of Gvec)"
+		end if
+		if( doZeeman)	write(*,'(a,e12.4,a)')	"[main]:	featuring a Zeeman term with prefact 		",0.5_dp*Bext(3),					" Hartree"
+		if( doMagHam)	write(*,'(a,e12.4,a)')	"[main]:	featuring a osc. mag. field  prefact 		",0.5_dp*Bext(3)*aX/(2.0_dp*PI_dp),	" Hartree a0"
+		write(*,*)								"*"
+		if( debugHam)	write(*,*)				"[main]:	debug on: will test Ham for hermiticity"
+		!
+		!
+		write(*,*)								"*"
+		write(*,*)								"*"
+		write(*,*)								"[main]:**************************external field*************************"
+		write(*,'(a,f6.3,a,f6.3,a,f6.3,a)')		"[main]: Bext = (",Bext(1)*aUtoTesla,", ",Bext(2)*aUtoTesla, ", ",Bext(3)*aUtoTesla,") (T)"
+		!
+		!try to print some WARNINGs for to small Gcut
+		write(*,*)								"*"
+		write(*,*)								"*"
+		write(*,*)								"[main]:**************************BASIS SET DEBUG*************************"
+		call printBasisInfo()
+		write(*,*)								"[main]: ...wrote basis set debug info"
+		write(*,*)								"*"
+		write(*,*)								"*"
+		write(*,*)								"*"
+		write(*,*)								"*"
+
+
+		return
+	end subroutine
+
+
+
+
+
+
+
+
+
 	subroutine writeMeshInfo()
 		!writes the generated meshes to readable txt file for debuggin purpose
 		!
