@@ -8,7 +8,7 @@ nProcs=16
 
 
 #data to calculate
-Gvalues=( -2.0 0.0 1.0 1.5 2.0 2.5 3.0) #10.0 100.0 1000.0 )
+Gvalues=(5.0 10.0 15.0 17.5 20.0 22.5 25.0 30.0 35.0 40.0) #10.0 100.0 1000.0 )
 
 
 
@@ -35,10 +35,10 @@ sed -i  "/nSolve/c\   nSolve      = $nSolve 	$infoString"	./input.txt
 sed -i 	"/shells/c\   shells       = $nShell 	$infoString" 	./input.txt
 
 #set Hamiltionian
-sed -i 	"/doVdesc/c\	doVdesc		= f 	$infoString"		./input.txt
-sed -i 	"/doZeeman/c\	doZeeman	= f 	$infoString"		./input.txt
-sed -i 	"/doMagHam/c\	doMagHam	= f 	$infoString"		./input.txt
-sed -i "/doRashba/c\    doRashba    = f     $infoString"        ./input.txt
+#sed -i 	"/doVdesc/c\	doVdesc		= f 	$infoString"		./input.txt
+#sed -i 	"/doZeeman/c\	doZeeman	= f 	$infoString"		./input.txt
+#sed -i 	"/doMagHam/c\	doMagHam	= f 	$infoString"		./input.txt
+#sed -i "/doRashba/c\    doRashba    = f     $infoString"        ./input.txt
 
 #folder to save data
 label='GcutTest'

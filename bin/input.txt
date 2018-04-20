@@ -17,8 +17,8 @@
 [wann]
     nBands      =   8
     nWfs        =   8
-    projAt      =   1 1 1 1     2 2 2 2 
-    projnX      =   1 1 2 2     1 1 2 2       
+    projAt      =   1 1 1 1     2 2 2 2
+    projnX      =   1 1 2 2     1 1 2 2
     projnY      =   1 2 1 2     1 2 1 2
 
 [field]
