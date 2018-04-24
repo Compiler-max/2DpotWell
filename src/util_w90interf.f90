@@ -416,9 +416,9 @@ module util_w90Interf
 			end do
 			!DEBUG
 			if( abs( krel(1,qi)*2.0_dp*PI_dp/aX - qpts(1,qi)) > machineP) then
-					write(*,*)	"				x: k_w90= ",krel(1,qi)*2.0_dp*PI_dp/aX, " qpts=",qpts(1,qi)
-					write(*,*)	"				y: k_w90= ",krel(2,qi)*2.0_dp*PI_dp/aY, " qpts=",qpts(2,qi)
-					stop	"[readUmatrix]: ERROR k meshes are ordered diffferently"
+					write(*,*)	"[readUmatrix]:	kx: k_w90= ",krel(1,qi)*2.0_dp*PI_dp/aX, " qpts=",qpts(1,qi)
+					write(*,*)	"[readUmatrix]:	ky: k_w90= ",krel(2,qi)*2.0_dp*PI_dp/aY, " qpts=",qpts(2,qi)
+					write(*,*)	"[readUmatrix]:	WARNING k meshes are ordered diffferently"
 			end if
 		end do
 		close(300)
