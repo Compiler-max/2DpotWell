@@ -13,7 +13,10 @@ from util_2dPW_Interf import getData
 
 
 
-def plotNiuColor(searchDir, plotState, cmap=mpl.cm.viridis,
+def plotNiuColor(searchDir, plotState, 
+						aX_ang=0,aY_ang=0, plot_percent=False,
+						plot_essin=True,
+						cmap=mpl.cm.viridis,
 						plot_titles=False, title_size=12, 
 						plot_k_labels=True, k_label_size=10,
 						plot_descriptor=False, descriptor_size=14,
@@ -28,22 +31,65 @@ def plotNiuColor(searchDir, plotState, cmap=mpl.cm.viridis,
 		print(searchDir+'/: WARNING different fields detected f2='+str(f2_bz)+' f3='+str(f3_bz))
 	bz = f2_bz
 
+
 	#get total max min of data
 	zmin = min(f2_min,f3_min)
 	zmax = max(f2_max,f3_max)
 
+	if plot_essin:
+		#essin flips sign of response
+		f2_plot_x = - f2_plot_x
+		f2_plot_y = - f2_plot_y
+		#
+		f3_plot_x = - f3_plot_x
+		f3_plot_y = - f3_plot_y
+
+		old_max = zmax
+		zmax = - zmin
+		zmin = - old_max
+
+
+	
+	
 	# Plot each slice as an independent subplot
 	fig, axes = plt.subplots(nrows=2, ncols=2, sharey='row')
 	# Make an axis for the colorbar on the right side
 
+	#only plot percent if the lattice vectors are given
+	do_plot_percent = False
+	if plot_percent:
+		if (aX_ang is not 0) and (aY_ang is not 0):
+			do_plot_percent = True
+
+	if do_plot_percent:
+		#x
+		f2_plot_x = f2_plot_x / aX_ang 
+		f3_plot_x = f3_plot_x / aX_ang
+		#y
+		f2_plot_y = f2_plot_y / aY_ang
+		f3_plot_y = f3_plot_y / aY_ang
+		
+		zmin = min(f2_min/max(aX_ang,aY_ang),f3_min/max(aX_ang,aY_ang))
+		zmax = max(f2_max/min(aX_ang,aY_ang),f3_max/min(aX_ang,aY_ang))
+
+		zmin= -(min(abs(zmin),abs(zmax)))
+		zmax= -zmin
+
+
+
+	
 	
 	if do_f2:
+
 		#
 		# X SHIFT
 		plt.subplot(221)
 		CSx_f2 	= plt.contourf(f2_xi, f2_yi, f2_plot_x, 15, cmap=cmap,vmax=zmax, vmin=zmin)
 		if plot_titles:
-			plt.title('a_x (Ang)',fontsize=title_size)
+			if do_plot_percent:
+				plt.title(r'$a_x (p_{\mathrm{q}})$',fontsize=title_size)
+			else:
+				plt.title(r'$a_x$ (Ang)',fontsize=title_size)
 		if plot_k_labels:
 			plt.ylabel('ky (a.u.)',fontsize=k_label_size)
 		#
@@ -52,7 +98,10 @@ def plotNiuColor(searchDir, plotState, cmap=mpl.cm.viridis,
 		plt.subplot(222)
 		CSy_f2 	= plt.contourf(f2_xi,f2_yi, f2_plot_y, 15, cmap=cmap,vmax=zmax, vmin=zmin)
 		if plot_titles:
-			plt.title('a_y (Ang)',fontsize=title_size)
+			if do_plot_percent:
+				plt.title(r'$a_y (p_{\mathrm{q}})$',fontsize=title_size)
+			else:
+				plt.title(r'$a_y$ (Ang)',fontsize=title_size)
 		
 		plt.tick_params(axis='y',  which='both',direction='in',   left='off', right='off',     labelleft='off', labelright='off') 
 
@@ -100,19 +149,37 @@ def plotNiuColor(searchDir, plotState, cmap=mpl.cm.viridis,
 	
 
 
-
-	plt.savefig(save_dir+'/a1_n'+str(plotState)+'_Bz'+str(bz)+'aRash'+str(a_Rashba)+'niuShift.pdf',bbox_inches='tight')
+	if plot_essin:
+		plt.savefig(save_dir+'/a1_n'+str(plotState)+'_Bz'+str(bz)+'aRash'+str(a_Rashba)+'essinShift.pdf',bbox_inches='tight')
+	else:
+		plt.savefig(save_dir+'/a1_n'+str(plotState)+'_Bz'+str(bz)+'aRash'+str(a_Rashba)+'niuShift.pdf',bbox_inches='tight')
 	#plt.show()
 	plt.close()
 
 	return axes
 
 
-
-#test
-#searchDir 	= '.'
-#fileName 	= 'f2response.txt'
-#plotState	= 5
 #
-#ax = plotNiuColor(searchDir,  plotState)
-#plt.show()
+
+
+
+def plotDir():
+	#test
+	searchDir 	= '.'
+	nwfs 		= 6
+
+
+
+	aUtoAngstrm = 0.52917721092
+	aX 			= 10.0 * aUtoAngstrm
+	aY			= 5.0 * aUtoAngstrm
+
+	print('unit cell=(',aX,', ',aY,'),(Ang)')
+
+	#
+	for plotState in range(1,nwfs+1):
+		print('plot state=',plotState)
+		ax = plotNiuColor(searchDir,  plotState, aX_ang=aX,aY_ang=aY, plot_percent=True, plot_essin=False, plot_titles=True)
+		plt.show()
+
+plotDir()
