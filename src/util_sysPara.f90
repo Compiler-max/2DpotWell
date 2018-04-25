@@ -585,11 +585,17 @@ module util_sysPara
 	subroutine getTestGridSize(nGx, nGy)
 		integer,	intent(out)			:: nGx, nGy
 		!
-		!nGrid = ceiling( 	dmax1(aX,aY)*Gcut/PI_dp 	+	dsqrt(2.0_dp)		)
+		!old:
+		!nGx	= ceiling(	aX		 *	( Gcut + 2.0_dp	)	/ PI_dp		)
+		!nGy = ceiling(	aY		 *	( Gcut + 2.0_dp	)	/ PI_dp		)
+		!	
+		!
+		!new:
+		!		nGi * 
+		!
+		nGx 	= ceiling( 0.5_dp * (aX*Gcut/PI_dp + 1.0_dp)		) * 2
+		nGy 	= ceiling( 0.5_dp * (aY*Gcut/PI_dp + 1.0_dp)		) * 2
 
-		!the addition of 1 makes shure that k point shifts are handled
-		nGx	= ceiling(	aX		 *	( Gcut + 1.0_dp	)	/ PI_dp		)
-		nGy = ceiling(	aY		 *	( Gcut + 1.0_dp	)	/ PI_dp		)
 		!
 		!make sure Grid is symmetric (needs to be odd number)
 		if(mod(nGx,2)==0) nGx = nGx + 1 
