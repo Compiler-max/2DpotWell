@@ -593,8 +593,8 @@ module util_sysPara
 		!new:
 		!		nGi * 
 		!
-		nGx 	= ceiling(  (aX*Gcut/PI_dp + 1.0_dp)		) 
-		nGy 	= ceiling(  (aY*Gcut/PI_dp + 1.0_dp)		) 
+		nGx 	= ceiling(  (aX*Gcut/PI_dp + 1.0_dp)		) + 1
+		nGy 	= ceiling(  (aY*Gcut/PI_dp + 1.0_dp)		) + 1
 
 		!
 		!make sure Grid is symmetric (needs to be odd number)
