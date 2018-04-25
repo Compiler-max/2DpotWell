@@ -152,8 +152,8 @@ module ham_Solver
 		integer							::	qi, nn, q_nn, nG_qi, nG_nn, qi_loc
 		!
 		allocate(	nGq_glob(nQ)					)
-		allocate(	Gvec_qi(dim, nG)				)
-		allocate(	Gvec_nn(dim, nG)				)
+		allocate(	Gvec_qi(dim, GmaxGLOBAL)				)
+		allocate(	Gvec_nn(dim, GmaxGLOBAL)				)
 		allocate(	ck_nn(GmaxGLOBAL, nSolve)		)
 		allocate(	ck_qi(GmaxGLOBAL, nSolve)		)
 		allocate(	Mmn(nBands, nBands, nntot)		)
