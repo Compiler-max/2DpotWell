@@ -636,7 +636,7 @@ module util_sysPara
 					!IF IN SPHERE APPEND TO GVEC
 					if( norm2(kg) < Gcut ) then
 						nGq(qLoc) = nGq(qLoc) + 1
-						Gvec(:,nGq(qLoc),qLoc) = kg(:)
+						Gtemp(:,nGq(qLoc),qLoc) = kg(:)
 						inside = inside + 1
 						if( ix==1 .or. ix==nGx ) 	stop	"[;popGvec]: ERROR, hit Gx boundary! Gcut-sphere hits boundary of test Grid. Developer should increase test grid size"
 						if( iy==1 .or. iy==nGy )	stop	"[;popGvec]: ERROR, hit Gy boundary! Gcut-sphere hits boundary of test Grid. Developer should increase test grid size"
