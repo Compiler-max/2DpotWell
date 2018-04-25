@@ -53,9 +53,143 @@ def getData(descriptor, fpath="./polOutput.txt"):
 	return data
 
 
+def read_w90_out(nAt, nWf, fpath="./wf1.wout"):
+	with open(fpath,'r') as f:
+		print('found file',fpath)
+		foundSite	= False
+		foundFinal	= False
+		p = re.compile(r'\d+\.\d+')  # Compile a pattern to capture float values
+		at_cent = []
+		wf_cent = []
+		wf_sprd = []
+
+
+		for counter, line in enumerate(f):
+			#read unit cell
+			if 'a_1' in line:
+				floats = [float(i) for i in p.findall(line)]  # Convert strings to float
+				a_X = floats[0]	#get only first component (cubic cell)
+
+			if 'a_2' in line:
+				floats = [float(i) for i in p.findall(line)]  # Convert strings to float
+				a_Y = floats[1]	#get only second component (cubic cell)
+
+			if 'a_3' in line:
+				floats = [float(i) for i in p.findall(line)]  # Convert strings to float
+				a_Z = floats[2]	#get only third component (cubic cell)
+
+			
+			#read atom cites
+			if 'Site' in line:
+				foundSite = True
+				siteLine = counter
+			if foundSite:
+				for at in range(nAt):
+					if counter == siteLine+2+at:
+						floats = [float(i) for i in p.findall(line)]  # Convert strings to float 
+						at_cent.append([floats[3],floats[4],0.0])
+
+			#read mp-grid
+			if 'Grid size' in line:
+				ints 	= [int(s) for s in line.split() if s.isdigit()]	# get all integers from line
+				mpGrid 	= ints[0:3]
+
+			#read final wf
+			if 'Final State' in line:
+				foundFinal = True
+				finalState = counter
+			if foundFinal:
+				for wf in range(nWf):
+					if counter == finalState+1+wf:
+						#print(line)
+						floats = [float(i) for i in p.findall(line)]  # Convert strings to float 
+						wf_cent.append(floats[0:3])
+						wf_sprd.append(floats[3])
+
+		#convert to np array
+		at_cent = np.array(		at_cent	)
+		mpGrid	= np.array(		mpGrid	)
+		wf_cent = np.array(		wf_cent )
+		wf_sprd = np.array(		wf_sprd )
+
+		#summary
+		#print('aCell =(',a_X,', ',a_Y,', ',a_Z,').')
+		#print('at_cent :',at_cent)
+		#print('mp grid:',mpGrid)
+		#print('wf_cent:',wf_cent)
+		#print('wf_sprd:',wf_sprd)
+
+		#sort wf to atom
+		wf_shift = []
+		for wf in wf_cent:
+			norm = []
+			for at in range(nAt):
+				norm.append(np.linalg.norm(wf-at_cent[at]))
+			atIndex = norm.index(min(norm))
+			wf_shift.append(at_cent[atIndex]-wf)
+		wf_shift = np.array( wf_shift )
+		wf_shift_sum = sum(wf_shift)
+
+		wf_pol = np.array([ wf_shift_sum[0]/a_X, wf_shift_sum[1]/a_Y, 0.0])	*100.0
+		
+		wf_sprd_sum = sum(wf_sprd)
+
+		#print('wf_shift sum:',wf_shift_sum)
+		print('tot sprd: ',wf_sprd_sum,'; pol =',wf_pol,"%")
+
+
+
+	return at_cent, mpGrid, wf_cent, wf_sprd, wf_shift, wf_pol
+
+
+def read_gcut_probe_w90(nAt, nWfs, dirpath="."):
+	gCut		= []
+	at_cent		= []
+	mpGrid		= []
+	wf_cent		= []
+	wf_sprd 	= []
+	wf_shift	= []
+	wf_pol		= []
+	p = re.compile(r'\d+\.\d+')  # Compile a pattern to capture float values
+
+
+	for dirpath, dirnames, filenames in os.walk(dirpath):
+		if 'gCut' in dirpath:
+			print('search in dirpath: ',dirpath)
+			floats = [float(i) for i in p.findall(dirpath)]  
+			gCut.append( floats[0] )
+	
+			for filename in [f for f in filenames if f.endswith("wf1.wout")]:
+				filepath = dirpath+'/'+filename
+				print('found new file:'+filepath)
+				at_cent_temp, mpGrid_temp, wf_cent_temp, wf_sprd_temp, wf_shift_temp, wf_pol_temp = read_w90_out(nAt,nWfs,filepath)
+
+			at_cent.append(at_cent_temp)
+			mpGrid.append(mpGrid_temp)			
+			wf_cent.append(wf_cent_temp)
+			wf_sprd.append(wf_sprd_temp)
+			wf_shift.append(wf_shift_temp)
+			wf_pol.append(wf_pol_temp)
+
+	#sort with respect to gcut value
+	s	= sorted(zip(gCut, at_cent, mpGrid, wf_cent, wf_sprd, wf_shift, wf_pol))
+	gCut, at_cent, mpGrid, wf_cent, wf_sprd, wf_shift, wf_pol = map(list,zip(*s))
+
+	return gCut, at_cent, mpGrid, wf_cent, wf_sprd, wf_shift, wf_pol
+
+
+
+
+
+
 
 def get_All_subDirs(descriptor,path="."):
 	data = []
+	#sys
+	uCell 	= []
+	#numerics
+	gCut 	= []
+	mpGrid 	= [] 
 	#results
 	p0			= []
 	pf2			= []
@@ -67,14 +201,19 @@ def get_All_subDirs(descriptor,path="."):
 	pf3_interp 	= []
 
 	#search for pol files
-	for dirpath, dirnames, filenames in os.walk("."):
+	for dirpath, dirnames, filenames in os.walk(path):
 		print('search in dirpath: ',dirpath)
 		#GET BERRY
 		for filename in [f for f in filenames if f.endswith("polOutput.txt")]:
 			filepath = dirpath+'/'+filename
 			print('found new file:'+filepath)
 			#
-			data.append(	getData( descriptor, filepath)		)
+			uCell.append(		getData('unit_cell'			,filepath)			)
+			#
+			gCut.append(		getData('gCut'				,filepath)			)
+			mpGrid.append(		getData('mp_grid'			,filepath)			)
+			#
+			data.append(		getData( descriptor			,filepath)			)
 			p0.append(			getData('zero_order'		,filepath)			)
 			pf2.append(			getData('niu_f2'			,filepath)			)
 			pf3.append(			getData('niu_f3'			,filepath)			)
@@ -95,7 +234,6 @@ def get_All_subDirs(descriptor,path="."):
 			bz.append(bVec[2])
 		print('Bz=',bz)
 		data = bz
-
 
 	#sort the lists in ascending order of data list
 	s	= sorted(zip(data,p0,pf2,pf3,p0_interp, pf2_interp, pf3_interp))

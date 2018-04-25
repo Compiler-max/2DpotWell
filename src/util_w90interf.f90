@@ -835,10 +835,12 @@ module util_w90Interf
   		!
 
   		!PLOTTING JOBS
-		write(100,*)	'wannier_plot = .true.'
-		write(100,*)	'wvfn_formatted = .true.'
-		write(100,*)	'wannier_plot_supercell =', nSCx, ' ', nSCy, ' ',1
-		
+  		if( do_w90plot ) then
+			write(100,*)	'wannier_plot = .true.'
+			write(100,*)	'wvfn_formatted = .true.'
+			write(100,*)	'wannier_plot_supercell =', nSCx, ' ', nSCy, ' ',1
+		end if
+
 		write(100,*)	
 		close(100)
 		!

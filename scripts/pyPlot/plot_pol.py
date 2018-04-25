@@ -16,10 +16,16 @@ print("will search for descriptor: '",str(descriptor[0]),"'.")
 
 
 #read pol files
-data, p0, pf2, pf3, p0_interp, pf2_interp, pf3_interp	= get_All_subDirs(	descriptor,	".")
+data, uCell, gCut, mpGrid, p0, pf2, pf3, p0_interp, pf2_interp, pf3_interp	= get_All_subDirs(	descriptor,	".")
 
 
 print(descriptor," :",data)
+
+
+
+
+
+
 
 
 p0_abs = np.sqrt(		p0[:,0]**2 + p0[:,1]**2 + p0[:,2]**2 )

@@ -28,10 +28,10 @@ module util_sysPara
 				nBands, nWfs, proj_at, proj_nX, proj_nY,  								&
 				seedName, w90_dir, info_dir, mkdir, raw_dir,							&
 				!perturbations:	
-				aRashba, use_px_rashba, Bext, prefactF3, 												&
+				aRashba, use_px_rashba, Bext, prefactF3, 								&
 				!switches:
 				debugHam, doSolveHam, doMagHam, doRashba, doZeeman, doVdesc, 			&
-				useBloch, doPw90, pw90GaugeB, 				 							&
+				useBloch, doPw90, pw90GaugeB, 	do_w90plot,	 							&
 				doBerry, doNiu, doGaugBack, fastConnConv,	 					&
 				!mpi:
 				myID, nProcs, root, ierr, qChunk
@@ -69,7 +69,7 @@ module util_sysPara
 	logical											::	debugHam,  																		&
 														doSolveHam, doVdesc,  doRashba, doZeeman, doMagHam, 							&
 														use_px_rashba, 																	&
-														useBloch, doPw90, pw90GaugeB, 													& 
+														useBloch, doPw90, pw90GaugeB, 	do_w90plot,										& 
 														doBerry, doNiu, doGaugBack, fastConnConv
 
 
@@ -169,6 +169,7 @@ module util_sysPara
 		![w90plot]
 		!call CFG_add_get(my_cfg,	"w90plot%nSCx"	     ,	nSCx   		,	"#			supercells "				)
 		!call CFG_add_get(my_cfg,	"w90plot%nSCy"	     ,	nSCy   		,	"#			supercells "				)
+		call CFG_add_get(my_cfg,	"w90plot%do_w90plot",	do_w90plot	,	"switch for plotting wannier & unk"		)
 		call CFG_add_get(my_cfg,	"w90plot%nRx"    	,	nRx      	,	"spacing of real space plot grid"		)
 		call CFG_add_get(my_cfg,	"w90plot%nRy"    	,	nRy      	,	"spacing of real space plot grid"		)
 		call CFG_add_get(my_cfg,	"w90plot%nRz"		,	nRz			,	"spacing of real space plot grid"		)
@@ -358,9 +359,6 @@ module util_sysPara
 		call MPI_Bcast(	nKx			,		1	,		MPI_INTEGER			,	root,	MPI_COMM_WORLD, ierr)
 		call MPI_Bcast(	nKy			,		1	,		MPI_INTEGER			,	root,	MPI_COMM_WORLD, ierr)
 		call MPI_Bcast( nK			,		1	,	MPI_DOUBLE_PRECISION	,	root,	MPI_COMM_WORLD,	ierr)
-		call MPI_Bcast(	nRx			,		1	,		MPI_INTEGER			,	root,	MPI_COMM_WORLD, ierr)
-		call MPI_Bcast(	nRy			,		1	,		MPI_INTEGER			,	root,	MPI_COMM_WORLD, ierr)
-		call MPI_Bcast( nRz			,		1	,		MPI_INTEGER			,	root,	MPI_COMM_WORLD,	ierr)
 		call MPI_Bcast( nR			,		1	,		MPI_INTEGER			,	root,	MPI_COMM_WORLD,	ierr)
 		call MPI_Bcast(	thres		,		1	,	MPI_DOUBLE_PRECISION	,	root,	MPI_COMM_WORLD, ierr)
 		![ham]
@@ -379,7 +377,11 @@ module util_sysPara
 		call MPI_Bcast( nShells		,		1	,		MPI_INTEGER			,	root,	MPI_COMM_WORLD, ierr)
 		call MPI_Bcast( nw90it		,		1	,		MPI_INTEGER			,	root,	MPI_COMM_WORLD, ierr)		
 		call MPI_Bcast( pw90GaugeB	,		1	,		MPI_LOGICAL			,	root,	MPI_COMM_WORLD, ierr)
-
+		![w90plot]
+		call MPI_Bcast( do_w90plot ,		1	,		MPI_LOGICAL			,	root,	MPI_COMM_WORLD,	ierr)
+		call MPI_Bcast(	nRx			,		1	,		MPI_INTEGER			,	root,	MPI_COMM_WORLD, ierr)
+		call MPI_Bcast(	nRy			,		1	,		MPI_INTEGER			,	root,	MPI_COMM_WORLD, ierr)
+		call MPI_Bcast( nRz			,		1	,		MPI_INTEGER			,	root,	MPI_COMM_WORLD,	ierr)
 		![berry]
 		call MPI_Bcast(fastConnConv	,		1	,		MPI_LOGICAL			,	root,	MPI_COMM_WORLD,	ierr)
 		call MPI_Bcast( doNiu		,		1	,		MPI_LOGICAL			,	root,	MPI_COMM_WORLD,	ierr)

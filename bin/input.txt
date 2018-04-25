@@ -59,6 +59,7 @@
     pw90GaugeB  =   f
 
 [w90plot]
+    do_w90plot  =   f
     nRx         =   10
     nRy         =   10
     nRz         =   2

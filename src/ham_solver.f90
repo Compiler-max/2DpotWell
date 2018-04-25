@@ -119,7 +119,7 @@ module ham_Solver
 			call calcAmatANA(	qi_loc, qi_glob, ck_temp)
 			call calcVeloGrad(	qi_loc, qi_glob, ck_temp)
 			!w90 plot preparation
-			call writeUNKs(qi_glob, nGq(qi_loc), ck_temp(:,1:nBands), Gvec(:,:,qi_loc))
+			if( do_w90plot ) call writeUNKs(qi_glob, nGq(qi_loc), ck_temp(:,1:nBands), Gvec(:,:,qi_loc))
 			!
 			!
 			!count insulating states
