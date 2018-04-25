@@ -612,11 +612,13 @@ module util_sysPara
 
 !
 	subroutine popGvec()
-		integer						:: qi, ix, iy, inside,tot, qLoc, Gmin
+		integer						:: qi, ix, iy, inside,tot, qLoc, Gmin, gi
 		real(dp)					:: kg(2), Gtest(2)
+		real(dp),	allocatable		:: Gtemp(:,:,:)
 		!
 		allocate(	nGq(					qChunk		)		)
-		allocate(	Gvec(	dim,	nG ,	qChunk		)		)
+		!allocate(	Gvec(	dim,	nG ,	qChunk		)		)
+		allocate(	Gtemp(	dim,	nG ,	qChunk		)		)
 		!
 		qLoc = 1
 		do qi = myID*qChunk+1, myID*qChunk+qChunk
@@ -654,6 +656,17 @@ module util_sysPara
 		call MPI_ALLREDUCE(Gmax, GmaxGLOBAL, 1, MPI_INTEGER, MPI_MAX, MPI_COMM_WORLD, ierr) 
 		call MPI_ALLREDUCE(Gmin, GminGLOBAL, 1, MPI_INTEGER, MPI_MIN, MPI_COMM_WORLD, ierr)
 		if( myID == root ) write(*,'(a,i3,a,i7,a,i7)') "[#",myID,";popGvec]: global Gmax=",GmaxGLOBAL, ";	global Gmin=",GminGLOBAL
+
+		!
+		!prepare final array
+		allocate(	Gvec(	dim, GmaxGLOBAL, qChunk)	)
+		Gvec = 0.0_dp
+		!copy from larger array
+		do qLoc = 1, qChunk
+			do gi = 1, nGq(qLoc)
+				Gvec(:,gi,qLoc) = Gtemp(:,gi,qLoc)
+			end do
+		end do
 		!
 		!
 		return
