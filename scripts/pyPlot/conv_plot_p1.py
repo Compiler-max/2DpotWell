@@ -4,6 +4,8 @@ import matplotlib.pyplot as plt
 from matplotlib import cm
 
 from util_2dPW_Interf import get_All_subDirs
+from util_2dPW_Interf import get_pw_count
+
 
 
 #constants
@@ -17,19 +19,19 @@ aY = 5.0 *aUtoAngstrm
 #read pol files
 descriptor = 'gCut'
 
-gCut_kx4, p0_kx4, pf2_kx4, pf3_kx4, p0_interp, pf2_interp, pf3_interp	= get_All_subDirs(	descriptor,	"./kx4ky8/GcutTest/")
-gCut_kx8, p0_kx8, pf2_kx8, pf3_kx8, p0_interp, pf2_interp, pf3_interp		= get_All_subDirs(	descriptor,	"./kx8ky16/GcutTest/")
-gCut_kx16, p0_kx16, pf2_kx16, pf3_kx16, p0_interp, pf2_interp, pf3_interp	= get_All_subDirs(	descriptor,	"./kx16ky32/GcutTest/")
+gCut_kx4, p0_kx4, pf2_kx4, pf3_kx4, p0_interp, pf2_interp, pf3_interp	= 	get_All_subDirs(	descriptor,	"./kx4/GcutTest/")
+gCut_kx8, p0_kx8, pf2_kx8, pf3_kx8, p0_interp, pf2_interp, pf3_interp		= get_All_subDirs(	descriptor,	"./kx8/GcutTest/")
+gCut_kx16, p0_kx16, pf2_kx16, pf3_kx16, p0_interp, pf2_interp, pf3_interp	= get_All_subDirs(	descriptor,	"./kx16/GcutTest/")
 
 
-def plot_essin(ind ,aX ,aY , gCut_kx4, gCut_kx8, gCut_kx16, pf2_kx4, pf3_kx4, pf2_kx8, pf3_kx8, pf2_kx16, pf3_kx16):
+def plot_essin(ind ,aX ,aY , pwCount_kx4, pwCount_kx8, pwCount_kx16, pf2_kx4, pf3_kx4, pf2_kx8, pf3_kx8, pf2_kx16, pf3_kx16):
 	fig, ax  = plt.subplots(1,1) 
-	label 	= r'$p^{(1)}_x ( \%)$'
+	label 	= r'$p^{(1)}_x ( p_Q)$'
 	a_ind	= aX
 
 	if ind is not 0:
 		ind 	= 1
-		label 	= label = r'$p^{(1)}_y ( \%)$'
+		label 	= label = r'$p^{(1)}_y ( p_Q)$'
 		a_ind	= aY
 
 	
@@ -46,16 +48,16 @@ def plot_essin(ind ,aX ,aY , gCut_kx4, gCut_kx8, gCut_kx16, pf2_kx4, pf3_kx4, pf
 	print('a_ind (ang)=',a_ind)
 	print('pol factor =',1.0/(polQuantum*a_ind)*100.0)
 
-	plt.plot(gCut_kx4, 		-(	pf2_kx4[:,ind]	+	pf3_kx4[:,ind]	)		/	(polQuantum*a_ind)*100.0,		'+-'	,label=' 4x8'	,color= colors[0]	) 
-	plt.plot(gCut_kx8, 		-(	pf2_kx8[:,ind]	+	pf3_kx8[:,ind]	)		/	(polQuantum*a_ind)*100.0,		'+-'	,label=' 8x16'	,color= colors[1]	)
-	plt.plot(gCut_kx16, 	-(	pf2_kx16[:,ind]	+	pf3_kx16[:,ind]	)		/	(polQuantum*a_ind)*100.0,		'+-'	,label='16x32'	,color= colors[2]	)
+	plt.plot(pwCount_kx4, 		-(	pf2_kx4[:,ind]	+	pf3_kx4[:,ind]	)		/	(polQuantum*a_ind),		'+-'	,label=' 4x8'	,color= colors[0]	) 
+	plt.plot(pwCount_kx8, 		-(	pf2_kx8[:,ind]	+	pf3_kx8[:,ind]	)		/	(polQuantum*a_ind),		'+-'	,label=' 8x16'	,color= colors[1]	)
+	plt.plot(pwCount_kx16, 		-(	pf2_kx16[:,ind]	+	pf3_kx16[:,ind]	)		/	(polQuantum*a_ind),		'+-'	,label='16x32'	,color= colors[2]	)
 
 	#plt.plot(gCut_kx32, pf2_k324[:,ind], pf3_kx32[:,ind],label='32x64')
 	#plt.plot(gCut_kx64, pf2_kx64[:,ind], pf3_kx64[:,ind],label='64x128')
 
 
 
-	plt.xlabel('PW cutoff')
+	plt.xlabel('# basis functions')
 	plt.ylabel(label)
 	plt.title('magnetoelectric response')
 	plt.legend(title='MP grid')
@@ -66,8 +68,14 @@ def plot_essin(ind ,aX ,aY , gCut_kx4, gCut_kx8, gCut_kx16, pf2_kx4, pf3_kx4, pf
 
 
 
-plot_essin(0,aX, aY, gCut_kx4, gCut_kx8, gCut_kx16, pf2_kx4, pf3_kx4, pf2_kx8, pf3_kx8, pf2_kx16, pf3_kx16)
-plot_essin(1,aX, aY, gCut_kx4, gCut_kx8, gCut_kx16, pf2_kx4, pf3_kx4, pf2_kx8, pf3_kx8, pf2_kx16, pf3_kx16)
+#get # plane waves used
+pwCount_kx4 	= 	get_pw_count("./kx4")
+pwCount_kx8 	=	get_pw_count("./kx8")
+pwCount_kx16 	=	get_pw_count("./kx16")
+
+
+plot_essin(0,aX, aY, pwCount_kx4, pwCount_kx8, pwCount_kx16, pf2_kx4, pf3_kx4, pf2_kx8, pf3_kx8, pf2_kx16, pf3_kx16)
+plot_essin(1,aX, aY, pwCount_kx4, pwCount_kx8, pwCount_kx16, pf2_kx4, pf3_kx4, pf2_kx8, pf3_kx8, pf2_kx16, pf3_kx16)
 
 
 

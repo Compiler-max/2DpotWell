@@ -6,18 +6,22 @@ import sys
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import cm
+import os
+import os.path
+import re
 
 from util_2dPW_Interf import get_All_subDirs
 from util_2dPW_Interf import read_gcut_probe_w90
+from util_2dPW_Interf import get_pw_count
 
 
-def plot_p0(ind, gCut_kx4, gCut_kx8, gCut_kx16, wf_pol_kx4, wf_pol_kx8, wf_pol_kx16):
+def plot_p0(ind, pwCount_kx4, pwCount_kx8, pwCount_kx16, wf_pol_kx4, wf_pol_kx8, wf_pol_kx16):
 	title 	= 'x polarization'
-	label 	= r'$p_x (\%)$'
+	label 	= r'$p_x (p_Q)$'
 	if ind is not 0:
 		ind 	= 1
 		title 	= 'y polarization'
-		label 	= label = r'$p_y (\%)$'
+		label 	= label = r'$p_y (p_Q)$'
 
 
 
@@ -51,28 +55,30 @@ def plot_p0(ind, gCut_kx4, gCut_kx8, gCut_kx16, wf_pol_kx4, wf_pol_kx8, wf_pol_k
 	#plot p_X
 	fig_p0, ax_p0  = plt.subplots(1,1) 
 	
-	plt.plot(gCut_kx4, pol_kx4, 		'+-',	color=colors[0],	label ='4x8')
-	plt.plot(gCut_kx8, pol_kx8, 		'+-',	color=colors[1],	label ='8x16')
-	plt.plot(gCut_kx16, pol_kx16, 		'+-',	color=colors[2],	label ='16x32')
+	plt.plot(pwCount_kx4, pol_kx4, 			'+-',	color=colors[0],	label ='4x8')
+	plt.plot(pwCount_kx8, pol_kx8, 			'+-',	color=colors[1],	label ='8x16')
+	plt.plot(pwCount_kx16, pol_kx16, 		'+-',	color=colors[2],	label ='16x32')
 	#plt.plot(gCut_kx32, pol_kx32, 		'+-',	color=colors[2],	label ='32x64')
 	#plt.plot(gCut_kx64, pol_kx128, 		'+-',	color=colors[2],	label ='64x128')
 
-
-
-	
-
-	
-
-
 	#set labels & descriptors
 	plt.title(title)
-	plt.xlabel('PW cutoff')
+	plt.xlabel('# basis functions')
 	plt.ylabel(label)
 	plt.legend(title='MP grid')
 	
 	#show plot
 	plt.tight_layout()
 	plt.show()
+
+
+
+
+
+
+
+
+
 
 
 
@@ -93,17 +99,25 @@ nAt 	= 2
 nWfs 	= 6
 
 #get Data
-gCut_kx4, at_cent_kx4, mpGrid_kx4, wf_cent_kx4, wf_sprd_kx4, wf_shift_kx4, wf_pol_kx4 = read_gcut_probe_w90(nAt, nWfs, dirpath="./kx4ky8/GcutTest/")
-gCut_kx8, at_cent_kx8, mpGrid_kx8, wf_cent_kx8, wf_sprd_kx8, wf_shift_kx8, wf_pol_kx8 = read_gcut_probe_w90(nAt, nWfs, dirpath="./kx8ky16/GcutTest/")
-gCut_kx16, at_cent_kx16, mpGrid_kx16, wf_cent_kx16, wf_sprd_kx16, wf_shift_kx16, wf_pol_kx16 = read_gcut_probe_w90(nAt, nWfs, dirpath="./kx16ky32/GcutTest/")
+gCut_kx4, at_cent_kx4, mpGrid_kx4, wf_cent_kx4, wf_sprd_kx4, wf_shift_kx4, wf_pol_kx4 = read_gcut_probe_w90(nAt, nWfs, dirpath="./kx4/GcutTest/")
+gCut_kx8, at_cent_kx8, mpGrid_kx8, wf_cent_kx8, wf_sprd_kx8, wf_shift_kx8, wf_pol_kx8 = read_gcut_probe_w90(nAt, nWfs, dirpath="./kx8/GcutTest/")
+gCut_kx16, at_cent_kx16, mpGrid_kx16, wf_cent_kx16, wf_sprd_kx16, wf_shift_kx16, wf_pol_kx16 = read_gcut_probe_w90(nAt, nWfs, dirpath="./kx16/GcutTest/")
+
+
+#get # plane waves used
+pwCount_kx4 	= 	get_pw_count("./kx4")
+pwCount_kx8 	=	get_pw_count("./kx8")
+pwCount_kx16 	=	get_pw_count("./kx16")
+
+
 
 #gCut_kx32, at_cent_kx32, mpGrid_kx32, wf_cent_kx32, wf_sprd_kx32, wf_shift_kx32, wf_pol_kx32 = read_gcut_probe_w90(nAt, nWfs, dirpath="./kx32ky64/GcutTest/")
 #gCut_kx64, at_cent_kx64, mpGrid_kx64, wf_cent_kx64, wf_sprd_kx64, wf_shift_kx64, wf_pol_kx64 = read_gcut_probe_w90(nAt, nWfs, dirpath="./kx64ky128/GcutTest/")
 
 
 #call plot routines
-plot_p0(0,gCut_kx4, gCut_kx8, gCut_kx16, wf_pol_kx4, wf_pol_kx8, wf_pol_kx16)
-plot_p0(1,gCut_kx4, gCut_kx8, gCut_kx16, wf_pol_kx4, wf_pol_kx8, wf_pol_kx16)
+plot_p0(0, pwCount_kx4, pwCount_kx8, pwCount_kx16, wf_pol_kx4, wf_pol_kx8, wf_pol_kx16)
+plot_p0(1, pwCount_kx4, pwCount_kx8, pwCount_kx16, wf_pol_kx4, wf_pol_kx8, wf_pol_kx16)
 
 
 

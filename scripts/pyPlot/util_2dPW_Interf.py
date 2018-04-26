@@ -53,6 +53,13 @@ def getData(descriptor, fpath="./polOutput.txt"):
 	return data
 
 
+
+
+
+
+
+
+
 def read_w90_out(nAt, nWf, fpath="./wf1.wout"):
 	with open(fpath,'r') as f:
 		print('found file',fpath)
@@ -130,12 +137,12 @@ def read_w90_out(nAt, nWf, fpath="./wf1.wout"):
 		wf_shift = np.array( wf_shift )
 		wf_shift_sum = sum(wf_shift)
 
-		wf_pol = np.array([ wf_shift_sum[0]/a_X, wf_shift_sum[1]/a_Y, 0.0])	*100.0
+		wf_pol = np.array([ wf_shift_sum[0]/a_X, wf_shift_sum[1]/a_Y, 0.0])
 		
 		wf_sprd_sum = sum(wf_sprd)
 
 		#print('wf_shift sum:',wf_shift_sum)
-		print('tot sprd: ',wf_sprd_sum,'; pol =',wf_pol,"%")
+		print('tot sprd: ',wf_sprd_sum,'; pol =',wf_pol," (pol Quant.)")
 
 
 
@@ -179,6 +186,34 @@ def read_gcut_probe_w90(nAt, nWfs, dirpath="."):
 
 
 
+
+def get_pw_count(dirpath):
+	gCut = []
+	pw_count = []
+	p = re.compile(r'\d+\.\d+')  # Compile a pattern to capture float values
+	print('hello from get_pw_count')
+
+	for dirpath, dirnames, filenames in os.walk(dirpath):
+		if 'gCut' in dirpath:
+			print('search in dirpath: ',dirpath)
+			floats = [float(i) for i in p.findall(dirpath)]  
+			gCut.append( floats[0] )
+	
+			for filename in [f for f in filenames if f.endswith("polOutput.txt")]:
+				pw_count.append(getData('Gmin',dirpath+'/'+filename))
+
+
+			print('found Gcut=',floats[0],' and associated Gmin=',pw_count[-1])
+	s	= sorted(zip(gCut, pw_count))
+	gCut, pw_count= map(list,zip(*s))
+
+	print('gCut=',gCut)
+	print('#pw=',pw_count)
+
+	for pw in pw_count:
+		pw = int(pw)
+
+	return pw_count
 
 
 
