@@ -15,9 +15,9 @@ module util_sysPara
 				!atoms:
 				nAt, relXpos, relYpos, atRx, atRy, atPot, dVpot,atPos, atR,  			&
 				!cutoff:
-				nG, nGq, Gmax, GmaxGLOBAL, GminGLOBAL, Gcut, nSolve, 				&
+				nG, nGq, Gmax, GmaxGLOBAL, GminGLOBAL, Gcut, nSolve, 					&
 				!grids:
-				qpts,  kpts, 															&
+				qpts, kpts, 															&
 				nQ, nQx, nQy, 															&
 				k_mesh_multiplier, nKx, nKy, nK,  										&
 				nSC, nSCx, nSCy, 														&
@@ -32,7 +32,7 @@ module util_sysPara
 				!switches:
 				debugHam, doSolveHam, doMagHam, doRashba, doZeeman, doVdesc, 			&
 				useBloch, doPw90, pw90GaugeB, 	do_w90plot,	 							&
-				doBerry, doNiu, doGaugBack, fastConnConv,	 					&
+				doBerry, doNiu, doGaugBack, fastConnConv,	 							&
 				!mpi:
 				myID, nProcs, root, ierr, qChunk
 
