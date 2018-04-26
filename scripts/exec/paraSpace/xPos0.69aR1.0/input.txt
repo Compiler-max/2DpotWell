@@ -1,0 +1,83 @@
+#Input for 2D pot well code
+
+[unitCell]
+    aX          =   10
+    aY          =   5
+    supCx       =   1
+
+[atoms]
+    nAt         =   2
+   relXpos    = 0.250 0.69	# changed by probeParaSpace.sh
+    relYpos     =   0.500 0.500
+    atRx        =   0.801 0.401
+    atRy        =   0.801 0.401
+    atPot       =   -4.00 -2.00
+    dVpot       =   0.000 0.000
+
+[wann]
+    nBands      =   8
+    nWfs        =   8
+    projAt      =   1 1 1 1     2 2 2 2
+    projnX      =   1 1 2 2     1 1 2 2
+    projnY      =   1 2 1 2     1 2 1 2
+
+[field]
+    B0  =       1.0               # changed by probeB.sh
+    Bext = 0.0 0.0 1.0             # changed by probeB.sh
+
+
+[rashba]
+  use_px_rashba    =   t # changed by probeParaSpace.sh
+   aRashba    = 1.0 	# changed by probeParaSpace.sh
+
+[numerics]
+   Gcut        = 30 	# changed by probeParaSpace.sh
+   nSolve      = 96 	# changed by probeParaSpace.sh
+   nQx         = 8 	# changed by probeParaSpace.sh
+    thres       =   0.1
+
+[ham]
+    debugHam    =   t
+    doVdesc     =   f
+    doZeeman    =   f
+  doMagHam    =   f # changed by probeParaSpace.sh
+  doRashba    =   t # changed by probeParaSpace.sh
+
+
+
+[methods]
+    doSolveHam  =   t
+    doPw90      =   f
+    doBerry     =   f
+
+[w90]
+    seedName    =   'wf1'
+    useBloch    =   f
+    nShells     =   1
+   shells       = 1 # changed by probeB.sh
+    nw90it      =   1000
+    pw90GaugeB  =   f
+
+[w90plot]
+    do_w90plot  =   f # changed by probeParaSpace.sh
+    nRx         =   10
+    nRy         =   10
+    nRz         =   2
+
+[w90interp]
+    k_mesh_multiplier = 4
+
+[berry]
+    fastConnConv=   t
+    doNiu       =   t
+    doGaugBack  =   f
+
+[semiclassics]
+    prefactF3   =   1.0
+
+
+
+
+
+
+

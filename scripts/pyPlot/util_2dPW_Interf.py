@@ -270,6 +270,14 @@ def get_All_subDirs(descriptor,path="."):
 		print('Bz=',bz)
 		data = bz
 
+	#print('data=',data)
+	#print('p0=',len(p0))
+	#print('pf2=',len(pf2))
+	#print('pf3=',len(pf3))
+	#print('p0_interp=',len(p0_interp))
+	#print('pf2_interp=',len(pf2_interp))
+	#print('pf3_interp=',len(pf3_interp))
+
 	#sort the lists in ascending order of data list
 	s	= sorted(zip(data,p0,pf2,pf3,p0_interp, pf2_interp, pf3_interp))
 	data, p0, pf2, pf3, p0_interp, pf2_interp, pf3_interp = map(list,zip(*s))

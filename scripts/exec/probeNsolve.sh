@@ -12,41 +12,41 @@ nSolve=( 6 12 24 48 96 192 384 786	)
 
 
 #set numerical paras
-gCut=28.0	#set Gcut
-nSolve=96
-bfield=1.0
-nQx=8
-nQy=16
-nShell=1
-aRashba=2.0
+#gCut=28.0	#set Gcut
+#nSolve=96
+#bfield=1.0
+#nQx=8
+#nQy=16
+#nShell=1
+#aRashba=2.0
 
 #
-nSCx=$((nQx+1))
-nSCy=$((nQy+1))
-nKx=$((nQx+1))
-nKy=$((nQy+1))
+#nSCx=$((nQx+1))
+#nSCy=$((nQy+1))
+#nKx=$((nQx+1))
+#nKy=$((nQy+1))
 
 #set numerics
 infoString='# changed by probeB.sh'
-sed -i  "/Gcut/c\   Gcut        = $gCut 	$infoString"	 	./input.txt
-sed -i 	"/nQx/c\   nQx         = $nQx 	$infoString" 			./input.txt
-sed -i 	"/nQy/c\   nQy         = $nQy 	$infoString" 			./input.txt
-sed -i 	"/nSCx/c\   nSCx        = $nSCx 	$infoString" 		./input.txt
-sed -i 	"/nSCy/c\   nSCy        = $nSCy 	$infoString" 		./input.txt
-sed -i 	"/nKx/c\   nKx         = $nKx 	$infoString" 			./input.txt
-sed -i 	"/nKy/c\   nKy         = $nKy 	$infoString" 			./input.txt
-sed -i 	"/shells/c\   shells       = $nShell 	$infoString" 	./input.txt
+#sed -i  "/Gcut/c\   Gcut        = $gCut 	$infoString"	 	./input.txt
+#sed -i 	"/nQx/c\   nQx         = $nQx 	$infoString" 			./input.txt
+#sed -i 	"/nQy/c\   nQy         = $nQy 	$infoString" 			./input.txt
+#sed -i 	"/nSCx/c\   nSCx        = $nSCx 	$infoString" 		./input.txt
+#sed -i 	"/nSCy/c\   nSCy        = $nSCy 	$infoString" 		./input.txt
+#sed -i 	"/nKx/c\   nKx         = $nKx 	$infoString" 			./input.txt
+#sed -i 	"/nKy/c\   nKy         = $nKy 	$infoString" 			./input.txt
+#sed -i 	"/shells/c\   shells       = $nShell 	$infoString" 	./input.txt
 
 #set parameters
-sed -i 	"/aRashba/c\   aRashba       = $aRashba 	$infoString" 	./input.txt
-sed -i	"/B0/c\		B0		= $bfield	$infoString"	./input.txt 
+#sed -i 	"/aRashba/c\   aRashba       = $aRashba 	$infoString" 	./input.txt
+#sed -i	"/B0/c\		B0		= $bfield	$infoString"	./input.txt 
 
 #set Hamiltionian
-sed -i 	"/doVdesc/c\	doVdesc		= f 	$infoString"		./input.txt
-sed -i 	"/doZeeman/c\	doZeeman	= f 	$infoString"		./input.txt
-sed -i 	"/doMagHam/c\	doMagHam	= f 	$infoString"		./input.txt
-sed -i "/doRashba/c\    doRashba    = t     $infoString"        ./input.txt
-
+#sed -i 	"/doVdesc/c\	doVdesc		= f 	$infoString"		./input.txt
+#sed -i 	"/doZeeman/c\	doZeeman	= f 	$infoString"		./input.txt
+#sed -i 	"/doMagHam/c\	doMagHam	= f 	$infoString"		./input.txt
+#sed -i "/doRashba/c\    doRashba    = t     $infoString"        ./input.txt
+#
 
 #folder to save data
 label='nSolve'
