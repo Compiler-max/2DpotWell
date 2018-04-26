@@ -21,18 +21,19 @@ module ham_PotWell
 
 
 	!POTENTIAL WELLS
-	subroutine add_potWell(qLoc, Hmat)
+	subroutine add_potWell(nG_qi, Gvec, Hmat)
 		!adds kinetic energy and potential Well term to Hamiltonian
-		integer,		intent(in)		::	qLoc
+		integer,		intent(in)		::	nG_qi
+		real(dp),		intent(in)		::	Gvec(:,:)
 		complex(dp),	intent(inout)	::	Hmat(:,:)
 		integer							::	i, j
 		!
-		do j = 1, nGq(qLoc)
-			do i = 1, nGq(qLoc)
+		do j = 1, nG_qi
+			do i = 1, nG_qi
 				if( doVdesc )	then
-					Hmat(i,j)	= Hmat(i,j)		+ Vdesc(qLoc, i,j)
+					Hmat(i,j)	= Hmat(i,j)		+ Vdesc(Gvec, i,j)
 				else
-					Hmat(i,j)	= Hmat(i,j)		+ Vconst(qLoc, i,j)
+					Hmat(i,j)	= Hmat(i,j)		+ Vconst(Gvec, i,j)
 				end if
 			end do
 		end do
@@ -43,18 +44,19 @@ module ham_PotWell
 
 
 
-	complex(dp) function Vconst(qLoc, i,j)
+	complex(dp) function Vconst(Gvec, i,j)
 		!calc potential matrix elements for constant potential inside each well
 		!
 		!the integrals were solved analytical and are hard coded in this function
-		integer,	intent(in)	::	qLoc,  i, j
-		integer					::	at
-		complex(dp)				::	Vpot
-		real(dp)				::  xL, yL, xR, yR, dGx, dGy
+		integer,		intent(in)	::	i, j
+		real(dp),		intent(in)	::	Gvec(:,:)
+		integer						::	at
+		complex(dp)					::	Vpot
+		real(dp)					::  xL, yL, xR, yR, dGx, dGy
 		!
 		Vconst 	= dcmplx(0.0_dp)
-		dGx		= Gvec(1,j,qLoc) - Gvec(1,i,qLoc) 
-		dGy		= Gvec(2,j,qLoc) - Gvec(2,i,qLoc) 
+		dGx		= Gvec(1,j) - Gvec(1,i) 
+		dGy		= Gvec(2,j) - Gvec(2,i) 
 		!
 		do at = 1, nAt
 			Vpot	=	dcmplx(atPot(at))		!in hartree
@@ -103,17 +105,18 @@ module ham_PotWell
 	end function
 
 
-	complex(dp) function Vdesc(qLoc, i,j)
+	complex(dp) function Vdesc(Gvec, i,j)
 		!potential integration for a well constant gradient in x direction (uniform electric field)
 		!it starts from V0 at xL till V0-dV at xR
-		integer,	intent(in)	::	qLoc, i, j
-		integer					::	at
-		complex(dp)				::	Vpot
-		real(dp)				::  xL, yL, xR, yR, dGx, dGy, dV, fact
+		integer,		intent(in)	::	i, j
+		real(dp),		intent(in)	::	Gvec(:,:)
+		integer						::	at
+		complex(dp)					::	Vpot
+		real(dp)					::  xL, yL, xR, yR, dGx, dGy, dV, fact
 		!
 		Vdesc 	= dcmplx(0.0_dp)
-		dGx		= Gvec(1,j,qLoc) - Gvec(1,i,qLoc) 
-		dGy		= Gvec(2,j,qLoc) - Gvec(2,i,qLoc) 
+		dGx		= Gvec(1,j) - Gvec(1,i) 
+		dGy		= Gvec(2,j) - Gvec(2,i) 
 		!
 		do at = 1, nAt
 			Vpot=	dcmplx(atPot(at))

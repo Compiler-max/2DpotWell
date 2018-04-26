@@ -8,8 +8,8 @@ module util_basisIO
 	implicit none
 
 	private
-	public :: 		writeABiN_basVect, writeABiN_energy, writeABiN_basis, writeABiN_basCoeff, writeABiN_velo, writeABiN_Amn,  writeABiN_Mmn,&
-					read_coeff, read_gVec, read_energies, read_velo, readBasis, read_Amn, read_Mmn
+	public :: 		writeABiN_energy, writeABiN_basCoeff, writeABiN_velo, writeABiN_Amn,  writeABiN_Mmn,&
+					read_coeff, read_gVec, read_energies, read_velo,  read_Amn, read_Mmn
 
 
 	character(len=1024)				::	format='(a,i7.7)'
@@ -22,19 +22,6 @@ module util_basisIO
 
 
 !WRITE
-	subroutine writeABiN_basVect(qi, Gvec)
-		integer,		intent(in)		::	qi
-		real(dp),		intent(in)		::	Gvec(:,:)
-		character(len=20)				::	filename
-		
-		!REAL
-		write(filename, format) raw_dir//'gVec.',qi
-		open(unit=210, file=filename		, form='unformatted', access='stream', action='write',status='replace') 
-		write(210)	Gvec
-		close(210)
-		!
-		return
-	end subroutine
 
 
 
@@ -147,46 +134,6 @@ module util_basisIO
 
 
 
-	subroutine writeABiN_basis(nGq_loc, Gvec_loc)
-		integer,		intent(in)		::	nGq_loc(:)
-		real(dp),		intent(in)		::	Gvec_loc(:,:,:)
-		integer,		allocatable		::	nGq_glob(:)
-		real(dp),		allocatable		::	Gvec_glob(:,:,:)
-
-		integer							::	qi
-		!
-		!ALLOCATE TARGET
-		if( myID == root ) then
-			allocate(	nGq_glob(	nQ	) 							)	
-			allocate( 	Gvec_glob( size(Gvec,1), size(Gvec,2), nQ)	)			
-		else
-			allocate(	nGq_glob( 0 	)							)			
-			allocate(	Gvec_glob( 0, 0, 0)							)
-		end if
-		!
-		!GATHER
-		call MPI_GATHER( nGq_loc	, qChunk, MPI_INTEGER, nGq_glob		, qChunk, MPI_INTEGER, MPI_COMM_WORLD, ierr)	
-		call MPI_GATHER( Gvec_loc	, qChunk, MPI_DOUBLE_PRECISION, Gvec_glob	, qChunk, MPI_DOUBLE_PRECISION, MPI_COMM_WORLD, ierr)	
-		!
-		!WRITE TO FILE
-		if( myID == root ) then
-			!NGQ
-			open(unit=215, file=raw_dir//'nGq.dat'		, form='unformatted', access='stream', action='write', status='replace')
-			write(215)	nGq_glob
-			close(215)
-			!REAL GVEC
-			open(unit=220, file=raw_dir//'Gvec.dat'		, form='unformatted', access='stream', action='write',status='replace') 
-			do qi = 1, size(Gvec_glob,3)
-				write(220)	Gvec_glob(:,:,qi)
-			end do
-			close(220)
-			write(*,*)	"[writeABiN_basis]: wrote nGq and Gvec to binary files"
-		end if
-		!
-		return
-	end subroutine
-
-
 
 
 
@@ -275,19 +222,6 @@ module util_basisIO
 	end subroutine
 
 
-	subroutine readBasis()
-		!
-		open(unit=730, file=raw_dir//"nGq.dat" ,form='unformatted',access='stream',action='read')
-		read(730)	nGq
-		close(730)
-		!
-		open(unit=740, file=raw_dir//"Gvec.dat", form='unformatted', access='stream', action='read')
-		read(740)	Gvec
-		close(740)
-		!
-		!
-		return
-	end subroutine
 
 
 	subroutine read_Amn(Amn)
@@ -443,3 +377,75 @@ end module util_basisIO
 
 
 
+
+
+	!subroutine writeABiN_basis(nGq_loc, Gvec_loc)
+	!	integer,		intent(in)		::	nGq_loc(:)
+	!	real(dp),		intent(in)		::	Gvec_loc(:,:,:)
+	!	integer,		allocatable		::	nGq_glob(:)
+	!	real(dp),		allocatable		::	Gvec_glob(:,:,:)
+!
+!	!	integer							::	qi
+!	!	!
+!	!	!ALLOCATE TARGET
+!	!	if( myID == root ) then
+!	!		allocate(	nGq_glob(	nQ	) 							)	
+!	!		allocate( 	Gvec_glob( size(Gvec,1), size(Gvec,2), nQ)	)			
+!	!	else
+!	!		allocate(	nGq_glob( 0 	)							)			
+!	!		allocate(	Gvec_glob( 0, 0, 0)							)
+!	!	end if
+!	!	!
+!	!	!GATHER
+!	!	call MPI_GATHER( nGq_loc	, qChunk, MPI_INTEGER, nGq_glob		, qChunk, MPI_INTEGER, MPI_COMM_WORLD, ierr)	
+!	!	call MPI_GATHER( Gvec_loc	, qChunk, MPI_DOUBLE_PRECISION, Gvec_glob	, qChunk, MPI_DOUBLE_PRECISION, MPI_COMM_WORLD, ierr)	
+!	!	!
+!	!	!WRITE TO FILE
+!	!	if( myID == root ) then
+!	!		!NGQ
+!	!		open(unit=215, file=raw_dir//'nGq.dat'		, form='unformatted', access='stream', action='write', status='replace')
+!	!		write(215)	nGq_glob
+!	!		close(215)
+!	!		!REAL GVEC
+!	!		open(unit=220, file=raw_dir//'Gvec.dat'		, form='unformatted', access='stream', action='write',status='replace') 
+!	!		do qi = 1, size(Gvec_glob,3)
+!	!			write(220)	Gvec_glob(:,:,qi)
+!	!		end do
+!	!		close(220)
+!	!		write(*,*)	"[writeABiN_basis]: wrote nGq and Gvec to binary files"
+!	!	end if
+!	!	!
+!	!	return
+	!end subroutine
+
+
+	!subroutine writeABiN_basVect(qi, Gvec)
+	!	!deprecated now directly performed in syspara/popGvec
+	!	integer,		intent(in)		::	qi
+	!	real(dp),		intent(in)		::	Gvec(:,:)
+	!	character(len=20)				::	filename
+	!	
+	!	!REAL
+	!	write(filename, format) raw_dir//'gVec.',qi
+	!	open(unit=210, file=filename		, form='unformatted', access='stream', action='write',status='replace') 
+	!	write(210)	Gvec
+	!	close(210)
+	!	!
+	!	return
+	!end subroutine
+
+
+
+	!subroutine readBasis()
+	!	!
+	!	open(unit=730, file=raw_dir//"nGq.dat" ,form='unformatted',access='stream',action='read')
+	!	read(730)	nGq
+	!	close(730)
+	!	!
+	!	open(unit=740, file=raw_dir//"Gvec.dat", form='unformatted', access='stream', action='read')
+	!	read(740)	Gvec
+	!	close(740)
+	!	!
+	!	!
+	!	return
+	!end subroutine

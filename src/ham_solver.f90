@@ -3,9 +3,12 @@ module ham_Solver
 	!	in the process the wannier functions are generated aswell with routines from wannGen module
 	use mpi
 	use omp_lib
-	use util_math,		only:	dp, PI_dp,i_dp, machineP, myExp, &
+	use util_math,		only:	dp, PI_dp,i_dp, machineP, myExp, 							&
 								eigSolverPART, isUnit, isHermitian, aUtoEv
-	use util_sysPara				
+	use util_sysPara,	only:	myID, root, ierr, 											&
+								dim, aX, aY, 												&
+								nQ, qChunk, nGq, GmaxGLOBAL, Gmax, nSolve, nBands, nWfs,	&
+								do_w90plot,	doZeeman, doMagHam, doRashba, debugHam
 	
 	use	ham_PotWell,	only:	add_potWell
 	use	ham_Zeeman,		only:	add_Zeeman
@@ -16,7 +19,7 @@ module ham_Solver
 
 
 	use ham_PWbasis,	only:	calcVeloGrad, calcAmatANA, calcMmat
-	use util_basisIO,	only:	writeABiN_basVect, writeABiN_energy, writeABiN_basCoeff, writeABiN_Mmn, &
+	use util_basisIO,	only:	writeABiN_energy, writeABiN_basCoeff, writeABiN_Mmn,		 &
 								read_coeff, read_gVec, read_energies
 	use util_w90Interf,	only:	setup_w90, write_w90_matrices, printNNinfo
 	use util_output,	only:	writeEnTXT
@@ -86,11 +89,12 @@ module ham_Solver
 	subroutine worker()
 		!			solve Ham, write results and derived quantites														
 		complex(dp),	allocatable		::	Hmat(:,:) , ck_temp(:,:)
-		real(dp),		allocatable		::	En_temp(:)
+		real(dp),		allocatable		::	En_temp(:), Gvec_qi(:,:)
 		integer							:: 	qi_glob, qi_loc, found, Gsize, boundStates, loc_minBound, loc_maxBound
 		real(dp)						::	loc_min_gap, tmp_Gap
 		!	
 		!
+		allocate(	Gvec_qi(	dim,	GmaxGLOBAL					)	)
 		allocate(	Hmat(				Gmax,	Gmax				)	)
 		allocate(	ck_temp(		GmaxGLOBAL, nSolve				)	)
 		allocate(	En_temp(				Gmax					)	)
@@ -101,25 +105,29 @@ module ham_Solver
 		call MPI_BARRIER( MPI_COMM_WORLD, ierr)
 		!LOOP KPTS
 		do qi_glob = myID*qChunk +1, myID*qChunk + qChunk
+			!grep # basis func
+			Gsize 	= nGq(qi_loc)
+			!
+			!read current Gvec
+			call read_gVec(qi_glob, 		Gvec_qi)
 			!
 			!SETUP HAM
-			call populateH(qi_loc, Hmat) 
+			call populateH(Gsize,Gvec_qi, Hmat) 
 			!
 			!SOLVE HAM
 			ck_temp	= dcmplx(0.0_dp)
 			En_temp	= 0.0_dp
-			Gsize 	= nGq(qi_loc)
 			call eigSolverPART(Hmat(1:Gsize,1:Gsize),En_temp(1:Gsize), ck_temp(1:Gsize,:), found)
 			!
 			!WRITE FILEs
-			call writeABiN_basVect(qi_glob, Gvec(:,:,qi_loc))
+			!call writeABiN_basVect(qi_glob, Gvec(:,:,qi_loc))
 			call writeABiN_basCoeff(qi_glob, ck_temp)
 			call writeABiN_energy(qi_glob, En_temp(1:nSolve))
 			!get derived quantities & write to file
-			call calcAmatANA(	qi_loc, qi_glob, ck_temp)
-			call calcVeloGrad(	qi_loc, qi_glob, ck_temp)
+			call calcAmatANA(	Gsize, qi_glob, Gvec_qi, ck_temp)
+			call calcVeloGrad(	Gsize, qi_glob, Gvec_qi, ck_temp)
 			!w90 plot preparation
-			if( do_w90plot ) call writeUNKs(qi_glob, nGq(qi_loc), ck_temp(:,1:nBands), Gvec(:,:,qi_loc))
+			if( do_w90plot ) call writeUNKs(qi_glob, Gsize, ck_temp(:,1:nBands), Gvec_qi(:,:))
 			!
 			!
 			!count insulating states
@@ -229,12 +237,13 @@ module ham_Solver
 
 
 !POPULATION OF H MATRIX
-	subroutine populateH(qi_loc, Hmat)
+	subroutine populateH(nG_qi, Gvec, Hmat)
 		!populates the Hamiltonian matrix by adding 
 		!	1. kinetic energy terms (onSite)
 		!	2. potential terms V(qi,i,j)
 		!and checks if the resulting matrix is hermitian( for debugging)
-		integer,		intent(in)	:: 	qi_loc
+		integer,		intent(in)	:: 	nG_qi
+		real(dp),		intent(in)	::	Gvec(:,:)
 		complex(dp), intent(inout) 	:: 	Hmat(:,:)
 		integer						::	gi
 		!init to zero
@@ -242,26 +251,26 @@ module ham_Solver
 		!
 		!
 		!KINETIC ENERGY
-		do gi = 1, size(Hmat,1)
-			Hmat(gi,gi) = 0.5_dp * dot_product(	Gvec(:,gi,qi_loc),	Gvec(:,gi,qi_loc)	)
+		do gi = 1, nG_qi
+			Hmat(gi,gi) = 0.5_dp * dot_product(	Gvec(:,gi),	Gvec(:,gi)	)
 		end do
 		!
 		!POTENTIAL WELLS
-		call add_potWell(qi_loc, Hmat)
+		call add_potWell(nG_qi, Gvec, Hmat)
 		!
 		!ZEEMAN
-		if(	doZeeman )		call add_Zeeman(qi_loc, Hmat)
+		if(	doZeeman )		call add_Zeeman(nG_qi, Gvec, Hmat)
 		!
 		!PEIERLS
-		if( doMagHam )	 	call add_magHam(qi_loc, Hmat)
+		if( doMagHam )	 	call add_magHam(nG_qi, Gvec, Hmat)
 		!
 		!RASHBA	
-		if( doRashba )		call add_rashba(qi_loc, Hmat)
+		if( doRashba )		call add_rashba(nG_qi, Gvec, Hmat)
 
 		!
 		!DEBUG
 		if(debugHam) then
-			if ( .not.	isHermitian(Hmat)	) 	write(*,'(a,i3,a,i3)')	"[#",myID,";populateH]: WARNING Hamiltonian matrix is not Hermitian at qi_loc=",qi_loc
+			if ( .not.	isHermitian(Hmat)	) 	write(*,'(a,i3,a)')	"[#",myID,";populateH]: WARNING Hamiltonian matrix is not Hermitian "
 		end if
 		!
 		!		

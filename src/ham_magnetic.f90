@@ -24,7 +24,7 @@ module ham_Magnetic
 
 
 	!EXTERNAL MAGNETIC FIELD ( OSCILLATING )
-	subroutine add_magHam(qLoc, Hmat)
+	subroutine add_magHam(nG_qi, Gvec, Hmat)
 		!adds oscillating magnetic field to hamiltonian via peierls sub
 		!
 		!
@@ -46,7 +46,8 @@ module ham_Magnetic
 		!
 		!only contribtutions if i/=j, i.e. to off-diagonal terms
 		! no contribution for dGx = 0
-		integer,		intent(in)		::	qLoc
+		integer,		intent(in)		::	nG_qi
+		real(dp),		intent(in)		::	Gvec(:,:)
 		complex(dp),	intent(inout)	::	Hmat(:,:)
 		integer							::	i, j
 		real(dp)						::	qX_Period, dGx, dGy
@@ -57,14 +58,14 @@ module ham_Magnetic
 		H_prefact 	= 	dcmplx( 0.0_dp, 		PI_dp *	Bext(3) * aX / (qX_period*vol)	)		!purely imaginary due to i in formula
 		!
 		!Loop elements
-		do j = 1, nGq(qLoc)
-			do i = 1, nGq(qLoc)
+		do j = 1, nG_qi
+			do i = 1, nG_qi
 				!
 				!
 				!only off diagonal elements can contribute
 				if( i/=j ) then
-					dGx		= Gvec(1,j,qLoc) - Gvec(1,i,qLoc) 
-					dGy		= Gvec(2,j,qLoc) - Gvec(2,i,qLoc) 
+					dGx		= Gvec(1,j) - Gvec(1,i) 
+					dGy		= Gvec(2,j) - Gvec(2,i) 
 					!
 					!
 					if( abs(dGx) > machineP  .and. abs(dGy) > machineP ) then
@@ -85,8 +86,7 @@ module ham_Magnetic
 			end do
 		end do
 		!
-		!DEBUG
-		if( myID == root .and. qLoc == 1) 	write(*,'(a,i3,a)')	"[#",myID,";addMagHam]: hello there"		
+		!DEBUG	
 		if( norm2(Bext(1:2)) > machineP ) 	write(*,'(a,i3,a)') "[#",myID,";addMagHam]: WARNING found non zero x or y component. External field should be along z direction! "
 		!
 		return

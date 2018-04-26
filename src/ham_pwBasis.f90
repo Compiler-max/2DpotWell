@@ -21,11 +21,12 @@ module ham_PWbasis
 
 
 !public
-	subroutine calcVeloGrad(qi_loc, qi_glob, ck)
+	subroutine calcVeloGrad(nG_qi, qi_glob, Gvec, ck)
 		!calculates the velocity operator matrix
 		!	Psi_n v Psi_m	= i/hbar Psi_n grad_r Psi_m
 		!					= + 1 / hbar sum_G ckn^dag ckm G
-		integer,		intent(in)		::	qi_loc, qi_glob
+		integer,		intent(in)		::	nG_qi, qi_glob
+		real(dp),		intent(in)		::	Gvec(:,:)
 		complex(dp),	intent(in)		:: 	ck(:,:)
 		complex(dp),	allocatable		::	v_mat(:,:,:)
 		integer							::	m, n, gi
@@ -39,8 +40,8 @@ module ham_PWbasis
 			do n = 1, nSolve
 				!
 				!SUM OVER BASIS FUNCTIONS
-				do gi = 1 , nGq(qi_loc)
-					v_mat(1:2,n,m) = v_mat(1:2,n,m) +  dconjg(ck(gi,n)) *  ck(gi,m)  *  Gvec(1:2,gi,qi_loc)
+				do gi = 1 , nG_qi
+					v_mat(1:2,n,m) = v_mat(1:2,n,m) +  dconjg(ck(gi,n)) *  ck(gi,m)  *  Gvec(1:2,gi)
 				end do
 			end do
 		end do
@@ -99,12 +100,13 @@ module ham_PWbasis
 	end subroutine
 
 
-	subroutine calcAmatANA(qi_loc, qi_glob,ckH)
+	subroutine calcAmatANA(nG_qi, qi_glob, Gvec, ckH)
 		!analytic projection with hard coded integrals
 		!	projection onto sin**2, sin cos, cos sin
 		!
 		!	Amn = <Psi_m|g_n>
-		integer,		intent(in)	:: 	qi_loc, qi_glob
+		integer,		intent(in)	:: 	nG_qi, qi_glob
+		real(dp),		intent(in)	::	Gvec(:,:)
 		complex(dp),	intent(in)	:: 	ckH(:,:)
 		complex(dp),	allocatable	:: 	A_matrix(:,:) !A(nBands,nWfs)
 		integer						:: 	nWf, m
@@ -121,7 +123,7 @@ module ham_PWbasis
 				A_matrix(nWf,nWf)	= dcmplx(1.0_dp)
 			else
 				do m = 1, nBands
-					A_matrix(m,nWf)	= infiniteWell(qi_loc, m, ckH, proj_at(nWf), proj_nX(nWf), proj_nY(nWf))
+					A_matrix(m,nWf)	= infiniteWell(nG_qi, m, Gvec, ckH, proj_at(nWf), proj_nX(nWf), proj_nY(nWf))
 				end do
 			end if
 		end do
@@ -193,18 +195,19 @@ module ham_PWbasis
 
 
 !prviat:
-		complex(dp) function infiniteWell(qi_loc,m, ckH, at, nx, ny)
+		complex(dp) function infiniteWell(nG_qi, m, Gvec, ckH, at, nx, ny)
 		!	calculates the integral
 		!
 		!		sin(nx*k*x ) * sin( ny*k*y) 	
 		!
 		!
 		!
-		integer,		intent(in)	:: qi_loc, m, at, nx, ny
-		complex(dp),	intent(in)	:: ckH(:,:)
-		complex(dp)					:: num1, num2, denom
-		real(dp)					:: kappaX, kappaY, xL, xR, yL, yR, Gx, Gy, xc, yc, at_rad
-		integer						:: gi
+		integer,		intent(in)	:: 	nG_qi, m, at, nx, ny
+		real(dp),		intent(in)	:: 	Gvec(:,:)
+		complex(dp),	intent(in)	:: 	ckH(:,:)
+		complex(dp)					:: 	num1, num2, denom
+		real(dp)					:: 	kappaX, kappaY, xL, xR, yL, yR, Gx, Gy, xc, yc, at_rad
+		integer						:: 	gi
 		!
 		!TRIAL ORBITAL:
 		kappaX	= real(nx,dp) * PI_dp / ( 2.0_dp * atR(1,at) )
@@ -220,9 +223,9 @@ module ham_PWbasis
 		!
 		!SUMMATION OVER G:
 		infiniteWell 	= dcmplx(0.0_dp)
-		do gi = 1, nGq(qi_loc)
-			Gx 		= Gvec(1,gi,qi_loc)
-			Gy		= Gvec(2,gi,qi_loc)
+		do gi = 1, nG_qi
+			Gx 		= Gvec(1,gi)
+			Gy		= Gvec(2,gi)
 			!
 			!
 			!
@@ -266,7 +269,7 @@ module ham_PWbasis
 			!
 			!DEBUG
 			if( abs(denom) < machineP) then
-				write(*,'(a,i4,a,f8.4,a,f8.4a,f8.4)') "[infiniteWell]: WARNING zero denom at qi=",qi_loc," Gx=",Gx,"Gy=",Gy,"denom=",denom
+				write(*,'(a,f8.4,a,f8.4,a,f8.4)') "[infiniteWell]: WARNING zero denom at Gx=",Gx,"Gy=",Gy,"denom=",denom
 				denom 	= 1e-8_dp
 			end if
 			!

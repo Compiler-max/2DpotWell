@@ -22,7 +22,7 @@ module ham_Zeeman
 
 
 
-	subroutine add_Zeeman(qLoc, Hmat)
+	subroutine add_Zeeman(nG_qi, Gvec, Hmat)
 		!adds the operator 
 		!				H_alpha = alpha ( op(x) op(p_y)	-	op(y) op(p_x)	)
 		!
@@ -45,7 +45,8 @@ module ham_Zeeman
 		!		3			1			0
 		!		4			1			1
 		!---------------------------------------------------------------------------
-		integer,		intent(in)		::	qLoc
+		integer,		intent(in)		::	nG_qi
+		real(dp),		intent(in)		::	Gvec(:,:)
 		complex(dp),	intent(inout)	::	Hmat(:,:)
 		integer							::	i, j, at 
 		real(dp)						::	dGx, dGy, Gjx, Gjy, x0, y0, at_rad, magMom, minI, maxI
@@ -56,14 +57,14 @@ module ham_Zeeman
 		alphaZee	=	dcmplx(	-1.0_dp * magMom * Bext(3)	)	! [magMom] [Bext]
 		!
 		!
-		do j = 1, nGq(qLoc)
-			do i = 1, nGq(qLoc)
+		do j = 1, nG_qi
+			do i = 1, nG_qi
 				!CASE 1 (i==j) gives 0
 				if( i /= j )	then
-					dGx		= Gvec(1,j,qLoc) - Gvec(1,i,qLoc) 
-					dGy		= Gvec(2,j,qLoc) - Gvec(2,i,qLoc) 
-					Gjx		= Gvec(1,j,qLoc)
-					Gjy		= Gvec(2,j,qLoc)
+					dGx		= Gvec(1,j) - Gvec(1,i) 
+					dGy		= Gvec(2,j) - Gvec(2,i) 
+					Gjx		= Gvec(1,j)
+					Gjy		= Gvec(2,j)
 					!
 					!for each atom/well
 					do at = 1, nAt

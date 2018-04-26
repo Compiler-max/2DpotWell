@@ -1,7 +1,7 @@
 module util_sysPara
 	!this modules reads the input file and generates the meshes accordingly
 	use mpi
-	use util_math, only: dp, PI_dp, setAcc, acc, machineP, aUtoTesla,  aUtoAngstrm, aUtoEv
+	use util_math, 		only:	dp, PI_dp, setAcc, acc, machineP, aUtoTesla,  aUtoAngstrm, aUtoEv
 	use m_config
 	implicit none
 	!#include "mpif.h"
@@ -15,7 +15,7 @@ module util_sysPara
 				!atoms:
 				nAt, relXpos, relYpos, atRx, atRy, atPot, dVpot,atPos, atR,  			&
 				!cutoff:
-				nG, nGq, Gmax, GmaxGLOBAL, GminGLOBAL, Gcut, Gvec, nSolve, 				&
+				nG, nGq, Gmax, GmaxGLOBAL, GminGLOBAL, Gcut, nSolve, 				&
 				!grids:
 				qpts,  kpts, 															&
 				nQ, nQx, nQy, 															&
@@ -65,7 +65,6 @@ module util_sysPara
 														atPos, atR, 																	&
 														qpts, kpts 
 
-	real(dp),	allocatable,	dimension(:,:,:)	::	Gvec
 	logical											::	debugHam,  																		&
 														doSolveHam, doVdesc,  doRashba, doZeeman, doMagHam, 							&
 														use_px_rashba, 																	&
@@ -612,12 +611,13 @@ module util_sysPara
 
 !
 	subroutine popGvec()
-		integer						:: qi, ix, iy, inside,tot, qLoc, Gmin, gi
+		integer						:: qi, ix, iy, inside,tot, qLoc, Gmin
 		real(dp)					:: kg(2), Gtest(2)
 		real(dp),	allocatable		:: Gtemp(:,:,:)
+		character(len=20)			::	filename
+		character(len=1024)			::	format='(a,i7.7)'
 		!
 		allocate(	nGq(					qChunk		)		)
-		!allocate(	Gvec(	dim,	nG ,	qChunk		)		)
 		allocate(	Gtemp(	dim,	nG ,	qChunk		)		)
 		!
 		qLoc = 1
@@ -656,16 +656,18 @@ module util_sysPara
 		call MPI_ALLREDUCE(Gmax, GmaxGLOBAL, 1, MPI_INTEGER, MPI_MAX, MPI_COMM_WORLD, ierr) 
 		call MPI_ALLREDUCE(Gmin, GminGLOBAL, 1, MPI_INTEGER, MPI_MIN, MPI_COMM_WORLD, ierr)
 		if( myID == root ) write(*,'(a,i3,a,i7,a,i7)') "[#",myID,";popGvec]: global Gmax=",GmaxGLOBAL, ";	global Gmin=",GminGLOBAL
-
 		!
-		!prepare final array
-		allocate(	Gvec(	dim, GmaxGLOBAL, qChunk)	)
-		Gvec = 0.0_dp
-		!copy from larger array
+		!
+		!WRITE TO FILE
 		do qLoc = 1, qChunk
-			do gi = 1, nGq(qLoc)
-				Gvec(:,gi,qLoc) = Gtemp(:,gi,qLoc)
-			end do
+			!get global q index & according filename
+			qi = myID*qChunk + qLoc
+			write(filename, format) raw_dir//'gVec.',qi
+			!
+			!write to file
+			open(unit=210, file=filename		, form='unformatted', access='stream', action='write',status='replace') 
+			write(210)	Gtemp(1:dim,1:GmaxGLOBAL,qLoc)
+			close(210)
 		end do
 		!
 		!
