@@ -237,29 +237,30 @@ def get_All_subDirs(descriptor,path="."):
 
 	#search for pol files
 	for dirpath, dirnames, filenames in os.walk(path):
-		print('search in dirpath: ',dirpath)
-		#GET BERRY
-		for filename in [f for f in filenames if f.endswith("polOutput.txt")]:
-			filepath = dirpath+'/'+filename
-			print('found new file:'+filepath)
-			#
-			uCell.append(		getData('unit_cell'			,filepath)			)
-			#
-			gCut.append(		getData('gCut'				,filepath)			)
-			mpGrid.append(		getData('mp_grid'			,filepath)			)
-			#
-			data.append(		getData( descriptor			,filepath)			)
-			p0.append(			getData('zero_order'		,filepath)			)
-			pf2.append(			getData('niu_f2'			,filepath)			)
-			pf3.append(			getData('niu_f3'			,filepath)			)
-		#GET INTERPOLATION
-		for filename in [f for f in filenames if f.endswith("polInterp.txt")]:
-			filepath = dirpath+'/'+filename
-			print('found new interp file:'+filepath)
-			#
-			p0_interp.append(	getData('zero_order_sum',filepath)	)
-			pf2_interp.append(	getData('f2_sum',filepath)			)
-			pf3_interp.append(	getData('f3_sum',filepath)			)
+		if 'pyache' not in dirpath:
+			print('search in dirpath: ',dirpath)
+			#GET BERRY
+			for filename in [f for f in filenames if f.endswith("polOutput.txt")]:
+				filepath = dirpath+'/'+filename
+				print('found new file:'+filepath)
+				#
+				uCell.append(		getData('unit_cell'			,filepath)			)
+				#
+				gCut.append(		getData('gCut'				,filepath)			)
+				mpGrid.append(		getData('mp_grid'			,filepath)			)
+				#
+				data.append(		getData( descriptor			,filepath)			)
+				p0.append(			getData('zero_order'		,filepath)			)
+				pf2.append(			getData('niu_f2'			,filepath)			)
+				pf3.append(			getData('niu_f3'			,filepath)			)
+			#GET INTERPOLATION
+			for filename in [f for f in filenames if f.endswith("polInterp.txt")]:
+				filepath = dirpath+'/'+filename
+				print('found new interp file:'+filepath)
+				#
+				p0_interp.append(	getData('zero_order_sum',filepath)	)
+				pf2_interp.append(	getData('f2_sum',filepath)			)
+				pf3_interp.append(	getData('f3_sum',filepath)			)
 			
 	#sort only works for scalars
 	if 'magnetic_field' in descriptor:
