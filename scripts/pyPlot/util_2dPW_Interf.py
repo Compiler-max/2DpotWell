@@ -161,7 +161,7 @@ def read_gcut_probe_w90(nAt, nWfs, dirpath="."):
 
 
 	for dirpath, dirnames, filenames in os.walk(dirpath):
-		if 'gCut' in dirpath:
+		if 'gCut' in dirpath and 'pycache' not in dirpath:
 			print('search in dirpath: ',dirpath)
 			floats = [float(i) for i in p.findall(dirpath)]  
 			gCut.append( floats[0] )
