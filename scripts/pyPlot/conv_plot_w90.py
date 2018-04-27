@@ -2,15 +2,11 @@
 
 
 
-import sys
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import cm
 import os
-import os.path
-import re
 
-from util_2dPW_Interf import get_All_subDirs
 from util_2dPW_Interf import read_gcut_probe_w90
 from util_2dPW_Interf import get_pw_count
 
@@ -56,11 +52,16 @@ def plot_p0(ind, pwCount_kx4, pwCount_kx8, pwCount_kx16, pwCount_kx32, pwCount_k
 	#plot p_X
 	fig_p0, ax_p0  = plt.subplots(1,1) 
 	
-	plt.plot(pwCount_kx4, pol_kx4, 			'+-',	color=colors[0],	label ='4x8')
-	plt.plot(pwCount_kx8, pol_kx8, 			'+-',	color=colors[1],	label ='8x16')
-	plt.plot(pwCount_kx16, pol_kx16, 		'+-',	color=colors[2],	label ='16x32')
-	plt.plot(pwCount_kx32, pol_kx32, 		'+-',	color=colors[3],	label ='32x64')
-	plt.plot(pwCount_kx64, pol_kx64, 		'+-',	color=colors[4],	label ='64x128')
+	if len(pwCount_kx4)>0:	
+		plt.plot(pwCount_kx4, pol_kx4, 			'+-',	color=colors[0],	label ='4x8')
+	if len(pwCount_kx8)>0:	
+		plt.plot(pwCount_kx8, pol_kx8, 			'+-',	color=colors[1],	label ='8x16')
+	if len(pwCount_kx16)>0:	
+		plt.plot(pwCount_kx16, pol_kx16, 		'+-',	color=colors[2],	label ='16x32')
+	if len(pwCount_kx32)>0:	
+		plt.plot(pwCount_kx32, pol_kx32, 		'+-',	color=colors[3],	label ='32x64')
+	if len(pwCount_kx64)>0:
+		plt.plot(pwCount_kx64, pol_kx64, 		'+-',	color=colors[4],	label ='64x128')
 
 	#set labels & descriptors
 	plt.title(title)
@@ -100,24 +101,39 @@ nAt 	= 2
 nWfs 	= 6
 
 #get Data
-gCut_kx4, at_cent_kx4, mpGrid_kx4, wf_cent_kx4, wf_sprd_kx4, wf_shift_kx4, wf_pol_kx4 = read_gcut_probe_w90(nAt, nWfs, dirpath="./kx4/GcutTest/")
-gCut_kx8, at_cent_kx8, mpGrid_kx8, wf_cent_kx8, wf_sprd_kx8, wf_shift_kx8, wf_pol_kx8 = read_gcut_probe_w90(nAt, nWfs, dirpath="./kx8/GcutTest/")
-gCut_kx16, at_cent_kx16, mpGrid_kx16, wf_cent_kx16, wf_sprd_kx16, wf_shift_kx16, wf_pol_kx16 = read_gcut_probe_w90(nAt, nWfs, dirpath="./kx16/GcutTest/")
-gCut_kx32, at_cent_kx32, mpGrid_kx32, wf_cent_kx32, wf_sprd_kx32, wf_shift_kx32, wf_pol_kx32 = read_gcut_probe_w90(nAt, nWfs, dirpath="./kx32/GcutTest/")
-gCut_kx64, at_cent_kx64, mpGrid_kx64, wf_cent_kx64, wf_sprd_kx64, wf_shift_kx64, wf_pol_kx64 = read_gcut_probe_w90(nAt, nWfs, dirpath="./kx64/GcutTest/")
+#gCut_kx4, at_cent_kx4, mpGrid_kx4, wf_cent_kx4, wf_sprd_kx4, wf_shift_kx4, wf_pol_kx4 = read_gcut_probe_w90(nAt, nWfs, dirpath="./kx4/GcutTest/")
+#gCut_kx8, at_cent_kx8, mpGrid_kx8, wf_cent_kx8, wf_sprd_kx8, wf_shift_kx8, wf_pol_kx8 = read_gcut_probe_w90(nAt, nWfs, dirpath="./kx8/GcutTest/")
+#gCut_kx16, at_cent_kx16, mpGrid_kx16, wf_cent_kx16, wf_sprd_kx16, wf_shift_kx16, wf_pol_kx16 = read_gcut_probe_w90(nAt, nWfs, dirpath="./kx16/GcutTest/")
+#gCut_kx32, at_cent_kx32, mpGrid_kx32, wf_cent_kx32, wf_sprd_kx32, wf_shift_kx32, wf_pol_kx32 = read_gcut_probe_w90(nAt, nWfs, dirpath="./kx32/GcutTest/")
+#gCut_kx64, at_cent_kx64, mpGrid_kx64, wf_cent_kx64, wf_sprd_kx64, wf_shift_kx64, wf_pol_kx64 = read_gcut_probe_w90(nAt, nWfs, dirpath="./kx64ky128/GcutTest/")
 
 
 #get # plane waves used
-pwCount_kx4 	= 	get_pw_count("./kx4")
-pwCount_kx8 	=	get_pw_count("./kx8")
-pwCount_kx16 	=	get_pw_count("./kx16")
-pwCount_kx32 	=	get_pw_count("./kx32")
-pwCount_kx64 	=	get_pw_count("./kx64")
+#pwCount_kx4 	= 	get_pw_count("./kx4")
+#pwCount_kx8 	=	get_pw_count("./kx8")
+#pwCount_kx16 	=	get_pw_count("./kx16")
+#pwCount_kx32 	=	get_pw_count("./kx32")
 
 
 
-#gCut_kx32, at_cent_kx32, mpGrid_kx32, wf_cent_kx32, wf_sprd_kx32, wf_shift_kx32, wf_pol_kx32 = read_gcut_probe_w90(nAt, nWfs, dirpath="./kx32ky64/GcutTest/")
-#gCut_kx64, at_cent_kx64, mpGrid_kx64, wf_cent_kx64, wf_sprd_kx64, wf_shift_kx64, wf_pol_kx64 = read_gcut_probe_w90(nAt, nWfs, dirpath="./kx64ky128/GcutTest/")
+
+def read_kmesh_folder(path="."):
+	if os.path.exists(path):
+		gCut, at_cent, mpGrid, wf_cent, wf_sprd, wf_shift, wf_pol = read_gcut_probe_w90(nAt, nWfs, dirpath=path+"/GcutTest/")
+		pwCount	=	get_pw_count(path)
+	else:
+		pwCount = []
+		wf_pol = []
+
+	return pwCount, wf_pol
+
+
+
+pwCount_kx4, wf_pol_kx4 	= read_kmesh_folder("./kx4"	)
+pwCount_kx8, wf_pol_kx8 	= read_kmesh_folder("./kx8"	)
+pwCount_kx16, wf_pol_kx16 	= read_kmesh_folder("./kx16")
+pwCount_kx32, wf_pol_kx32 	= read_kmesh_folder("./kx32")
+pwCount_kx64, wf_pol_kx64 	= read_kmesh_folder("./kx64")
 
 
 #call plot routines
