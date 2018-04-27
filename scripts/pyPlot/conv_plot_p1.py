@@ -1,3 +1,4 @@
+import os
 import sys
 import numpy as np
 import matplotlib.pyplot as plt
@@ -45,11 +46,17 @@ def plot_essin(ind ,aX ,aY , pwCount_kx4, pwCount_kx8, pwCount_kx16, pwCount_kx3
 	print('a_ind (ang)=',a_ind)
 	print('pol factor =',1.0/(polQuantum*a_ind)*100.0)
 
-	plt.plot(pwCount_kx4, 		-(	pf2_kx4[:,ind]	+	pf3_kx4[:,ind]	)		/	(polQuantum*a_ind),		'+-'	,label=' 4x8'	,color= colors[0]	) 
-	plt.plot(pwCount_kx8, 		-(	pf2_kx8[:,ind]	+	pf3_kx8[:,ind]	)		/	(polQuantum*a_ind),		'+-'	,label=' 8x16'	,color= colors[1]	)
-	plt.plot(pwCount_kx16, 		-(	pf2_kx16[:,ind]	+	pf3_kx16[:,ind]	)		/	(polQuantum*a_ind),		'+-'	,label='16x32'	,color= colors[2]	)
-	plt.plot(pwCount_kx32, 		-(	pf2_kx32[:,ind]	+	pf3_kx32[:,ind]	)		/	(polQuantum*a_ind),		'+-'	,label='32x64'	,color= colors[3]	)
-	plt.plot(pwCount_kx64,		-(	pf2_kx64[:,ind]	+	pf3_kx64[:,ind]	)		/	(polQuantum*a_ind),		'+-'	,label='64x128'	,color= colors[4]	)
+
+	if len(pwCount_kx4)>0:
+		plt.plot(pwCount_kx4, 		-(	pf2_kx4[:,ind]	+	pf3_kx4[:,ind]	)		/	(polQuantum*a_ind),		'+-'	,label=' 4x8'	,color= colors[0]	) 
+	if len(pwCount_kx8)>0:
+		plt.plot(pwCount_kx8, 		-(	pf2_kx8[:,ind]	+	pf3_kx8[:,ind]	)		/	(polQuantum*a_ind),		'+-'	,label=' 8x16'	,color= colors[1]	)
+	if len(pwCount_kx16)>0:
+		plt.plot(pwCount_kx16, 		-(	pf2_kx16[:,ind]	+	pf3_kx16[:,ind]	)		/	(polQuantum*a_ind),		'+-'	,label='16x32'	,color= colors[2]	)
+	if len(pwCount_kx32)>0:
+		plt.plot(pwCount_kx32, 		-(	pf2_kx32[:,ind]	+	pf3_kx32[:,ind]	)		/	(polQuantum*a_ind),		'+-'	,label='32x64'	,color= colors[3]	)
+	if len(pwCount_kx64)>0:
+		plt.plot(pwCount_kx64,		-(	pf2_kx64[:,ind]	+	pf3_kx64[:,ind]	)		/	(polQuantum*a_ind),		'+-'	,label='64x128'	,color= colors[4]	)
 
 
 
@@ -61,19 +68,42 @@ def plot_essin(ind ,aX ,aY , pwCount_kx4, pwCount_kx8, pwCount_kx16, pwCount_kx3
 	plt.tight_layout()
 	plt.show()
 
-#read data
-gCut_kx4, p0_kx4, pf2_kx4, pf3_kx4, p0_interp, pf2_interp, pf3_interp	= 	get_All_subDirs(	descriptor,	"./kx4/GcutTest/")
-gCut_kx8, p0_kx8, pf2_kx8, pf3_kx8, p0_interp, pf2_interp, pf3_interp		= get_All_subDirs(	descriptor,	"./kx8/GcutTest/")
-gCut_kx16, p0_kx16, pf2_kx16, pf3_kx16, p0_interp, pf2_interp, pf3_interp	= get_All_subDirs(	descriptor,	"./kx16/GcutTest/")
-gCut_kx32, p0_kx32, pf2_kx32, pf3_kx32, p0_interp, pf2_interp, pf3_interp	= get_All_subDirs(	descriptor,	"./kx32/GcutTest/")
-gCut_kx64, p0_kx64, pf2_kx64, pf3_kx64, p0_interp, pf2_interp, pf3_interp	= get_All_subDirs(	descriptor,	"./kx64/GcutTest/")
 
-#get # plane waves used
-pwCount_kx4 	= 	get_pw_count("./kx4")
-pwCount_kx8 	=	get_pw_count("./kx8")
-pwCount_kx16 	=	get_pw_count("./kx16")
-pwCount_kx32 	=	get_pw_count("./kx32")
-pwCount_kx64 	=	get_pw_count("./kx64")
+
+
+def read_kmesh_folder(path="."):
+	pwCount = []
+	p0 		= []
+	pf2		= []
+	pf3 	= []
+	#
+	if os.path.exists(path):
+		gCut, p0, pf2, pf3, p0_interp, pf2_interp, pf3_interp	= 	get_All_subDirs(	descriptor,	path+"/GcutTest/")
+		pwCount	=	get_pw_count(path)
+	#	
+	return pwCount, p0, pf2, pf3
+
+
+
+
+
+pwCount_kx4, p0_kx4, pf2_kx4, pf3_kx4 		= read_kmesh_folder("./kx4")
+pwCount_kx8, p0_kx8, pf2_kx8, pf3_kx8 		= read_kmesh_folder("./kx8")
+pwCount_kx16, p0_kx16, pf2_kx16, pf3_kx16 	= read_kmesh_folder("./kx16")
+pwCount_kx32, p0_kx32, pf2_kx32, pf3_kx32 	= read_kmesh_folder("./kx32")
+pwCount_kx64, p0_kx64, pf2_kx64, pf3_kx64 	= read_kmesh_folder("./kx64")
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 plot_essin(0,aX, aY, pwCount_kx4, pwCount_kx8, pwCount_kx16, pwCount_kx16, pwCount_kx64, pf2_kx4, pf3_kx4, pf2_kx8, pf3_kx8, pf2_kx16, pf3_kx16, pf2_kx16, pf3_kx16, pf2_kx64, pf3_kx64)
@@ -122,3 +152,16 @@ plot_essin(1,aX, aY, pwCount_kx4, pwCount_kx8, pwCount_kx16, pwCount_kx16, pwCou
 #	plt.legend()
 #	plt.show()
 
+#read data
+#gCut_kx4, p0_kx4, pf2_kx4, pf3_kx4, p0_interp, pf2_interp, pf3_interp	= 	get_All_subDirs(	descriptor,	"./kx4/GcutTest/")
+#gCut_kx8, p0_kx8, pf2_kx8, pf3_kx8, p0_interp, pf2_interp, pf3_interp		= get_All_subDirs(	descriptor,	"./kx8/GcutTest/")
+#gCut_kx16, p0_kx16, pf2_kx16, pf3_kx16, p0_interp, pf2_interp, pf3_interp	= get_All_subDirs(	descriptor,	"./kx16/GcutTest/")
+#gCut_kx32, p0_kx32, pf2_kx32, pf3_kx32, p0_interp, pf2_interp, pf3_interp	= get_All_subDirs(	descriptor,	"./kx32/GcutTest/")
+#gCut_kx64, p0_kx64, pf2_kx64, pf3_kx64, p0_interp, pf2_interp, pf3_interp	= get_All_subDirs(	descriptor,	"./kx64/GcutTest/")
+#
+##get # plane waves used
+#pwCount_kx4 	= 	get_pw_count("./kx4")
+#pwCount_kx8 	=	get_pw_count("./kx8")
+#pwCount_kx16 	=	get_pw_count("./kx16")
+#pwCount_kx32 	=	get_pw_count("./kx32")
+#pwCount_kx64 	=	get_pw_count("./kx64")
