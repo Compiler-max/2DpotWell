@@ -237,7 +237,7 @@ def get_All_subDirs(descriptor,path="."):
 
 	#search for pol files
 	for dirpath, dirnames, filenames in os.walk(path):
-		if 'pyache' not in dirpath:
+		if 'pycache' not in dirpath:
 			print('search in dirpath: ',dirpath)
 			#GET BERRY
 			for filename in [f for f in filenames if f.endswith("polOutput.txt")]:
