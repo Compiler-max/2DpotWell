@@ -43,7 +43,7 @@ pf3 	= Bz * pf3
 #PLOT
 fig, ax  = plt.subplots(1,1) 
 
-plt.plot(data,(-pf2[:,1]-pf3[:,1]) * 1e6 / (polQuantum*aY), marker='+', color='orange', label='essin')
+plt.plot(data,(-pf2[:,1]-pf3[:,1]) * 1e6 / aY, marker='+', color='orange', label='essin')
 
 
 my_xticks = [6,12,24,48,96]

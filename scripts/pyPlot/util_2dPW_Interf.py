@@ -263,9 +263,9 @@ def get_All_subDirs(descriptor,path="."):
 				mpGrid.append(		getData('mp_grid'			,filepath)			)
 				#
 				data.append(		getData( descriptor			,filepath)			)
-				p0.append(			getData('zero_order'		,filepath)			)
-				pf2.append(			getData('niu_f2'			,filepath)			)
-				pf3.append(			getData('niu_f3'			,filepath)			)
+				p0.append(			getData('sum_zero_shifts'		,filepath)			)
+				pf2.append(			getData('sum_niu_f2'			,filepath)			)
+				pf3.append(			getData('sum_niu_f3'			,filepath)			)
 			#GET INTERPOLATION
 			for filename in [f for f in filenames if f.endswith("polInterp.txt")]:
 				filepath = dirpath+'/'+filename
@@ -328,9 +328,9 @@ def print_Info(fpath="./polOutput.txt"):
 	print('B_ext   =',getData('magnetic_field'	,fpath)					, ' (T)'			)
 	print('a_rashba=',getData('alpha_rashba'	,fpath)					,' (eV Ang)'		)
 	print('nSolve  =',getData('nSolve'			,fpath)										)
-	print('p_0     =',getData('zero_order'		,fpath)					,r'($\mu C / cm$)'	)
-	print('p_niu_F2=',getData('niu_f2'			,fpath)					,r'($\mu C / cm$)'	)
-	print('p_niu_F3=',getData('niu_f3'			,fpath)					,r'($\mu C / cm$)'	)
+	print('p_0     =',getData('sum_zero_shifts'		,fpath)				,r'(Ang)'			)
+	print('p_niu_F2=',getData('sum_niu_f2'			,fpath)				,r'(Ang)'			)
+	print('p_niu_F3=',getData('sum_niu_f3'			,fpath)				,r'(Ang)'			)
 
 	return
 

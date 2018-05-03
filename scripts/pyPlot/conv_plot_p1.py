@@ -47,15 +47,15 @@ def plot_essin(ind ,aX ,aY , pwCount_kx4, pwCount_kx8, pwCount_kx16, pwCount_kx3
 
 
 	if len(pwCount_kx4)>0:
-		plt.plot(pwCount_kx4, 		-(	pf2_kx4[:,ind]	+	pf3_kx4[:,ind]	)		/	(polQuantum*a_ind),		'+-'	,label=' 4x8'	,color= colors[0]	) 
+		plt.plot(pwCount_kx4, 		-(	pf2_kx4[:,ind]	+	pf3_kx4[:,ind]	)		/	a_ind,		'+-'	,label=' 4x8'	,color= colors[0]	) 
 	if len(pwCount_kx8)>0:
-		plt.plot(pwCount_kx8, 		-(	pf2_kx8[:,ind]	+	pf3_kx8[:,ind]	)		/	(polQuantum*a_ind),		'+-'	,label=' 8x16'	,color= colors[1]	)
+		plt.plot(pwCount_kx8, 		-(	pf2_kx8[:,ind]	+	pf3_kx8[:,ind]	)		/	a_ind,		'+-'	,label=' 8x16'	,color= colors[1]	)
 	if len(pwCount_kx16)>0:
-		plt.plot(pwCount_kx16, 		-(	pf2_kx16[:,ind]	+	pf3_kx16[:,ind]	)		/	(polQuantum*a_ind),		'+-'	,label='16x32'	,color= colors[2]	)
+		plt.plot(pwCount_kx16, 		-(	pf2_kx16[:,ind]	+	pf3_kx16[:,ind]	)		/	a_ind,		'+-'	,label='16x32'	,color= colors[2]	)
 	if len(pwCount_kx32)>0:
-		plt.plot(pwCount_kx32, 		-(	pf2_kx32[:,ind]	+	pf3_kx32[:,ind]	)		/	(polQuantum*a_ind),		'+-'	,label='32x64'	,color= colors[3]	)
+		plt.plot(pwCount_kx32, 		-(	pf2_kx32[:,ind]	+	pf3_kx32[:,ind]	)		/	a_ind,		'+-'	,label='32x64'	,color= colors[3]	)
 	if len(pwCount_kx64)>0:
-		plt.plot(pwCount_kx64,		-(	pf2_kx64[:,ind]	+	pf3_kx64[:,ind]	)		/	(polQuantum*a_ind),		'+-'	,label='64x128'	,color= colors[4]	)
+		plt.plot(pwCount_kx64,		-(	pf2_kx64[:,ind]	+	pf3_kx64[:,ind]	)		/	a_ind,		'+-'	,label='64x128'	,color= colors[4]	)
 
 
 

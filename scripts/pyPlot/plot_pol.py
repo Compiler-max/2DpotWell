@@ -70,8 +70,8 @@ for ind, string in enumerate(direction):
 	#plt.plot(data,	-1.0*p0_max[:],		color='black',	label='p0_abs')
 	#plt.plot(data, pf2[:,ind],	marker='+',		color='red',	label='p_f2'	)
 	#plt.plot(data, pf3[:,ind],	marker='+',		color='green',	label='p_f3'	)
-	plt.plot(data, (pf2[:,ind]+pf3[:,ind]) / (polQuantum*a_ind), marker='+', color='blue', label='niu')
-	plt.plot(data,-(pf2[:,ind]+pf3[:,ind]) / (polQuantum*a_ind), marker='+', color='orange', label='essin')
+	plt.plot(data, (pf2[:,ind]+pf3[:,ind]) / a_ind, marker='+', color='blue', label='niu')
+	plt.plot(data,-(pf2[:,ind]+pf3[:,ind]) / a_ind, marker='+', color='orange', label='essin')
 
 
 	#plt.plot(data,pf2[:,ind]-pf3[:,ind], marker='+', color='orange', label='f2-f3')
