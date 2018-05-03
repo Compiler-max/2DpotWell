@@ -544,9 +544,11 @@ module util_output
 				write(600,'(i3,a,f14.6,a,f14.6,a,f14.6,a,a,e13.4,a,e13.4,a)') n,"  | ",w_final(1,n),", ", w_final(2,n),",",w_final(3,n), "  | ",&
 																"(",w_final(1,n)*polQuantum*centiMet,", ", w_final(2,n)*polQuantum*centiMet, ")."
 		end do
+		write(600,*)	"begin sum_zero_shifts"
 		write(600,'(a,f14.6,a,f14.6,a,f14.6,a)')	"	sum	",sum(w_final(1,:))," ",&
 																sum(w_final(2,:))," ",&
 																sum(w_final(3,:))," | "
+		write(600,*)	"end sum_zero_shifts"
 		write(600,*)	"begin zero_order"
 		write(600,'(a,e16.9,a,e16.9,a,e16.9,a)')	"		 ",sum(w_final(1,:))*polQuantum*centiMet," ",&
 															sum(w_final(2,:))*polQuantum*centiMet," ",&
@@ -592,9 +594,11 @@ module util_output
 			write(600,'(i3,a,f14.6,a,f14.6,a,f14.6,a,a,e13.4,a,e13.4,a)') n,"  | ",niu_centF2(1,n),", ", niu_centF2(2,n),",",niu_centF2(3,n), "  | ",&
 																"(",niu_centF2(1,n)*polQuantum*centiMet,", ", niu_centF2(2,n)*polQuantum*centiMet, ")."
 		end do
+		write(600,*)	"begin sum_niu_f2"
 		write(600,'(a,f14.6,a,f14.6,a,f14.6,a)')	"	sum	",sum(niu_centF2(1,:))," ",&
 																sum(niu_centF2(2,:))," ",&
 																sum(niu_centF2(3,:))," | "
+		write(600,*)	"end sum_niu_f2"
 		write(600,*)	"begin niu_f2"
 		write(600,'(a,e16.9,a,e16.9,a,e16.9,a)')	"				",sum(niu_centF2(1,:))*polQuantum*centiMet," ",&
 																sum(niu_centF2(2,:))*polQuantum*centiMet," ",&
@@ -611,9 +615,11 @@ module util_output
 			write(600,'(i3,a,f14.6,a,f14.6,a,f14.6,a,a,e13.4,a,e13.4,a)') n,"  | ",niu_centF3(1,n),", ", niu_centF3(2,n),",",niu_centF3(3,n), "  | ",&
 																"(",niu_centF3(1,n)*polQuantum*centiMet,", ", niu_centF3(2,n)*polQuantum*centiMet, ")."
 		end do
+		write(600,*)	"begin sum_niu_f3"
 		write(600,'(a,f14.6,a,f14.6,a,f14.6,a)')	"	sum	",sum(niu_centF3(1,:))," ",&
 																sum(niu_centF3(2,:))," ",&
 																sum(niu_centF3(3,:))," | "
+		write(600,*)	"end sum_niu_f2"
 		write(600,*)	"begin niu_f3"
 		write(600,'(a,e16.9,a,e16.9,a,e16.9,a)')	"				",sum(niu_centF3(1,:))*polQuantum*centiMet," ",&
 																sum(niu_centF3(2,:))*polQuantum*centiMet," ",&
