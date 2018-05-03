@@ -619,7 +619,7 @@ module util_output
 		write(600,'(a,f14.6,a,f14.6,a,f14.6,a)')	"	sum	",sum(niu_centF3(1,:))," ",&
 																sum(niu_centF3(2,:))," ",&
 																sum(niu_centF3(3,:))," | "
-		write(600,*)	"end sum_niu_f2"
+		write(600,*)	"end sum_niu_f3"
 		write(600,*)	"begin niu_f3"
 		write(600,'(a,e16.9,a,e16.9,a,e16.9,a)')	"				",sum(niu_centF3(1,:))*polQuantum*centiMet," ",&
 																sum(niu_centF3(2,:))*polQuantum*centiMet," ",&
