@@ -179,8 +179,15 @@ def read_gcut_probe_w90(nAt, nWfs, dirpath="."):
 			wf_pol.append(wf_pol_temp)
 
 	#sort with respect to gcut value
-	s	= sorted(zip(gCut, at_cent, mpGrid, wf_cent, wf_sprd, wf_shift, wf_pol))
-	gCut, at_cent, mpGrid, wf_cent, wf_sprd, wf_shift, wf_pol = map(list,zip(*s))
+	try:
+		s	= sorted(zip(gCut, at_cent, mpGrid, wf_cent, wf_sprd, wf_shift, wf_pol))
+		gCut, at_cent, mpGrid, wf_cent, wf_sprd, wf_shift, wf_pol = map(list,zip(*s))
+		print('read_gcut_probe_w90: sorted data successfully')
+	except:
+		print('read_gcut_probe_w90: could not sort data')
+	finally:
+		print('done reading data')
+
 
 	return gCut, at_cent, mpGrid, wf_cent, wf_sprd, wf_shift, wf_pol
 
@@ -194,7 +201,7 @@ def get_pw_count(dirpath):
 	print('hello from get_pw_count')
 
 	for dirpath, dirnames, filenames in os.walk(dirpath):
-		if 'gCut' in dirpath:
+		if 'gCut' in dirpath and 'pycache' not in dirpath:
 			print('search in dirpath: ',dirpath)
 			floats = [float(i) for i in p.findall(dirpath)]  
 			gCut.append( floats[0] )
@@ -204,8 +211,14 @@ def get_pw_count(dirpath):
 
 
 			print('found Gcut=',floats[0],' and associated Gmin=',pw_count[-1])
-	s	= sorted(zip(gCut, pw_count))
-	gCut, pw_count= map(list,zip(*s))
+	
+	try:
+		s	= sorted(zip(gCut, pw_count))
+		gCut, pw_count= map(list,zip(*s))
+		print('get_pw_count: sorted the data')
+	except:
+		print('get_pw_count: could not sort data in path='+dirpath)
+
 
 	print('gCut=',gCut)
 	print('#pw=',pw_count)
@@ -280,8 +293,16 @@ def get_All_subDirs(descriptor,path="."):
 	#print('pf3_interp=',len(pf3_interp))
 
 	#sort the lists in ascending order of data list
-	s	= sorted(zip(data,p0,pf2,pf3,p0_interp, pf2_interp, pf3_interp))
-	data, p0, pf2, pf3, p0_interp, pf2_interp, pf3_interp = map(list,zip(*s))
+	print('..now try to sort the data')
+	try:
+		s	= sorted(zip(data,p0,pf2,pf3,p0_interp, pf2_interp, pf3_interp))
+		data, p0, pf2, pf3, p0_interp, pf2_interp, pf3_interp = map(list,zip(*s))
+		print('data sorted successfully')
+	except:
+		print('could not sort the data')
+	finally:
+		print('finished sorting the data')
+
 
 	
 
