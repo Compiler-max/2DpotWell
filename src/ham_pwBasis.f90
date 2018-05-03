@@ -206,14 +206,15 @@ module ham_PWbasis
 		real(dp),		intent(in)	:: 	Gvec(:,:)
 		complex(dp),	intent(in)	:: 	ckH(:,:)
 		complex(dp)					:: 	num1, num2, denom
-		real(dp)					:: 	kappaX, kappaY, xL, xR, yL, yR, Gx, Gy, xc, yc, at_rad
+		real(dp)					:: 	kappaX, kappaY, xL, xR, yL, yR, Gx, Gy, xc, yc, at_rX, at_rY
 		integer						:: 	gi
 		!
 		!TRIAL ORBITAL:
 		kappaX	= real(nx,dp) * PI_dp / ( 2.0_dp * atR(1,at) )
 		kappaY 	= real(ny,dp) * PI_dp / ( 2.0_dp * atR(2,at) )
-		if( atR(1,at) /= atR(2,at) )	stop	"[infiniteWell]: ERROR analytic projection can not handle non cubic wells"
-		at_rad 	= atR(1,at)
+		!
+		at_rX 	= atR(1,at)
+		at_rY	= atR(2,at)
 		xc		= atPos(1,at)
 		yc		= atPos(2,at)
 		xL 		= atPos(1,at) - atR(1,at) 
@@ -232,37 +233,37 @@ module ham_PWbasis
 			!
 			!CASE 1 (Gx==0 && Gy==0)
 			if( 	abs(Gx) < machineP 	.and.	 abs(Gy) < machineP 	) then
-				num1	= dcos((xL-xc+at_rad)*kappaX) - dcos((xR-xc+at_rad)*kappaX)
-				num2	= dcos((yL-yc+at_rad)*kappaY) - dcos((yR-yc+at_rad)*kappaY)
-				denom	= at_rad * kappaX*kappaY
+				num1	= dcos((xL-xc+at_rX)*kappaX) - dcos((xR-xc+at_rX)*kappaX)
+				num2	= dcos((yL-yc+at_rY)*kappaY) - dcos((yR-yc+at_rY)*kappaY)
+				denom	= dsqrt(at_rX*at_rY) * kappaX*kappaY
 			!----------------------------------------------------------------------------------------------------------------------------------------------
 			!
-			!	ToDo:
+			!	
 			!CASE 2 (Gx!=0	&& Gy==0)
 			else if( abs(Gy) < machineP ) then
-				num1	= 	myExp(-Gx*(xL+xR)) 	* 	( 				dcos((yL-yc+at_rad)*kappaY) - 				dcos((yR-yc+at_rad)*kappaY)	)
-				num2	= 		-	myExp(Gx*xR)* 	( 	kappaX * 	dcos((xL-xc+at_rad)*kappaX) + i_dp * Gx * 	dsin((xL-xc+at_rad)*kappaX)	)
-				num2	= num2  + 	myExp(Gx*xL)* 	( 	kappaX *	dcos((xR-xc+at_rad)*kappaX) + i_dp * Gx *	dsin((xR-xc+at_rad)*kappaX)	)
-				denom	= at_rad * kappaY * ( Gx**2 - kappaX**2 )
+				num1	= 	myExp(-Gx*(xL+xR)) 	* 	( 				dcos((yL-yc+at_rY)*kappaY) - 				dcos((yR-yc+at_rY)*kappaY)	)
+				num2	= 		-	myExp(Gx*xR)* 	( 	kappaX * 	dcos((xL-xc+at_rX)*kappaX) + i_dp * Gx * 	dsin((xL-xc+at_rX)*kappaX)	)
+				num2	= num2  + 	myExp(Gx*xL)* 	( 	kappaX *	dcos((xR-xc+at_rX)*kappaX) + i_dp * Gx *	dsin((xR-xc+at_rX)*kappaX)	)
+				denom	= dsqrt(at_rX*at_rY)* kappaY * ( Gx**2 - kappaX**2 )
 			!----------------------------------------------------------------------------------------------------------------------------------------------
 			!
 			!
 			!CASE 3 (Gx==0	&& Gy!=0)
 			else if( abs(Gx) < machineP) then
-				num1	= 	myExp(-Gy*(yL+yR))	*	(				dcos((xL-xc+at_rad)*kappaX) -				dcos((xR-xc+at_rad)*kappaX)	)
-				num2	=		-	myExp(Gy*yR)*	( 	kappaY *	dcos((yL-yc+at_rad)*kappaY) + i_dp * Gy *	dsin((yL-yc+at_rad)*kappaY)	)
-				num2	= num2  +	myExp(Gy*yL)*	( 	kappaY *	dcos((yR-yc+at_rad)*kappaY) + i_dp * Gy *	dsin((yR-yc+at_rad)*kappaY)	)
-				denom	= at_rad * kappaX * ( Gy**2 - kappaY**2 )
+				num1	= 	myExp(-Gy*(yL+yR))	*	(				dcos((xL-xc+at_rX)*kappaX) -				dcos((xR-xc+at_rX)*kappaX)	)
+				num2	=		-	myExp(Gy*yR)*	( 	kappaY *	dcos((yL-yc+at_rY)*kappaY) + i_dp * Gy *	dsin((yL-yc+at_rY)*kappaY)	)
+				num2	= num2  +	myExp(Gy*yL)*	( 	kappaY *	dcos((yR-yc+at_rY)*kappaY) + i_dp * Gy *	dsin((yR-yc+at_rY)*kappaY)	)
+				denom	= dsqrt(at_rX*at_rY) * kappaX * ( Gy**2 - kappaY**2 )
 			!----------------------------------------------------------------------------------------------------------------------------------------------
 			!
 			!
 			!CASE 4 (Gx!=0	&& Gy!=0)
 			else
-				num1 	=    	- myExp(-Gx*xL)	* 	( kappaX *	dcos((xL-xc+at_rad)*kappaX)	+ 	i_dp * Gx * dsin((xL-xc+at_rad)*KappaX) )
-				num1 	= num1  + myExp(-Gx*xR) * 	( kappaX * 	dcos((xR-xc+at_rad)*kappaX)	+	i_dp * Gx * dsin((xR-xc+at_rad)*KappaX)	)
-				num2 	= 		  myExp(Gy*yL) 	* 	( kappaY *	dcos((yR-yc+at_rad)*kappaY)	+	i_dp * Gy * dsin((yR-yc+at_rad)*kappaY)	) 
-				num2 	= num2  - myExp(Gy*yR) 	* 	( kappaY *	dcos((yL-yc+at_rad)*kappaY)	+	i_dp * Gy * dsin((yL-yc+at_rad)*kappaY)	)
-				denom	= at_rad * myExp(Gy*(yL+yR)) * (Gy**2-kappaY**2) * (Gx**2-kappaX**2)
+				num1 	=    	- myExp(-Gx*xL)	* 	( kappaX *	dcos((xL-xc+at_rX)*kappaX)	+ 	i_dp * Gx * dsin((xL-xc+at_rX)*KappaX) )
+				num1 	= num1  + myExp(-Gx*xR) * 	( kappaX * 	dcos((xR-xc+at_rX)*kappaX)	+	i_dp * Gx * dsin((xR-xc+at_rX)*KappaX)	)
+				num2 	= 		  myExp(Gy*yL) 	* 	( kappaY *	dcos((yR-yc+at_rY)*kappaY)	+	i_dp * Gy * dsin((yR-yc+at_rY)*kappaY)	) 
+				num2 	= num2  - myExp(Gy*yR) 	* 	( kappaY *	dcos((yL-yc+at_rY)*kappaY)	+	i_dp * Gy * dsin((yL-yc+at_rY)*kappaY)	)
+				denom	= dsqrt(at_rX*at_rY) * myExp(Gy*(yL+yR)) * (Gy**2-kappaY**2) * (Gx**2-kappaX**2)
 			!
 			end if
 			!----------------------------------------------------------------------------------------------------------------------------------------------
