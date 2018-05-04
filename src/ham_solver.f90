@@ -2,7 +2,6 @@ module ham_Solver
 	!this modules sets up the Hamiltonian matrix and solves it for each k point
 	!	in the process the wannier functions are generated aswell with routines from wannGen module
 	use mpi
-	use omp_lib
 	use util_math,		only:	dp, PI_dp,i_dp, machineP, myExp, 							&
 								eigSolverPART, isUnit, isHermitian, aUtoEv
 	use util_sysPara,	only:	myID, root, ierr, 											&
@@ -124,7 +123,7 @@ module ham_Solver
 			call writeABiN_basCoeff(qi_glob, ck_temp)
 			call writeABiN_energy(qi_glob, En_temp(1:nSolve))
 			!get derived quantities & write to file
-			call calcAmatANA(	Gsize, qi_glob, Gvec_qi, ck_temp)
+			call cfalcAmatANA(	Gsize, qi_glob, Gvec_qi, ck_temp)
 			call calcVeloGrad(	Gsize, qi_glob, Gvec_qi, ck_temp)
 			!w90 plot preparation
 			if( do_w90plot ) call writeUNKs(qi_glob, Gsize, ck_temp(:,1:nBands), Gvec_qi(:,:))
