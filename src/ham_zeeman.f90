@@ -1,7 +1,5 @@
 module ham_Zeeman
 	!add Zeeman like term to hamitlonian
-	use mpi
-	use omp_lib
 	use util_math,		only:	dp, PI_dp,i_dp, machineP, myExp
 	use util_sysPara				
 	implicit none	

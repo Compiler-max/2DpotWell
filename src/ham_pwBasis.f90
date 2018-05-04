@@ -1,6 +1,5 @@
 module ham_PWbasis
 	!generates bloch and lattice periodidc functions given a basCoeff matrix
-	use omp_lib
 	use util_math,		only:	dp, PI_dp,i_dp, acc, machineP,& 
 									myExp
 	use util_sysPara

@@ -1,8 +1,5 @@
 module util_output
 	!module contains several routines for printing and writing data
-	use mpi
-	use omp_lib
-
 	use util_sysPara 
 	use util_math,		only:	dp, PI_dp, machineP, aUtoEv, aUtoAngstrm, aUtoTesla
 

@@ -123,7 +123,7 @@ module ham_Solver
 			call writeABiN_basCoeff(qi_glob, ck_temp)
 			call writeABiN_energy(qi_glob, En_temp(1:nSolve))
 			!get derived quantities & write to file
-			call cfalcAmatANA(	Gsize, qi_glob, Gvec_qi, ck_temp)
+			call calcAmatANA(	Gsize, qi_glob, Gvec_qi, ck_temp)
 			call calcVeloGrad(	Gsize, qi_glob, Gvec_qi, ck_temp)
 			!w90 plot preparation
 			if( do_w90plot ) call writeUNKs(qi_glob, Gsize, ck_temp(:,1:nBands), Gvec_qi(:,:))

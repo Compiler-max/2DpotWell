@@ -1,6 +1,5 @@
 import matplotlib.pyplot as plt
 import numpy as np
-import re
 from util_2dPW_Interf import read_AbIn_energies
 from util_2dPW_Interf import read_w90_energies
 from util_2dPW_Interf import getData
