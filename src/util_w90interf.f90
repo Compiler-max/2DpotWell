@@ -645,7 +645,7 @@ module util_w90Interf
 			call randomProjString(n_per_at, orbitals)
 
 			!write to input
-			write(100,*)	atom_symbols(at),' : '//orbitals
+			if (n_per_at > 0) 	write(100,*)	atom_symbols(at),' : '//orbitals
 		end do
 		write(100,*)	'End Projections'
 		
@@ -661,7 +661,7 @@ module util_w90Interf
 		character(len=30), 	intent(out)			:: string
 		!
 		select case(nStates)
-			case (1)
+			:case (1)
 				string = 'l=0' 								! s
 			case (2)
 				string = 'l=0; l=1, mr=2'	 				! s ; px
