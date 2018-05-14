@@ -661,7 +661,7 @@ module util_w90Interf
 		character(len=30), 	intent(out)			:: string
 		!
 		select case(nStates)
-			:case (1)
+			case (1)
 				string = 'l=0' 								! s
 			case (2)
 				string = 'l=0; l=1, mr=2'	 				! s ; px
