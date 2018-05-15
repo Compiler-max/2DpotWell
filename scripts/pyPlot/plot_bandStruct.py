@@ -7,22 +7,22 @@ from util_2dPW_Interf import getData
 
 #plots bandstructure of orthorombic unit cell
 #
-#   
+#
 #-first BZ:
 #
-#  (1,0) X  *-----------*   Gamma (0,0)   
-#           |           |                          
-#           |           |               
-#           |           |               
-#           |           |               
-#           |           |               
-#           |           |               
-#           |           |               
+#  (1,0) X  *-----------*   Gamma (0,0)
+#           |           |
+#           |           |
+#           |           |
+#           |           |
+#           |           |
+#           |           |
+#           |           |
 #  (1,1) S  *-----------*   Y   (0,1)
 #
 #-path in BZ:
 #   path   I:   S       ->       X
-#   path  II:   X       ->       Gamma      
+#   path  II:   X       ->       Gamma
 #   path III:   Gamma   ->       S
 #   path  IV:   S       ->       Y
 #   path   V:   Y       ->       Gamma
@@ -44,10 +44,10 @@ show_Bfield_box = True
 show_rashba_box = True
 
 
-def plotBands(w90_dir=".",out_dir=".", minEn=0, maxEn=0, show_Bfield_box=False, show_rashba_box=False, saveToDir="."):
+def plotBands(w90_dir=".",out_dir=".", minEn=0, maxEn=0, show_Bfield_box=False, show_rashba_box=False, show_fermi_indicator=False, saveToDir="."):
     #GET ABINITIO ENERGIES
     do_ABiN, nQ, nSolve, qpts, en_abi = read_AbIn_energies(out_dir+'/enABiN.txt')
-  
+
     #GET INTERPOLATED ENERGIES
     do_w90, nK, nWfs, kpts, en_W90, velo_w90 = read_w90_energies(w90_dir+'/wf1_geninterp.dat')
 
@@ -77,7 +77,7 @@ def plotBands(w90_dir=".",out_dir=".", minEn=0, maxEn=0, show_Bfield_box=False, 
     #PLOT W90 INTERPOLATION
     if do_w90:
         print('will plot w90 interpolation')
-        kpath, kplot, kticks = get_BZ_path(kpts)   
+        kpath, kplot, kticks = get_BZ_path(kpts)
         #
         for n in range(0,nWfs):
             for path in range(0,len(kpath)):
@@ -89,9 +89,11 @@ def plotBands(w90_dir=".",out_dir=".", minEn=0, maxEn=0, show_Bfield_box=False, 
                 xPlot = kplot[path][0:len(kplot[0])]
                 yPlot = enPlot[0:len(enPlot)]
                 ax.plot(xPlot, yPlot,  marker_w90, markersize=markerS_w90,linewidth=line_w90, color=color_w90)
+                if show_fermi_indicator:
+                    ax.plot(xPlot, np.zeros(len(xPlot)),linestyle='--' ,linewidth=2*2*line_w90,color='green')
         print('...finished w90 interpolation plot')
     else:
-        print('did not find any w90 interpolation data, skip')  
+        print('did not find any w90 interpolation data, skip')
 
 
     #X TICK-LABELS
@@ -110,11 +112,12 @@ def plotBands(w90_dir=".",out_dir=".", minEn=0, maxEn=0, show_Bfield_box=False, 
         ax.set_xticklabels(xtickLabel,fontsize=14)
         ax.set_xlim(kticks[0],kticks[-1])
 
-    #Y-LABELS 
-    if maxEn-minEn > 0: 
+    #Y-LABELS
+    if maxEn-minEn > 0:
         ax.set_ylim(minEn,maxEn)
-    #
     plt.ylabel('E [eV]',fontsize=16)
+    ax.tick_params(right=True,labelright=False)
+
 
     #GET PARAMETERS
     alpha_rashba    = getData('alpha_rashba'    ,out_dir+'/polOutput.txt')
@@ -123,18 +126,20 @@ def plotBands(w90_dir=".",out_dir=".", minEn=0, maxEn=0, show_Bfield_box=False, 
 
     #PLOT PARAMETER BOX
     if show_Bfield_box:
-        ax.text(0.8, 0.9, 'B_z='+str(B_ext[2])+' T', 
-                horizontalalignment='center', 
+        ax.text(0.8, 0.9, 'B_z='+str(B_ext[2])+' T',
+                horizontalalignment='center',
                 verticalalignment='center',
-                transform = ax.transAxes, 
+                transform = ax.transAxes,
                 fontsize=16, bbox={'facecolor':'white', 'alpha':0.8, 'pad':10})
     if show_rashba_box:
-        ax.text(0.7, 0.9, r'$\alpha_{Rashba}=$'+str(alpha_rashba)+r'eV $\AA$', 
-                horizontalalignment='center', 
+        ax.text(0.7, 0.9, r'$\alpha_{Rashba}=$'+str(alpha_rashba)+r'eV $\AA$',
+                horizontalalignment='center',
                 verticalalignment='center',
-                transform = ax.transAxes, 
+                transform = ax.transAxes,
                 fontsize=16, bbox={'facecolor':'white', 'alpha':0.8, 'pad':10})
-    #
+
+
+        #
     #SAVE FILE
     file_name = 'en_B_aRashb'+str(alpha_rashba)+'bands.pdf'
     if len(B_ext) == 3:
@@ -144,11 +149,11 @@ def plotBands(w90_dir=".",out_dir=".", minEn=0, maxEn=0, show_Bfield_box=False, 
     plt.savefig(file_path,bbox_inches='tight')
     print('saved plot to file',file_path)
     plt.close()
-    #    
+    #
     #
     return ax
 
-  
+
 
 
 
@@ -157,7 +162,7 @@ def get_BZ_path(qpts):
     #get q point path
     tol         = 1e-8
     qxmin       = min(qpts[:,0])
-    qymin       = min(qpts[:,1]) 
+    qymin       = min(qpts[:,1])
 
     M_vec       = np.array([qxmin,qymin,0.0])
     M_norm      = np.linalg.norm(M_vec)
@@ -180,7 +185,7 @@ def get_BZ_path(qpts):
             #I  :    M->X
             if abs(q_vec[0]-qxmin) < tol:
                 qpathI.append( ([ind,q_vec[0],q_vec[1]])        )
-                
+
             #II :    X->Gamma
             if abs(q_vec[1]) < tol:
                 qpathII.append( ([ind,q_vec[0],q_vec[1]])        )
@@ -226,7 +231,7 @@ def get_BZ_path(qpts):
         print('WARNING: Q-path not smoth at III->IV')
     if qpathIV[-1][0] is not  qpathV[0][0]:
         print('WARNING: Q-path not smoth at IV->V')
-  
+
 
 
     qpath   = []
@@ -250,8 +255,8 @@ def get_BZ_path(qpts):
         length  =np.linalg.norm(qpVect[path])
 
         #make linspace
-        tmp = np.linspace(offset,offset+length,len(qpath[path]))  
-        qplot.append( tmp ) 
+        tmp = np.linspace(offset,offset+length,len(qpath[path]))
+        qplot.append( tmp )
 
         offset = offset + length
         xticks.append(offset)
@@ -267,6 +272,6 @@ def get_BZ_path(qpts):
 
 
 #TEST
-#axTest = plotBands()
+axTest = plotBands(minEn=-10.0,maxEn=12.0, show_fermi_indicator=True)
 #plt.show()
 
