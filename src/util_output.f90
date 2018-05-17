@@ -493,6 +493,19 @@ module util_output
 
 		write(600,*)"*"
 		write(600,*)"*"
+		write(600,*)"**************BANDSTRUCT:"
+		write(600,*)		"minimum direct band gap in (eV)"
+		
+		write(600,*)"begin min_band_gap"
+		write(600,*)	glob_min_gap*aUtoEv
+		write(600,*)"end min_band_gap"
+
+
+
+
+
+		write(600,*)"*"
+		write(600,*)"*"
 		write(600,*)"**************PERTURBATION:"
 		!
 		!

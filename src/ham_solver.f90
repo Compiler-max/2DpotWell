@@ -7,6 +7,7 @@ module ham_Solver
 	use util_sysPara,	only:	myID, root, ierr, 											&
 								dim, aX, aY, 												&
 								nQ, qChunk, nGq, GmaxGLOBAL, Gmax, nSolve, nBands, nWfs,	&
+								glob_min_gap,												&
 								do_w90plot,	doZeeman, doMagHam, doRashba, debugHam
 	
 	use	ham_PotWell,	only:	add_potWell
@@ -305,7 +306,6 @@ module ham_Solver
 		integer,		intent(in)		::	loc_minBound	, 	loc_maxBound
 		real(dp),		intent(in)		::	loc_min_gap
 		integer							::	glob_minBound	,	glob_maxBound 
-		real(dp)						::	glob_min_gap
 		!
 		call MPI_REDUCE(loc_minBound, 	glob_minBound, 	1, 	MPI_INTEGER, 			MPI_MIN,	root, MPI_COMM_WORLD, ierr)
 		call MPI_REDUCE(loc_maxBound, 	glob_maxBound, 	1, 	MPI_INTEGER, 			MPI_MAX,	root, MPI_COMM_WORLD, ierr)
