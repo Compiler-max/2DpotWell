@@ -69,6 +69,7 @@ function runCalc {
 	mv input.txt oldInput/inputABiN.txt
 	rm wf1.win #remove input for wannier setup
 	mv wf1* w90files
+	wait
 	echo '['$(date +"%T")']: finished electronic structure'
 	
 	
@@ -76,7 +77,7 @@ function runCalc {
 	cd w90files
 	$wannDIR/wannier90.x wf1
 	wait
-	$wannDIR/postw90.x wf1
+	mpirun -np $nprocs $wannDIR/postw90.x wf1
 	wait
 	cd ..
 	echo '['$(date +"%T")']: finished wannier90 calculations'
