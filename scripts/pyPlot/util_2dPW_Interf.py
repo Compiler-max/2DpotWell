@@ -41,8 +41,9 @@ def getData(descriptor, fpath="./polOutput.txt"):
 				data = np.fromstring( line, dtype=np.float, sep=' ' )	
 				
 				#uncommend for debug output:
-				#print('getData: found data assoc. to "',start,'" in line ',counter)
-				#print(line)
+				print('getData: found data assoc. to "',start,'" in line ',counter)
+				print(line)
+				print('extracted data=',data)
 			if start in line:
 				parser = True
 
