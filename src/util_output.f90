@@ -555,7 +555,7 @@ module util_output
 																"(",w_final(1,n)*polQuantum*centiMet,", ", w_final(2,n)*polQuantum*centiMet, ")."
 		end do
 		write(600,*)	"begin sum_zero_shifts"
-		write(600,'(a,f14.6,a,f14.6,a,f14.6,a)')	"	sum	",sum(w_final(1,:))," ",&
+		write(600,'(a,f14.6,a,f14.6,a,f14.6,a)')	"		",sum(w_final(1,:))," ",&
 																sum(w_final(2,:))," ",&
 																sum(w_final(3,:))," | "
 		write(600,*)	"end sum_zero_shifts"
@@ -605,7 +605,7 @@ module util_output
 																"(",niu_centF2(1,n)*polQuantum*centiMet,", ", niu_centF2(2,n)*polQuantum*centiMet, ")."
 		end do
 		write(600,*)	"begin sum_niu_f2"
-		write(600,'(a,f14.6,a,f14.6,a,f14.6,a)')	"	sum	",sum(niu_centF2(1,:))," ",&
+		write(600,'(a,f14.6,a,f14.6,a,f14.6,a)')	"		",sum(niu_centF2(1,:))," ",&
 																sum(niu_centF2(2,:))," ",&
 																sum(niu_centF2(3,:))," | "
 		write(600,*)	"end sum_niu_f2"
@@ -626,7 +626,7 @@ module util_output
 																"(",niu_centF3(1,n)*polQuantum*centiMet,", ", niu_centF3(2,n)*polQuantum*centiMet, ")."
 		end do
 		write(600,*)	"begin sum_niu_f3"
-		write(600,'(a,f14.6,a,f14.6,a,f14.6,a)')	"	sum	",sum(niu_centF3(1,:))," ",&
+		write(600,'(a,f14.6,a,f14.6,a,f14.6,a)')	"  ",sum(niu_centF3(1,:))," ",&
 																sum(niu_centF3(2,:))," ",&
 																sum(niu_centF3(3,:))," | "
 		write(600,*)	"end sum_niu_f3"
