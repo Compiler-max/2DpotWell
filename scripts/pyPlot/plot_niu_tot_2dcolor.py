@@ -15,7 +15,7 @@ from util_2dPW_Interf import getData
 
 
 
-def plotNiuColor(searchDir, plotState, 
+def plotNiu_orb(searchDir, plotState, 
 						aX_ang=0,aY_ang=0, plot_percent=False,
 						plot_essin=True,
 						cmap=mpl.cm.viridis,
@@ -89,53 +89,19 @@ def plotNiuColor(searchDir, plotState,
 
 
 
+	#set uniform colorbar
+	print('colormap min_val=',zmin)
+	print('colormap max_val=',zmax)
 	
-	
-	if do_f2:
-
-		#
-		# X SHIFT
-		plt.subplot(321)
-		CSx_f2 	= plt.contourf(f2_xi, f2_yi, f2_plot_x, 15, cmap=cmap,vmax=zmax, vmin=zmin)
-		if plot_titles:
-			if do_plot_percent:
-				plt.title(r'$a_x (p_{\mathrm{q}})$',fontsize=title_size)
-			else:
-				plt.title(r'$a_x$ (Ang)',fontsize=title_size)
-		if plot_k_labels:
-			plt.ylabel('ky (a.u.)',fontsize=k_label_size)
-		#
-		#
-		# Y SHIFT
-		plt.subplot(322)
-		CSy_f2 	= plt.contourf(f2_xi,f2_yi, f2_plot_y, 15, cmap=cmap,vmax=zmax, vmin=zmin)
-		if plot_titles:
-			if do_plot_percent:
-				plt.title(r'$a_y (p_{\mathrm{q}})$',fontsize=title_size)
-			else:
-				plt.title(r'$a_y$ (Ang)',fontsize=title_size)
-		
-		plt.tick_params(axis='y',  which='both',direction='in',   left='off', right='off',     labelleft='off', labelright='off') 
 
 
-	if do_f3:
-		#
-		# X SHIFT
-		plt.subplot(323)
-		CSx_f3 	= plt.contourf(f3_xi, f3_yi, f3_plot_x, 15, cmap=cmap, vmin=zmin,vmax=zmax)
-		if plot_k_labels:
-			plt.ylabel('ky (a.u.)',fontsize=k_label_size)
-			plt.xlabel('kx (a.u.)',fontsize=k_label_size)
-		#
-		#
-		# Y SHIFT
-		plt.subplot(324)
-		CSy_f3 	= plt.contourf(f3_xi,f3_yi, f3_plot_y, 15, cmap=cmap, vmin=zmin,vmax=zmax)
-		if plot_k_labels:
-			plt.xlabel('kx (a.u.)',fontsize=k_label_size)
+	#cb1.set_clim(zmin,zmax)
+	a_Rashba = getData('alpha_rashba',searchDir+'/polOutput.txt')
 
 
-	plt.subplot(325)
+
+	#plot X shift
+	plt.subplot(111)
 	CSx_tot = plt.contourf(f2_xi, f2_yi, tot_plot_x, 15, cmap=cmap,vmax=zmax, vmin=zmin)
 	if plot_titles:
 		if do_plot_percent:
@@ -145,8 +111,31 @@ def plotNiuColor(searchDir, plotState,
 	if plot_k_labels:
 		plt.ylabel('ky (a.u.)',fontsize=k_label_size)
 
+	plt.show()
+	if plot_essin:
+		plt.savefig(save_dir+'/a1_n'+str(plotState)+'_Bz'+str(bz)+'aRash'+str(a_Rashba)+'essinShiftX.pdf',bbox_inches='tight')
+	else:
+		plt.savefig(save_dir+'/a1_n'+str(plotState)+'_Bz'+str(bz)+'aRash'+str(a_Rashba)+'niuShiftX.pdf',bbox_inches='tight')
 
-	plt.subplot(326)
+
+	#rescale the whole figure to add colorbar
+	scale = .8
+	plt.tight_layout(pad=1.25,rect=(0,0,scale,scale))
+
+	cax = fig.add_axes([.81, 0.1, .03, scale*0.8])	# [left, bottom, width, height] 
+	#cb1 = fig.colorbar(CSy_f2, cax=cax, cmap=cmap, norm=norm, label="1. order shift (ang)")
+	norm = mpl.colors.Normalize(vmin=zmin, vmax=zmax)
+	cb1 = mpl.colorbar.ColorbarBase(cax, cmap=cmap,
+                                norm=norm,
+                                orientation='vertical')
+	
+	
+
+
+
+
+	#plot Y shift
+	plt.subplot(111)
 	CSy_tot = plt.contourf(f2_xi, f2_yi, tot_plot_y, 15, cmap=cmap,vmax=zmax, vmin=zmin)
 	if plot_titles:
 		if do_plot_percent:
@@ -155,22 +144,6 @@ def plotNiuColor(searchDir, plotState,
 			plt.title(r'$a_x$ (Ang)',fontsize=title_size)
 	if plot_k_labels:
 		plt.ylabel('ky (a.u.)',fontsize=k_label_size)
-
-
-
-
-
-	#set uniform colorbar
-	print('colormap min_val=',zmin)
-	print('colormap max_val=',zmax)
-	
-	
-	
-	#cb1.set_clim(zmin,zmax)
-	a_Rashba = getData('alpha_rashba',searchDir+'/polOutput.txt')
-
-	if plot_descriptor:
-		plt.figtext(.25,.001,' n='+str(plotState)+' Bz='+str(bz)+'T'+' a_Rashba='+str(a_Rashba),fontsize=descriptor_size)
 
 	#rescale the whole figure to add colorbar
 	scale = .8
@@ -184,13 +157,20 @@ def plotNiuColor(searchDir, plotState,
                                 orientation='vertical')
 	
 
-
+	plt.show()
 	if plot_essin:
-		plt.savefig(save_dir+'/a1_n'+str(plotState)+'_Bz'+str(bz)+'aRash'+str(a_Rashba)+'essinShift.pdf',bbox_inches='tight')
+		plt.savefig(save_dir+'/a1_n'+str(plotState)+'_Bz'+str(bz)+'aRash'+str(a_Rashba)+'essinShiftY.pdf',bbox_inches='tight')
 	else:
-		plt.savefig(save_dir+'/a1_n'+str(plotState)+'_Bz'+str(bz)+'aRash'+str(a_Rashba)+'niuShift.pdf',bbox_inches='tight')
-	#plt.show()
-	plt.close()
+		plt.savefig(save_dir+'/a1_n'+str(plotState)+'_Bz'+str(bz)+'aRash'+str(a_Rashba)+'niuShiftY.pdf',bbox_inches='tight')
+
+
+	
+	
+
+
+
+	
+
 
 	return axes
 
@@ -216,6 +196,6 @@ def plotDir():
 	for plotState in range(1,nwfs+1):
 		print('plot state=',plotState)
 		ax = plotNiuColor(searchDir,  plotState, aX_ang=aX,aY_ang=aY, plot_percent=True, plot_essin=False, plot_titles=True)
-		plt.show()
+
 
 plotDir()

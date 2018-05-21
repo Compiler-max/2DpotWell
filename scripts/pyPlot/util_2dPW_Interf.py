@@ -419,11 +419,15 @@ def read_Niu_shift(nWf, fpath):
 		xi 			= np.empty([])
 		yi 			= np.empty([])
 		aNiuX_plot 	= np.empty([])
-		aNiuY_plot	= np.emtpy([])
+		aNiuY_plot	= np.empty([])
+		aNiu_x		= np.empty([])
+		aNiu_y		= np.empty([])
+		kptsX		= np.array([])
+		kptsY		= np.array([])
 		zmin		= 0
 		zmax 		= 0
 		bz			= 0.0
-		return exists, xi,yi, aNiuX_plot, aNiuY_plot, zmin, zmax, bz
+		return exists, xi,yi, aNiuX_plot, aNiuY_plot, zmin, zmax, bz,kptsX, kptsY, aNiu_x, aNiu_y
 	exists = True
 	
 
@@ -480,7 +484,7 @@ def read_Niu_shift(nWf, fpath):
 	aNiuY_plot = griddata((kptsX,kptsY), aNiu_y, (xi[None,:], yi[:,None]), method='cubic')
 
 
-	return exists, xi,yi, aNiuX_plot, aNiuY_plot, zmin, zmax, bz
+	return exists, xi,yi, aNiuX_plot, aNiuY_plot, zmin, zmax, bz, kptsX, kptsY, aNiu_x, aNiu_y
 
 
 
