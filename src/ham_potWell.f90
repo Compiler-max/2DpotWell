@@ -110,16 +110,15 @@ module ham_PotWell
 		!it starts from V0 at xL till V0-dV at xR
 		integer,		intent(in)	::	i, j
 		real(dp),		intent(in)	::	Gvec(:,:)
-		integer						::	at
-		complex(dp)					::	Vpot
-		real(dp)					::  xL, yL, xR, yR, dGx, dGy, dV, fact
+		integer						::	at	
+		real(dp)					::  xL, yL, xR, yR, dGx, dGy, dV, fact, Vpot
 		!
 		Vdesc 	= dcmplx(0.0_dp)
 		dGx		= Gvec(1,j) - Gvec(1,i) 
 		dGy		= Gvec(2,j) - Gvec(2,i) 
 		!
 		do at = 1, nAt
-			Vpot=	dcmplx(atPot(at))
+			Vpot=	atPot(at)
 			dV	=	dVpot(at)
 			xL	=	atPos(1,at) - atR(1,at)
 			xR	=	atPos(1,at) + atR(1,at) 
