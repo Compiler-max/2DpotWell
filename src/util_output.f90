@@ -406,7 +406,7 @@ module util_output
 	subroutine writePolFile(polQuantum, centiMet, w_centers, b_H_gauge, b_W_gauge, niu_centF2, niu_centF3, essin_centF3)	!writePolFile(pWann, pBerry, pNiu, pPei )
 		!
 		real(dp),		intent(in)		::	polQuantum, centiMet, w_centers(:,:),  b_H_gauge(:,:), b_W_gauge(:,:), niu_centF2(:,:), niu_centF3(:,:), essin_centF3(:,:) !CENTERS IN ANGSTROEM
-		real(dp)						:: 	pWann(3), pBerryH(3),pBerryW(3), &
+		real(dp)						:: 	pWann(3), pBerryH(3),pBerryW(3), lattice_center(2), &
 											pNiuF2(3), pNiuF3(3), pNiu(3), pFirst(3), Btesla(3)
 		real(dp),		allocatable		::	w_final(:,:), b_H_final(:,:), b_W_final(:,:)
 		integer							::	n, x
@@ -423,12 +423,21 @@ module util_output
 		b_H_final	= 0.0_dp
 		b_W_final	= 0.0_dp
 
+		!lattice center position for hybridized orbitals
+		lattice_center(1) = aX * 0.5_dp * aUtoAngstrm
+		lattice_center(2) = aY * 0.5_dp * aUtoAngstrm   
 
 		!substract atom centers
 		do n = 1, size(w_centers,2)
-			w_final(1:2,n)		= w_centers(1:2,n) - atPos(1:2,proj_at(n))*aUtoAngstrm
-			b_H_final(1:2,n)	= b_H_gauge(1:2,n) - atPos(1:2,proj_at(n))*aUtoAngstrm
-			b_W_final(1:2,n)	= b_W_gauge(1:2,n) - atPos(1:2,proj_at(n))*aUtoAngstrm
+			if(proj_at(n) > 0) then
+				w_final(1:2,n)		= w_centers(1:2,n) - atPos(1:2,proj_at(n))*aUtoAngstrm
+				b_H_final(1:2,n)	= b_H_gauge(1:2,n) - atPos(1:2,proj_at(n))*aUtoAngstrm
+				b_W_final(1:2,n)	= b_W_gauge(1:2,n) - atPos(1:2,proj_at(n))*aUtoAngstrm
+			else
+				w_final(1:2,n)		= w_centers(1:2,n) - lattice_center(1:2)
+				b_H_final(1:2,n)	= b_H_gauge(1:2,n) - lattice_center(1:2)
+				b_W_final(1:2,n)	= b_W_gauge(1:2,n) - lattice_center(1:2)
+			end if
 			!
 			!ToDo: need niu cent as well ?
 		end do

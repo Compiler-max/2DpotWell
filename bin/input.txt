@@ -1,25 +1,33 @@
 #Input for 2D pot well code
 
 [unitCell]
-    aX          =   10
-    aY          =   5
+    aX          =   20
+    aY          =   10
     supCx       =   1
 
 [atoms]
     nAt         =   2
     relXpos     =   0.250 0.750
     relYpos     =   0.500 0.500
-    atRx        =   0.801 0.401
-    atRy        =   0.801 0.401
-    atPot       =   -4.00 -2.00
-    dVpot       =   0.000 0.000
+    atRx        =   2.001 2.501
+    atRy        =   1.701 3.751
+    atPot       =   -0.78 -0.42
+    dVpot       =   0.10  0.10
 
 [wann]
-    nBands      =   8
-    nWfs        =   8
-    projAt      =   1 1 1 1     2 2 2 2
-    projnX      =   1 1 2 2     1 1 2 2
-    projnY      =   1 2 1 2     1 2 1 2
+    nBands      =   6
+    nWfs        =   6
+    projAt      =   1 1     1 2     -1 2
+    projnX      =   1 1     2 2      2 1
+    projnY      =   1 2     1 1      1 2
+
+[phantomWell]    
+    nPhant      = 1
+    phant_Xpos  =   0.500
+    phant_Ypos  =   0.500
+    phant_Rx    =   1.001
+    phant_Ry    =   1.001
+
 
 [field]
     B0  =       1.0               # changed by probeB.sh
@@ -28,17 +36,17 @@
 
 [rashba]
     use_px_rashba  = t
-    aRashba    = 2.4   #in eV Ang
+    aRashba    = 1.0   #in eV Ang
 
 [numerics]
-   Gcut        = 25.0 # changed by probeB.sh
+   Gcut        = 7.0 # changed by probeB.sh
    nSolve      = 96 # changed by probeB.sh
    nQx         = 4 # changed by probeB.sh
     thres       =   0.1
 
 [ham]
     debugHam    =   t
-    doVdesc     =   f
+    doVdesc     =   t
     doZeeman    =   f
     doMagHam    =   f
     doRashba    =   f
@@ -59,8 +67,8 @@
     pw90GaugeB  =   f
 
 [w90plot]
-    do_w90plot  =   f
-    nRx         =   10
+    do_w90plot  =   t
+    nRx         =   20
     nRy         =   10
     nRz         =   2
 

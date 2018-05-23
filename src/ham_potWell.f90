@@ -125,6 +125,7 @@ module ham_PotWell
 			xR	=	atPos(1,at) + atR(1,at) 
 			yL	=	atPos(2,at) - atR(2,at)
 			yR	=	atPos(2,at) + atR(2,at) 
+			!write(*,*)	"[",myId,"]dV=",dV
 			!
 			!
 			!

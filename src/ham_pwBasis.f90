@@ -206,20 +206,41 @@ module ham_PWbasis
 		complex(dp),	intent(in)	:: 	ckH(:,:)
 		complex(dp)					:: 	num1, num2, denom
 		real(dp)					:: 	kappaX, kappaY, xL, xR, yL, yR, Gx, Gy, xc, yc, at_rX, at_rY
-		integer						:: 	gi
+		integer						:: 	gi, pi
 		!
 		!TRIAL ORBITAL:
-		kappaX	= real(nx,dp) * PI_dp / ( 2.0_dp * atR(1,at) )
-		kappaY 	= real(ny,dp) * PI_dp / ( 2.0_dp * atR(2,at) )
-		!
-		at_rX 	= atR(1,at)
-		at_rY	= atR(2,at)
-		xc		= atPos(1,at)
-		yc		= atPos(2,at)
-		xL 		= atPos(1,at) - atR(1,at) 
-		xR		= atPos(1,at) + atR(1,at)
-		yL		= atPos(2,at) - atR(2,at)
-		yR		= atPos(2,at) + atR(2,at)
+		
+		if( at > 0) then
+			kappaX	= real(nx,dp) * PI_dp / ( 2.0_dp * atR(1,at) )
+			kappaY 	= real(ny,dp) * PI_dp / ( 2.0_dp * atR(2,at) )
+			!
+			at_rX 	= atR(1,at)
+			at_rY	= atR(2,at)
+			xc		= atPos(1,at)
+			yc		= atPos(2,at)
+			xL 		= atPos(1,at) - atR(1,at) 
+			xR		= atPos(1,at) + atR(1,at)
+			yL		= atPos(2,at) - atR(2,at)
+			yR		= atPos(2,at) + atR(2,at)
+		else if (at < 0) then
+			!get index of phant well
+			pi = - at
+			!
+			!set accordingly
+			kappaX	= real(nx,dp) * PI_dp / ( 2.0_dp * phant_R(1,pi) )
+			kappaY 	= real(ny,dp) * PI_dp / ( 2.0_dp * phant_R(2,pi) )
+			!
+			at_rX 	= phant_R(1,pi)
+			at_rY	= phant_R(2,pi)
+			xc		= phant_Pos(1,pi)
+			yc		= phant_Pos(2,pi)
+			xL 		= phant_Pos(1,pi) - phant_R(1,pi) 
+			xR		= phant_Pos(1,pi) + phant_R(1,pi)
+			yL		= phant_Pos(2,pi) - phant_R(2,pi)
+			yR		= phant_Pos(2,pi) + phant_R(2,pi)
+		else
+			stop "[infiniteWEll]: at=0 not supported"
+		end if
 		!
 		!SUMMATION OVER G:
 		infiniteWell 	= dcmplx(0.0_dp)

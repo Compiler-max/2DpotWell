@@ -609,7 +609,7 @@ module util_w90Interf
 !PREPARE & RUN W90
 	subroutine write_W90setup_input()
 		!write input file for wannier_setup call
-		integer	:: at, n_per_at, nWf, i
+		integer	:: at, n_per_at, nWf, i, phw
 		character(len=30)	:: 	orbitals
 		!
 		open(unit=100,file=seed_name//'.win',action='write', form='formatted', status='replace')
@@ -639,6 +639,8 @@ module util_w90Interf
 			n_per_at	= 0
 			do nWf = 1, nWfs
 				if( proj_at(nWf) == at ) n_per_at = n_per_at + 1
+				if( proj_at(nWf) == -at ) n_per_at = n_per_at + 1
+
 			end do
 
 			!generate generic projection strintg
@@ -647,6 +649,10 @@ module util_w90Interf
 			!write to input
 			if (n_per_at > 0) 	write(100,*)	atom_symbols(at),' : '//orbitals
 		end do
+
+
+
+
 		write(100,*)	'End Projections'
 		
 		!
