@@ -111,7 +111,7 @@ module ham_PotWell
 		integer,		intent(in)	::	i, j
 		real(dp),		intent(in)	::	Gvec(:,:)
 		integer						::	at	
-		real(dp)					::  xL, yL, xR, yR, dGx, dGy, dV, fact, Vpot
+		complex(dp)					::  xL, yL, xR, yR, dGx, dGy, dV, fact, Vpot
 		!
 		Vdesc 	= dcmplx(0.0_dp)
 		dGx		= Gvec(1,j) - Gvec(1,i) 
