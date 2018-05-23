@@ -13,7 +13,9 @@ module util_sysPara
 				!unit cell:
 				dim, aX, aY, vol, recpLatt, supCx,										& 
 				!atoms:
-				nAt, relXpos, relYpos, atRx, atRy, atPot, dVpot,atPos, atR,  			&
+				nAt, relXpos, relYpos, atPos,  atRx, atRy,  atR, atPot, dVpot,  		&
+				!phantom wells
+				nPhant, phant_Xpos, phant_Ypos, phant_Pos, phant_Rx, phant_Ry, phant_R,	&
 				!cutoff:
 				nG, nGq, Gmax, GmaxGLOBAL, GminGLOBAL, Gcut, nSolve, glob_min_gap,		&
 				!grids:
@@ -38,7 +40,7 @@ module util_sysPara
 
 
 	!
-	integer  										:: 	dim=2, nAt=0, nAt_inp=0, supCx=1,												& 
+	integer  										:: 	dim=2, nAt=0, nAt_inp=0, supCx=1, nPhant_inp=0,	nPhant, 						& 
 														nG, nGx,nGy, Gmax, GmaxGLOBAL, GminGLOBAL,nSolve=20,							&  
 														nQx=1, nQy=1,nQ , 																&
 														nSCx=1, nSCy=1, nSC, 															& 
@@ -60,10 +62,12 @@ module util_sysPara
 														proj_at_inp, proj_nX_inp, proj_nY_inp		
 	!
 	real(dp),	allocatable,	dimension(:)		::	relXpos_inp, relYpos_inp, atRx_inp, atRy_inp, atPot_inp, dVpot_inp, 			&
-														relXpos, relYpos, atRx, atRy, atPot, dVpot
+														relXpos, relYpos, atRx, atRy, atPot, dVpot, 									&
+														phant_Xpos_inp, phant_Ypos_inp, phant_Ry_inp, phant_Rx_inp,						&
+														phant_Xpos, phant_Ypos, phant_Ry, phant_Rx
 	!
-	real(dp),	allocatable,	dimension(:,:)		::	atPos_inp, atR_inp, 															&
-														atPos, atR, 																	&
+	real(dp),	allocatable,	dimension(:,:)		::	atR_inp, 	atPos, atR, 														&
+														phant_R_inp, phant_R, phant_Pos,												&
 														qpts, kpts 
 
 	logical											::	debugHam,  																		&
@@ -90,6 +94,7 @@ module util_sysPara
 		call MPI_BARRIER(MPI_COMM_WORLD, ierr)
 		call bcastPARAM() 
 		!
+
 		!qpts per mpi process
 		qChunk = nQ/nProcs
 		!
@@ -98,9 +103,13 @@ module util_sysPara
 		call qmeshGen()
 		!call rmeshGen()
 		call popGvec()
+		
 		call popAtPos()
 		call popAtR()
 		call kWmeshGen()
+		write(*,*)	"[readInp]: arrays filled"
+
+
 		!
 		!MAKE DIRECTORIES
 		if( myID == root ) then
@@ -112,6 +121,7 @@ module util_sysPara
 			!
 			inquire(directory=raw_dir, exist=dir_exists) 
 			if( .not. dir_exists )	call system(mkdir//raw_dir)
+			write(*,*)	"[readInp]: created working directories"
 		end if
 
 		!
@@ -138,6 +148,8 @@ module util_sysPara
 		![wann]
 		call CFG_add_get(my_cfg,	"wann%nBands"		,	nBands_inp	 ,	"# of bands to project onto trial orbs"	)
 		call CFG_add_get(my_cfg,	"wann%nWfs"			,	nWfs_inp	 ,	"# wannier functions to generate"		)
+		![phantomWell]
+		call CFG_add_get(my_cfg,	"phantomWell%nPhant",	nPhant_inp	,	"number of phantom wells for project."	)
 		![field]	
 		call CFG_add_get(my_cfg,	"field%B0"			,	B0			,	"scaling fact. of ext. magnetic field"	)
 		call CFG_add_get(my_cfg,	"field%Bext"		,	Bext		,	"vector of ext. magnetic field"			)
@@ -186,10 +198,10 @@ module util_sysPara
 		
 
 
-
 		!reformulate super cell
 		aX				= real(supCx,dp) * aX_inp
 		nAt				= supCx * nAt_inp
+		nPhant			= supCx * nPhant_inp
 		nBands			= supCx * nBands_inp
 		nWfs			= supCx * nWfs_inp
 
@@ -237,6 +249,13 @@ module util_sysPara
 		allocate(	atPot_inp(nAt_inp)			)
 		allocate(	dVpot_inp(nAt_inp)			)
 		!
+		!phantom
+		allocate(	phant_Xpos_inp(nPhant_inp)		)
+		allocate(	phant_Ypos_inp(nPhant_inp)		)
+		allocate(	phant_Rx_inp(nPhant_inp)		)		
+		allocate(	phant_Ry_inp(nPhant_inp)		)
+
+
 		!wann (input)
 		allocate(	proj_at_inp(nWfs_inp)		)
 		allocate(	proj_nX_inp(nWfs_inp)		)
@@ -252,6 +271,13 @@ module util_sysPara
 		call CFG_add_get(my_cfg,	"atoms%atRy"		,	atRy_inp		,	"radius of each atom in angstroem"		)
 		call CFG_add_get(my_cfg,	"atoms%atPot"		,	atPot_inp		,	"potential depth in hartree"			)
 		call CFG_add_get(my_cfg,	"atoms%dVpot"		,	dVpot_inp		,	"potential gradient"					)
+		!phantom
+		call CFG_add_get(my_cfg,	"phantomWell%phant_Xpos", phant_Xpos_inp,	"rel x"									)
+		call CFG_add_get(my_cfg,	"phantomWell%phant_Ypos", phant_Ypos_inp,	"rel y"									)
+		call CFG_add_get(my_cfg,	"phantomWell%phant_Rx", phant_Rx_inp,	" rad x"								)
+		call CFG_add_get(my_cfg,	"phantomWell%phant_Ry", phant_Ry_inp,	" rad y"								)		
+
+
 		![wann]
 		call CFG_add_get(my_cfg,	"wann%projAt"		,	proj_at_inp		,	"list of atoms to project to (init U)"	)
 		call CFG_add_get(my_cfg,	"wann%projnX"		,	proj_nX_inp		,	"on which state to project x-dir"		)
@@ -259,6 +285,11 @@ module util_sysPara
 		![w90]
 		call CFG_add_get(my_cfg,	"w90%shells"		, 	shells		,	"list of shells used for FD connection"	)
 	
+		!write(*,*) 'phant_Rx=',phant_Rx_inp(1)
+		!write(*,*) 'phant_Ry=',phant_Ry_inp(1)
+		!write(*,*) 'phant_xpos=',phant_Xpos_inp(1)
+		!write(*,*) 'phant_ypos=',phant_Ypos_inp(1)
+		!stop
 		!project to super cell
 		call superCell_projector()
 		!
@@ -270,7 +301,7 @@ module util_sysPara
 
 	subroutine superCell_projector()
 		!projects onto a superCell in x direction
-		integer							::	cell, at, wf, index
+		integer							::	cell, at, wf, index, phw
 
 
 		!!atoms (input)
@@ -300,17 +331,39 @@ module util_sysPara
 				atPot(index)		= atPot_inp(at)
 				dVpot(index)		= dVpot_inp(at)
 			end do
+			!project phantom well
+			do phw = 1, nPhant_inp
+				index				= cell*nPhant_inp + phw
+				!
+				phant_Xpos(index)	= ( real(cell,dp) + phant_Xpos_inp(phw) )	*	aX_inp 	/ aX 
+				!
+				phant_Ypos(index)	= phant_Ypos_inp(phw)
+				phant_Rx(index)		= phant_Rx_inp(phw)
+				phant_Ry(index)		= phant_Ry_inp(phw)
+
+			end do
 			!
 			!
 			!project Wannier functions
 			do wf = 1, nWfs_inp
-				proj_at(	cell*nWfs_inp + wf)	=	cell*nAt_inp + proj_at_inp(wf)
+				if( proj_at_inp(wf) > 0 ) then
+					proj_at(	cell*nWfs_inp + wf)	=	cell*nAt_inp + proj_at_inp(wf)
+				else if(proj_at_inp(wf) < 0) then
+					proj_at(	cell*nWfs_inp + wf)	=	cell*(-nPhant_inp) + proj_at_inp(wf)
+				else
+					proj_at(	cell*nWfs_inp + wf)	=	0
+				end if
 				!
 				proj_nX(	cell*nWfs_inp + wf)	=	proj_nX_inp(wf)
 				proj_nY(	cell*nWfs_inp + wf)	=	proj_nY_inp(wf)
 			end do
 		end do
 		write(*,*)	"[superCell_projector]: finished projection"
+
+		!write(*,*)	'phant_Xpos=',phant_Xpos
+		!write(*,*)	'phant_Ypos=',phant_Ypos
+		!write(*,*)	'phant_Rx=',phant_Rx
+		!write(*,*)	'phant_Ry=',phant_Ry
 		!
 		return
 	end subroutine
@@ -333,6 +386,9 @@ module util_sysPara
 		call MPI_Bcast( doVdesc		, 		1	,		MPI_LOGICAL			,	root,	MPI_COMM_WORLD, ierr)	
 		call MPI_Bcast( nAt_inp		, 		1	,		MPI_INTEGER			,	root,	MPI_COMM_WORLD, ierr)	
 		call MPI_Bcast( nAt			, 		1	,		MPI_INTEGER			,	root,	MPI_COMM_WORLD, ierr)		
+		![phantomWell]
+		call MPI_Bcast( nPhant_inp	, 		1	,		MPI_INTEGER			,	root,	MPI_COMM_WORLD, ierr)	
+		call MPI_Bcast( nPhant		, 		1	,		MPI_INTEGER			,	root,	MPI_COMM_WORLD, ierr)	
 		![wann]
 		call MPI_Bcast( nBands_inp	,		1	,		MPI_INTEGER			,	root,	MPI_COMM_WORLD, ierr)		
 		call MPI_Bcast( nBands		,		1	,		MPI_INTEGER			,	root,	MPI_COMM_WORLD, ierr)		
@@ -402,7 +458,7 @@ module util_sysPara
 
 		!call MPI_Bcast(	atPot_inp	,	nAt_inp	,	MPI_DOUBLE_PRECISION	,	root,	MPI_COMM_WORLD, ierr)
 		call MPI_Bcast(	atPot		,	nAt		,	MPI_DOUBLE_PRECISION	,	root,	MPI_COMM_WORLD, ierr)
-
+		call MPI_Bcast(	dVpot		, 	nAt		,	MPI_DOUBLE_PRECISION	,	root,	MPI_COMM_WORLD, ierr)
 
 		!call MPI_Bcast(	proj_at_inp	,	nWfs_inp	,		MPI_INTEGER			,	root,	MPI_COMM_WORLD,	ierr)
 		!call MPI_Bcast( proj_nX_inp	,	nWfs_inp	,		MPI_INTEGER			,	root,	MPI_COMM_WORLD,	ierr)
@@ -433,6 +489,17 @@ module util_sysPara
 		allocate(	dVpot(nAt)			)
 		allocate(	atPos(dim,nAt)		)
 		allocate(	atR(dim,nAt) 		)
+		!phantom
+		allocate(	phant_Xpos(nPhant)	)
+		allocate(	phant_Ypos(nPhant)	)
+		allocate(	phant_Rx(nPhant)	)
+		allocate(	phant_Ry(nPhant)	)
+		allocate(	phant_Pos(dim,nPhant)	)
+		allocate(	phant_R(dim,nPhant)	 )
+
+
+
+
 		!wann (super Cell)
 		allocate(	proj_at(nWfs)		)
 		allocate(	proj_nX(nWfs)		)
@@ -706,7 +773,7 @@ module util_sysPara
 
 	subroutine popAtPos()
 		!populates the atom position vector
-		integer		:: at
+		integer		:: at, phw
 		!
 		if(myID == root ) then
 			
@@ -718,12 +785,19 @@ module util_sysPara
 				atPos(1,at)	= relXpos(at) * aX	!x component
 				atPos(2,at)	= relYpos(at) * aY	!y component
 			end do
-
-
-
+			!
+			do phw = 1, nPhant
+				!test if inside unit cell
+				if( phant_Xpos(phw) < 0.0_dp .or. phant_Xpos(phw) > 1.0_dp ) stop '[popAtPos]: relXpos out of bounds'
+				if( phant_Ypos(phw) < 0.0_dp .or. phant_Ypos(phw) > 1.0_dp ) stop '[popAtPos]: relYpos out of bounds'
+				phant_Pos(1,phw)	= phant_Xpos(phw) * aX	!x component
+				phant_Pos(2,phw)	= phant_Ypos(phw) * aY	!y component
+			end do
 
 		end if
-		call MPI_Bcast(atPos, dim*nAt, MPI_DOUBLE_PRECISION, root, MPI_COMM_WORLD, ierr)
+		call MPI_Bcast(atPos		, dim*nAt		, MPI_DOUBLE_PRECISION, root, MPI_COMM_WORLD, ierr)
+		call MPI_Bcast(phant_Pos	, dim*nPhant	, MPI_DOUBLE_PRECISION, root, MPI_COMM_WORLD, ierr)
+		!
 		!
 		return
 	end subroutine
@@ -731,7 +805,7 @@ module util_sysPara
 
 	subroutine popAtR()
 		!populates the atom radius vector
-		integer		:: at
+		integer		:: at, phw
 		!
 		if(myID == root ) then
 			do at = 1, nAt
@@ -743,9 +817,14 @@ module util_sysPara
 				if( (atPos(2,at)-atR(2,at)) < 0.0_dp .or. (atPos(2,at)+atR(2,at)) > aY ) stop'[popAtR]: wells exceed unit cell (x-dir)'
 			end do
 			!ToDo: test if wells overlap
+			do phw = 1, nPhant
+				phant_R(1,phw) = phant_Rx(phw)
+				phant_R(2,phw) = phant_Ry(phw)
+			end do
 
 		end if
-		call MPI_Bcast(atR, dim*nAt, MPI_DOUBLE_PRECISION, root, MPI_COMM_WORLD, ierr)
+		call MPI_Bcast(atR		, dim*nAt		, MPI_DOUBLE_PRECISION, root, MPI_COMM_WORLD, ierr)
+		call MPI_Bcast(phant_R	, dim*nPhant	, MPI_DOUBLE_PRECISION, root, MPI_COMM_WORLD, ierr)
 		!
 		return
 	end subroutine
