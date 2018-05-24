@@ -12,16 +12,16 @@
     atRx        =   1.501
     atRy        =   1.601
     atPot       =   -1.35
-    dVpot       =   0.10  
+    dVpot       =   0.40
 
 [wann]
     nBands      =   3
     nWfs        =   3
-    projAt      =   1 1     1 
+    projAt      =   1 1     1
     projnX      =   1 1     2
     projnY      =   1 2     1
 
-[phantomWell]    
+[phantomWell]
     nPhant      = 1
     phant_Xpos  =   0.500
     phant_Ypos  =   0.500
@@ -39,9 +39,9 @@
     aRashba    = 1.0   #in eV Ang
 
 [numerics]
-   Gcut        = 7.0 # changed by probeB.sh
+   Gcut        = 9.0 # changed by probeB.sh
    nSolve      = 96 # changed by probeB.sh
-   nQx         = 4 # changed by probeB.sh
+   nQx         = 16 # changed by probeB.sh
     thres       =   0.1
 
 [ham]
@@ -67,13 +67,13 @@
     pw90GaugeB  =   f
 
 [w90plot]
-    do_w90plot  =   t
+    do_w90plot  =   f
     nRx         =   20
     nRy         =   10
     nRz         =   2
 
 [w90interp]
-    k_mesh_multiplier = 4
+    k_mesh_multiplier = 1
 
 [berry]
     fastConnConv=   t

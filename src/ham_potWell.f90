@@ -30,7 +30,7 @@ module ham_PotWell
 		call Vconst(nG_qi, Gvec, Hmat)
 		!
 		if( doVdesc ) then
-			call Vdesc(nG_qi, Gvec, Hmat)
+			call Vdesc2(nG_qi, Gvec, Hmat)
 		end if
 
 		!old: disadvantages: function call overhead, the const potential contribution was calculated in different way
@@ -208,6 +208,67 @@ module ham_PotWell
 
 
 
+
+	subroutine Vdesc2(nG_qi, Gvec, Hmat)
+		!potential integration for a well constant gradient in x direction (uniform electric field)
+		!it starts from V0 at xL till V0-dV at xR
+		integer,		intent(in)		::	nG_qi
+		real(dp),		intent(in)		::	Gvec(:,:)
+		complex(dp),	intent(inout)	::	Hmat(:,:)
+		integer							::	at, i, j
+		complex(dp)						::  xL, yL, xR, yR, dGx, dGy, dV, fact, cvol, intX, intY
+		!
+		cvol = dcmplx( vol )
+		!
+		do at = 1, nAt
+			dV	=	dcmplx(		dVpot(at)					)	
+			xL	=	dcmplx(		atPos(1,at) - atR(1,at)		)
+			xR	=	dcmplx(		atPos(1,at) + atR(1,at) 	)
+			yL	=	dcmplx(		atPos(2,at) - atR(2,at) 	)
+			yR	=	dcmplx(		atPos(2,at) + atR(2,at) 	)
+			!write(*,*)	"[",myId,"]dV=",dV
+			!
+			fact = - dV / ( (xR-xL)*cvol	)
+			!
+			do j = 1, nG_qi
+				do i = 1, nG_qi
+					dGx		= dcmplx(	Gvec(1,j) - Gvec(1,i) )
+					dGy		= dcmplx(	Gvec(2,j) - Gvec(2,i) )
+					!
+					!
+					!----------------------------------------------------------------------------------------------------------------------------------
+					!INT-X
+					if(  abs(dGx) < machineP ) then
+						intX	= 0.5_dp * (xR-xL)**2
+					else
+						intX	= (1.0_dp/dGx**2) * (		myExp(dreal(dGx*(xR-xL))) * (1.0_dp-i_dp*dGx*(xR-xL)) 		 -		 1.0_dp			)
+					end if	
+					
+					!----------------------------------------------------------------------------------------------------------------------------------
+					!INT-Y 
+					if(  abs(dGy) < machineP ) then
+						intY	= yR-yL
+					else
+						intY	=  - (i_dp/dGy ) * ( myExp(dreal(dGy*yR))		- myExp(dreal(dGy*yL))				)
+					end if	
+					
+					
+					!----------------------------------------------------------------------------------------------------------------------------------		
+					!
+					Hmat(i,j)	= Hmat(i,j)		+		fact * intX * intY 	
+
+					
+
+					!
+				end do
+			end do
+			!
+			!
+		end do
+		!
+		!
+		return
+	end subroutine
 
 
 
