@@ -609,7 +609,7 @@ module util_w90Interf
 !PREPARE & RUN W90
 	subroutine write_W90setup_input()
 		!write input file for wannier_setup call
-		integer	:: at, n_per_at, nWf, i, phw
+		integer	:: at, n_per_at, nWf, i
 		character(len=30)	:: 	orbitals
 		!
 		open(unit=100,file=seed_name//'.win',action='write', form='formatted', status='replace')
