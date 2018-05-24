@@ -103,13 +103,11 @@ module util_sysPara
 		call qmeshGen()
 		!call rmeshGen()
 		call popGvec()
-		
 		call popAtPos()
 		call popAtR()
+
 		call kWmeshGen()
-		write(*,*)	"[readInp]: arrays filled"
-
-
+		write(*,'(a,i3,a)')	"[#",myID,"readInp]: finished array setup"
 		!
 		!MAKE DIRECTORIES
 		if( myID == root ) then
@@ -681,7 +679,7 @@ module util_sysPara
 	subroutine popGvec()
 		integer						:: qi, ix, iy, inside,tot, qLoc, Gmin
 		real(dp)					:: kg(2), Gtest(2)
-		real(dp),	allocatable		:: Gtemp(:,:,:)
+		real(dp),	allocatable		:: Gtemp(:,:,:), write_container(:,:)
 		character(len=20)			::	filename
 		character(len=1024)			::	format='(a,i7.7)'
 		!
@@ -727,16 +725,22 @@ module util_sysPara
 		!
 		!
 		!WRITE TO FILE
+		allocate( 	write_container(dim,GmaxGlobal		)		)
+		!
 		do qLoc = 1, qChunk
 			!get global q index & according filename
 			qi = myID*qChunk + qLoc
 			write(filename, format) raw_dir//'gVec.',qi
 			!
-			!write to file
+			!copy to container
+			write_container(:,:) = Gtemp(1:dim,1:GmaxGLOBAL,qLoc)
+			!
+			!write container to file
 			open(unit=210, file=filename		, form='unformatted', access='stream', action='write',status='replace') 
-			write(210)	Gtemp(1:dim,1:GmaxGLOBAL,qLoc)
+			write(210)	write_container
 			close(210)
 		end do
+		write(*,'(a,i3,a)')	"[#",myID,"popGvec]: wrote basis set to files"
 		!
 		!
 		return
