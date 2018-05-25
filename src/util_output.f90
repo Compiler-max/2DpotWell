@@ -37,6 +37,7 @@ module util_output
 !public:
 	subroutine	input_info_printer()
 		integer						:: wf, at, at_per_cell, count, cell, wf_per_cell
+		real(dp)					:: dv_x
 		!
 		!
 		write(*,*)								"*"
@@ -66,9 +67,11 @@ module util_output
 		write(*,*)"---------------------------------------------------------------------------"
 		count 	= 0
 		cell 	= 0
+		dV_x	= 0.0_dp
 		do at = 1, nAt
+			if( doVdesc ) dV_x = dvPot(at)
 			write(*,'(a,i3,a,i3,a,f8.3,a,f8.3,a,f8.3,a,f8.3,a,f5.2,a,f5.2)')		"	",cell+1," | ",at,"	 | ", relXpos(at)," | ", relYpos(at)," |   ",&
-																											 atRx(at), " | ",atRy(at)," | 	",atPot(at)," | 	",dvPot(at)
+																											 atRx(at), " | ",atRy(at)," | 	",atPot(at)," | 	",dV_x
 																													
 			!
 			count = count + 1
