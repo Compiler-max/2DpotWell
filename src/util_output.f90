@@ -62,13 +62,13 @@ module util_output
 		write(*,*)								"[main]: total nAt   =", nAt
 		write(*,*)								"[main]: nAt per cell=", at_per_cell
 		
-		write(*,*)								"	#cell |  #atom | x_rel |  y_rel	  |	 radius_x[a0] | radius_y[a0] | 	pot[Hartr]"
+		write(*,'(a)')								"	#cell |  #atom | x_rel |  y_rel	| radius_x[a0] | radius_y[a0] | pot[Hartr] | dV_x[Hartr]"
 		write(*,*)"---------------------------------------------------------------------------"
 		count 	= 0
 		cell 	= 0
 		do at = 1, nAt
-			write(*,'(a,i3,a,i3,a,f8.3,a,f8.3,a,f8.3,a,f8.3,a,f8.3)')		"	",cell+1," | ",at,"	 | ", relXpos(at)," | ", relYpos(at)," |   ",&
-																											 atRx(at), " | ",atRy(at)," | 	",atPot(at)
+			write(*,'(a,i3,a,i3,a,f8.3,a,f8.3,a,f8.3,a,f8.3,a,f5.2,a,f5.2)')		"	",cell+1," | ",at,"	 | ", relXpos(at)," | ", relYpos(at)," |   ",&
+																											 atRx(at), " | ",atRy(at)," | 	",atPot(at)," | 	",dvPot(at)
 																													
 			!
 			count = count + 1

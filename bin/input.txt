@@ -9,10 +9,10 @@
     nAt         =   1
     relXpos     =   0.500
     relYpos     =   0.500
-    atRx        =   1.501
-    atRy        =   1.601
-    atPot       =   -1.35
-    dVpot       =   0.40
+    atRx        =   2.901
+    atRy        =   2.901
+    atPot       =   0.0
+    dVpot       =   1.35
 
 [wann]
     nBands      =   3

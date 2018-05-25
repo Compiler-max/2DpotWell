@@ -30,6 +30,7 @@ module ham_PotWell
 		call Vconst(nG_qi, Gvec, Hmat)
 		!
 		if( doVdesc ) then
+			!write(*,'(a,i3,a)') "[#",myID,"; add_potWell]: will use Vdesc2"
 			call Vdesc2(nG_qi, Gvec, Hmat)
 		end if
 
@@ -229,6 +230,8 @@ module ham_PotWell
 			!write(*,*)	"[",myId,"]dV=",dV
 			!
 			fact = - dV / ( (xR-xL)*cvol	)
+			!write(*,'(a,i3,a,e14.4)') "[#",myID,"Vdesc2]: fact=",fact
+			if( abs(dV) < 1e-3_dp	) write(*,'(a,i3,a,e12.4)') "[#",myID,"Vdesc2]: warning, small dV detetected! dV=",dV
 			!
 			do j = 1, nG_qi
 				do i = 1, nG_qi
@@ -255,6 +258,8 @@ module ham_PotWell
 					
 					!----------------------------------------------------------------------------------------------------------------------------------		
 					!
+					!write(*,*)"ham=",Hmat(i,j),"; vdesc2 contribution=",fact * intX * intY 	
+
 					Hmat(i,j)	= Hmat(i,j)		+		fact * intX * intY 	
 
 					
