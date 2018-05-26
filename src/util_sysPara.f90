@@ -817,8 +817,8 @@ module util_sysPara
 				atR(2,at)	= atRy(at)
 
 				!Test if well exceeds unit cell
-				if( (atPos(1,at)-atR(1,at)) < 0.0_dp .or. (atPos(1,at)+atR(1,at)) > aX ) stop'[popAtR]: wells exceed unit cell (x-dir)'
-				if( (atPos(2,at)-atR(2,at)) < 0.0_dp .or. (atPos(2,at)+atR(2,at)) > aY ) stop'[popAtR]: wells exceed unit cell (x-dir)'
+				!if( (atPos(1,at)-atR(1,at)) < 0.0_dp .or. (atPos(1,at)+atR(1,at)) > aX ) stop'[popAtR]: wells exceed unit cell (x-dir)'
+				!if( (atPos(2,at)-atR(2,at)) < 0.0_dp .or. (atPos(2,at)+atR(2,at)) > aY ) stop'[popAtR]: wells exceed unit cell (x-dir)'
 			end do
 			!ToDo: test if wells overlap
 			do phw = 1, nPhant
