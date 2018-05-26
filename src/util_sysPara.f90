@@ -205,7 +205,7 @@ module util_sysPara
 
 
 		!
-		if( mod(aX/aY,1.0_dp) > 1e-7_dp)	stop	"wARNING unit length (aX/aY) should be integer multiples from each other "
+		!if( mod(aX/aY,1.0_dp) > 1e-7_dp)	stop	"wARNING unit length (aX/aY) should be integer multiples from each other "
 
 		write(*,*)	"[rootRead]: scale nQy with int(aX/aY)=",int(aX/aY)
 		nQy				= nQx * int(aX/aY) 
