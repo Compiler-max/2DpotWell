@@ -205,7 +205,7 @@ module util_sysPara
 
 
 		!
-		if( mod(aX/aY,1.0_dp) > 1e-7_dp)	stop	"wARNING unit length (aX/aY) should be integer multiples from each other "
+		!if( mod(aX/aY,1.0_dp) > 1e-7_dp)	stop	"wARNING unit length (aX/aY) should be integer multiples from each other "
 
 		write(*,*)	"[rootRead]: scale nQy with int(aX/aY)=",int(aX/aY)
 		nQy				= nQx * int(aX/aY) 
@@ -817,8 +817,8 @@ module util_sysPara
 				atR(2,at)	= atRy(at)
 
 				!Test if well exceeds unit cell
-				if( (atPos(1,at)-atR(1,at)) < 0.0_dp .or. (atPos(1,at)+atR(1,at)) > aX ) stop'[popAtR]: wells exceed unit cell (x-dir)'
-				if( (atPos(2,at)-atR(2,at)) < 0.0_dp .or. (atPos(2,at)+atR(2,at)) > aY ) stop'[popAtR]: wells exceed unit cell (x-dir)'
+				!if( (atPos(1,at)-atR(1,at)) < 0.0_dp .or. (atPos(1,at)+atR(1,at)) > aX ) stop'[popAtR]: wells exceed unit cell (x-dir)'
+				!if( (atPos(2,at)-atR(2,at)) < 0.0_dp .or. (atPos(2,at)+atR(2,at)) > aY ) stop'[popAtR]: wells exceed unit cell (x-dir)'
 			end do
 			!ToDo: test if wells overlap
 			do phw = 1, nPhant
