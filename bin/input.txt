@@ -3,16 +3,16 @@
 [unitCell]
     aX          =   6
     aY          =   6
-    supCx       =   1
+    supCx       =   3
 
 [atoms]
     nAt         =   1
     relXpos     =   0.500
     relYpos     =   0.500
-    atRx        =   2.901
-    atRy        =   2.901
-    atPot       =   0.0
-    dVpot       =   1.35
+    atRx        =   2.001
+    atRy        =   2.001
+    atPot       =   -0.5
+    dVpot       =  0.2
 
 [wann]
     nBands      =   3
@@ -39,17 +39,17 @@
     aRashba    = 1.0   #in eV Ang
 
 [numerics]
-   Gcut        = 9.0 # changed by probeB.sh
+   Gcut        = 6.0 # changed by probeB.sh
    nSolve      = 96 # changed by probeB.sh
-   nQx         = 16 # changed by probeB.sh
+   nQx         = 4 # changed by probeB.sh
     thres       =   0.1
 
 [ham]
     debugHam    =   t
-    doVdesc     =   t
-    doZeeman    =   f
+    doVdesc     =   f
+    doZeeman    =   t
     doMagHam    =   f
-    doRashba    =   f
+    doRashba    =   t
 
 
 

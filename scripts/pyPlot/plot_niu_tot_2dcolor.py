@@ -22,6 +22,7 @@ def plotNiu_tot(searchDir, nWfs,
 						plot_titles=False, title_size=12, 
 						plot_k_labels=True, k_label_size=10,
 						plot_descriptor=False, descriptor_size=14,
+						axis_tick_size=12,
 						show_rashba_box=False,
 						save_dir="."):
 	f2_path	= searchDir+'/f2response.txt'
@@ -77,11 +78,8 @@ def plotNiu_tot(searchDir, nWfs,
 		f3_plot_y = f3_plot_y / aY_ang
 		tot_plot_y = tot_plot_y  / aY_ang
 		print('Will use the percentage plot')		
-			
-
-
-
-
+	
+	
 	#SET RASHBA INFO BOX
 	a_Rashba = getData('alpha_rashba',searchDir+'/polOutput.txt')
 	#
@@ -101,39 +99,42 @@ def plotNiu_tot(searchDir, nWfs,
 
 
 	##
-	##plot X shift
-	##plt.subplot(111)
-	#fig, axes = plt.subplots(1,1)
-	#CSx_tot = plt.contourf(f2_xi, f2_yi, tot_plot_x, 15, cmap=cmap)#,vmax=zmax, vmin=zmin)
-	#if plot_titles:
-	#	if do_plot_percent:
-	#		plt.title(r'$a_x (p_{\mathrm{q}})$',fontsize=title_size)
-	#	else:
-	#		plt.title(r'$a_x$ (Ang)',fontsize=title_size)
-	#if plot_k_labels:
-	#	plt.ylabel('ky (a.u.)',fontsize=k_label_size)
-	#	plt.xlabel('kx (a.u.)',fontsize=k_label_size)
-	##
-	##rescale the whole figure to add colorbar
-	#scale = .8
-	#plt.tight_layout(pad=1.25,rect=(0,0,scale,scale))
-	##
-	#cax = fig.add_axes([.81, 0.1, .03, scale*0.8])	# [left, bottom, width, height] 
-	#cb1 = fig.colorbar(CSx_tot, cax=cax, cmap=cmap, label="polarizability")
-	##
-	#if show_rashba_box:
-	#	axes.text(box_x_rel, box_y_rel, box_string, 
-	#		horizontalalignment='center',
-	#		verticalalignment='center',
-	#		transform = axes.transAxes,
-	#		fontsize=box_font_size, bbox={'facecolor':'white', 'alpha':box_opacity, 'pad':10})
-	##
-	#if plot_essin:
-	#	plt.savefig(save_dir+'/a1_n'+str(plotState)+'_Bz'+str(bz)+'aRash'+str(a_Rashba)+'essinShiftX.pdf',bbox_inches='tight')
-	#else:
-	#	plt.savefig(save_dir+'/a1_n'+str(plotState)+'_Bz'+str(bz)+'aRash'+str(a_Rashba)+'niuShiftX.pdf',bbox_inches='tight')
-	#plt.show()
-	#plt.close()
+	#plot X shift
+	#plt.subplot(111)
+	fig, axes = plt.subplots(1,1)
+	CSx_tot = plt.contourf(f2_xi, f2_yi, tot_plot_x, 15, cmap=cmap)#,vmax=zmax, vmin=zmin)
+	if plot_titles:
+		if do_plot_percent:
+			plt.title(r'$a_x (p_{\mathrm{q}})$',fontsize=title_size)
+		else:
+			plt.title(r'$a_x$ (Ang)',fontsize=title_size)
+	if plot_k_labels:
+		plt.ylabel('ky (a.u.)',fontsize=k_label_size)
+		plt.xlabel('kx (a.u.)',fontsize=k_label_size)
+	#
+	#rescale the whole figure to add colorbar
+	scale = .8
+	plt.tight_layout(pad=1.25,rect=(0,0,scale,scale))
+	#
+	cax = fig.add_axes([.81, 0.1, .03, scale*0.8])	# [left, bottom, width, height] 
+	cb1 = fig.colorbar(CSx_tot, cax=cax, cmap=cmap, label=r'polarizability $a_x$ ($\mu p_Q$)')
+	cb1.ax.tick_params(labelsize=k_label_size)
+	#
+	if show_rashba_box:
+		axes.text(box_x_rel, box_y_rel, box_string, 
+			horizontalalignment='center',
+			verticalalignment='center',
+			transform = axes.transAxes,
+			fontsize=box_font_size, bbox={'facecolor':'white', 'alpha':box_opacity, 'pad':10})
+	
+	axes.tick_params(axis = 'both', which = 'major', labelsize = axis_tick_size)
+	#
+	if plot_essin:
+		plt.savefig(save_dir+'/a1_n'+str(plotState)+'_Bz'+str(bz)+'aRash'+str(a_Rashba)+'essinShiftX.pdf',bbox_inches='tight')
+	else:
+		plt.savefig(save_dir+'/a1_n'+str(plotState)+'_Bz'+str(bz)+'aRash'+str(a_Rashba)+'niuShiftX.pdf',bbox_inches='tight')
+	plt.show()
+	plt.close()
 	
 
 
@@ -155,11 +156,12 @@ def plotNiu_tot(searchDir, nWfs,
 	scale = .8
 	plt.tight_layout(pad=1.25,rect=(0,0,scale,scale))
 	cax = fig.add_axes([.81, 0.1, .03, scale*0.8])	# [left, bottom, width, height] 
-	#cb1 = fig.colorbar(CSy_tot, cax=cax, cmap=cmap, label=r'polarizability $a_y \;$ ($\mu p_Q$)')
-	norm = mpl.colors.Normalize(vmin=zmin, vmax=zmax)
-	cb1 = mpl.colorbar.ColorbarBase(cax, cmap=cmap,
-                                norm=norm,
-                                orientation='vertical')
+	cb1 = fig.colorbar(CSy_tot, cax=cax, cmap=cmap, label=r'polarizability $a_y$ ($\mu p_Q$)')
+	cb1.ax.tick_params(labelsize=k_label_size)
+	#norm = mpl.colors.Normalize(vmin=zmin, vmax=zmax)
+	#cb1 = mpl.colorbar.ColorbarBase(cax, cmap=cmap,
+    #                           norm=norm,
+    #                           orientation='vertical')
 
 	
 	if show_rashba_box:
@@ -170,7 +172,7 @@ def plotNiu_tot(searchDir, nWfs,
 			fontsize=box_font_size, bbox={'facecolor':'white', 'alpha':box_opacity, 'pad':10})
 
 
-
+	axes.tick_params(axis = 'both', which = 'major', labelsize = axis_tick_size)
 
 	if plot_essin:
 		plt.savefig(save_dir+'/a1'+'_Bz'+str(bz)+'aRash'+str(a_Rashba)+'essinShiftY.pdf',bbox_inches='tight')
@@ -179,6 +181,12 @@ def plotNiu_tot(searchDir, nWfs,
 
 	plt.show()
 	plt.close()
+
+	print('a_x=',sum(raw_x_shift)/aX_ang,r'\,$(p_Q)$')		
+	print('a_y=',sum(raw_y_shift)/aY_ang,r'\,$(p_Q)$')
+
+
+
 	
 	
 
@@ -196,19 +204,19 @@ def plotNiu_tot(searchDir, nWfs,
 def plotDir():
 	#test
 	searchDir 	= '.'
-	nWfs 		= 6
+	nWfs 		= 2
 
 
 
 	aUtoAngstrm = 0.52917721092
-	aX 			= 20.0 * aUtoAngstrm
-	aY			= 10.0 * aUtoAngstrm
+	aX 			= 8.0 * aUtoAngstrm
+	aY			= 8.0 * aUtoAngstrm
 
 
 	print('unit cell=(',aX,', ',aY,'),(Ang)')
 
 	#
-	plotNiu_tot(searchDir,  nWfs, aX_ang=aX,aY_ang=aY, plot_percent=True, plot_essin=True, plot_titles=False, show_rashba_box=True)
+	plotNiu_tot(searchDir,  nWfs, aX_ang=aX,aY_ang=aY, plot_percent=True, plot_essin=True, plot_titles=False,plot_k_labels=True,k_label_size=14, show_rashba_box=True)
 
 
 plotDir()

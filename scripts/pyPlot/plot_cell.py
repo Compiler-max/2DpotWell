@@ -1,10 +1,11 @@
 import numpy as np
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 
-from mpl_toolkits.mplot3d import Axes3D
 from matplotlib import cm
 from matplotlib.ticker import LinearLocator, FormatStrFormatter
+from mpl_toolkits.mplot3d import Axes3D
 
 
 
@@ -15,8 +16,8 @@ def get_example(use_angstrom=False,use_eV=False):
 	aY	= 10
 	#
 	nAt		= 2
-	relXpos = np.array(		[0.25,0.75]			) 
-	relYpos = np.array(		[0.5,0.5]			) 
+	relXpos = np.array(		[0.25,0.75]			)
+	relYpos = np.array(		[0.5,0.5]			)
 	atRx	= np.array(		[1.0,2.0]			)
 	atRy	= np.array(		[0.5,3.0]			)
 	atPot	= np.array(		[-1.0,-1.5]			)
@@ -65,7 +66,7 @@ def get_input_data(fpath,use_angstrom=False,use_eV=False):
 	atRx	= []
 	atRy	= []
 	atPot	= []
-	dVpot	= []	
+	dVpot	= []
 	#read file
 	with open(fpath,'r') as f:
 		for counter,line in enumerate(f):
@@ -131,7 +132,7 @@ def plot_2D(aX, aY, nAt, relXpos, relYpos, atRx, atRy, atPot, dVpot,length_unit,
 		Vpot	= atPot[at]
 		#
 		#plot rectangle
-		ax1.add_patch(		patches.Rectangle( (xmin, ymin),  dx,  dy, fill=True, alpha=.4, 
+		ax1.add_patch(		patches.Rectangle( (xmin, ymin),  dx,  dy, fill=True, alpha=.4,
 													facecolor='blue', edgecolor='black',
 													label='well #'+str(at),
 													linestyle='solid', linewidth=2.0
@@ -140,10 +141,10 @@ def plot_2D(aX, aY, nAt, relXpos, relYpos, atRx, atRy, atPot, dVpot,length_unit,
 		#create energy string
 		pot_formatted = str(	"{:4.2f}".format(atPot[at]) )
 		print( pot_formatted + energy_unit )
-	
+
 		#plot energy string
 		ax1.text(xmin+dx*.3, ymin+dy*.4, pot_formatted+'\n'+energy_unit, fontsize=12 )
-	
+
 		#plot center indicator
 		plt.plot([aX/2.0], [aY/2.0], marker='+', markersize=5, color="black")
 	#
@@ -159,57 +160,71 @@ def plot_2D(aX, aY, nAt, relXpos, relYpos, atRx, atRy, atPot, dVpot,length_unit,
 
 
 
-def plot_3D(aX, aY, nAt, relXpos, relYpos, atRx, atRy, atPot, dVpot,length_unit,energy_unit):
+
+
+
+
+
+
+
+
+def plot_3D(aX, aY, nAt, relXpos, relYpos, atRx, atRy, atPot, dVpot,length_unit,energy_unit,tickLabel_size=12,axesLabel_size = 14):
 	fig3D		= plt.figure()
 	axes			= fig3D.gca(projection='3d')
 
 	mesh_den	= 0.25
 	cmap		= cm.viridis
 	alpha		= .2
+	zmin		= -1.0
 
+	#SETUP MESH
 	X			= np.arange(0, aX, mesh_den)
 	Y			= np.arange(0, aY, mesh_den)
 	X, Y		= np.meshgrid(X, Y)
 
 
 
-	xmin		= 1.0
-	xmax 		= 4.0
-	ymin		= 1.0
-	ymax 		= 4.0
-
-	Vpot		= -2.5
-	Z1 			= Vpot		*		np.heaviside(X-xmin,1) * (1.0-np.heaviside(X-xmax,1))	*		np.heaviside(Y-ymin,1) * (1.0-np.heaviside(Y-ymax,1))
-
-
-	xmin		= 6.0
-	xmax 		= 8.0
-	ymin		= 1.0
-	ymax 		= 4.0
-	Vpot		= -1.2
-	Z2 			= Vpot		*		np.heaviside(X-xmin,1) * (1.0-np.heaviside(X-xmax,1))	*		np.heaviside(Y-ymin,1) * (1.0-np.heaviside(Y-ymax,1))
+	Ztot	= []
 	for at in range(nAt):
 		#set rectangle
 		xmin 	= relXpos[at]*aX - atRx[at]
+		xmax	= relXpos[at]*aX + atRx[at]
 		ymin 	= relYpos[at]*aY - atRy[at]
-		dx		= atRx[at]*2.0
-		dy		= atRy[at]*2.0
+		ymax	= relYpos[at]*aY + atRy[at]
 		Vpot	= atPot[at]
+		try:
+			dV		= dVpot[at]
+		except:
+			dV		= 0.0
+			print('warning dV set to zero, problems reading')
+		#
+		Zat		=  (Vpot-dV*(X-xmin)/(xmax-xmin))	*	np.heaviside(X-xmin,1) * (1.0-np.heaviside(X-xmax,1))	*		np.heaviside(Y-ymin,1) * (1.0-np.heaviside(Y-ymax,1))
+		#
+		Ztot.append(Zat)
 
 
-		
-
-	# Plot the surface.
-	surf1 = axes.plot_surface(X, Y, Z1, color='blue',alpha=alpha,
-	                       linewidth=0, antialiased=False)
-#
-	surf2 = axes.plot_surface(X, Y, Z2, color='blue',alpha=alpha,
-	                       linewidth=0, antialiased=False)
-	
+	print('detected ',len(Ztot),' wells in the unit cell')
 
 
-	Vmin	= -2.5 
-	surfA1 	= axes.contourf(X,Y,Z1+Z2,offset=Vmin*2.,cmap=cmap, zmin=Vmin, zmax=0.0)
+	Zsum = []
+	for id,wellZ in enumerate(Ztot):
+		axes.plot_surface(X, Y, wellZ, color='blue', alpha=alpha, linewidth=0,antialiased=False)
+		if id ==0:
+			Zsum = wellZ
+		else:
+			Zsum = Zsum + wellZ
+
+		Zsum = Zsum + wellZ
+
+
+
+
+	Vmin = min(atPot)*1.5
+	Vmax = max(max(atPot),0.0) # in case of positive wells
+	print('Vmin=',Vmin)
+	print('Vmax=',Vmax)
+
+	energy_surf 	= axes.contourf(X,Y,Zsum,offset=zmin,cmap=cmap, zmin=Vmin, zmax=Vmax)
 	#surfA2 	= axes.contourf(X,Y,Z2,offset=Vmin*2.,cmap=cmap, zmin=Vmin, zmax=1.0)
 
 
@@ -217,22 +232,35 @@ def plot_3D(aX, aY, nAt, relXpos, relYpos, atRx, atRy, atPot, dVpot,length_unit,
 	axes.set_xlim(0.0,aX)
 	axes.set_ylim(0.0,aY)
 
-	axes.set_zlim(Vpot*2., 1.01)
+	axes.set_zlim(zmin, 1.01)
 	axes.zaxis.set_major_locator(LinearLocator(10))
 	axes.zaxis.set_major_formatter(FormatStrFormatter('%.02f'))
 
+	#tick
+	axes.set_xticks(np.linspace(0.0, aX, num=5))
+	axes.set_yticks(np.linspace(0.0, aY, num=5))
+	axes.set_zticks([])
+
+	#tick labels
+	axes.set_xticklabels([0,r'$1/4$',r'$1/2$',r'$3/4$',1],fontsize=tickLabel_size)
+	axes.set_yticklabels([])#[0,r'$1/4$',r'$1/2$',r'$3/4$',1],fontsize=tickLabel_size)
 	axes.set_zticklabels([])
 
 
 
-	axes.set_xlabel('x'+length_unit)
-	axes.set_ylabel('y'+length_unit)
-	
-	# Add a color bar which maps values to colors.
-	fig3D.colorbar(surfA1, shrink=0.5, aspect=5, label='E'+energy_unit)
+	axes.set_xlabel(r'x ($a_x$)',fontsize=axesLabel_size)
+	#axes.set_ylabel(r'y ($a_y$)',fontsize=axesLabel_size)
 
-	axes.view_init(25, 90+30)
-	
+	# Add a color bar which maps values to colors.
+	norm = mpl.colors.Normalize(vmin=zmin, vmax=0.0)
+	cbar = fig3D.colorbar(energy_surf ,norm=norm,shrink=0.5, aspect=5)
+	cbar.set_label(label='E'+energy_unit, fontsize=axesLabel_size)
+	cbar.ax.tick_params(labelsize=tickLabel_size)
+
+	axes.view_init(0, -90)
+
+
+	plt.tight_layout()
 	plt.show()
 
 #
@@ -254,7 +282,7 @@ aX, aY, nAt, relXpos, relYpos, atRx, atRy, atPot, dVpot = get_input_data(fpath, 
 #uncomment for example data
 #aX, aY, nAt, relXpos, relYpos, atRx, atRy, atPot, dVpot = get_example(fpath, use_angstrom, use_eV)
 
-#set unit strings 
+#set unit strings
 if use_angstrom:
 	length_unit = r' ($\AA$)'
 else:
@@ -270,8 +298,10 @@ else:
 #
 #plot_2D(aX, aY, nAt, relXpos, relYpos, atRx, atRy, atPot, dVpot,length_unit,energy_unit)
 
+tickLabel_size = 12
+axesLabel_size = 14
 
-
-plot_3D(aX, aY, nAt, relXpos, relYpos, atRx, atRy, atPot, dVpot,length_unit,energy_unit)
+#
+plot_3D(aX, aY, nAt, relXpos, relYpos, atRx, atRy, atPot, dVpot,length_unit,energy_unit, tickLabel_size, axesLabel_size)
 
 
