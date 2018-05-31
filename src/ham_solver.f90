@@ -312,7 +312,6 @@ module ham_Solver
 		!
 		real(dp),		intent(in)		::	loc_min_gap, loc_max_valence, loc_min_conduct
 		real(dp)						::	glob_max_valence, glob_min_conduct
-		integer							::	glob_minBound	,	glob_maxBound 
 		!
 		call MPI_REDUCE(loc_max_valence	,	glob_max_valence		, 	1, 	MPI_DOUBLE_PRECISION, 		MPI_MAX,	root, MPI_COMM_WORLD, ierr)
 		call MPI_REDUCE(loc_min_conduct	, 	glob_min_conduct		, 	1, 	MPI_DOUBLE_PRECISION, 		MPI_MIN,	root, MPI_COMM_WORLD, ierr)
