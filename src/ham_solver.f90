@@ -311,7 +311,7 @@ module ham_Solver
 		!	test if all kpts have same amount of negative energy eigenvalues (i.e. no states become metallic in parts of BZ)
 		!
 		real(dp),		intent(in)		::	loc_min_gap, loc_max_valence, loc_min_conduct
-		real(dp),		intent(in)		::	glob_max_valence, glob_min_conduct
+		real(dp)						::	glob_max_valence, glob_min_conduct
 		integer							::	glob_minBound	,	glob_maxBound 
 		!
 		call MPI_REDUCE(loc_max_valence	,	glob_max_valence		, 	1, 	MPI_DOUBLE_PRECISION, 		MPI_MAX,	root, MPI_COMM_WORLD, ierr)
