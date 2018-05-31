@@ -7,7 +7,7 @@ module ham_Solver
 	use util_sysPara,	only:	myID, root, ierr, 											&
 								dim, aX, aY, 												&
 								nQ, qChunk, nGq, GmaxGLOBAL, Gmax, nSolve, nBands, nWfs,	&
-								glob_min_gap,												&
+								glob_min_gap, glob_min_gap_indirect,						&
 								do_w90plot,	doZeeman, doMagHam, doRashba, debugHam
 	
 	use	ham_PotWell,	only:	add_potWell
