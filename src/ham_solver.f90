@@ -305,7 +305,7 @@ module ham_Solver
 	end function
 
 
-	subroutine band_analyzer(loc_minBound, loc_max_valence, loc_min_conduct)
+	subroutine band_analyzer(loc_min_gap, loc_max_valence, loc_min_conduct)
 		!band_analyzer(loc_min_Gap, max_valence, min_conduct)
 		!
 		!	test if all kpts have same amount of negative energy eigenvalues (i.e. no states become metallic in parts of BZ)
