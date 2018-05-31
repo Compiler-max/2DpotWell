@@ -17,8 +17,8 @@ module util_sysPara
 				!phantom wells
 				nPhant, phant_Xpos, phant_Ypos, phant_Pos, phant_Rx, phant_Ry, phant_R,	&
 				!cutoff:
-				nG, nGq, Gmax, GmaxGLOBAL, GminGLOBAL, Gcut, nSolve, glob_min_gap,		&
-				glob_min_gap_indirect,
+				nG, nGq, Gmax, GmaxGLOBAL, GminGLOBAL, Gcut, nSolve, 					&
+				glob_min_gap,		glob_min_gap_indirect,								&
 				!grids:
 				qpts, kpts, 															&
 				nQ, nQx, nQy, 															&
