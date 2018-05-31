@@ -91,7 +91,7 @@ module ham_Solver
 		complex(dp),	allocatable		::	Hmat(:,:) , ck_temp(:,:)
 		real(dp),		allocatable		::	En_temp(:), Gvec_qi(:,:)
 		integer							:: 	qi_glob, qi_loc, found, Gsize, boundStates, loc_minBound, loc_maxBound
-		real(dp)						::	loc_min_gap, tmp_Gap
+		real(dp)						::	loc_min_gap, max_valence, min_conduct
 		!	
 		!
 		allocate(	Gvec_qi(	dim,	GmaxGLOBAL					)	)
@@ -131,19 +131,25 @@ module ham_Solver
 			!
 			!
 			!count insulating states
-			boundStates = count_negative_eigenvalues(loc_minBound, loc_maxBound, En_temp)
+			!boundStates = count_negative_eigenvalues(loc_minBound, loc_maxBound, En_temp)
 			!
 			!GET BANDGAP
-			tmp_Gap = get_band_gap(qi_loc, qi_glob, found, Gsize, boundStates, En_temp)
-			if( qi_loc==1 ) loc_min_gap = En_temp(Gmax)-En_temp(1)
-			loc_min_Gap = min(tmp_Gap, loc_min_Gap)
+			if( qi_loc==1 ) then
+				loc_min_gap = En_temp(Gmax)-En_temp(1)
+				max_valence	= En_temp(nWfs)
+				min_conduct	= En_temp(nWfs+1)
+			else
+				loc_min_Gap = min(loc_min_Gap, get_band_gap(qi_loc, qi_glob, found, Gsize, nWfs, En_temp) )
+				max_valence	= max(max_valence, En_temp(nWfs)	)
+				min_conduct	= min(min_conduct, En_temp(nWfs+1)	)
+			end if
 			!
 			!goto next qpt
 			qi_loc = qi_loc + 1		
 		end do
 		!
 		!ANALYZE BANDS
-		call band_analyzer(loc_minBound, loc_maxBound, loc_min_Gap)
+		call band_analyzer(loc_min_Gap, max_valence, min_conduct)
 		!
 		!
 		return
@@ -299,17 +305,20 @@ module ham_Solver
 	end function
 
 
-	subroutine band_analyzer(loc_minBound, loc_maxBound, loc_min_gap)
+	subroutine band_analyzer(loc_minBound, loc_max_valence, loc_min_conduct)
+		!band_analyzer(loc_min_Gap, max_valence, min_conduct)
 		!
 		!	test if all kpts have same amount of negative energy eigenvalues (i.e. no states become metallic in parts of BZ)
 		!
-		integer,		intent(in)		::	loc_minBound	, 	loc_maxBound
-		real(dp),		intent(in)		::	loc_min_gap
+		real(dp),		intent(in)		::	loc_min_gap, , loc_max_valence, loc_min_conduct
+		real(dp),		intent(in)		::	glob_max_valence, glob_min_conduct
 		integer							::	glob_minBound	,	glob_maxBound 
 		!
-		call MPI_REDUCE(loc_minBound, 	glob_minBound, 	1, 	MPI_INTEGER, 			MPI_MIN,	root, MPI_COMM_WORLD, ierr)
-		call MPI_REDUCE(loc_maxBound, 	glob_maxBound, 	1, 	MPI_INTEGER, 			MPI_MAX,	root, MPI_COMM_WORLD, ierr)
-		call MPI_REDUCE(loc_min_gap,	glob_min_gap,	1,	MPI_DOUBLE_PRECISION, 	MPI_MIN,	root, MPI_COMM_WORLD, ierr)
+		call MPI_REDUCE(loc_max_valence	,	glob_max_valence		, 	1, 	MPI_DOUBLE_PRECISION, 		MPI_MAX,	root, MPI_COMM_WORLD, ierr)
+		call MPI_REDUCE(loc_min_conduct	, 	glob_min_conduct		, 	1, 	MPI_DOUBLE_PRECISION, 		MPI_MIN,	root, MPI_COMM_WORLD, ierr)
+		call MPI_REDUCE(loc_min_gap		,		glob_min_gap		,	1,	MPI_DOUBLE_PRECISION, 		MPI_MIN,	root, MPI_COMM_WORLD, ierr)
+		!
+		glob_min_gap_indirect = glob_min_conduct - glob_max_valence
 		!
 		if( myID == root ) then
 			write(*,*)	"*"
@@ -318,16 +327,18 @@ module ham_Solver
 			write(*,'(a,i3,a)')	"[#",myID,", solveHam]:********band structure analysis:****************************************"
 			!
 			!TEST FOR METALLIC BANDS
-			if( glob_minBound == glob_maxBound	) then
-				write(*,'(a,i3,a,i3,a)')	"[#",myID,", solveHam]: found system with #",glob_minBound," insulating states"
-				write(*,'(a,i3,a,f12.4,a)')	"[#",myID,", solveHam]: minimum (direct) band gap =",glob_min_gap*aUtoEv," (eV)	"
-			else
-				write(*,'(a,i3,a,i3,a)')	"[#",myID,", solveHam]: WARNING: ",glob_maxBound-glob_minBound," insulating states get metallic at points of BZ"
+			write(*,'(a,i3,a,f12.4,a)')	"[#",myID,", solveHam]: minimum direct band gap   =",	glob_min_gap*aUtoEv				," (eV)	"
+			write(*,'(a,i3,a,f12.4,a)')	"[#",myID,", solveHam]: minimum indirect band gap =",	glob_min_gap_indirect*aUtoEv		," (eV)	"
+			!
+			!
+			!
+			!METALLIC WARNINGS
+			if( glob_min_gap <= 0.0_dp	) then
+				write(*,'(a,i3,a)')	"[#",myID,", solveHam]: WARNING: direct bandgap does not exist"
 			end if
 			!
-			!TEST IF ENOUGH BANDS FOR W90
-			if( glob_minBound < nWfs	) then
-				write(*,'(a,i3,a)')	"[#",myID,", solveHam]: WARNING: not enough localized states for w90"
+			if( glob_min_gap_indirect <= 0.0_dp	) then
+				write(*,'(a,i3,a)')	"[#",myID,", solveHam]: WARNING: indirect bandgap does not exist"
 			end if
 			write(*,*)	"*"
 		end if

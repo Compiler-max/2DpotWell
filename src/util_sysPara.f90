@@ -18,6 +18,7 @@ module util_sysPara
 				nPhant, phant_Xpos, phant_Ypos, phant_Pos, phant_Rx, phant_Ry, phant_R,	&
 				!cutoff:
 				nG, nGq, Gmax, GmaxGLOBAL, GminGLOBAL, Gcut, nSolve, glob_min_gap,		&
+				glob_min_gap_indirect,
 				!grids:
 				qpts, kpts, 															&
 				nQ, nQx, nQy, 															&
@@ -50,7 +51,7 @@ module util_sysPara
 														myID, nProcs, ierr, qChunk
 	integer,	parameter							::	root=0
 	real(dp) 										::	aX=0.0_dp,aX_inp=0.0_dp, aY=0.0_dp, vol=0.0_dp, Gcut=2*PI_dp, thres,			& 
-														glob_min_gap,																	&
+														glob_min_gap, glob_min_gap_indirect,											&
 														dqx, dqy, dkx, dky,																& 
 														aRashba=0.0_dp, B0, Bext(3)	, prefactF3, recpLatt(2,2)
 	character(len=3)								::	seedName										
