@@ -44,7 +44,7 @@ show_Bfield_box = True
 show_rashba_box = True
 
 
-def plotBands(w90_dir=".",out_dir=".", minEn=0, maxEn=0, show_Bfield_box=False, show_rashba_box=False, show_fermi_indicator=False, saveToDir="."):
+def plotBands(w90_dir=".",out_dir=".", minEn=0, maxEn=0,E_fermi=0.0, show_Bfield_box=False, show_rashba_box=False, show_fermi_indicator=False, saveToDir="."):
     #GET ABINITIO ENERGIES
     do_ABiN, nQ, nSolve, qpts, en_abi = read_AbIn_energies(out_dir+'/enABiN.txt')
 
@@ -64,7 +64,7 @@ def plotBands(w90_dir=".",out_dir=".", minEn=0, maxEn=0, show_Bfield_box=False, 
                 enPlot = []
                 for q in range(0,len(qpath[path])):
                     q_idx = qpath[path][q][0]
-                    enPlot.append(en_abi[q_idx,n])
+                    enPlot.append(en_abi[q_idx,n]-E_fermi)
                 #
                 xPlot = qplot[path][0:len(qplot[0])]
                 yPlot = enPlot[0:len(enPlot)]
@@ -84,7 +84,7 @@ def plotBands(w90_dir=".",out_dir=".", minEn=0, maxEn=0, show_Bfield_box=False, 
                 enPlot = []
                 for k in range(0,len(kpath[path])):
                     k_idx = kpath[path][k][0]
-                    enPlot.append(en_W90[k_idx,n])
+                    enPlot.append(en_W90[k_idx,n]-E_fermi)
                 #
                 xPlot = kplot[path][0:len(kplot[0])]
                 yPlot = enPlot[0:len(enPlot)]
@@ -115,7 +115,7 @@ def plotBands(w90_dir=".",out_dir=".", minEn=0, maxEn=0, show_Bfield_box=False, 
     #Y-LABELS
     if maxEn-minEn > 0:
         ax.set_ylim(minEn,maxEn)
-    plt.ylabel('E [eV]',fontsize=16)
+    plt.ylabel(r'E-$\mathrm{E}_\mathrm{F}$ (eV)',fontsize=16)
     ax.tick_params(right=True,labelright=False)
 
 
@@ -272,6 +272,6 @@ def get_BZ_path(qpts):
 
 
 #TEST
-axTest = plotBands(minEn=-10.0,maxEn=12.0, show_fermi_indicator=True)
+axTest = plotBands(minEn=-15.0,maxEn=15.0,E_fermi=3.9, show_fermi_indicator=True)
 #plt.show()
 
